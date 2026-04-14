@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/diary_provider.dart';
 import '../../inventory/providers/inventory_provider.dart';
 import 'package:igkeeper/core/database/database.dart';
@@ -32,7 +31,6 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
   final _notesController = TextEditingController();
   final _weightController = TextEditingController();
   late DateTime _selectedDate;
-  bool _timerEnabled = true;
 
   @override
   void initState() {
@@ -41,15 +39,8 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
       text: widget.initialDosage?.toString() ?? '1.0',
     );
     _selectedDate = widget.initialDate ?? DateTime.now();
-    _loadTimerSetting();
   }
 
-  Future<void> _loadTimerSetting() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _timerEnabled = prefs.getBool('hyqvia_timer_enabled') ?? true;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {

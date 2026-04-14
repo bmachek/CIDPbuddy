@@ -6,7 +6,6 @@ import '../../../core/database/database.dart';
 import 'add_infusion_page.dart';
 import 'add_schedule_page.dart';
 import '../../reminders/services/notification_service.dart';
-import '../../../core/services/scheduler_service.dart';
 
 class PlanningPage extends StatelessWidget {
   const PlanningPage({super.key});

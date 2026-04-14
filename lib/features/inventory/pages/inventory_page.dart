@@ -429,22 +429,3 @@ class _EmptySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(padding: const EdgeInsets.all(20), child: Center(child: Text(message, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))));
 }
-
-class _StockCounter extends StatelessWidget {
-  final double stock;
-  final String unit;
-  final VoidCallback onAdd;
-  final VoidCallback onRemove;
-  const _StockCounter({required this.stock, required this.unit, required this.onAdd, required this.onRemove});
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(icon: const Icon(Icons.remove_circle_outline_rounded, size: 18), onPressed: onRemove),
-        Text('${stock.toStringAsFixed(0)} $unit', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-        IconButton(icon: const Icon(Icons.add_circle_outline_rounded, size: 18), onPressed: onAdd),
-      ],
-    );
-  }
-}

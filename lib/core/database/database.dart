@@ -287,7 +287,6 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future confirmOrder(int orderId) async {
-    final order = await (select(pendingOrders)..where((t) => t.id.equals(orderId))).getSingle();
     final items = await getPendingOrderItems(orderId);
     
     await transaction(() async {

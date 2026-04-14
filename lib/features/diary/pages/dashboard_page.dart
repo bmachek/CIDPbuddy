@@ -24,7 +24,6 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<AppDatabase>(context);
-    final now = DateTime.now();
     final greeting = _getGreeting();
 
     return Scaffold(
@@ -179,7 +178,6 @@ class _DashboardPageState extends State<DashboardPage> {
                           future: medService.getLowStockMedications(),
                           builder: (context, lowMedsSnapshot) {
                             final upcomingCount = upcomingSnapshot.data?.length ?? 0;
-                            final allMeds = medsSnapshot.data ?? [];
                             final allAccs = accSnapshot.data ?? [];
                             final allLinks = linksSnapshot.data ?? [];
                             
@@ -344,7 +342,9 @@ class _DashboardPageState extends State<DashboardPage> {
         );
       },
     );
-  }
+  },
+);
+}
 
 
   Widget _buildPendingOrdersSection(AppDatabase db) {
