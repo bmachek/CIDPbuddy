@@ -13,45 +13,53 @@ class InventoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final db = Provider.of<AppDatabase>(context);
     final inventoryProvider = Provider.of<InventoryProvider>(context);
 
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: const Text('Medikation'),
-            pinned: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart_checkout_rounded),
-                tooltip: 'Einkaufs-Assistent',
-                onPressed: () => showDialog(
-                  context: context,
-                  builder: (context) => const ShoppingWizardDialog(),
-                ),
+    return StreamBuilder<List<PendingOrder>>(
+      stream: db.watchPendingOrders(),
+      builder: (context, pendingSnapshot) {
+        final pendingMedIds = (pendingSnapshot.data ?? []).map((o) => o.medicationId).toSet();
+
+        return Scaffold(
+          body: CustomScrollView(
+            slivers: [
+              SliverAppBar.large(
+                title: const Text('Medikation'),
+                pinned: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart_checkout_rounded),
+                    tooltip: 'Einkaufs-Assistent',
+                    onPressed: () => showDialog(
+                      context: context,
+                      builder: (context) => const ShoppingWizardDialog(),
+                    ),
+                  ),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: _buildInventoryContent(context, inventoryProvider, pendingMedIds),
               ),
             ],
           ),
-          SliverToBoxAdapter(
-            child: _buildInventoryContent(context, inventoryProvider),
+          floatingActionButton: FloatingActionButton.extended(
+            heroTag: 'medication_fab',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AddItemPage()),
+              );
+            },
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Hinzufügen'),
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'medication_fab',
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddItemPage()),
-          );
-        },
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Hinzufügen'),
-      ),
+        );
+      }
     );
   }
 
-  Widget _buildInventoryContent(BuildContext context, InventoryProvider provider) {
+  Widget _buildInventoryContent(BuildContext context, InventoryProvider provider, Set<int> pendingMedIds) {
     final db = Provider.of<AppDatabase>(context);
     return Column(
       children: [
@@ -78,7 +86,7 @@ class InventoryPage extends StatelessWidget {
             return Column(
               children: meds.map((med) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildMedicationItem(context, med, provider, db),
+                child: _buildMedicationItem(context, med, provider, db, pendingMedIds.contains(med.id)),
               )).toList(),
             );
           },
@@ -158,18 +166,18 @@ class InventoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMedicationItem(BuildContext context, Medication med, InventoryProvider provider, AppDatabase db) {
+  Widget _buildMedicationItem(BuildContext context, Medication med, InventoryProvider provider, AppDatabase db, bool hasPendingOrder) {
     final medService = Provider.of<MedicationService>(context, listen: false);
     
     return FutureBuilder<double?>(
       future: medService.calculateDaysRemaining(med),
       builder: (context, daysSnapshot) {
         final daysRemaining = daysSnapshot.data;
-        final isLowStock = daysRemaining != null && daysRemaining <= med.minStock && med.minStock > 0;
+        final isLowStock = daysRemaining != null && daysRemaining <= med.minStock && med.minStock > 0 && !hasPendingOrder;
         
         final reachText = daysRemaining != null 
           ? 'Reicht bis: ${DateFormat('dd.MM.yyyy').format(DateTime.now().add(Duration(days: daysRemaining.floor())))}' 
-          : (isLowStock ? 'Niedriger Bestand!' : 'PZN: ${med.pzn ?? "-"}');
+          : (isLowStock ? 'Niedriger Bestand!' : (hasPendingOrder ? 'Bestellung unterwegs' : 'PZN: ${med.pzn ?? "-"}'));
 
         return StreamBuilder<List<MedicationAccessory>>(
           stream: db.watchAccessoriesForMedication(med.id),
