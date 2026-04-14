@@ -117,8 +117,8 @@ class InventoryPage extends StatelessWidget {
             final allAcc = snapshot.data ?? [];
             if (allAcc.isEmpty) return const SizedBox();
             
-            return FutureBuilder<List<MedicationAccessory>>(
-              future: db.getAllMedicationAccessories(),
+            return StreamBuilder<List<MedicationAccessory>>(
+              stream: db.watchAllMedicationAccessories(),
               builder: (context, linksSnapshot) {
                 final links = linksSnapshot.data ?? [];
                 final linkedIds = links.map((l) => l.accessoryId).toSet();
@@ -321,8 +321,8 @@ class InventoryPage extends StatelessWidget {
   }
 
   Widget _buildEmbeddedAccessoryItem(BuildContext context, AppDatabase db, MedicationAccessory link, InventoryProvider provider) {
-    return FutureBuilder<Accessory>(
-      future: (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).getSingle(),
+    return StreamBuilder<Accessory>(
+      stream: (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).watchSingle(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox();
         final acc = snapshot.data!;

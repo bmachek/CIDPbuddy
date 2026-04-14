@@ -85,8 +85,8 @@ class MedicationDetailsPage extends StatelessWidget {
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
-                FutureBuilder<List<MedicationAccessory>>(
-                  future: db.getAccessoriesForMedication(medication.id),
+                StreamBuilder<List<MedicationAccessory>>(
+                  stream: db.watchAccessoriesForMedication(medication.id),
                   builder: (context, snapshot) {
                     final links = snapshot.data ?? [];
                     if (links.isEmpty) {
@@ -257,8 +257,8 @@ class MedicationDetailsPage extends StatelessWidget {
   }
 
   Widget _buildAccessoryRow(BuildContext context, AppDatabase db, MedicationAccessory link) {
-    return FutureBuilder<Accessory>(
-      future: (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).getSingle(),
+    return StreamBuilder<Accessory>(
+      stream: (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).watchSingle(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox();
         final acc = snapshot.data!;

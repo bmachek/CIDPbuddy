@@ -170,23 +170,40 @@ class _DashboardPageState extends State<DashboardPage> {
                 return StreamBuilder<List<Accessory>>(
                   stream: db.watchAllAccessories(),
                   builder: (context, accSnapshot) {
-                    final medService = Provider.of<MedicationService>(context, listen: false);
-                    
-                    return FutureBuilder<List<Medication>>(
-                      future: medService.getLowStockMedications(),
-                      builder: (context, lowMedsSnapshot) {
-                        final upcomingCount = upcomingSnapshot.data?.length ?? 0;
-                        final allMeds = medsSnapshot.data ?? [];
-                        final allAccs = accSnapshot.data ?? [];
+                    return StreamBuilder<List<MedicationAccessory>>(
+                      stream: db.watchAllMedicationAccessories(),
+                      builder: (context, linksSnapshot) {
+                        final medService = Provider.of<MedicationService>(context, listen: false);
                         
-                        // Filter out items that already have a pending order
-                        final lowMeds = (lowMedsSnapshot.data ?? [])
-                            .where((m) => !pendingMedIds.contains(m.id))
-                            .toList();
+                        return FutureBuilder<List<Medication>>(
+                          future: medService.getLowStockMedications(),
+                          builder: (context, lowMedsSnapshot) {
+                            final upcomingCount = upcomingSnapshot.data?.length ?? 0;
+                            final allMeds = medsSnapshot.data ?? [];
+                            final allAccs = accSnapshot.data ?? [];
+                            final allLinks = linksSnapshot.data ?? [];
                             
-                        final lowAccs = allAccs
-                            .where((a) => a.stock < 5 && !pendingAccIds.contains(a.id))
-                            .toList();
+                            // Filter out items that already have a pending order
+                            final lowMeds = (lowMedsSnapshot.data ?? [])
+                                .where((m) => !pendingMedIds.contains(m.id))
+                                .toList();
+                                
+                            final lowAccs = allAccs.where((a) {
+                                if (pendingAccIds.contains(a.id)) return false;
+                                
+                                // Check if this accessory has any link with consumption > 0
+                                final hasPositiveConsumption = allLinks
+                                    .where((l) => l.accessoryId == a.id)
+                                    .any((l) => l.defaultQuantity > 0);
+                                
+                                if (!hasPositiveConsumption) {
+                                  // For items with 0 consumption (or not linked), only warn at stock 0
+                                  return a.stock <= 0;
+                                } else {
+                                  // For items with consumption, warn at stock < 5 (standard threshold)
+                                  return a.stock < 5;
+                                }
+                            }).toList();
 
                         final isStockProblem = lowMeds.isNotEmpty || lowAccs.isNotEmpty;
 

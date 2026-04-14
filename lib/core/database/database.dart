@@ -197,6 +197,7 @@ class AppDatabase extends _$AppDatabase {
   Future<int> insertMedicationAccessory(MedicationAccessoriesCompanion entry) =>
       into(medicationAccessories).insert(entry);
   Future<List<MedicationAccessory>> getAllMedicationAccessories() => select(medicationAccessories).get();
+  Stream<List<MedicationAccessory>> watchAllMedicationAccessories() => select(medicationAccessories).watch();
   Future updateMedicationAccessory(MedicationAccessory entry) =>
       update(medicationAccessories).replace(entry);
 
