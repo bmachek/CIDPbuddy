@@ -164,8 +164,8 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 const SizedBox(height: 12),
                 
                 if (_results!.any((it) => it.isSystemRecommended)) ...[
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
                     child: Text('Notwendig für diese Bestellung:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ),
                   ..._results!.where((it) => it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
@@ -173,8 +173,8 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 ],
 
                 if (_results!.any((it) => !it.isSystemRecommended)) ...[
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
                     child: Text('Weiteres Zubehör (Optional):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ),
                   ..._results!.where((it) => !it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
@@ -188,7 +188,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Kein Zubehör automatisch vorgeschlagen.', 
                       style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                       textAlign: TextAlign.center,

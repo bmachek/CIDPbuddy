@@ -75,12 +75,12 @@ class MedicationDetailsPage extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _buildSectionHeader('Lagerstand & Warnungen'),
+                _buildSectionHeader(context, 'Lagerstand & Warnungen'),
                 const SizedBox(height: 12),
                 _StockManagementCard(medication: medication),
                 const SizedBox(height: 32),
-                _buildSectionHeader('Verknüpftes Zubehör'),
-                const Text(
+                _buildSectionHeader(context, 'Verknüpftes Zubehör'),
+                Text(
                   'Dieses Zubehör wird bei jeder Infusion automatisch vom Bestand abgezogen.',
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
@@ -96,7 +96,7 @@ class MedicationDetailsPage extends StatelessWidget {
                           color: Colors.grey.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text('Noch kein Zubehör verknüpft', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                         ),
                       );
@@ -140,16 +140,16 @@ class MedicationDetailsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 48),
                 const SizedBox(height: 48),
-                _buildSectionHeader('Einnahme-Workflow'),
-                const Text(
+                _buildSectionHeader(context, 'Einnahme-Workflow'),
+                Text(
                   'Konfiguriere hier, welche Felder beim Erfassen einer Einnahme angezeigt werden.',
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
                 const SizedBox(height: 12),
                 _buildWorkflowConfig(context, db, invProvider, medication),
                 const SizedBox(height: 32),
-                _buildSectionHeader('Zeitpläne'),
-                const Text(
+                _buildSectionHeader(context, 'Zeitpläne'),
+                Text(
                   'Lege hier fest, in welchem Rhythmus du dieses Medikament einnimmst.',
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
@@ -165,7 +165,7 @@ class MedicationDetailsPage extends StatelessWidget {
                           color: Colors.grey.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text('Keine Zeitpläne aktiv', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                         ),
                       );
@@ -199,7 +199,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 48),
-                _buildSectionHeader('System-Aktionen'),
+                _buildSectionHeader(context, 'System-Aktionen'),
                 const SizedBox(height: 12),
                 if (medication.discontinuedAt == null)
                   ElevatedButton.icon(
@@ -246,7 +246,7 @@ class MedicationDetailsPage extends StatelessWidget {
 );
 }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Text(
       title,
       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Theme.of(context).colorScheme.primary),
