@@ -814,6 +814,17 @@ class $InfusionLogTable extends InfusionLog
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _bodyWeightMeta = const VerificationMeta(
+    'bodyWeight',
+  );
+  @override
+  late final GeneratedColumn<double> bodyWeight = GeneratedColumn<double>(
+    'body_weight',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -822,6 +833,7 @@ class $InfusionLogTable extends InfusionLog
     dosage,
     batchNumber,
     notes,
+    bodyWeight,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -880,6 +892,12 @@ class $InfusionLogTable extends InfusionLog
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('body_weight')) {
+      context.handle(
+        _bodyWeightMeta,
+        bodyWeight.isAcceptableOrUnknown(data['body_weight']!, _bodyWeightMeta),
+      );
+    }
     return context;
   }
 
@@ -913,6 +931,10 @@ class $InfusionLogTable extends InfusionLog
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       ),
+      bodyWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}body_weight'],
+      ),
     );
   }
 
@@ -929,6 +951,7 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
   final double dosage;
   final String? batchNumber;
   final String? notes;
+  final double? bodyWeight;
   const InfusionLogData({
     required this.id,
     required this.date,
@@ -936,6 +959,7 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
     required this.dosage,
     this.batchNumber,
     this.notes,
+    this.bodyWeight,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -949,6 +973,9 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
     }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || bodyWeight != null) {
+      map['body_weight'] = Variable<double>(bodyWeight);
     }
     return map;
   }
@@ -965,6 +992,9 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
+      bodyWeight: bodyWeight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bodyWeight),
     );
   }
 
@@ -980,6 +1010,7 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
       dosage: serializer.fromJson<double>(json['dosage']),
       batchNumber: serializer.fromJson<String?>(json['batchNumber']),
       notes: serializer.fromJson<String?>(json['notes']),
+      bodyWeight: serializer.fromJson<double?>(json['bodyWeight']),
     );
   }
   @override
@@ -992,6 +1023,7 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
       'dosage': serializer.toJson<double>(dosage),
       'batchNumber': serializer.toJson<String?>(batchNumber),
       'notes': serializer.toJson<String?>(notes),
+      'bodyWeight': serializer.toJson<double?>(bodyWeight),
     };
   }
 
@@ -1002,6 +1034,7 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
     double? dosage,
     Value<String?> batchNumber = const Value.absent(),
     Value<String?> notes = const Value.absent(),
+    Value<double?> bodyWeight = const Value.absent(),
   }) => InfusionLogData(
     id: id ?? this.id,
     date: date ?? this.date,
@@ -1009,6 +1042,7 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
     dosage: dosage ?? this.dosage,
     batchNumber: batchNumber.present ? batchNumber.value : this.batchNumber,
     notes: notes.present ? notes.value : this.notes,
+    bodyWeight: bodyWeight.present ? bodyWeight.value : this.bodyWeight,
   );
   InfusionLogData copyWithCompanion(InfusionLogCompanion data) {
     return InfusionLogData(
@@ -1022,6 +1056,9 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
           ? data.batchNumber.value
           : this.batchNumber,
       notes: data.notes.present ? data.notes.value : this.notes,
+      bodyWeight: data.bodyWeight.present
+          ? data.bodyWeight.value
+          : this.bodyWeight,
     );
   }
 
@@ -1033,14 +1070,22 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
           ..write('medicationId: $medicationId, ')
           ..write('dosage: $dosage, ')
           ..write('batchNumber: $batchNumber, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('bodyWeight: $bodyWeight')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, date, medicationId, dosage, batchNumber, notes);
+  int get hashCode => Object.hash(
+    id,
+    date,
+    medicationId,
+    dosage,
+    batchNumber,
+    notes,
+    bodyWeight,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1050,7 +1095,8 @@ class InfusionLogData extends DataClass implements Insertable<InfusionLogData> {
           other.medicationId == this.medicationId &&
           other.dosage == this.dosage &&
           other.batchNumber == this.batchNumber &&
-          other.notes == this.notes);
+          other.notes == this.notes &&
+          other.bodyWeight == this.bodyWeight);
 }
 
 class InfusionLogCompanion extends UpdateCompanion<InfusionLogData> {
@@ -1060,6 +1106,7 @@ class InfusionLogCompanion extends UpdateCompanion<InfusionLogData> {
   final Value<double> dosage;
   final Value<String?> batchNumber;
   final Value<String?> notes;
+  final Value<double?> bodyWeight;
   const InfusionLogCompanion({
     this.id = const Value.absent(),
     this.date = const Value.absent(),
@@ -1067,6 +1114,7 @@ class InfusionLogCompanion extends UpdateCompanion<InfusionLogData> {
     this.dosage = const Value.absent(),
     this.batchNumber = const Value.absent(),
     this.notes = const Value.absent(),
+    this.bodyWeight = const Value.absent(),
   });
   InfusionLogCompanion.insert({
     this.id = const Value.absent(),
@@ -1075,6 +1123,7 @@ class InfusionLogCompanion extends UpdateCompanion<InfusionLogData> {
     required double dosage,
     this.batchNumber = const Value.absent(),
     this.notes = const Value.absent(),
+    this.bodyWeight = const Value.absent(),
   }) : date = Value(date),
        medicationId = Value(medicationId),
        dosage = Value(dosage);
@@ -1085,6 +1134,7 @@ class InfusionLogCompanion extends UpdateCompanion<InfusionLogData> {
     Expression<double>? dosage,
     Expression<String>? batchNumber,
     Expression<String>? notes,
+    Expression<double>? bodyWeight,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1093,6 +1143,7 @@ class InfusionLogCompanion extends UpdateCompanion<InfusionLogData> {
       if (dosage != null) 'dosage': dosage,
       if (batchNumber != null) 'batch_number': batchNumber,
       if (notes != null) 'notes': notes,
+      if (bodyWeight != null) 'body_weight': bodyWeight,
     });
   }
 
@@ -1103,6 +1154,7 @@ class InfusionLogCompanion extends UpdateCompanion<InfusionLogData> {
     Value<double>? dosage,
     Value<String?>? batchNumber,
     Value<String?>? notes,
+    Value<double?>? bodyWeight,
   }) {
     return InfusionLogCompanion(
       id: id ?? this.id,
@@ -1111,6 +1163,7 @@ class InfusionLogCompanion extends UpdateCompanion<InfusionLogData> {
       dosage: dosage ?? this.dosage,
       batchNumber: batchNumber ?? this.batchNumber,
       notes: notes ?? this.notes,
+      bodyWeight: bodyWeight ?? this.bodyWeight,
     );
   }
 
@@ -1135,6 +1188,9 @@ class InfusionLogCompanion extends UpdateCompanion<InfusionLogData> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (bodyWeight.present) {
+      map['body_weight'] = Variable<double>(bodyWeight.value);
+    }
     return map;
   }
 
@@ -1146,7 +1202,8 @@ class InfusionLogCompanion extends UpdateCompanion<InfusionLogData> {
           ..write('medicationId: $medicationId, ')
           ..write('dosage: $dosage, ')
           ..write('batchNumber: $batchNumber, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('bodyWeight: $bodyWeight')
           ..write(')'))
         .toString();
   }
@@ -2153,6 +2210,17 @@ class $PlannedInfusionsTable extends PlannedInfusions
       'REFERENCES infusion_schedules (id)',
     ),
   );
+  static const VerificationMeta _bodyWeightMeta = const VerificationMeta(
+    'bodyWeight',
+  );
+  @override
+  late final GeneratedColumn<double> bodyWeight = GeneratedColumn<double>(
+    'body_weight',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2162,6 +2230,7 @@ class $PlannedInfusionsTable extends PlannedInfusions
     notes,
     isCompleted,
     scheduleId,
+    bodyWeight,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2226,6 +2295,12 @@ class $PlannedInfusionsTable extends PlannedInfusions
         scheduleId.isAcceptableOrUnknown(data['schedule_id']!, _scheduleIdMeta),
       );
     }
+    if (data.containsKey('body_weight')) {
+      context.handle(
+        _bodyWeightMeta,
+        bodyWeight.isAcceptableOrUnknown(data['body_weight']!, _bodyWeightMeta),
+      );
+    }
     return context;
   }
 
@@ -2263,6 +2338,10 @@ class $PlannedInfusionsTable extends PlannedInfusions
         DriftSqlType.int,
         data['${effectivePrefix}schedule_id'],
       ),
+      bodyWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}body_weight'],
+      ),
     );
   }
 
@@ -2280,6 +2359,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
   final String? notes;
   final bool isCompleted;
   final int? scheduleId;
+  final double? bodyWeight;
   const PlannedInfusion({
     required this.id,
     required this.date,
@@ -2288,6 +2368,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
     this.notes,
     required this.isCompleted,
     this.scheduleId,
+    this.bodyWeight,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2302,6 +2383,9 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
     map['is_completed'] = Variable<bool>(isCompleted);
     if (!nullToAbsent || scheduleId != null) {
       map['schedule_id'] = Variable<int>(scheduleId);
+    }
+    if (!nullToAbsent || bodyWeight != null) {
+      map['body_weight'] = Variable<double>(bodyWeight);
     }
     return map;
   }
@@ -2319,6 +2403,9 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
       scheduleId: scheduleId == null && nullToAbsent
           ? const Value.absent()
           : Value(scheduleId),
+      bodyWeight: bodyWeight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bodyWeight),
     );
   }
 
@@ -2335,6 +2422,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
       notes: serializer.fromJson<String?>(json['notes']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
       scheduleId: serializer.fromJson<int?>(json['scheduleId']),
+      bodyWeight: serializer.fromJson<double?>(json['bodyWeight']),
     );
   }
   @override
@@ -2348,6 +2436,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
       'notes': serializer.toJson<String?>(notes),
       'isCompleted': serializer.toJson<bool>(isCompleted),
       'scheduleId': serializer.toJson<int?>(scheduleId),
+      'bodyWeight': serializer.toJson<double?>(bodyWeight),
     };
   }
 
@@ -2359,6 +2448,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
     Value<String?> notes = const Value.absent(),
     bool? isCompleted,
     Value<int?> scheduleId = const Value.absent(),
+    Value<double?> bodyWeight = const Value.absent(),
   }) => PlannedInfusion(
     id: id ?? this.id,
     date: date ?? this.date,
@@ -2367,6 +2457,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
     notes: notes.present ? notes.value : this.notes,
     isCompleted: isCompleted ?? this.isCompleted,
     scheduleId: scheduleId.present ? scheduleId.value : this.scheduleId,
+    bodyWeight: bodyWeight.present ? bodyWeight.value : this.bodyWeight,
   );
   PlannedInfusion copyWithCompanion(PlannedInfusionsCompanion data) {
     return PlannedInfusion(
@@ -2383,6 +2474,9 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
       scheduleId: data.scheduleId.present
           ? data.scheduleId.value
           : this.scheduleId,
+      bodyWeight: data.bodyWeight.present
+          ? data.bodyWeight.value
+          : this.bodyWeight,
     );
   }
 
@@ -2395,7 +2489,8 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
           ..write('dosage: $dosage, ')
           ..write('notes: $notes, ')
           ..write('isCompleted: $isCompleted, ')
-          ..write('scheduleId: $scheduleId')
+          ..write('scheduleId: $scheduleId, ')
+          ..write('bodyWeight: $bodyWeight')
           ..write(')'))
         .toString();
   }
@@ -2409,6 +2504,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
     notes,
     isCompleted,
     scheduleId,
+    bodyWeight,
   );
   @override
   bool operator ==(Object other) =>
@@ -2420,7 +2516,8 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
           other.dosage == this.dosage &&
           other.notes == this.notes &&
           other.isCompleted == this.isCompleted &&
-          other.scheduleId == this.scheduleId);
+          other.scheduleId == this.scheduleId &&
+          other.bodyWeight == this.bodyWeight);
 }
 
 class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
@@ -2431,6 +2528,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
   final Value<String?> notes;
   final Value<bool> isCompleted;
   final Value<int?> scheduleId;
+  final Value<double?> bodyWeight;
   const PlannedInfusionsCompanion({
     this.id = const Value.absent(),
     this.date = const Value.absent(),
@@ -2439,6 +2537,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
     this.notes = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.scheduleId = const Value.absent(),
+    this.bodyWeight = const Value.absent(),
   });
   PlannedInfusionsCompanion.insert({
     this.id = const Value.absent(),
@@ -2448,6 +2547,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
     this.notes = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.scheduleId = const Value.absent(),
+    this.bodyWeight = const Value.absent(),
   }) : date = Value(date),
        medicationId = Value(medicationId),
        dosage = Value(dosage);
@@ -2459,6 +2559,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
     Expression<String>? notes,
     Expression<bool>? isCompleted,
     Expression<int>? scheduleId,
+    Expression<double>? bodyWeight,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2468,6 +2569,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
       if (notes != null) 'notes': notes,
       if (isCompleted != null) 'is_completed': isCompleted,
       if (scheduleId != null) 'schedule_id': scheduleId,
+      if (bodyWeight != null) 'body_weight': bodyWeight,
     });
   }
 
@@ -2479,6 +2581,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
     Value<String?>? notes,
     Value<bool>? isCompleted,
     Value<int?>? scheduleId,
+    Value<double?>? bodyWeight,
   }) {
     return PlannedInfusionsCompanion(
       id: id ?? this.id,
@@ -2488,6 +2591,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
       notes: notes ?? this.notes,
       isCompleted: isCompleted ?? this.isCompleted,
       scheduleId: scheduleId ?? this.scheduleId,
+      bodyWeight: bodyWeight ?? this.bodyWeight,
     );
   }
 
@@ -2515,6 +2619,9 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
     if (scheduleId.present) {
       map['schedule_id'] = Variable<int>(scheduleId.value);
     }
+    if (bodyWeight.present) {
+      map['body_weight'] = Variable<double>(bodyWeight.value);
+    }
     return map;
   }
 
@@ -2527,7 +2634,8 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
           ..write('dosage: $dosage, ')
           ..write('notes: $notes, ')
           ..write('isCompleted: $isCompleted, ')
-          ..write('scheduleId: $scheduleId')
+          ..write('scheduleId: $scheduleId, ')
+          ..write('bodyWeight: $bodyWeight')
           ..write(')'))
         .toString();
   }
@@ -3511,6 +3619,7 @@ typedef $$InfusionLogTableCreateCompanionBuilder =
       required double dosage,
       Value<String?> batchNumber,
       Value<String?> notes,
+      Value<double?> bodyWeight,
     });
 typedef $$InfusionLogTableUpdateCompanionBuilder =
     InfusionLogCompanion Function({
@@ -3520,6 +3629,7 @@ typedef $$InfusionLogTableUpdateCompanionBuilder =
       Value<double> dosage,
       Value<String?> batchNumber,
       Value<String?> notes,
+      Value<double?> bodyWeight,
     });
 
 final class $$InfusionLogTableReferences
@@ -3577,6 +3687,11 @@ class $$InfusionLogTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get bodyWeight => $composableBuilder(
+    column: $table.bodyWeight,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3638,6 +3753,11 @@ class $$InfusionLogTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get bodyWeight => $composableBuilder(
+    column: $table.bodyWeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$MedicationsTableOrderingComposer get medicationId {
     final $$MedicationsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3687,6 +3807,11 @@ class $$InfusionLogTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<double> get bodyWeight => $composableBuilder(
+    column: $table.bodyWeight,
+    builder: (column) => column,
+  );
 
   $$MedicationsTableAnnotationComposer get medicationId {
     final $$MedicationsTableAnnotationComposer composer = $composerBuilder(
@@ -3746,6 +3871,7 @@ class $$InfusionLogTableTableManager
                 Value<double> dosage = const Value.absent(),
                 Value<String?> batchNumber = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<double?> bodyWeight = const Value.absent(),
               }) => InfusionLogCompanion(
                 id: id,
                 date: date,
@@ -3753,6 +3879,7 @@ class $$InfusionLogTableTableManager
                 dosage: dosage,
                 batchNumber: batchNumber,
                 notes: notes,
+                bodyWeight: bodyWeight,
               ),
           createCompanionCallback:
               ({
@@ -3762,6 +3889,7 @@ class $$InfusionLogTableTableManager
                 required double dosage,
                 Value<String?> batchNumber = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<double?> bodyWeight = const Value.absent(),
               }) => InfusionLogCompanion.insert(
                 id: id,
                 date: date,
@@ -3769,6 +3897,7 @@ class $$InfusionLogTableTableManager
                 dosage: dosage,
                 batchNumber: batchNumber,
                 notes: notes,
+                bodyWeight: bodyWeight,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -4774,6 +4903,7 @@ typedef $$PlannedInfusionsTableCreateCompanionBuilder =
       Value<String?> notes,
       Value<bool> isCompleted,
       Value<int?> scheduleId,
+      Value<double?> bodyWeight,
     });
 typedef $$PlannedInfusionsTableUpdateCompanionBuilder =
     PlannedInfusionsCompanion Function({
@@ -4784,6 +4914,7 @@ typedef $$PlannedInfusionsTableUpdateCompanionBuilder =
       Value<String?> notes,
       Value<bool> isCompleted,
       Value<int?> scheduleId,
+      Value<double?> bodyWeight,
     });
 
 final class $$PlannedInfusionsTableReferences
@@ -4874,6 +5005,11 @@ class $$PlannedInfusionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<double> get bodyWeight => $composableBuilder(
+    column: $table.bodyWeight,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$MedicationsTableFilterComposer get medicationId {
     final $$MedicationsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -4955,6 +5091,11 @@ class $$PlannedInfusionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get bodyWeight => $composableBuilder(
+    column: $table.bodyWeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$MedicationsTableOrderingComposer get medicationId {
     final $$MedicationsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5025,6 +5166,11 @@ class $$PlannedInfusionsTableAnnotationComposer
 
   GeneratedColumn<bool> get isCompleted => $composableBuilder(
     column: $table.isCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get bodyWeight => $composableBuilder(
+    column: $table.bodyWeight,
     builder: (column) => column,
   );
 
@@ -5113,6 +5259,7 @@ class $$PlannedInfusionsTableTableManager
                 Value<String?> notes = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<int?> scheduleId = const Value.absent(),
+                Value<double?> bodyWeight = const Value.absent(),
               }) => PlannedInfusionsCompanion(
                 id: id,
                 date: date,
@@ -5121,6 +5268,7 @@ class $$PlannedInfusionsTableTableManager
                 notes: notes,
                 isCompleted: isCompleted,
                 scheduleId: scheduleId,
+                bodyWeight: bodyWeight,
               ),
           createCompanionCallback:
               ({
@@ -5131,6 +5279,7 @@ class $$PlannedInfusionsTableTableManager
                 Value<String?> notes = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<int?> scheduleId = const Value.absent(),
+                Value<double?> bodyWeight = const Value.absent(),
               }) => PlannedInfusionsCompanion.insert(
                 id: id,
                 date: date,
@@ -5139,6 +5288,7 @@ class $$PlannedInfusionsTableTableManager
                 notes: notes,
                 isCompleted: isCompleted,
                 scheduleId: scheduleId,
+                bodyWeight: bodyWeight,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -131,8 +131,8 @@ class DiaryPage extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13)),
               ],
+              if (log.notes != null && log.notes!.isNotEmpty)
                 Text(log.notes!, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-              ],
               if (log.bodyWeight != null) ...[
                 const SizedBox(height: 4),
                 Row(
