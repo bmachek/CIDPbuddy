@@ -179,7 +179,7 @@ class InventoryPage extends StatelessWidget {
           child: const Icon(Icons.build_circle_rounded, color: Colors.teal),
         ),
         title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        trailing: _ StockCounter(
+        trailing: _StockCounter(
           stock: acc.stock,
           unit: acc.unit,
           onAdd: () => provider.updateAccessoryStock(acc, 1),
