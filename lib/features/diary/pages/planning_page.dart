@@ -191,9 +191,16 @@ class PlanningPage extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const AddInfusionPage()),
-                        ).then((_) async {
-                          await db.completePlannedInfusion(appt.id);
+                          MaterialPageRoute(
+                            builder: (_) => AddInfusionPage(
+                              initialMedicationId: appt.medicationId,
+                              initialDosage: appt.dosage,
+                            ),
+                          ),
+                        ).then((result) async {
+                          if (result == true) {
+                            await db.completePlannedInfusion(appt.id);
+                          }
                         });
                       },
                       icon: const Icon(Icons.check_circle_outline_rounded, size: 18),

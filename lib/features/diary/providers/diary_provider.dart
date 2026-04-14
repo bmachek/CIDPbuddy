@@ -19,7 +19,7 @@ class DiaryProvider extends ChangeNotifier {
     await _db.transaction(() async {
       // 2. Reduce medication stock
       final med = await (_db.select(_db.medications)..where((t) => t.id.equals(medicationId))).getSingle();
-      await _db.updateMedication(med.copyWith(stock: med.stock - 1)); // Assuming 1 vial/unit per infusion for now
+      await _db.updateMedication(med.copyWith(stock: med.stock - dosage));
 
       // 3. Find and reduce accessory stock (BOM logic)
       final accessories = await _db.getAccessoriesForMedication(medicationId);

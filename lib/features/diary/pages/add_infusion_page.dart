@@ -6,7 +6,14 @@ import '../../inventory/providers/inventory_provider.dart';
 import '../../../core/database/database.dart';
 
 class AddInfusionPage extends StatefulWidget {
-  const AddInfusionPage({super.key});
+  final int? initialMedicationId;
+  final double? initialDosage;
+
+  const AddInfusionPage({
+    super.key,
+    this.initialMedicationId,
+    this.initialDosage,
+  });
 
   @override
   State<AddInfusionPage> createState() => _AddInfusionPageState();
@@ -16,8 +23,19 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
   final _formKey = GlobalKey<FormState>();
   Medication? _selectedMed;
   final _batchController = TextEditingController();
-  final _dosageController = TextEditingController(text: '1.0');
+  late final TextEditingController _dosageController;
   final _notesController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _dosageController = TextEditingController(
+      text: widget.initialDosage?.toString() ?? '1.0',
+    );
+    
+    // If initialMedicationId is provided, we'll wait for the stream in the builder or set it here if we had the list.
+    // Since we only have the ID, we'll leave _selectedMed null and handle it in the StreamBuilder.
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +61,16 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               stream: invProvider.medicationsStream,
               builder: (context, snapshot) {
                 final meds = snapshot.data ?? [];
+                
+                // Set initial medication if provided and not yet set
+                if (_selectedMed == null && widget.initialMedicationId != null && meds.isNotEmpty) {
+                  try {
+                    _selectedMed = meds.firstWhere((m) => m.id == widget.initialMedicationId);
+                  } catch (_) {
+                    // Not found, ignore
+                  }
+                }
+
                 return DropdownButtonFormField<Medication>(
                   value: _selectedMed,
                   decoration: InputDecoration(
@@ -191,7 +219,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         batchNumber: _batchController.text,
         notes: _notesController.text,
       );
-      if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context, true);
     }
   }
 }
