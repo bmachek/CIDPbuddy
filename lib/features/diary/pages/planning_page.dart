@@ -152,9 +152,21 @@ class PlanningPage extends StatelessWidget {
             leading: const CircleAvatar(child: Icon(Icons.repeat)),
             title: Text('${med.name} ($freqLabel)'),
             subtitle: Text('Dosis: ${schedule.dosage} ${med.unit}\nStart: ${DateFormat('dd.MM.yyyy').format(schedule.startDate)}'),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: () => _confirmDeleteSchedule(context, db, schedule),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AddSchedulePage(initialSchedule: schedule)),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () => _confirmDeleteSchedule(context, db, schedule),
+                ),
+              ],
             ),
           ),
         );

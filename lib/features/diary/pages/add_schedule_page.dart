@@ -5,7 +5,8 @@ import '../../../core/database/database.dart';
 import '../../../core/services/scheduler_service.dart';
 
 class AddSchedulePage extends StatefulWidget {
-  const AddSchedulePage({super.key});
+  final InfusionSchedule? initialSchedule;
+  const AddSchedulePage({super.key, this.initialSchedule});
 
   @override
   State<AddSchedulePage> createState() => _AddSchedulePageState();
@@ -13,11 +14,12 @@ class AddSchedulePage extends StatefulWidget {
 
 class _AddSchedulePageState extends State<AddSchedulePage> {
   Medication? _selectedMedication;
-  final _dosageController = TextEditingController(text: '1.0');
-  final _intervalController = TextEditingController(text: '2');
-  DateTime _startDate = DateTime.now();
-  String _frequencyType = 'daily';
+  late final TextEditingController _dosageController;
+  late final TextEditingController _intervalController;
+  late DateTime _startDate;
+  late String _frequencyType;
   final List<int> _selectedWeekdays = [];
+  bool _isFirstLoad = true;
 
   final List<Map<String, String>> _frequencies = [
     {'value': 'daily', 'label': 'Täglich'},
@@ -28,16 +30,50 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    final s = widget.initialSchedule;
+    _dosageController = TextEditingController(text: s?.dosage.toString() ?? '1.0');
+    _intervalController = TextEditingController(text: s?.intervalValue?.toString() ?? '2');
+    _startDate = s?.startDate ?? DateTime.now();
+    _frequencyType = s?.frequencyType ?? 'daily';
+    
+    // Map back 'weekly' with interval 2 to 'biweekly' for the UI
+    if (_frequencyType == 'weekly' && s?.intervalValue == 2) {
+      _frequencyType = 'biweekly';
+    }
+
+    if (s?.selectedWeekdays != null && s!.selectedWeekdays!.isNotEmpty) {
+      _selectedWeekdays.addAll(s.selectedWeekdays!.split(',').where((e) => e.isNotEmpty).map(int.parse));
+    }
+  }
+
+  @override
+  void dispose() {
+    _dosageController.dispose();
+    _intervalController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final db = Provider.of<AppDatabase>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Infusionsplan erstellen')),
+      appBar: AppBar(title: Text(widget.initialSchedule == null ? 'Infusionsplan erstellen' : 'Infusionsplan bearbeiten')),
       body: FutureBuilder<List<Medication>>(
         future: db.getAllMedications(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final medications = snapshot.data!;
+
+          // Initialize selected medication on first load
+          if (_isFirstLoad && widget.initialSchedule != null) {
+            try {
+              _selectedMedication = medications.firstWhere((m) => m.id == widget.initialSchedule!.medicationId);
+            } catch (_) {}
+            _isFirstLoad = false;
+          }
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -119,7 +155,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                   child: ElevatedButton(
                     onPressed: _selectedMedication == null ? null : () => _saveSchedule(db),
                     style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                    child: const Text('Plan speichern'),
+                    child: Text(widget.initialSchedule == null ? 'Plan speichern' : 'Änderungen speichern'),
                   ),
                 ),
               ],
@@ -142,14 +178,30 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
       interval = 1;
     }
 
-    await db.insertSchedule(InfusionSchedulesCompanion.insert(
-      medicationId: _selectedMedication!.id,
-      dosage: double.tryParse(_dosageController.text) ?? 1.0,
-      frequencyType: finalFreq,
-      intervalValue: drift.Value(interval),
-      selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
-      startDate: _startDate,
-    ));
+    if (widget.initialSchedule != null) {
+      // Update existing schedule
+      await db.updateSchedule(widget.initialSchedule!.copyWith(
+        medicationId: _selectedMedication!.id,
+        dosage: double.tryParse(_dosageController.text) ?? 1.0,
+        frequencyType: finalFreq,
+        intervalValue: drift.Value(interval),
+        selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
+        startDate: _startDate,
+      ));
+      
+      // Clear out future entries to force regeneration
+      await db.deletePlannedInfusionsForSchedule(widget.initialSchedule!.id);
+    } else {
+      // Insert new schedule
+      await db.insertSchedule(InfusionSchedulesCompanion.insert(
+        medicationId: _selectedMedication!.id,
+        dosage: double.tryParse(_dosageController.text) ?? 1.0,
+        frequencyType: finalFreq,
+        intervalValue: drift.Value(interval),
+        selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
+        startDate: _startDate,
+      ));
+    }
 
     // Force immediate sync
     final scheduler = SchedulerService(db);
