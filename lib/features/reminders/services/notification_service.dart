@@ -35,7 +35,7 @@ class NotificationService {
     final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin == null) return AndroidScheduleMode.inexactAllowWhileIdle;
     
-    final bool? canScheduleExact = await androidPlugin.canScheduleExactAlarms();
+    final bool? canScheduleExact = await androidPlugin.canScheduleExactNotifications();
     return (canScheduleExact ?? false) 
         ? AndroidScheduleMode.exactAllowWhileIdle 
         : AndroidScheduleMode.inexactAllowWhileIdle;
