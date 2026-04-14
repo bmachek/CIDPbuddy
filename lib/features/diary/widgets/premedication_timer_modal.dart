@@ -111,6 +111,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
     final minutes = _secondsRemaining ~/ 60;
     final seconds = _secondsRemaining % 60;
     final progress = 1 - (_secondsRemaining / _totalSeconds);
+    final remainingMl = (_secondsRemaining / 60).ceil();
 
     return Container(
       padding: const EdgeInsets.all(32),
@@ -141,35 +142,107 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
           ),
           const SizedBox(height: 40),
           
-          // Circular Timer
+          // Circular Timer with Volume Display
           Stack(
             alignment: Alignment.center,
             children: [
               SizedBox(
-                width: 200,
-                height: 200,
+                width: 220,
+                height: 220,
                 child: CircularProgressIndicator(
                   value: progress,
-                  strokeWidth: 10,
+                  strokeWidth: 8,
                   backgroundColor: Colors.teal.withOpacity(0.1),
                   color: Colors.teal,
                   strokeCap: StrokeCap.round,
                 ),
               ),
               Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
                     style: const TextStyle(
-                      fontSize: 48,
+                      fontSize: 42,
                       fontWeight: FontWeight.w300,
                       fontFamily: 'monospace',
                     ),
                   ),
-                  const Text('verbleibend', style: TextStyle(color: Colors.grey)),
+                  const Text('verbleibend', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.vaccines_rounded, size: 16, color: Colors.teal),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${(remainingMl).toStringAsFixed(0)} ml',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ],
+          ),
+          
+          const SizedBox(height: 32),
+          
+          // Syringe Progress Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Spritzen-Fortschritt', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    Text('${(remainingMl).toStringAsFixed(0)} / ${_totalSeconds ~/ 60} ml', 
+                         style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 24,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Stack(
+                    children: [
+                      FractionallySizedBox(
+                        widthFactor: 1 - progress, // Inverting because progress is time passed, we want time remaining
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.teal.shade300, Colors.teal],
+                            ),
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                        ),
+                      ),
+                      const Center(
+                        child: Icon(Icons.keyboard_double_arrow_right_rounded, color: Colors.white, size: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           
           const SizedBox(height: 40),
