@@ -8,6 +8,7 @@ import 'add_item_page.dart';
 import 'medication_details_page.dart';
 import 'shopping_wizard_dialog.dart';
 import 'discontinued_medications_page.dart';
+import 'package:drift/drift.dart' hide Column;
 
 class InventoryPage extends StatelessWidget {
   const InventoryPage({super.key});
@@ -196,7 +197,7 @@ class InventoryPage extends StatelessWidget {
         final daysRemaining = daysSnapshot.data;
         final isLowStock = daysRemaining != null && daysRemaining <= med.minStock && med.minStock > 0 && !hasPendingOrder;
         
-        return StreamBuilder<PlannedInfusion?>(
+        return FutureBuilder<PlannedInfusion?>(
           future: (db.select(db.plannedInfusions)
             ..where((t) => t.medicationId.equals(med.id) & t.isCompleted.equals(false))
             ..orderBy([(t) => OrderingTerm(expression: t.date)])
