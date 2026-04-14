@@ -161,6 +161,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
                           if (futureTreatments.isNotEmpty)
                             _buildExpansionSection(
+                              context: context,
                               title: 'SPÄTER GEPLANT (${futureTreatments.length})',
                               icon: Icons.event_repeat_rounded,
                               isExpanded: _showFuture,
@@ -170,6 +171,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
                           if (pastTreatments.isNotEmpty)
                             _buildExpansionSection(
+                              context: context,
                               title: 'VERGANGENE TERMINE (${pastTreatments.length})',
                               icon: Icons.history_rounded,
                               isExpanded: _showPast,
@@ -314,92 +316,89 @@ class _DashboardPageState extends State<DashboardPage> {
                             ],
                           ),
                         ),
-                            
-                            const SizedBox(height: 16),
-                            
-                            // Contextual Detail Bar
-                            if (isStockProblem)
-                              InkWell(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => ShoppingWizardDialog(
-                                      initialMedication: lowMeds.isNotEmpty ? lowMeds.first : null,
-                                    ),
-                                  );
-                                },
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Contextual Detail Bar
+                        if (isStockProblem)
+                          InkWell(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => ShoppingWizardDialog(
+                                  initialMedication: lowMeds.isNotEmpty ? lowMeds.first : null,
+                                ),
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: Colors.orange.withOpacity(0.2)),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Bestellung empfohlen',
-                                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
-                                            ),
-                                            Text(
-                                              'Niedriger Bestand: ${[...lowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
-                                              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const Icon(Icons.chevron_right_rounded, color: Colors.orange),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            else if (pendingItems.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.teal.withOpacity(0.05),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.teal.withOpacity(0.1)),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.local_shipping_rounded, color: Colors.teal, size: 20),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        'Bestellungen sind unterwegs.',
-                                        style: TextStyle(fontSize: 14, color: Colors.teal, fontWeight: FontWeight.w500),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                border: Border.all(color: Colors.orange.withOpacity(0.2)),
                               ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  },
-);
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Bestellung empfohlen',
+                                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                                        ),
+                                        Text(
+                                          'Niedriger Bestand: ${[...lowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
+                                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.chevron_right_rounded, color: Colors.orange),
+                                ],
+                              ),
+                            ),
+                          )
+                        else if (pendingItems.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.teal.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.teal.withOpacity(0.1)),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.local_shipping_rounded, color: Colors.teal, size: 20),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Bestellungen sind unterwegs.',
+                                    style: TextStyle(fontSize: 14, color: Colors.teal, fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          );
+        },
+      );
+    },
+  );
 }
 
-
-  Widget _buildPendingOrdersSection(AppDatabase db) {
+Widget _buildPendingOrdersSection(AppDatabase db) {
     return StreamBuilder<List<PendingOrder>>(
       stream: db.watchPendingOrders(),
       builder: (context, snapshot) {
@@ -886,6 +885,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildExpansionSection({
+    required BuildContext context,
     required String title,
     required IconData icon,
     required bool isExpanded,
@@ -918,33 +918,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  List<Widget> _buildTodayList(BuildContext context, AppDatabase db, List<PlannedInfusion> treatments) {
-    if (treatments.isEmpty) return [];
-    
-    return treatments.asMap().entries.map((entry) {
-      final index = entry.key;
-      final treatment = entry.value;
-      final bool showTimeSeparator = index > 0 && 
-          (treatments[index - 1].date.hour != treatment.date.hour || treatments[index - 1].date.minute != treatment.date.minute);
 
-      return Column(
-        children: [
-          if (showTimeSeparator)
-             Padding(
-               padding: const EdgeInsets.symmetric(vertical: 8),
-               child: Row(
-                 children: [
-                   const Expanded(child: Divider(indent: 16, endIndent: 16)),
-                   Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle)),
-                   const Expanded(child: Divider(indent: 16, endIndent: 16)),
-                 ],
-               ),
-             ),
-          _buildTreatmentCard(context, db, treatment),
-        ],
-      );
-    }).toList();
-  }
 
   List<Widget> _groupAndBuildFutureList(BuildContext context, AppDatabase db, List<PlannedInfusion> treatments) {
     final List<Widget> list = [];
