@@ -18,6 +18,7 @@ class _AddItemPageState extends State<AddItemPage> {
   final _pznController = TextEditingController();
   final _stockController = TextEditingController(text: '0');
   final _unitController = TextEditingController(text: 'Flasche');
+  final _packageSizeController = TextEditingController(text: '1');
   MedicationType _medType = MedicationType.infusion;
 
   @override
@@ -149,6 +150,7 @@ class _AddItemPageState extends State<AddItemPage> {
           name: _nameController.text,
           stock: stock,
           unit: _unitController.text,
+          packageSize: packageSize,
         );
         if (mounted) Navigator.pop(context);
       }

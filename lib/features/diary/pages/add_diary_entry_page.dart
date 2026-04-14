@@ -221,17 +221,17 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
     if (widget.initialEntry != null) {
       await db.updateDiaryEntry(widget.initialEntry!.copyWith(
         date: _selectedDate,
-        systolicBP: entry.systolicBP.value,
-        diastolicBP: entry.diastolicBP.value,
-        heartRate: entry.heartRate.value,
-        temperature: entry.temperature.value,
-        weight: entry.weight.value,
-        notes: entry.notes.value,
-        strengthScore: entry.strengthScore.value,
-        sensoryScore: entry.sensoryScore.value,
-        fatigueScore: entry.fatigueScore.value,
-        painScore: entry.painScore.value,
-        balanceScore: entry.balanceScore.value,
+        systolicBP: entry.systolicBP,
+        diastolicBP: entry.diastolicBP,
+        heartRate: entry.heartRate,
+        temperature: entry.temperature,
+        weight: entry.weight,
+        notes: entry.notes,
+        strengthScore: entry.strengthScore,
+        sensoryScore: entry.sensoryScore,
+        fatigueScore: entry.fatigueScore,
+        painScore: entry.painScore,
+        balanceScore: entry.balanceScore,
       ));
     } else {
       await db.insertDiaryEntry(entry);
