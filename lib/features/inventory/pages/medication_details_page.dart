@@ -16,54 +16,98 @@ class MedicationDetailsPage extends StatelessWidget {
     final invProvider = Provider.of<InventoryProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(medication.name)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildStockAlertConfig(context, db, invProvider),
-          const SizedBox(height: 24),
-          const Text('Verknüpftes Zubehör', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const Text('Dieses Zubehör wird bei jeder Infusion automatisch vom Bestand abgezogen.', 
-                     style: TextStyle(color: Colors.grey, fontSize: 12)),
-          const SizedBox(height: 16),
-          FutureBuilder<List<MedicationAccessory>>(
-            future: db.getAccessoriesForMedication(medication.id),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('Noch kein Zubehör verknüpft'));
-              }
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar.large(
+            title: Text(medication.name),
+            pinned: true,
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.all(20),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildSectionHeader('Lagerstand & Warnungen'),
+                const SizedBox(height: 12),
+                _buildStockAlertConfig(context, db, invProvider),
+                const SizedBox(height: 32),
+                _buildSectionHeader('Verknüpftes Zubehör'),
+                const Text(
+                  'Dieses Zubehör wird bei jeder Infusion automatisch vom Bestand abgezogen.',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                FutureBuilder<List<MedicationAccessory>>(
+                  future: db.getAccessoriesForMedication(medication.id),
+                  builder: (context, snapshot) {
+                    final links = snapshot.data ?? [];
+                    if (links.isEmpty) {
+                      return Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: const Center(
+                          child: Text('Noch kein Zubehör verknüpft', style: TextStyle(color: Colors.grey)),
+                        ),
+                      );
+                    }
 
-              return Column(
-                children: snapshot.data!.map((link) => _buildAccessoryRow(context, db, link)).toList(),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => _showAddAccessoryDialog(context, db),
-            icon: const Icon(Icons.add_link),
-            label: const Text('Zubehör verknüpfen'),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () async {
-              await NotificationService().scheduleNotification(
-                id: medication.id,
-                title: 'Erinnerung: ${medication.name}',
-                body: 'Es ist Zeit für deine Infusion / Einnahme.',
-                scheduledTime: DateTime.now().add(const Duration(minutes: 1)),
-              );
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Erinnerung für in 1 Minute geplant!'))
-                );
-              }
-            },
-            icon: const Icon(Icons.notification_add),
-            label: const Text('Test-Erinnerung (+1 Min)'),
+                    return Column(
+                      children: links.map((link) => _buildAccessoryRow(context, db, link)).toList(),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => _showAddAccessoryDialog(context, db),
+                  icon: const Icon(Icons.add_link_rounded),
+                  label: const Text('Zubehör verknüpfen'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                    foregroundColor: Theme.of(context).primaryColor,
+                    elevation: 0,
+                  ),
+                ),
+                const SizedBox(height: 48),
+                _buildSectionHeader('Benachrichtigungen'),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await NotificationService().scheduleNotification(
+                      id: medication.id,
+                      title: 'Erinnerung: ${medication.name}',
+                      body: 'Es ist Zeit für deine Infusion / Einnahme.',
+                      scheduledTime: DateTime.now().add(const Duration(minutes: 1)),
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Test-Erinnerung für in 1 Minute geplant!'))
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.notification_add_rounded),
+                  label: const Text('Test-Erinnerung (+1 Min)'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+                const SizedBox(height: 100),
+              ]),
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Colors.grey),
     );
   }
 
@@ -73,17 +117,25 @@ class MedicationDetailsPage extends StatelessWidget {
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox();
         final acc = snapshot.data!;
-        return ListTile(
-          leading: const Icon(Icons.build_circle_outlined),
-          title: Text(acc.name),
-          subtitle: Text('Bedarf pro Gabe: ${link.defaultQuantity.toStringAsFixed(0)} ${acc.unit}'),
-          trailing: IconButton(
-            icon: const Icon(Icons.link_off, color: Colors.grey),
-            onPressed: () async {
-              // Delete link
-              await (db.delete(db.medicationAccessories)..where((t) => t.id.equals(link.id))).go();
-              (context as Element).markNeedsBuild(); // Refresh simple way
-            },
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            leading: const Icon(Icons.build_circle_rounded, color: Colors.teal),
+            title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('Bedarf: ${link.defaultQuantity.toStringAsFixed(0)} ${acc.unit}'),
+            trailing: IconButton(
+              icon: const Icon(Icons.link_off_rounded, color: Colors.grey),
+              onPressed: () async {
+                await (db.delete(db.medicationAccessories)..where((t) => t.id.equals(link.id))).go();
+                (context as Element).markNeedsBuild();
+              },
+            ),
           ),
         );
       },
@@ -109,17 +161,19 @@ class MedicationDetailsPage extends StatelessWidget {
         
         return AlertDialog(
           title: const Text('Zubehör hinzufügen'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<Accessory>(
                 items: allAcc.map((a) => DropdownMenuItem(value: a, child: Text(a.name))).toList(),
                 onChanged: (val) => selected = val,
-                decoration: const InputDecoration(labelText: 'Zubehör wählen'),
+                decoration: const InputDecoration(labelText: 'Zubehör wählen', border: OutlineInputBorder()),
               ),
+              const SizedBox(height: 16),
               TextField(
                 controller: qtyController,
-                decoration: const InputDecoration(labelText: 'Menge pro Infusion'),
+                decoration: const InputDecoration(labelText: 'Menge pro Infusion', border: OutlineInputBorder()),
                 keyboardType: TextInputType.number,
               ),
             ],
@@ -147,46 +201,64 @@ class MedicationDetailsPage extends StatelessWidget {
 
   Widget _buildStockAlertConfig(BuildContext context, AppDatabase db, InventoryProvider provider) {
     final controller = TextEditingController(text: medication.minStock.toStringAsFixed(0));
-    return Card(
-      color: Colors.teal.withOpacity(0.05),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.warning_amber_rounded, color: Colors.teal),
-                SizedBox(width: 8),
-                Text('Bestands-Warnung', style: TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text('Gib an, ab welcher Menge du eine Warnung erhalten möchtest.', style: TextStyle(fontSize: 12)),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(labelText: 'Mindestbestand'),
-                    keyboardType: TextInputType.number,
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
+      ),
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.2), shape: BoxShape.circle),
+                child: const Icon(Icons.notifications_active_rounded, color: Colors.orange, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text('Niedriger Bestand', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Ab welcher Menge möchtest du gewarnt werden?',
+            style: TextStyle(fontSize: 13, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    labelText: 'Mindestbestand',
+                    suffixText: medication.unit,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   ),
+                  keyboardType: TextInputType.number,
                 ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: () async {
-                    final newMin = double.tryParse(controller.text) ?? 0.0;
-                    await db.updateMedication(medication.copyWith(minStock: newMin));
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mindestbestand aktualisiert')));
-                    }
-                  },
-                  child: const Text('Speichern'),
-                )
-              ],
-            ),
-          ],
-        ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton(
+                onPressed: () async {
+                  final newMin = double.tryParse(controller.text) ?? 0.0;
+                  await db.updateMedication(medication.copyWith(minStock: newMin));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mindestbestand aktualisiert')));
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(100, 56),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('OK'),
+              )
+            ],
+          ),
+        ],
       ),
     );
   }

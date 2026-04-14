@@ -16,25 +16,52 @@ class PlanningPage extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Termine & Pläne'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Anstehend', icon: Icon(Icons.upcoming)),
-              Tab(text: 'Zeitpläne', icon: Icon(Icons.repeat)),
+        body: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverAppBar.large(
+              title: const Text('Termine & Pläne'),
+              pinned: true,
+              floating: true,
+              bottom: TabBar(
+                dividerColor: Colors.transparent,
+                indicatorSize: TabBarIndicatorSize.label,
+                indicatorWeight: 3,
+                tabs: [
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.upcoming_rounded, size: 18),
+                        const SizedBox(width: 8),
+                        const Text('Anstehend'),
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.repeat_rounded, size: 18),
+                        const SizedBox(width: 8),
+                        const Text('Zeitpläne'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          body: TabBarView(
+            children: [
+              _buildUpcomingTab(db),
+              _buildSchedulesTab(db),
             ],
           ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildUpcomingTab(db),
-            _buildSchedulesTab(db),
-          ],
         ),
         floatingActionButton: FloatingActionButton.extended(
           heroTag: 'planning_fab',
           onPressed: () => _showAddOptions(context, db),
-          icon: const Icon(Icons.add),
+          icon: const Icon(Icons.add_rounded),
           label: const Text('Hinzufügen'),
         ),
       ),
@@ -45,13 +72,14 @@ class PlanningPage extends StatelessWidget {
     return StreamBuilder<List<PlannedInfusion>>(
       stream: db.watchPlannedInfusions(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState('Keine zukünftigen Termine');
+        final appointments = snapshot.data ?? [];
+        
+        if (appointments.isEmpty) {
+          return _buildEmptyState('Keine zukünftigen Termine', Icons.calendar_today_rounded);
         }
 
-        final appointments = snapshot.data!;
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
           itemCount: appointments.length,
           itemBuilder: (context, index) {
             final appt = appointments[index];
@@ -66,13 +94,14 @@ class PlanningPage extends StatelessWidget {
     return StreamBuilder<List<InfusionSchedule>>(
       stream: db.watchSchedules(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState('Keine aktiven Zeitpläne');
+        final schedules = snapshot.data ?? [];
+
+        if (schedules.isEmpty) {
+          return _buildEmptyState('Keine aktiven Zeitpläne', Icons.repeat_on_rounded);
         }
 
-        final schedules = snapshot.data!;
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
           itemCount: schedules.length,
           itemBuilder: (context, index) {
             final schedule = schedules[index];
@@ -83,21 +112,34 @@ class PlanningPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(String message, IconData icon) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.calendar_month, size: 80, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text(message, style: const TextStyle(color: Colors.grey)),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 64, color: Colors.grey.withOpacity(0.5)),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              message,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildAppointmentCard(BuildContext context, AppDatabase db, PlannedInfusion appt) {
-    final dateStr = DateFormat('dd.MM.yyyy').format(appt.date);
+    final dateStr = DateFormat('dd. MMMM yyyy').format(appt.date);
     
     return FutureBuilder<Medication>(
       future: (db.select(db.medications)..where((t) => t.id.equals(appt.medicationId))).getSingle(),
@@ -105,57 +147,92 @@ class PlanningPage extends StatelessWidget {
         if (!snapshot.hasData) return const SizedBox();
         final med = snapshot.data!;
 
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: appt.scheduleId != null ? Colors.blue.shade100 : null,
-              child: Icon(appt.scheduleId != null ? Icons.repeat : Icons.event),
-            ),
-            title: Text('$dateStr - ${med.name}'),
-            subtitle: Text('Dosis: ${appt.dosage} ${med.unit}'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.grey),
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Termin löschen?'),
-                        content: const Text('Möchtest du diesen spezifischen Termin löschen?'),
-                        actions: [
-                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: (appt.scheduleId != null ? Colors.blue : Theme.of(context).primaryColor).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    appt.scheduleId != null ? Icons.repeat_rounded : Icons.event_rounded,
+                    color: appt.scheduleId != null ? Colors.blue : Theme.of(context).primaryColor,
+                    size: 20,
+                  ),
+                ),
+                title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('Geplant für den $dateStr'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                  onPressed: () => _confirmDeleteAppointment(context, db, appt),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Dosis: ${appt.dosage} ${med.unit}',
+                      style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.w600),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const AddInfusionPage()),
+                        ).then((_) async {
+                          await db.completePlannedInfusion(appt.id);
+                        });
+                      },
+                      icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                      label: const Text('Erledigt'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        elevation: 0,
+                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                        foregroundColor: Theme.of(context).primaryColor,
                       ),
-                    );
-                    if (confirm == true) {
-                      await db.deletePlannedInfusion(appt.id);
-                    }
-                  },
+                    ),
+                  ],
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AddInfusionPage()),
-                    ).then((_) async {
-                      await db.completePlannedInfusion(appt.id);
-                    });
-                  },
-                  child: const Text('Abhaken'),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
     );
+  }
+
+  void _confirmDeleteAppointment(BuildContext context, AppDatabase db, PlannedInfusion appt) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Termin löschen?'),
+        content: const Text('Möchtest du diesen spezifischen Termin aus deiner Planung entfernen?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await db.deletePlannedInfusion(appt.id);
+    }
   }
 
   Widget _buildScheduleCard(BuildContext context, AppDatabase db, InfusionSchedule schedule) {
@@ -170,15 +247,43 @@ class PlanningPage extends StatelessWidget {
           case 'daily': freqLabel = 'Täglich'; break;
           case 'weekly': freqLabel = schedule.intervalValue == 2 ? 'Alle 2 Wochen' : 'Wöchentlich'; break;
           case 'interval': freqLabel = 'Alle ${schedule.intervalValue} Tage'; break;
-          case 'weekdays': freqLabel = 'Bestimmte Wochentage'; break;
+          case 'weekdays': freqLabel = 'Wochentage'; break;
         }
 
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+          ),
           child: ListTile(
-            leading: const CircleAvatar(child: Icon(Icons.repeat)),
-            title: Text('${med.name} ($freqLabel)'),
-            subtitle: Text('Dosis: ${schedule.dosage} ${med.unit}\nStart: ${DateFormat('dd.MM.yyyy').format(schedule.startDate)}'),
+            contentPadding: const EdgeInsets.all(16),
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.repeat_rounded, color: Colors.blue),
+            ),
+            title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today_rounded, size: 12, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(freqLabel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text('Dosis: ${schedule.dosage} ${med.unit}'),
+              ],
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -190,7 +295,7 @@ class PlanningPage extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
                   onPressed: () => _confirmDeleteSchedule(context, db, schedule),
                 ),
               ],
@@ -205,8 +310,8 @@ class PlanningPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Plan löschen?'),
-        content: const Text('Alle zukünftigen (nicht abgehakten) Termine dieses Plans werden ebenfalls gelöscht.'),
+        title: const Text('Zeitplan löschen?'),
+        content: const Text('Alle zukünftigen (nicht erledigten) Termine dieses Plans werden ebenfalls gelöscht.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
           TextButton(
@@ -225,26 +330,42 @@ class PlanningPage extends StatelessWidget {
   void _showAddOptions(BuildContext context, AppDatabase db) {
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.event),
-              title: const Text('Einmaliger Termin'),
-              onTap: () {
-                Navigator.pop(context);
-                _showAddAppointmentDialog(context, db);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.repeat),
-              title: const Text('Wiederkehrender Plan'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const AddSchedulePage()));
-              },
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), shape: BoxShape.circle),
+                  child: Icon(Icons.event_rounded, color: Theme.of(context).primaryColor),
+                ),
+                title: const Text('Einmaliger Termin', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Einen einzelnen Termin hinzufügen'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showAddAppointmentDialog(context, db);
+                },
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.repeat_rounded, color: Colors.blue),
+                ),
+                title: const Text('Wiederkehrender Plan', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Einen automatischen Infusions-Rhythmus erstellen'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AddSchedulePage()));
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -270,13 +391,14 @@ class PlanningPage extends StatelessWidget {
 
         return AlertDialog(
           title: const Text('Termin planen'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<Medication>(
                 items: meds.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
                 onChanged: (val) => selectedMed = val,
-                decoration: const InputDecoration(labelText: 'Medikament'),
+                decoration: const InputDecoration(labelText: 'Medikament', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 16),
               InputDatePickerFormField(
@@ -285,9 +407,10 @@ class PlanningPage extends StatelessWidget {
                 initialDate: selectedDate,
                 onDateSaved: (date) => selectedDate = date,
               ),
+              const SizedBox(height: 8),
               TextField(
                 controller: dosageController,
-                decoration: const InputDecoration(labelText: 'Geplante Dosis'),
+                decoration: const InputDecoration(labelText: 'Geplante Dosis', border: OutlineInputBorder()),
                 keyboardType: TextInputType.number,
               ),
             ],

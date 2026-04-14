@@ -14,77 +14,92 @@ class InventoryPage extends StatelessWidget {
     final provider = Provider.of<InventoryProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bestand'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_checkout),
-            tooltip: 'Einkaufs-Assistent',
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => const ShoppingWizardDialog(),
-            ),
-          ),
-        ],
-      ),
       body: CustomScrollView(
         slivers: [
-          const SliverToBoxAdapter(
+          SliverAppBar.large(
+            title: const Text('Bestand'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart_checkout_rounded),
+                tooltip: 'Einkaufs-Assistent',
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (context) => const ShoppingWizardDialog(),
+                ),
+              ),
+            ],
+          ),
+          SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Medikamente',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Row(
+                children: [
+                  Icon(Icons.medication_rounded, color: Theme.of(context).primaryColor, size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Medikamente',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ),
           ),
           StreamBuilder<List<Medication>>(
             stream: provider.medicationsStream,
             builder: (context, snapshot) {
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              final meds = snapshot.data ?? [];
+              if (meds.isEmpty) {
                 return const SliverToBoxAdapter(
-                  child: Center(child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('Keine Medikamente angelegt'),
-                  )),
+                  child: _EmptySection(message: 'Keine Medikamente angelegt'),
                 );
               }
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildMedicationItem(context, snapshot.data![index], provider),
-                  childCount: snapshot.data!.length,
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _buildMedicationItem(context, meds[index], provider),
+                    childCount: meds.length,
+                  ),
                 ),
               );
             },
           ),
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Zubehör',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+              child: Row(
+                children: [
+                  Icon(Icons.category_rounded, color: Theme.of(context).primaryColor, size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Zubehör',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ),
           ),
           StreamBuilder<List<Accessory>>(
             stream: provider.accessoriesStream,
             builder: (context, snapshot) {
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              final accs = snapshot.data ?? [];
+              if (accs.isEmpty) {
                 return const SliverToBoxAdapter(
-                  child: Center(child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('Kein Zubehör angelegt'),
-                  )),
+                  child: _EmptySection(message: 'Kein Zubehör angelegt'),
                 );
               }
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildAccessoryItem(context, snapshot.data![index], provider),
-                  childCount: snapshot.data!.length,
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _buildAccessoryItem(context, accs[index], provider),
+                    childCount: accs.length,
+                  ),
                 ),
               );
             },
           ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -93,7 +108,7 @@ class InventoryPage extends StatelessWidget {
           context,
           MaterialPageRoute(builder: (_) => const AddItemPage()),
         ),
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Hinzufügen'),
       ),
     );
@@ -102,71 +117,97 @@ class InventoryPage extends StatelessWidget {
   Widget _buildMedicationItem(BuildContext context, Medication med, InventoryProvider provider) {
     final isLowStock = med.stock <= med.minStock && med.minStock > 0;
 
-    return Card(
-      color: isLowStock ? Colors.orange.withOpacity(0.1) : null,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: isLowStock ? Colors.orange.withOpacity(0.05) : Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isLowStock ? Colors.orange.withOpacity(0.2) : Theme.of(context).dividerColor.withOpacity(0.05),
+        ),
+      ),
       child: ListTile(
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => MedicationDetailsPage(medication: med)),
         ),
-        leading: CircleAvatar(
-          backgroundColor: isLowStock ? Colors.orange : null,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: isLowStock ? Colors.orange.withOpacity(0.1) : Theme.of(context).primaryColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
           child: Icon(
-            isLowStock ? Icons.warning_amber_rounded : Icons.medication,
-            color: isLowStock ? Colors.white : null,
+            isLowStock ? Icons.warning_amber_rounded : Icons.medication_rounded,
+            color: isLowStock ? Colors.orange : Theme.of(context).primaryColor,
           ),
         ),
         title: Text(
           med.name,
-          style: TextStyle(fontWeight: isLowStock ? FontWeight.bold : null),
+          style: TextStyle(fontWeight: FontWeight.bold, color: isLowStock ? Colors.orange.shade900 : null),
         ),
         subtitle: Text(isLowStock ? 'Niedriger Bestand!' : 'PZN: ${med.pzn ?? "-"}'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.remove_circle_outline),
-              onPressed: () => provider.updateMedicationStock(med, -1),
-            ),
-            Text(
-              '${med.stock.toStringAsFixed(0)} ${med.unit}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              onPressed: () => provider.updateMedicationStock(med, 1),
-            ),
-          ],
+        trailing: _StockCounter(
+          stock: med.stock,
+          unit: med.unit,
+          onAdd: () => provider.updateMedicationStock(med, 1),
+          onRemove: () => provider.updateMedicationStock(med, -1),
         ),
       ),
     );
   }
 
   Widget _buildAccessoryItem(BuildContext context, Accessory acc, InventoryProvider provider) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+      ),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.teal.withOpacity(0.2),
-          child: Icon(Icons.build_circle_outlined, color: Colors.teal),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.teal.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.build_circle_rounded, color: Colors.teal),
         ),
-        title: Text(acc.name),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        trailing: _ StockCounter(
+          stock: acc.stock,
+          unit: acc.unit,
+          onAdd: () => provider.updateAccessoryStock(acc, 1),
+          onRemove: () => provider.updateAccessoryStock(acc, -1),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptySection extends StatelessWidget {
+  final String message;
+  const _EmptySection({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Center(
+        child: Column(
           children: [
-            IconButton(
-              icon: const Icon(Icons.remove_circle_outline),
-              onPressed: () => provider.updateAccessoryStock(acc, -1),
+            Image.asset(
+              'assets/images/empty_inventory.png',
+              height: 120,
+              opacity: const AlwaysStoppedAnimation(0.6),
             ),
-            Text(
-              '${acc.stock.toStringAsFixed(0)} ${acc.unit}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              onPressed: () => provider.updateAccessoryStock(acc, 1),
-            ),
+            const SizedBox(height: 12),
+            Text(message, style: const TextStyle(color: Colors.grey)),
           ],
         ),
       ),
@@ -174,7 +215,39 @@ class InventoryPage extends StatelessWidget {
   }
 }
 
-// Helper extension for colors if needed, but using standard here
-extension ColorExt on Color {
-  static const Color tealOpacity = Color(0x33008080);
+class _StockCounter extends StatelessWidget {
+  final double stock;
+  final String unit;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+
+  const _StockCounter({
+    required this.stock,
+    required this.unit,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.remove_circle_outline_rounded, size: 20),
+          onPressed: onRemove,
+          visualDensity: VisualDensity.compact,
+        ),
+        Text(
+          '${stock.toStringAsFixed(0)} $unit',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
+        IconButton(
+          icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
+          onPressed: onAdd,
+          visualDensity: VisualDensity.compact,
+        ),
+      ],
+    );
+  }
 }

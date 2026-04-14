@@ -62,7 +62,10 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
     final db = Provider.of<AppDatabase>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.initialSchedule == null ? 'Infusionsplan erstellen' : 'Infusionsplan bearbeiten')),
+      appBar: AppBar(
+        title: Text(widget.initialSchedule == null ? 'Infusionsplan erstellen' : 'Infusionsplan bearbeiten'),
+        centerTitle: true,
+      ),
       body: FutureBuilder<List<Medication>>(
         future: db.getAllMedications(),
         builder: (context, snapshot) {
@@ -78,49 +81,69 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildSectionHeader('Medikation & Dosis'),
+                const SizedBox(height: 16),
                 DropdownButtonFormField<Medication>(
                   value: _selectedMedication,
                   items: medications.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
                   onChanged: (val) => setState(() => _selectedMedication = val),
-                  decoration: const InputDecoration(labelText: 'Medikament', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: 'Medikament wählen',
+                    prefixIcon: const Icon(Icons.medication_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _dosageController,
-                  decoration: const InputDecoration(labelText: 'Dosis', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Einheiten pro Infusion',
+                    prefixIcon: const Icon(Icons.scale_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),
+                const SizedBox(height: 32),
+                _buildSectionHeader('Häufigkeit'),
                 const SizedBox(height: 16),
-                const Text('Häufigkeit', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   value: _frequencyType,
                   items: _frequencies.map((f) => DropdownMenuItem(value: f['value'], child: Text(f['label']!))).toList(),
                   onChanged: (val) => setState(() => _frequencyType = val!),
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.repeat_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
                 ),
-                const SizedBox(height: 16),
                 if (_frequencyType == 'interval') ...[
+                  const SizedBox(height: 16),
                   TextField(
                     controller: _intervalController,
-                    decoration: const InputDecoration(labelText: 'Alle wie viele Tage?', border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: 'Anzahl der Tage',
+                      hintText: 'Z.B. alle 5 Tage',
+                      prefixIcon: const Icon(Icons.today_rounded),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
                     keyboardType: TextInputType.number,
                   ),
-                  const SizedBox(height: 16),
                 ],
                 if (_frequencyType == 'weekdays') ...[
-                  const Text('Wochentage wählen:'),
+                  const SizedBox(height: 16),
+                  const Text('Tage auswählen:', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
+                    runSpacing: 0,
                     children: List.generate(7, (index) {
                       final day = index + 1;
                       final label = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'][index];
                       final isSelected = _selectedWeekdays.contains(day);
-                      return FilterChip(
+                      return ChoiceChip(
                         label: Text(label),
                         selected: isSelected,
                         onSelected: (val) {
@@ -132,41 +155,107 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                             }
                           });
                         },
+                        selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                        checkmarkColor: Theme.of(context).primaryColor,
+                        labelStyle: TextStyle(
+                          color: isSelected ? Theme.of(context).primaryColor : null,
+                          fontWeight: isSelected ? FontWeight.bold : null,
+                        ),
                       );
                     }),
                   ),
-                  const SizedBox(height: 16),
                 ],
-                ListTile(
-                  title: const Text('Startdatum'),
-                  subtitle: Text('${_startDate.day}.${_startDate.month}.${_startDate.year}'),
-                  trailing: const Icon(Icons.calendar_today),
+                const SizedBox(height: 32),
+                _buildSectionHeader('Zeitraum'),
+                const SizedBox(height: 16),
+                InkWell(
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: context,
                       initialDate: _startDate,
                       firstDate: DateTime.now().subtract(const Duration(days: 30)),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: Theme.of(context).colorScheme.copyWith(
+                              primary: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
                     );
                     if (picked != null) {
                       setState(() => _startDate = DateTime(picked.year, picked.month, picked.day));
                     }
                   },
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _selectedMedication == null ? null : () => _saveSchedule(db),
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                    child: Text(widget.initialSchedule == null ? 'Plan speichern' : 'Änderungen speichern'),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today_rounded, size: 20, color: Colors.grey),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Startdatum', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                Text(
+                                  DateFormat('dd. MMMM yyyy').format(_startDate),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Icon(Icons.edit_rounded, size: 18, color: Theme.of(context).primaryColor),
+                      ],
+                    ),
                   ),
                 ),
+                const SizedBox(height: 48),
+                ElevatedButton(
+                  onPressed: _selectedMedication == null ? null : () => _saveSchedule(db),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(60),
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    elevation: 0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.save_rounded),
+                      const SizedBox(width: 12),
+                      Text(
+                        widget.initialSchedule == null ? 'Zeitplan aktivieren' : 'Änderungen speichern',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
               ],
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Colors.grey),
     );
   }
 
@@ -186,7 +275,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
       // Update existing schedule
       await db.updateSchedule(widget.initialSchedule!.copyWith(
         medicationId: _selectedMedication!.id,
-        dosage: double.tryParse(_dosageController.text) ?? 1.0,
+        dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
         frequencyType: finalFreq,
         intervalValue: drift.Value(interval),
         selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
@@ -199,7 +288,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
       // Insert new schedule
       await db.insertSchedule(InfusionSchedulesCompanion.insert(
         medicationId: _selectedMedication!.id,
-        dosage: double.tryParse(_dosageController.text) ?? 1.0,
+        dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
         frequencyType: finalFreq,
         intervalValue: drift.Value(interval),
         selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),

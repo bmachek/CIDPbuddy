@@ -14,33 +14,44 @@ class DiaryPage extends StatelessWidget {
     final diaryProvider = Provider.of<DiaryProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Infusionstagebuch'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const StatisticsPage()),
-            ),
-          ),
-        ],
-      ),
       body: StreamBuilder<List<InfusionLogData>>(
         stream: diaryProvider.infusionLogsStream,
         builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return _buildEmptyState();
-          }
-
-          final logs = snapshot.data!;
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: logs.length,
-            itemBuilder: (context, index) {
-              final log = logs[index];
-              return _buildLogCard(context, log);
-            },
+          final logs = snapshot.data ?? [];
+          
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar.large(
+                title: const Text('Infusionstagebuch'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.bar_chart_rounded),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const StatisticsPage()),
+                    ),
+                  ),
+                ],
+              ),
+              if (logs.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildEmptyState(),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final log = logs[index];
+                        return _buildLogCard(context, log);
+                      },
+                      childCount: logs.length,
+                    ),
+                  ),
+                ),
+            ],
           );
         },
       ),
@@ -50,7 +61,7 @@ class DiaryPage extends StatelessWidget {
           context,
           MaterialPageRoute(builder: (_) => const AddInfusionPage()),
         ),
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Infusion erfassen'),
       ),
     );
@@ -58,36 +69,81 @@ class DiaryPage extends StatelessWidget {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.history_edu, size: 80, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text('Noch keine Infusionen erfasst', style: TextStyle(color: Colors.grey, fontSize: 16)),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/empty_diary.png',
+              height: 200,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Dein Tagebuch ist noch leer',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Erfasse deine erste Infusion, um den Überblick über deine Behandlung zu behalten.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildLogCard(BuildContext context, InfusionLogData log) {
-    final dateStr = DateFormat('dd.MM.yyyy HH:mm').format(log.date);
+    final dateStr = DateFormat('dd. MMMM yyyy').format(log.date);
+    final timeStr = DateFormat('HH:mm').format(log.date);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+      ),
       child: ListTile(
-        title: Text('Infusion am $dateStr'),
-        subtitle: Column(
+        contentPadding: const EdgeInsets.all(16),
+        title: Text(
+          dateStr,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                if (log.batchNumber != null && log.batchNumber!.isNotEmpty)
-                    Text('Charge: ${log.batchNumber}'),
-                if (log.notes != null && log.notes!.isNotEmpty)
-                    Text('Notiz: ${log.notes}', maxLines: 1, overflow: TextOverflow.ellipsis),
+              Row(
+                children: [
+                  Icon(Icons.access_time, size: 14, color: Theme.of(context).primaryColor),
+                  const SizedBox(width: 4),
+                  Text(timeStr, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.w600)),
+                ],
+              ),
+              if (log.batchNumber != null && log.batchNumber!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13)),
+              ],
+              if (log.notes != null && log.notes!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(log.notes!, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+              ],
             ],
+          ),
         ),
-        trailing: CircleAvatar(
-          backgroundColor: Colors.teal.withOpacity(0.1),
-          child: const Icon(Icons.check, color: Colors.teal),
+        trailing: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.check_rounded, color: Theme.of(context).primaryColor, size: 20),
         ),
       ),
     );
