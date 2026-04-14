@@ -277,6 +277,13 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> insertPendingOrderItem(PendingOrderItemsCompanion entry) => into(pendingOrderItems).insert(entry);
   Future<List<PendingOrderItem>> getPendingOrderItems(int orderId) => (select(pendingOrderItems)..where((t) => t.orderId.equals(orderId))).get();
+  Stream<List<PendingOrderItem>> watchAllPendingOrderItems() {
+    return (select(pendingOrderItems).join([
+      innerJoin(pendingOrders, pendingOrders.id.equalsExp(pendingOrderItems.orderId)),
+    ])..where(pendingOrders.isConfirmed.equals(false)))
+    .watch()
+    .map((rows) => rows.map((row) => row.readTable(pendingOrderItems)).toList());
+  }
 
   Future confirmOrder(int orderId) async {
     final order = await (select(pendingOrders)..where((t) => t.id.equals(orderId))).getSingle();

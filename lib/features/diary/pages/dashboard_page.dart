@@ -62,9 +62,7 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSummarySection(db),
-                  const SizedBox(height: 24),
-                  _buildStockSection(db),
+                  _buildNotificationCenter(db),
                   const SizedBox(height: 24),
                   _buildPendingOrdersSection(db),
                   const SizedBox(height: 32),
@@ -155,166 +153,171 @@ class _DashboardPageState extends State<DashboardPage> {
     return 'Guten Abend';
   }
 
-  Widget _buildSummarySection(AppDatabase db) {
+  Widget _buildNotificationCenter(AppDatabase db) {
     return StreamBuilder<List<PlannedInfusion>>(
       stream: db.watchUpcomingPlannedTreatments(48),
-      builder: (context, snapshot) {
-        final remainingCount = snapshot.data?.length ?? 0;
-        
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppTheme.primaryBase, AppTheme.primaryLight],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primaryBase.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 24),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset('assets/images/app_icon.png', height: 48, width: 48),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                remainingCount > 0 
-                  ? 'Noch $remainingCount Termine bald' 
-                  : 'Keine anstehenden Termine',
-                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                remainingCount > 0 
-                  ? 'Vergiss nicht deine Medikamente!' 
-                  : 'Du bist voll im Plan.',
-                style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+      builder: (context, upcomingSnapshot) {
+        return StreamBuilder<List<PendingOrderItem>>(
+          stream: db.watchAllPendingOrderItems(),
+          builder: (context, pendingSnapshot) {
+            final pendingItems = pendingSnapshot.data ?? [];
+            final pendingMedIds = pendingItems.map((o) => o.medicationId).whereType<int>().toSet();
+            final pendingAccIds = pendingItems.map((o) => o.accessoryId).whereType<int>().toSet();
 
-
-  Widget _buildStockSection(AppDatabase db) {
-    return StreamBuilder<List<PendingOrder>>(
-      stream: db.watchPendingOrders(),
-      builder: (context, pendingSnapshot) {
-        final pendingOrders = pendingSnapshot.data ?? [];
-        final pendingMedIds = pendingOrders.map((o) => o.medicationId).toSet();
-
-        return StreamBuilder<List<Medication>>(
-          stream: db.watchAllMedications(),
-          builder: (context, medsSnapshot) {
-            return StreamBuilder<List<Accessory>>(
-              stream: db.watchAllAccessories(),
-              builder: (context, accSnapshot) {
-                final medService = Provider.of<MedicationService>(context, listen: false);
-                
-                return FutureBuilder<List<Medication>>(
-                  future: medService.getLowStockMedications(),
-                  builder: (context, lowMedsSnapshot) {
-                    if (lowMedsSnapshot.connectionState == ConnectionState.waiting && !lowMedsSnapshot.hasData) {
-                      return const SizedBox(height: 70, child: Center(child: CircularProgressIndicator()));
-                    }
+            return StreamBuilder<List<Medication>>(
+              stream: db.watchAllMedications(),
+              builder: (context, medsSnapshot) {
+                return StreamBuilder<List<Accessory>>(
+                  stream: db.watchAllAccessories(),
+                  builder: (context, accSnapshot) {
+                    final medService = Provider.of<MedicationService>(context, listen: false);
                     
-                    // Filter out medications that already have a pending order
-                    final lowMeds = (lowMedsSnapshot.data ?? [])
-                        .where((m) => !pendingMedIds.contains(m.id))
-                        .toList();
+                    return FutureBuilder<List<Medication>>(
+                      future: medService.getLowStockMedications(),
+                      builder: (context, lowMedsSnapshot) {
+                        final upcomingCount = upcomingSnapshot.data?.length ?? 0;
+                        final allMeds = medsSnapshot.data ?? [];
+                        final allAccs = accSnapshot.data ?? [];
                         
-                    final lowAccs = (accSnapshot.data ?? []).where((a) => a.stock < 5).toList();
-                    
-                    final isEverythingOK = lowMeds.isEmpty && lowAccs.isEmpty;
+                        // Filter out items that already have a pending order
+                        final lowMeds = (lowMedsSnapshot.data ?? [])
+                            .where((m) => !pendingMedIds.contains(m.id))
+                            .toList();
+                            
+                        final lowAccs = allAccs
+                            .where((a) => a.stock < 5 && !pendingAccIds.contains(a.id))
+                            .toList();
 
-                    return InkWell(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => ShoppingWizardDialog(
-                            initialMedication: lowMeds.isNotEmpty ? lowMeds.first : null,
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(24),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isEverythingOK ? Colors.green.withOpacity(0.05) : Colors.red.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: isEverythingOK ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                          ),
-                        ),
-                        child: Row(
+                        final isStockProblem = lowMeds.isNotEmpty || lowAccs.isNotEmpty;
+
+                        return Column(
                           children: [
+                            // Main Summary Card
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: isEverythingOK ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: isStockProblem 
+                                    ? [Colors.orange.shade700, Colors.orange.shade500]
+                                    : [AppTheme.primaryBase, AppTheme.primaryLight],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(32),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isStockProblem ? Colors.orange : AppTheme.primaryBase).withOpacity(0.3),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
                               ),
-                              child: Icon(
-                                isEverythingOK ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
-                                color: isEverythingOK ? Colors.green : Colors.red,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    isEverythingOK ? 'Alles vorrätig' : 'Bestellung empfohlen',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isEverythingOK ? Colors.green.shade700 : Colors.red.shade700,
-                                    ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Icon(
+                                        isStockProblem ? Icons.shopping_cart_checkout_rounded : Icons.auto_awesome_rounded, 
+                                        color: Colors.white, 
+                                        size: 24
+                                      ),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.asset('assets/images/app_icon.png', height: 48, width: 48),
+                                      ),
+                                    ],
                                   ),
-                                  if (!isEverythingOK)
-                                    Text(
-                                      '${lowMeds.length + lowAccs.length} Artikel sollten nachbestellt werden.',
-                                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                    )
-                                  else if (pendingOrders.isNotEmpty)
-                                    const Text(
-                                      'Bestellungen sind unterwegs.',
-                                      style: TextStyle(fontSize: 12, color: Colors.teal),
-                                    )
-                                  else
-                                    const Text(
-                                      'Dein Bestand ist aktuell ausreichend.',
-                                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                                    ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    upcomingCount > 0 
+                                      ? 'Noch $upcomingCount Termine bald' 
+                                      : 'Keine anstehenden Termine',
+                                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    isStockProblem 
+                                      ? 'Bestand prüfen!'
+                                      : (upcomingCount > 0 ? 'Vergiss nicht deine Medikamente!' : 'Du bist voll im Plan.'),
+                                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+                                  ),
                                 ],
                               ),
                             ),
-                            Icon(
-                              Icons.chevron_right_rounded, 
-                              color: isEverythingOK ? Colors.green.shade300 : Colors.red.shade300
-                            ),
+                            
+                            const SizedBox(height: 16),
+                            
+                            // Contextual Detail Bar
+                            if (isStockProblem)
+                              InkWell(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => ShoppingWizardDialog(
+                                      initialMedication: lowMeds.isNotEmpty ? lowMeds.first : null,
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Bestellung empfohlen',
+                                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                                            ),
+                                            Text(
+                                              'Niedriger Bestand: ${[...lowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
+                                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(Icons.chevron_right_rounded, color: Colors.orange),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else if (pendingItems.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.teal.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.teal.withOpacity(0.1)),
+                                ),
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.local_shipping_rounded, color: Colors.teal, size: 20),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Bestellungen sind unterwegs.',
+                                        style: TextStyle(fontSize: 14, color: Colors.teal, fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                           ],
-                        ),
-                      ),
+                        );
+                      },
                     );
                   },
                 );

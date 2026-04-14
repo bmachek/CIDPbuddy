@@ -23,6 +23,22 @@ class NotificationService {
 
     await _notificationsPlugin.initialize(initSettings);
     tz.initializeTimeZones();
+    
+    // Request permission for Android 13+ notifications
+    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      await androidPlugin.requestNotificationsPermission();
+    }
+  }
+
+  Future<AndroidScheduleMode> _getScheduleMode() async {
+    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin == null) return AndroidScheduleMode.inexactAllowWhileIdle;
+    
+    final bool? canScheduleExact = await androidPlugin.canScheduleExactAlarms();
+    return (canScheduleExact ?? false) 
+        ? AndroidScheduleMode.exactAllowWhileIdle 
+        : AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
   Future<void> scheduleNotification({
@@ -31,6 +47,8 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
   }) async {
+    final scheduleMode = await _getScheduleMode();
+    
     await _notificationsPlugin.zonedSchedule(
       id,
       title,
@@ -46,7 +64,7 @@ class NotificationService {
         iOS: DarwinNotificationDetails(),
         macOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: scheduleMode,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
@@ -137,6 +155,8 @@ class NotificationService {
         final scheduledTime = tz.TZDateTime.now(tz.local)
             .add(Duration(minutes: i, seconds: repeat * 5));
             
+        final scheduleMode = await _getScheduleMode();
+            
         await _notificationsPlugin.zonedSchedule(
           999 + (i * 10) + repeat, // Unique ID per minute and repeat
           'Vormedikation Timer',
@@ -155,7 +175,7 @@ class NotificationService {
               presentSound: true,
             ),
           ),
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          androidScheduleMode: scheduleMode,
           uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         );
       }
