@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import '../database/database.dart';
+import '../../features/reminders/services/notification_service.dart';
 
 class SchedulerService {
   final AppDatabase db;
@@ -17,30 +18,24 @@ class SchedulerService {
     for (final schedule in activeSchedules) {
       final dates = _calculateDates(schedule, today, lookAhead);
       for (final date in dates) {
-        // Robust existence check: check for any entry within this day in local time.
-        // Drift converts these local DateTimes to UTC ranges correctly in the SQL query.
-        final dayEnd = date.add(const Duration(hours: 23, minutes: 59, seconds: 59));
-        
+        // Find existing entries for this EXACT time
         final existingEvents = await (db.select(db.plannedInfusions)
           ..where((t) => t.scheduleId.equals(schedule.id) & 
-                         t.date.isBetweenValues(date, dayEnd)))
+                         t.date.equals(date)))
           .get();
 
         if (existingEvents.isEmpty) {
-          await db.insertPlannedInfusion(PlannedInfusionsCompanion.insert(
+          final id = await db.insertPlannedInfusion(PlannedInfusionsCompanion.insert(
             date: date,
             medicationId: schedule.medicationId,
             dosage: schedule.dosage,
             scheduleId: Value(schedule.id),
           ));
-        } else if (existingEvents.length > 1) {
-          // Cleanup logic: If we have multiple entries for the same day and schedule,
-          // keep one and remove the others (as long as they aren't completed).
-          // We keep the first one found.
-          for (int i = 1; i < existingEvents.length; i++) {
-            if (!existingEvents[i].isCompleted) {
-              await db.deletePlannedInfusion(existingEvents[i].id);
-            }
+          
+          // Schedule notifications for this specific treatment
+          if (date.isAfter(now)) {
+            final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(id))).getSingle();
+            await NotificationService().scheduleTreatmentReminders(treatment);
           }
         }
       }
@@ -78,7 +73,20 @@ class SchedulerService {
             break;
         }
         if (matches) {
-          dates.add(current);
+          // Add entries for each intake time if specified, otherwise just midnight
+          if (schedule.intakeTimes != null && schedule.intakeTimes!.isNotEmpty) {
+            final times = schedule.intakeTimes!.split(',');
+            for (final tStr in times) {
+              final parts = tStr.trim().split(':');
+              if (parts.length == 2) {
+                final hh = int.tryParse(parts[0]) ?? 8;
+                final mm = int.tryParse(parts[1]) ?? 0;
+                dates.add(DateTime(current.year, current.month, current.day, hh, mm));
+              }
+            }
+          } else {
+            dates.add(current);
+          }
         }
       }
 

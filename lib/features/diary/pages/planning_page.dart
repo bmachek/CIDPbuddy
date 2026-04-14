@@ -5,6 +5,8 @@ import 'package:drift/drift.dart' as drift;
 import '../../../core/database/database.dart';
 import 'add_infusion_page.dart';
 import 'add_schedule_page.dart';
+import '../../reminders/services/notification_service.dart';
+import '../../../core/services/scheduler_service.dart';
 
 class PlanningPage extends StatelessWidget {
   const PlanningPage({super.key});
@@ -135,6 +137,10 @@ class PlanningPage extends StatelessWidget {
             onPressed: () async {
               final now = DateTime.now();
               final today = DateTime(now.year, now.month, now.day);
+              final overdue = await (db.select(db.plannedInfusions)..where((t) => t.date.isSmallerThanValue(today) & t.isCompleted.equals(false))).get();
+              for (final appt in overdue) {
+                await NotificationService().cancelTreatmentReminders(appt.id);
+              }
               await db.deleteIncompletePlannedInfusionsBefore(today);
               if (context.mounted) Navigator.pop(context);
             },
@@ -268,6 +274,7 @@ class PlanningPage extends StatelessWidget {
                         ).then((result) async {
                           if (result == true) {
                             await db.completePlannedInfusion(appt.id);
+                            await NotificationService().cancelTreatmentReminders(appt.id);
                           }
                         });
                       },
@@ -299,7 +306,11 @@ class PlanningPage extends StatelessWidget {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () async {
+              await db.deletePlannedInfusion(appt.id);
+              await NotificationService().cancelTreatmentReminders(appt.id);
+              if (context.mounted) Navigator.pop(context, true);
+            },
             child: const Text('Löschen', style: TextStyle(color: Colors.red)),
           ),
         ],
@@ -456,6 +467,10 @@ class PlanningPage extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
           TextButton(
             onPressed: () async {
+              final futureAppts = await (db.select(db.plannedInfusions)..where((t) => t.scheduleId.equals(schedule.id) & t.isCompleted.equals(false))).get();
+              for (final appt in futureAppts) {
+                await NotificationService().cancelTreatmentReminders(appt.id);
+              }
               await db.deletePlannedInfusionsForSchedule(schedule.id);
               await db.deleteSchedule(schedule.id);
               if (context.mounted) Navigator.pop(context);

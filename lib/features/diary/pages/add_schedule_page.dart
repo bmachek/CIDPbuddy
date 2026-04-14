@@ -20,6 +20,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
   late DateTime _startDate;
   late String _frequencyType;
   final List<int> _selectedWeekdays = [];
+  final List<TimeOfDay> _intakeTimes = [const TimeOfDay(hour: 8, minute: 0)];
   bool _isFirstLoad = true;
 
   final List<Map<String, String>> _frequencies = [
@@ -48,6 +49,16 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
 
     if (s?.selectedWeekdays != null && s!.selectedWeekdays!.isNotEmpty) {
       _selectedWeekdays.addAll(s.selectedWeekdays!.split(',').where((e) => e.isNotEmpty).map(int.parse));
+    }
+
+    if (s?.intakeTimes != null && s!.intakeTimes!.isNotEmpty) {
+      _intakeTimes.clear();
+      for (final tStr in s.intakeTimes!.split(',')) {
+        final parts = tStr.split(':');
+        if (parts.length == 2) {
+          _intakeTimes.add(TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1])));
+        }
+      }
     }
   }
 
@@ -222,6 +233,53 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                     ),
                   ),
                 ),
+                if (_selectedMedication?.type == MedicationType.pill) ...[
+                  const SizedBox(height: 32),
+                  _buildSectionHeader('Einnahme-Uhrzeiten'),
+                  const SizedBox(height: 16),
+                  ...List.generate(_intakeTimes.length, (index) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: _intakeTimes[index],
+                              );
+                              if (picked != null) {
+                                setState(() => _intakeTimes[index] = picked);
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade400),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                _intakeTimes[index].format(context),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (_intakeTimes.length > 1)
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline_rounded, color: Colors.red),
+                            onPressed: () => setState(() => _intakeTimes.removeAt(index)),
+                          ),
+                      ],
+                    ),
+                  )),
+                  TextButton.icon(
+                    onPressed: () => setState(() => _intakeTimes.add(const TimeOfDay(hour: 8, minute: 0))),
+                    icon: const Icon(Icons.add_circle_outline_rounded),
+                    label: const Text('Weitere Uhrzeit hinzufügen'),
+                  ),
+                ],
                 const SizedBox(height: 48),
                 ElevatedButton(
                   onPressed: _selectedMedication == null ? null : () => _saveSchedule(db),
@@ -272,6 +330,10 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
       interval = 1;
     }
 
+    final intakeTimesStr = _selectedMedication?.type == MedicationType.pill 
+        ? _intakeTimes.map((t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}').join(',')
+        : null;
+
     if (widget.initialSchedule != null) {
       // Update existing schedule
       await db.updateSchedule(widget.initialSchedule!.copyWith(
@@ -281,6 +343,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
         intervalValue: drift.Value(interval),
         selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
         startDate: _startDate,
+        intakeTimes: drift.Value(intakeTimesStr),
       ));
       
       // Clear out future entries to force regeneration
@@ -294,6 +357,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
         intervalValue: drift.Value(interval),
         selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
         startDate: _startDate,
+        intakeTimes: drift.Value(intakeTimesStr),
       ));
     }
 

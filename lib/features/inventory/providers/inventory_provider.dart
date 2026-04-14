@@ -15,12 +15,14 @@ class InventoryProvider extends ChangeNotifier {
     required String pzn,
     required double stock,
     required String unit,
+    required MedicationType type,
   }) async {
     await _db.insertMedication(MedicationsCompanion.insert(
       name: name,
       pzn: Value(pzn),
       stock: Value(stock),
       unit: unit,
+      type: Value(type),
     ));
     notifyListeners();
   }

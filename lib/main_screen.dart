@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:igkeeper/features/diary/pages/dashboard_page.dart';
 import 'package:igkeeper/features/inventory/pages/inventory_page.dart';
 import 'package:igkeeper/features/diary/pages/diary_page.dart';
 import 'package:igkeeper/features/diary/pages/planning_page.dart';
@@ -15,6 +15,7 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
+    const DashboardPage(),
     const DiaryPage(),
     const InventoryPage(),
     const PlanningPage(),
@@ -49,6 +50,11 @@ class _MainScreenState extends State<MainScreen> {
           },
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.grid_view_rounded),
+              selectedIcon: Icon(Icons.grid_view_rounded),
+              label: 'Dashboard',
+            ),
             NavigationDestination(
               icon: Icon(Icons.history_edu_outlined),
               selectedIcon: Icon(Icons.history_edu),

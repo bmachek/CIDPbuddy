@@ -16,6 +16,7 @@ class _AddItemPageState extends State<AddItemPage> {
   final _pznController = TextEditingController();
   final _stockController = TextEditingController(text: '0');
   final _unitController = TextEditingController(text: 'Flasche');
+  MedicationType _medType = MedicationType.infusion;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +29,7 @@ class _AddItemPageState extends State<AddItemPage> {
           children: [
             DropdownButtonFormField<String>(
               value: _type,
-              decoration: const InputDecoration(labelText: 'Typ'),
+              decoration: const InputDecoration(labelText: 'Kategorie'),
               items: ['Medikament', 'Zubehör']
                   .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                   .toList(),
@@ -40,6 +41,27 @@ class _AddItemPageState extends State<AddItemPage> {
               },
             ),
             const SizedBox(height: 16),
+            if (_type == 'Medikament') ...[
+              DropdownButtonFormField<MedicationType>(
+                value: _medType,
+                decoration: const InputDecoration(labelText: 'Darreichungsform'),
+                items: [
+                  const DropdownMenuItem(value: MedicationType.infusion, child: Text('Infusion')),
+                  const DropdownMenuItem(value: MedicationType.pill, child: Text('Tablette / Pille')),
+                ],
+                onChanged: (val) {
+                  setState(() {
+                    _medType = val!;
+                    if (_medType == MedicationType.pill) {
+                      _unitController.text = 'Stk';
+                    } else {
+                      _unitController.text = 'Flasche';
+                    }
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: 'Bezeichnung', hintText: 'z.B. Hizentra 20%'),
@@ -96,6 +118,7 @@ class _AddItemPageState extends State<AddItemPage> {
           pzn: _pznController.text,
           stock: stock,
           unit: _unitController.text,
+          type: _medType,
         );
       } else {
         await provider.addAccessory(

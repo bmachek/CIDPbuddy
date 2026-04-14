@@ -51,20 +51,39 @@ class _SettingsPageState extends State<SettingsPage> {
             onTap: () => _confirmImport(context, backupService),
           ),
           const Divider(),
-          _buildSectionHeader('Hyqvia Timer'),
-          FutureBuilder<int>(
-            future: SharedPreferences.getInstance().then((p) => p.getInt('hyqvia_timer_duration') ?? 15),
+          _buildSectionHeader('Erinnerungen'),
+          FutureBuilder<Map<String, dynamic>>(
+            future: _getReminderSettings(),
             builder: (context, snapshot) {
-              final current = snapshot.data ?? 15;
-              return ListTile(
-                leading: const Icon(Icons.timer_outlined),
-                title: const Text('Vormedikation Dauer'),
-                subtitle: Text('Aktuell: $current Minuten'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showDurationPicker(context, current),
+              final settings = snapshot.data ?? {'snooze': true, 'hourly': true, 'quiet_start': 22, 'quiet_end': 7};
+              return Column(
+                children: [
+                  SwitchListTile(
+                    title: const Text('Schlummer-Funktion'),
+                    subtitle: const Text('Erneut erinnern alle 15 Minuten'),
+                    value: settings['snooze'],
+                    onChanged: (val) => _updateReminderSetting('snooze', val),
+                    secondary: const Icon(Icons.snooze_rounded),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Stündliche Erinnerung'),
+                    subtitle: const Text('Erinnern zur vollen Stunde'),
+                    value: settings['hourly'],
+                    onChanged: (val) => _updateReminderSetting('hourly', val),
+                    secondary: const Icon(Icons.hourglass_bottom_rounded),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.nightlight_round),
+                    title: const Text('Nachtruhe'),
+                    subtitle: Text('Keine Erinnerungen von ${settings['quiet_start']}:00 bis ${settings['quiet_end']}:00'),
+                    onTap: () => _showQuietHoursPicker(context, settings['quiet_start'], settings['quiet_end']),
+                  ),
+                ],
               );
             },
           ),
+          const Divider(),
+          _buildSectionHeader('Hyqvia Timer'),
           const Divider(),
           _buildSectionHeader('Über IgKeeper'),
           const ListTile(
@@ -92,7 +111,72 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Future<Map<String, dynamic>> _getReminderSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'snooze': prefs.getBool('reminder_snooze') ?? true,
+      'hourly': prefs.getBool('reminder_hourly') ?? true,
+      'quiet_start': prefs.getInt('quiet_hours_start') ?? 22,
+      'quiet_end': prefs.getInt('quiet_hours_end') ?? 7,
+    };
+  }
+
+  void _updateReminderSetting(String key, dynamic value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value is bool) {
+      await prefs.setBool('reminder_$key', value);
+    } else if (value is int) {
+      await prefs.setInt('quiet_hours_$key', value);
+    }
+    setState(() {});
+  }
+
+  void _showQuietHoursPicker(BuildContext context, int currentStart, int currentEnd) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Nachtruhe einstellen', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildTimeColumn('Beginn', currentStart, (val) => _updateReminderSetting('start', val)),
+                const Icon(Icons.arrow_forward_rounded, color: Colors.grey),
+                _buildTimeColumn('Ende', currentEnd, (val) => _updateReminderSetting('end', val)),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeColumn(String label, int current, Function(int) onSelected) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey)),
+        const SizedBox(height: 8),
+        DropdownButton<int>(
+          value: current,
+          items: List.generate(24, (i) => DropdownMenuItem(value: i, child: Text('$i:00'))),
+          onChanged: (val) {
+            if (val != null) {
+              onSelected(val);
+              Navigator.pop(context);
+            }
+          },
+        ),
+      ],
+    );
+  }
+
   void _confirmImport(BuildContext context, BackupService service) async {
+    // ... existing ...
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

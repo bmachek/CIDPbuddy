@@ -6,13 +6,16 @@ import 'package:path/path.dart' as p;
 
 part 'database.g.dart';
 
+enum MedicationType { infusion, pill }
+
 class Medications extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 1, max: 100)();
   TextColumn get pzn => text().nullable()();
   RealColumn get stock => real().withDefault(const Constant(0.0))();
   RealColumn get minStock => real().withDefault(const Constant(0.0))();
-  TextColumn get unit => text().withLength(min: 1, max: 20)(); // e.g., "Flasche", "ml"
+  TextColumn get unit => text().withLength(min: 1, max: 20)(); // e.g., "Flasche", "ml", "Stk"
+  IntColumn get type => intEnum<MedicationType>().withDefault(const Constant(0))(); // default infusion
 }
 
 class Accessories extends Table {
@@ -57,6 +60,7 @@ class InfusionSchedules extends Table {
   TextColumn get selectedWeekdays => text().nullable()(); // comma separated: '1,3,5'
   DateTimeColumn get startDate => dateTime()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  TextColumn get intakeTimes => text().nullable()(); // comma separated: '08:00,20:00'
 }
 
 @DriftDatabase(tables: [Medications, Accessories, InfusionLog, MedicationAccessories, PlannedInfusions, InfusionSchedules])
@@ -64,7 +68,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2; // Incremented schema version
+  int get schemaVersion => 3; // Incremented schema version
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -72,6 +76,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createTable(infusionSchedules);
         await m.addColumn(plannedInfusions, plannedInfusions.scheduleId);
+      }
+      if (from < 3) {
+        await m.addColumn(medications, medications.type);
+        await m.addColumn(infusionSchedules, infusionSchedules.intakeTimes);
       }
     },
   );
@@ -110,9 +118,21 @@ class AppDatabase extends _$AppDatabase {
   Future updateMedicationAccessory(MedicationAccessory entry) =>
       update(medicationAccessories).replace(entry);
 
-  // Planned Infusions
+  // Planned Infusions / Treatments
   Stream<List<PlannedInfusion>> watchPlannedInfusions() =>
       (select(plannedInfusions)..where((t) => t.isCompleted.equals(false))..orderBy([(t) => OrderingTerm(expression: t.date)])).watch();
+  
+  Stream<List<PlannedInfusion>> watchTodayPlannedTreatments() {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    
+    return (select(plannedInfusions)
+      ..where((t) => t.date.isBetweenValues(startOfDay, endOfDay) & t.isCompleted.equals(false))
+      ..orderBy([(t) => OrderingTerm(expression: t.date)]))
+      .watch();
+  }
+
   Future<int> insertPlannedInfusion(PlannedInfusionsCompanion entry) =>
       into(plannedInfusions).insert(entry);
   Future completePlannedInfusion(int id) =>
