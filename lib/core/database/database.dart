@@ -212,7 +212,7 @@ class AppDatabase extends _$AppDatabase {
     final endRange = DateTime(now.year, now.month, now.day).add(Duration(days: daysForward + 1));
     
     return (select(plannedInfusions)
-      ..where((t) => t.date.isBetweenValues(startRange, endRange))
+      ..where((t) => t.date.isBetweenValues(startRange, endRange) & t.isCompleted.equals(false))
       ..orderBy([(t) => OrderingTerm(expression: t.date)]))
       .watch();
   }
