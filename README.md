@@ -1,6 +1,6 @@
 # CIDP Buddy
 
-CIDP Buddy is a premium, comprehensive medication and symptom management application specifically designed for patients with Chronic Inflammatory Demyelinating Polyneuropathy (CIDP). It helps users manage complex infusion schedules, track inventory of medications and supplies, and monitor their health journey through a detailed vitals and symptom diary.
+CIDP Buddy is a comprehensive medication and symptom management application specifically designed for patients with Chronic Inflammatory Demyelinating Polyneuropathy (CIDP). It helps users manage complex infusion schedules, track inventory of medications and supplies, and monitor their health journey through a detailed vitals and symptom diary.
 
 ## ✨ Key Features
 
