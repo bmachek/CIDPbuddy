@@ -175,8 +175,6 @@ class InventoryPage extends StatelessWidget {
       },
     );
   }
-
-  }
 }
 
 class _EmptySection extends StatelessWidget {
