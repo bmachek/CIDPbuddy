@@ -35,7 +35,9 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
     final s = widget.initialSchedule;
     _dosageController = TextEditingController(text: s?.dosage.toString() ?? '1.0');
     _intervalController = TextEditingController(text: s?.intervalValue?.toString() ?? '2');
-    _startDate = s?.startDate ?? DateTime.now();
+    _startDate = (s?.startDate ?? DateTime.now());
+    // Normalize to midnight local time
+    _startDate = DateTime(_startDate.year, _startDate.month, _startDate.day);
     _frequencyType = s?.frequencyType ?? 'daily';
     
     // Map back 'weekly' with interval 2 to 'biweekly' for the UI
@@ -146,7 +148,9 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                       firstDate: DateTime.now().subtract(const Duration(days: 30)),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
-                    if (picked != null) setState(() => _startDate = picked);
+                    if (picked != null) {
+                      setState(() => _startDate = DateTime(picked.year, picked.month, picked.day));
+                    }
                   },
                 ),
                 const SizedBox(height: 32),
