@@ -32,12 +32,21 @@ class _DashboardPageState extends State<DashboardPage> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+            title: Row(
               children: [
-                Text(greeting, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal)),
-                const Text('Deine Übersicht', style: TextStyle(fontWeight: FontWeight.bold)),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset('assets/images/app_icon.png', height: 32, width: 32),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(greeting, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal)),
+                    const Text('Deine Übersicht', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ],
             ),
             actions: [
@@ -173,7 +182,16 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 24),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset('assets/images/app_icon.png', height: 48, width: 48),
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               Text(
                 remainingCount > 0 
