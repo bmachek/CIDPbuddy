@@ -76,19 +76,26 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
   }
 
   Future<void> _playMinutePing() async {
-    // Attempt to play a subtle ping sound
-    try {
-      await _audioPlayer.play(AssetSource('audio/ping.mp3'));
-    } catch (_) {
-      // Fallback or ignore if asset missing
+    // Repeat the ping 3 times with a 1.5s delay
+    for (int i = 0; i < 3; i++) {
+      try {
+        await _audioPlayer.play(AssetSource('audio/ping.mp3'));
+      } catch (_) {
+        // Fallback or ignore
+      }
+      if (i < 2) await Future.delayed(const Duration(milliseconds: 1500));
     }
   }
 
   Future<void> _playFinalSound() async {
-    try {
-      await _audioPlayer.play(AssetSource('audio/bell.mp3'));
-    } catch (_) {
-      // Fallback
+    // Final bell repeats 4 times
+    for (int i = 0; i < 4; i++) {
+      try {
+        await _audioPlayer.play(AssetSource('audio/bell.mp3'));
+      } catch (_) {
+        // Fallback
+      }
+      if (i < 3) await Future.delayed(const Duration(milliseconds: 2000));
     }
   }
 
