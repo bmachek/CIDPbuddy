@@ -16,6 +16,7 @@ class DiaryPage extends StatelessWidget {
     final diaryProvider = Provider.of<DiaryProvider>(context);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: StreamBuilder<List<dynamic>>(
         stream: diaryProvider.combinedEntriesStream,
         builder: (context, snapshot) {
@@ -103,9 +104,12 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.1)),
+        color: Theme.of(context).cardColor.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
@@ -222,9 +226,12 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+        color: Theme.of(context).cardColor.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(color: Theme.of(context).primaryColor.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),

@@ -23,6 +23,7 @@ class InventoryPage extends StatelessWidget {
         final pendingMedIds = (pendingSnapshot.data ?? []).map((o) => o.medicationId).toSet();
 
         return Scaffold(
+          backgroundColor: Colors.transparent,
           body: CustomScrollView(
             slivers: [
               SliverAppBar.large(
@@ -144,9 +145,12 @@ class InventoryPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+                          color: Theme.of(context).cardColor.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                          ],
                         ),
                         child: ListTile(
                           leading: CircleAvatar(
@@ -205,9 +209,16 @@ class InventoryPage extends StatelessWidget {
             return Container(
               margin: const EdgeInsets.symmetric(vertical: 4),
               decoration: BoxDecoration(
-                color: isLowStock ? Colors.orange.withOpacity(0.05) : Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: isLowStock ? Colors.orange.withOpacity(0.2) : Theme.of(context).dividerColor.withOpacity(0.05)),
+                color: isLowStock 
+                    ? Colors.orange.withOpacity(0.15) 
+                    : Theme.of(context).cardColor.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: isLowStock ? Colors.orange.withOpacity(0.3) : Colors.white.withOpacity(0.1),
+                ),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6)),
+                ],
               ),
               child: Theme(
                 data: Theme.of(context).copyWith(dividerColor: Colors.transparent),

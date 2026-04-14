@@ -18,6 +18,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final backupService = BackupService();
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Einstellungen')),
       body: ListView(
         children: [
@@ -114,7 +115,7 @@ class _SettingsPageState extends State<SettingsPage> {
             },
           ),
           const Divider(),
-          _buildSectionHeader('Über IgKeeper'),
+          _buildSectionHeader('Über CIDP Buddy'),
           const ListTile(
             leading: Icon(Icons.info_outline),
             title: Text('Version'),

@@ -34,20 +34,20 @@ void main() async {
           update: (context, database, previous) => DiaryProvider(database),
         ),
       ],
-      child: const IgKeeperApp(),
+      child: const CIDPBuddyApp(),
     ),
   );
 }
 
-class IgKeeperApp extends StatelessWidget {
-  const IgKeeperApp({super.key});
+class CIDPBuddyApp extends StatelessWidget {
+  const CIDPBuddyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return MaterialApp(
-      title: 'IgKeeper',
+      title: 'CIDP Buddy',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

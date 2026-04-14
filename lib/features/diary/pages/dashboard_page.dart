@@ -8,6 +8,7 @@ import '../../reminders/services/notification_service.dart';
 import '../../inventory/pages/shopping_wizard_dialog.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:igkeeper/core/services/medication_service.dart';
+import 'package:igkeeper/core/theme/app_theme.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -19,6 +20,7 @@ class DashboardPage extends StatelessWidget {
     final greeting = _getGreeting();
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
@@ -124,14 +126,14 @@ class DashboardPage extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.teal.shade400, Colors.teal.shade700],
+              colors: [AppTheme.primaryBase, AppTheme.primaryLight],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.teal.withOpacity(0.3),
+                color: AppTheme.primaryBase.withOpacity(0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -140,7 +142,7 @@ class DashboardPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.medication_rounded, color: Colors.white, size: 32),
+              const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 32),
               const SizedBox(height: 16),
               Text(
                 remainingCount > 0 
