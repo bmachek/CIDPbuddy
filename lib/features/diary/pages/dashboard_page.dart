@@ -195,7 +195,7 @@ class DashboardPage extends StatelessWidget {
                     final isEverythingOK = lowMeds.isEmpty && lowAccs.isEmpty;
 
                     return InkWell(
-                      onTap: isEverythingOK ? null : () {
+                      onTap: () {
                         showDialog(
                           context: context,
                           builder: (context) => ShoppingWizardDialog(
@@ -246,14 +246,21 @@ class DashboardPage extends StatelessWidget {
                                     )
                                   else if (pendingOrders.isNotEmpty)
                                     const Text(
-                                      'Bestellungen sind bereits unterwegs.',
+                                      'Bestellungen sind unterwegs.',
                                       style: TextStyle(fontSize: 12, color: Colors.teal),
+                                    )
+                                  else
+                                    const Text(
+                                      'Dein Bestand ist aktuell ausreichend.',
+                                      style: TextStyle(fontSize: 12, color: Colors.grey),
                                     ),
                                 ],
                               ),
                             ),
-                            if (!isEverythingOK)
-                              Icon(Icons.chevron_right_rounded, color: Colors.red.shade300),
+                            Icon(
+                              Icons.chevron_right_rounded, 
+                              color: isEverythingOK ? Colors.green.shade300 : Colors.red.shade300
+                            ),
                           ],
                         ),
                       ),
