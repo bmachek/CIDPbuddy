@@ -12,7 +12,7 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('launcher_icon');
+    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
     const DarwinInitializationSettings darwinSettings = DarwinInitializationSettings();
 
     const InitializationSettings initSettings = InitializationSettings(
