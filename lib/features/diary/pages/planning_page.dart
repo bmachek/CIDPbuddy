@@ -78,15 +78,70 @@ class PlanningPage extends StatelessWidget {
           return _buildEmptyState('Keine zukünftigen Termine', Icons.calendar_today_rounded);
         }
 
-        return ListView.builder(
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        
+        final overdue = appointments.where((a) => a.date.isBefore(today)).toList();
+        final upcoming = appointments.where((a) => !a.date.isBefore(today)).toList();
+
+        return ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-          itemCount: appointments.length,
-          itemBuilder: (context, index) {
-            final appt = appointments[index];
-            return _buildAppointmentCard(context, db, appt);
-          },
+          children: [
+            if (overdue.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Überfällig',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => _confirmBulkDelete(context, db),
+                    icon: const Icon(Icons.delete_sweep_rounded, size: 18, color: Colors.red),
+                    label: const Text('Alle löschen', style: TextStyle(color: Colors.red, fontSize: 13)),
+                    style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ...overdue.map((appt) => _buildAppointmentCard(context, db, appt, isOverdue: true)),
+              const SizedBox(height: 24),
+            ],
+            if (upcoming.isNotEmpty) ...[
+              const Text(
+                'Anstehend',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
+              ),
+              const SizedBox(height: 12),
+              ...upcoming.map((appt) => _buildAppointmentCard(context, db, appt, isOverdue: false)),
+            ],
+          ],
         );
       },
+    );
+  }
+
+  void _confirmBulkDelete(BuildContext context, AppDatabase db) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Vergangene Termine löschen?'),
+        content: const Text(
+          'Möchtest du alle geplanten Termine aus der Vergangenheit unwiderruflich löschen? \n\nDies erstellt keine Einträge im Tagebuch.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(
+            onPressed: () async {
+              final now = DateTime.now();
+              final today = DateTime(now.year, now.month, now.day);
+              await db.deleteIncompletePlannedInfusionsBefore(today);
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -138,7 +193,7 @@ class PlanningPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAppointmentCard(BuildContext context, AppDatabase db, PlannedInfusion appt) {
+  Widget _buildAppointmentCard(BuildContext context, AppDatabase db, PlannedInfusion appt, {bool isOverdue = false}) {
     final dateStr = DateFormat('dd. MMMM yyyy').format(appt.date);
     
     return FutureBuilder<Medication>(
@@ -162,17 +217,20 @@ class PlanningPage extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: (appt.scheduleId != null ? Colors.blue : Theme.of(context).primaryColor).withOpacity(0.1),
+                    color: (isOverdue ? Colors.red : (appt.scheduleId != null ? Colors.blue : Theme.of(context).primaryColor)).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    appt.scheduleId != null ? Icons.repeat_rounded : Icons.event_rounded,
-                    color: appt.scheduleId != null ? Colors.blue : Theme.of(context).primaryColor,
+                    isOverdue ? Icons.priority_high_rounded : (appt.scheduleId != null ? Icons.repeat_rounded : Icons.event_rounded),
+                    color: isOverdue ? Colors.red : (appt.scheduleId != null ? Colors.blue : Theme.of(context).primaryColor),
                     size: 20,
                   ),
                 ),
                 title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text('Geplant für den $dateStr'),
+                subtitle: Text(
+                  'Geplant für den $dateStr',
+                  style: isOverdue ? const TextStyle(color: Colors.red, fontWeight: FontWeight.bold) : null,
+                ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -204,6 +262,7 @@ class PlanningPage extends StatelessWidget {
                             builder: (_) => AddInfusionPage(
                               initialMedicationId: appt.medicationId,
                               initialDosage: appt.dosage,
+                              initialDate: appt.date,
                             ),
                           ),
                         ).then((result) async {

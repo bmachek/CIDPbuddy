@@ -14,6 +14,7 @@ class DiaryProvider extends ChangeNotifier {
     required double dosage,
     String? batchNumber,
     String? notes,
+    DateTime? date,
   }) async {
     // 1. Transaction to ensure database integrity
     await _db.transaction(() async {
@@ -30,7 +31,7 @@ class DiaryProvider extends ChangeNotifier {
 
       // 4. Create log entry
       await _db.insertInfusionLog(InfusionLogCompanion.insert(
-        date: DateTime.now(),
+        date: date ?? DateTime.now(),
         medicationId: medicationId,
         dosage: dosage,
         batchNumber: Value(batchNumber),

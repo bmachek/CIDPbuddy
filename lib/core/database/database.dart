@@ -124,6 +124,9 @@ class AppDatabase extends _$AppDatabase {
   Future updatePlannedInfusion(PlannedInfusion entry) =>
       update(plannedInfusions).replace(entry);
 
+  Future deleteIncompletePlannedInfusionsBefore(DateTime date) =>
+      (delete(plannedInfusions)..where((t) => t.date.isSmallerThan(Constant(date)) & t.isCompleted.equals(false))).go();
+
   // Schedules
   Stream<List<InfusionSchedule>> watchSchedules() => select(infusionSchedules).watch();
   Future<List<InfusionSchedule>> getAllActiveSchedules() => (select(infusionSchedules)..where((t) => t.isActive.equals(true))).get();

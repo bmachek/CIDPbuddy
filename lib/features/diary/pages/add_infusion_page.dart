@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:intl/intl.dart';
 import '../providers/diary_provider.dart';
 import '../../inventory/providers/inventory_provider.dart';
 import '../../../core/database/database.dart';
@@ -9,11 +10,13 @@ import '../widgets/premedication_timer_modal.dart';
 class AddInfusionPage extends StatefulWidget {
   final int? initialMedicationId;
   final double? initialDosage;
+  final DateTime? initialDate;
 
   const AddInfusionPage({
     super.key,
     this.initialMedicationId,
     this.initialDosage,
+    this.initialDate,
   });
 
   @override
@@ -26,6 +29,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
   final _batchController = TextEditingController();
   late final TextEditingController _dosageController;
   final _notesController = TextEditingController();
+  late DateTime _selectedDate;
 
   @override
   void initState() {
@@ -33,6 +37,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
     _dosageController = TextEditingController(
       text: widget.initialDosage?.toString() ?? '1.0',
     );
+    _selectedDate = widget.initialDate ?? DateTime.now();
     
     // If initialMedicationId is provided, we'll wait for the stream in the builder or set it here if we had the list.
     // Since we only have the ID, we'll leave _selectedMed null and handle it in the StreamBuilder.
@@ -86,6 +91,38 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   validator: (val) => val == null ? 'Bitte wählen' : null,
                 );
               },
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: _selectDate,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_today_rounded, size: 20, color: Theme.of(context).primaryColor),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Zeitpunkt der Infusion', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text(
+                            DateFormat('dd.MM.yyyy, HH:mm').format(_selectedDate),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.edit_rounded, size: 18, color: Colors.grey),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             Row(
@@ -145,29 +182,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               maxLines: 4,
             ),
             const SizedBox(height: 20),
-            if (_selectedMed?.name.toLowerCase().contains('hyqvia') == true && _batchController.text.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(56),
-                    side: BorderSide(color: Theme.of(context).primaryColor),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  ),
-                  onPressed: _showTimer,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.timer_outlined, color: Theme.of(context).primaryColor),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Timer für Vormedikation',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            // We'll remove the manual timer button and integrate it into the Save button for Hyqvia
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(60),
@@ -177,14 +192,14 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 elevation: 0,
               ),
               onPressed: () => _save(diaryProvider),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline_rounded),
-                  SizedBox(width: 12),
+                  const Icon(Icons.check_circle_outline_rounded),
+                  const SizedBox(width: 12),
                   Text(
-                    'Infusion speichern & Bestand abbuchen',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    _isHyqvia ? 'Speichern & Timer starten' : 'Infusion speichern & Bestand abbuchen',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -235,13 +250,26 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
     }
   }
 
-  void _showTimer() {
-    showModalBottomSheet(
+  bool get _isHyqvia => _selectedMed?.name.toLowerCase().contains('hyqvia') == true;
+
+  Future<void> _selectDate() async {
+    final date = await showDatePicker(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const PremedicationTimerModal(),
+      initialDate: _selectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
     );
+    if (date != null) {
+      final time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_selectedDate),
+      );
+      if (time != null) {
+        setState(() {
+          _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+        });
+      }
+    }
   }
 
   void _save(DiaryProvider provider) async {
@@ -251,8 +279,28 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
         batchNumber: _batchController.text,
         notes: _notesController.text,
+        date: _selectedDate,
       );
-      if (mounted) Navigator.pop(context, true);
+      
+      if (mounted) {
+        if (_isHyqvia) {
+          // For Hyqvia, we show the timer modal and wait for it to be dismissed/started 
+          // but we actually want to pop the add page first so they are back on the list
+          Navigator.pop(context, true);
+          _showTimer(context);
+        } else {
+          Navigator.pop(context, true);
+        }
+      }
     }
+  }
+
+  void _showTimer(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const PremedicationTimerModal(),
+    );
   }
 }
