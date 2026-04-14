@@ -353,6 +353,24 @@ class DashboardPage extends StatelessWidget {
         final timeStr = DateFormat('HH:mm').format(medDate);
         final isPill = med.type == MedicationType.pill;
 
+        final onAction = () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AddInfusionPage(
+                initialMedicationId: treatment.medicationId,
+                initialDosage: treatment.dosage,
+                initialDate: treatment.date,
+              ),
+            ),
+          ).then((result) async {
+            if (result == true) {
+              await db.completePlannedInfusion(treatment.id);
+              await NotificationService().cancelTreatmentReminders(treatment.id);
+            }
+          });
+        };
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
@@ -361,6 +379,7 @@ class DashboardPage extends StatelessWidget {
             border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
           ),
           child: ListTile(
+            onTap: onAction,
             contentPadding: const EdgeInsets.all(16),
             leading: Container(
               width: 48,
@@ -377,23 +396,7 @@ class DashboardPage extends StatelessWidget {
             title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('$dateStr um $timeStr Uhr • ${treatment.dosage} ${med.unit}'),
             trailing: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AddInfusionPage(
-                      initialMedicationId: treatment.medicationId,
-                      initialDosage: treatment.dosage,
-                      initialDate: treatment.date,
-                    ),
-                  ),
-                ).then((result) async {
-                  if (result == true) {
-                    await db.completePlannedInfusion(treatment.id);
-                    await NotificationService().cancelTreatmentReminders(treatment.id);
-                  }
-                });
-              },
+              onPressed: onAction,
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 0,

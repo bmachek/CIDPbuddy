@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/diary_provider.dart';
 import '../../inventory/providers/inventory_provider.dart';
 import '../../../core/database/database.dart';
@@ -31,6 +32,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
   final _notesController = TextEditingController();
   final _weightController = TextEditingController();
   late DateTime _selectedDate;
+  bool _timerEnabled = true;
 
   @override
   void initState() {
@@ -39,9 +41,14 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
       text: widget.initialDosage?.toString() ?? '1.0',
     );
     _selectedDate = widget.initialDate ?? DateTime.now();
-    
-    // If initialMedicationId is provided, we'll wait for the stream in the builder or set it here if we had the list.
-    // Since we only have the ID, we'll leave _selectedMed null and handle it in the StreamBuilder.
+    _loadTimerSetting();
+  }
+
+  Future<void> _loadTimerSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _timerEnabled = prefs.getBool('hyqvia_timer_enabled') ?? true;
+    });
   }
 
   @override
@@ -125,39 +132,41 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _batchController,
-                    decoration: InputDecoration(
-                      labelText: 'Chargennummer / Barcode',
-                      hintText: 'Scannen oder tippen',
-                      prefixIcon: const Icon(Icons.qr_code_rounded),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                      filled: true,
-                      fillColor: Theme.of(context).cardColor,
+            if (_selectedMed?.trackBatchNumber ?? true) ...[
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _batchController,
+                      decoration: InputDecoration(
+                        labelText: 'Chargennummer / Barcode',
+                        hintText: 'Scannen oder tippen',
+                        prefixIcon: const Icon(Icons.qr_code_rounded),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                InkWell(
-                  onTap: _openScanner,
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    height: 56,
-                    width: 56,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.2)),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: _openScanner,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      height: 56,
+                      width: 56,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.2)),
+                      ),
+                      child: Icon(Icons.qr_code_scanner_rounded, color: Theme.of(context).primaryColor),
                     ),
-                    child: Icon(Icons.qr_code_scanner_rounded, color: Theme.of(context).primaryColor),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
             const SizedBox(height: 20),
             TextFormField(
               controller: _dosageController,
@@ -170,19 +179,21 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _weightController,
-              decoration: InputDecoration(
-                labelText: 'Körpergewicht (kg)',
-                prefixIcon: const Icon(Icons.monitor_weight_rounded),
-                suffixText: 'kg',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                filled: true,
-                fillColor: Theme.of(context).cardColor,
+            if (_selectedMed?.trackWeight ?? true) ...[
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _weightController,
+                decoration: InputDecoration(
+                  labelText: 'Körpergewicht (kg)',
+                  prefixIcon: const Icon(Icons.monitor_weight_rounded),
+                  suffixText: 'kg',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  filled: true,
+                  fillColor: Theme.of(context).cardColor,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            ),
+            ],
             const SizedBox(height: 20),
             TextFormField(
               controller: _notesController,
@@ -212,7 +223,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   const Icon(Icons.check_circle_outline_rounded),
                   const SizedBox(width: 12),
                   Text(
-                    _isHyqvia ? 'Speichern & Timer starten' : 'Infusion speichern & Bestand abbuchen',
+                    _shouldShowTimer ? 'Speichern & Timer starten' : 'Infusion speichern & Bestand abbuchen',
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -264,7 +275,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
     }
   }
 
-  bool get _isHyqvia => _selectedMed?.name.toLowerCase().contains('hyqvia') == true;
+  bool get _shouldShowTimer => _selectedMed?.useTimer == true;
 
   Future<void> _selectDate() async {
     final date = await showDatePicker(
@@ -298,8 +309,8 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
       );
       
       if (mounted) {
-        if (_isHyqvia) {
-          // For Hyqvia, we show the timer modal and wait for it to be dismissed/started 
+        if (_shouldShowTimer) {
+          // Show the timer modal if enabled for this medication
           // but we actually want to pop the add page first so they are back on the list
           Navigator.pop(context, true);
           _showTimer(context);

@@ -17,6 +17,9 @@ class Medications extends Table {
   TextColumn get unit => text().withLength(min: 1, max: 20)(); // e.g., "Flasche", "ml", "Stk"
   IntColumn get type => intEnum<MedicationType>().withDefault(const Constant(0))(); // default infusion
   RealColumn get packageSize => real().withDefault(const Constant(1.0))();
+  BoolColumn get trackBatchNumber => boolean().withDefault(const Constant(true))();
+  BoolColumn get trackWeight => boolean().withDefault(const Constant(true))();
+  BoolColumn get useTimer => boolean().withDefault(const Constant(false))();
 }
 
 class Accessories extends Table {
@@ -109,7 +112,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 8; // Incremented schema version to 8 for DiaryEntries
+  int get schemaVersion => 9; // Incremented schema version to 9 for Medication workflow config
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -136,8 +139,10 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(medications, medications.packageSize);
         await m.addColumn(accessories, accessories.packageSize);
       }
-      if (to >= 8 && from < 8) {
-        await m.createTable(diaryEntries);
+      if (to >= 9 && from < 9) {
+        await m.addColumn(medications, medications.trackBatchNumber);
+        await m.addColumn(medications, medications.trackWeight);
+        await m.addColumn(medications, medications.useTimer);
       }
     },
   );

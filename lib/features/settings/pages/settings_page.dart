@@ -84,6 +84,35 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const Divider(),
           _buildSectionHeader('Hyqvia Timer'),
+          FutureBuilder<bool>(
+            future: SharedPreferences.getInstance().then((p) => p.getBool('hyqvia_timer_enabled') ?? true),
+            builder: (context, snapshot) {
+              final enabled = snapshot.data ?? true;
+              return SwitchListTile(
+                title: const Text('Timer automatisch vorschlagen'),
+                subtitle: const Text('Bei Hyqvia-Infusionen den Premedikation-Timer anbieten'),
+                value: enabled,
+                onChanged: (val) async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('hyqvia_timer_enabled', val);
+                  setState(() {});
+                },
+                secondary: const Icon(Icons.av_timer_rounded),
+              );
+            },
+          ),
+          FutureBuilder<int>(
+            future: SharedPreferences.getInstance().then((p) => p.getInt('hyqvia_timer_duration') ?? 10),
+            builder: (context, snapshot) {
+              final duration = snapshot.data ?? 10;
+              return ListTile(
+                leading: const Icon(Icons.timer_outlined),
+                title: const Text('Premedikation-Dauer'),
+                subtitle: Text('Aktuell: $duration Minuten'),
+                onTap: () => _showDurationPicker(context, duration),
+              );
+            },
+          ),
           const Divider(),
           _buildSectionHeader('Über IgKeeper'),
           const ListTile(

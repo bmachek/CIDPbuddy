@@ -17,6 +17,9 @@ class InventoryProvider extends ChangeNotifier {
     required String unit,
     required MedicationType type,
     double packageSize = 1.0,
+    bool trackBatchNumber = true,
+    bool trackWeight = true,
+    bool useTimer = false,
   }) async {
     final id = await _db.insertMedication(MedicationsCompanion.insert(
       name: name,
@@ -25,9 +28,17 @@ class InventoryProvider extends ChangeNotifier {
       unit: unit,
       type: Value(type),
       packageSize: Value(packageSize),
+      trackBatchNumber: Value(trackBatchNumber),
+      trackWeight: Value(trackWeight),
+      useTimer: Value(useTimer),
     ));
     notifyListeners();
     return id;
+  }
+
+  Future<void> updateMedication(Medication med) async {
+    await _db.updateMedication(med);
+    notifyListeners();
   }
 
   Future<void> addAccessory({
@@ -47,8 +58,7 @@ class InventoryProvider extends ChangeNotifier {
 
   Future<void> updateMedicationStock(Medication med, double delta) async {
     final newStock = med.stock + delta;
-    await _db.updateMedication(med.copyWith(stock: newStock));
-    notifyListeners();
+    await updateMedication(med.copyWith(stock: newStock));
   }
 
   Future<void> updateAccessoryStock(Accessory acc, double delta) async {

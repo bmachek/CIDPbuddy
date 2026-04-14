@@ -110,6 +110,14 @@ class MedicationDetailsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 48),
                 const SizedBox(height: 48),
+                _buildSectionHeader('Einnahme-Workflow'),
+                const Text(
+                  'Konfiguriere hier, welche Felder beim Erfassen einer Einnahme angezeigt werden.',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                _buildWorkflowConfig(context, db, invProvider, medication),
+                const SizedBox(height: 32),
                 _buildSectionHeader('Zeitpläne'),
                 const Text(
                   'Lege hier fest, in welchem Rhythmus du dieses Medikament einnimmst.',
@@ -617,6 +625,43 @@ class MedicationDetailsPage extends StatelessWidget {
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorkflowConfig(BuildContext context, AppDatabase db, InventoryProvider provider, Medication medication) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile(
+            title: const Text('Chargennummer erfassen'),
+            subtitle: const Text('Barcode scannen oder manuell eingeben'),
+            value: medication.trackBatchNumber,
+            onChanged: (val) => provider.updateMedication(medication.copyWith(trackBatchNumber: val)),
+            secondary: const Icon(Icons.qr_code_rounded, color: Colors.blueGrey),
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
+            title: const Text('Körpergewicht erfassen'),
+            subtitle: const Text('Gewicht bei der Infusion protokollieren'),
+            value: medication.trackWeight,
+            onChanged: (val) => provider.updateMedication(medication.copyWith(trackWeight: val)),
+            secondary: const Icon(Icons.monitor_weight_rounded, color: Colors.blueGrey),
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
+            title: const Text('Einnahmetimer nutzen'),
+            subtitle: const Text('Premedikation-Timer vor der Infusion'),
+            value: medication.useTimer,
+            onChanged: (val) => provider.updateMedication(medication.copyWith(useTimer: val)),
+            secondary: const Icon(Icons.av_timer_rounded, color: Colors.blueGrey),
           ),
         ],
       ),

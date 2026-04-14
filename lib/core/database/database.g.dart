@@ -101,6 +101,51 @@ class $MedicationsTable extends Medications
     requiredDuringInsert: false,
     defaultValue: const Constant(1.0),
   );
+  static const VerificationMeta _trackBatchNumberMeta = const VerificationMeta(
+    'trackBatchNumber',
+  );
+  @override
+  late final GeneratedColumn<bool> trackBatchNumber = GeneratedColumn<bool>(
+    'track_batch_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("track_batch_number" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _trackWeightMeta = const VerificationMeta(
+    'trackWeight',
+  );
+  @override
+  late final GeneratedColumn<bool> trackWeight = GeneratedColumn<bool>(
+    'track_weight',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("track_weight" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _useTimerMeta = const VerificationMeta(
+    'useTimer',
+  );
+  @override
+  late final GeneratedColumn<bool> useTimer = GeneratedColumn<bool>(
+    'use_timer',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("use_timer" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -111,6 +156,9 @@ class $MedicationsTable extends Medications
     unit,
     type,
     packageSize,
+    trackBatchNumber,
+    trackWeight,
+    useTimer,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -170,6 +218,30 @@ class $MedicationsTable extends Medications
         ),
       );
     }
+    if (data.containsKey('track_batch_number')) {
+      context.handle(
+        _trackBatchNumberMeta,
+        trackBatchNumber.isAcceptableOrUnknown(
+          data['track_batch_number']!,
+          _trackBatchNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('track_weight')) {
+      context.handle(
+        _trackWeightMeta,
+        trackWeight.isAcceptableOrUnknown(
+          data['track_weight']!,
+          _trackWeightMeta,
+        ),
+      );
+    }
+    if (data.containsKey('use_timer')) {
+      context.handle(
+        _useTimerMeta,
+        useTimer.isAcceptableOrUnknown(data['use_timer']!, _useTimerMeta),
+      );
+    }
     return context;
   }
 
@@ -213,6 +285,18 @@ class $MedicationsTable extends Medications
         DriftSqlType.double,
         data['${effectivePrefix}package_size'],
       )!,
+      trackBatchNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}track_batch_number'],
+      )!,
+      trackWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}track_weight'],
+      )!,
+      useTimer: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}use_timer'],
+      )!,
     );
   }
 
@@ -234,6 +318,9 @@ class Medication extends DataClass implements Insertable<Medication> {
   final String unit;
   final MedicationType type;
   final double packageSize;
+  final bool trackBatchNumber;
+  final bool trackWeight;
+  final bool useTimer;
   const Medication({
     required this.id,
     required this.name,
@@ -243,6 +330,9 @@ class Medication extends DataClass implements Insertable<Medication> {
     required this.unit,
     required this.type,
     required this.packageSize,
+    required this.trackBatchNumber,
+    required this.trackWeight,
+    required this.useTimer,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -259,6 +349,9 @@ class Medication extends DataClass implements Insertable<Medication> {
       map['type'] = Variable<int>($MedicationsTable.$convertertype.toSql(type));
     }
     map['package_size'] = Variable<double>(packageSize);
+    map['track_batch_number'] = Variable<bool>(trackBatchNumber);
+    map['track_weight'] = Variable<bool>(trackWeight);
+    map['use_timer'] = Variable<bool>(useTimer);
     return map;
   }
 
@@ -272,6 +365,9 @@ class Medication extends DataClass implements Insertable<Medication> {
       unit: Value(unit),
       type: Value(type),
       packageSize: Value(packageSize),
+      trackBatchNumber: Value(trackBatchNumber),
+      trackWeight: Value(trackWeight),
+      useTimer: Value(useTimer),
     );
   }
 
@@ -291,6 +387,9 @@ class Medication extends DataClass implements Insertable<Medication> {
         serializer.fromJson<int>(json['type']),
       ),
       packageSize: serializer.fromJson<double>(json['packageSize']),
+      trackBatchNumber: serializer.fromJson<bool>(json['trackBatchNumber']),
+      trackWeight: serializer.fromJson<bool>(json['trackWeight']),
+      useTimer: serializer.fromJson<bool>(json['useTimer']),
     );
   }
   @override
@@ -307,6 +406,9 @@ class Medication extends DataClass implements Insertable<Medication> {
         $MedicationsTable.$convertertype.toJson(type),
       ),
       'packageSize': serializer.toJson<double>(packageSize),
+      'trackBatchNumber': serializer.toJson<bool>(trackBatchNumber),
+      'trackWeight': serializer.toJson<bool>(trackWeight),
+      'useTimer': serializer.toJson<bool>(useTimer),
     };
   }
 
@@ -319,6 +421,9 @@ class Medication extends DataClass implements Insertable<Medication> {
     String? unit,
     MedicationType? type,
     double? packageSize,
+    bool? trackBatchNumber,
+    bool? trackWeight,
+    bool? useTimer,
   }) => Medication(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -328,6 +433,9 @@ class Medication extends DataClass implements Insertable<Medication> {
     unit: unit ?? this.unit,
     type: type ?? this.type,
     packageSize: packageSize ?? this.packageSize,
+    trackBatchNumber: trackBatchNumber ?? this.trackBatchNumber,
+    trackWeight: trackWeight ?? this.trackWeight,
+    useTimer: useTimer ?? this.useTimer,
   );
   Medication copyWithCompanion(MedicationsCompanion data) {
     return Medication(
@@ -341,6 +449,13 @@ class Medication extends DataClass implements Insertable<Medication> {
       packageSize: data.packageSize.present
           ? data.packageSize.value
           : this.packageSize,
+      trackBatchNumber: data.trackBatchNumber.present
+          ? data.trackBatchNumber.value
+          : this.trackBatchNumber,
+      trackWeight: data.trackWeight.present
+          ? data.trackWeight.value
+          : this.trackWeight,
+      useTimer: data.useTimer.present ? data.useTimer.value : this.useTimer,
     );
   }
 
@@ -354,14 +469,28 @@ class Medication extends DataClass implements Insertable<Medication> {
           ..write('minStock: $minStock, ')
           ..write('unit: $unit, ')
           ..write('type: $type, ')
-          ..write('packageSize: $packageSize')
+          ..write('packageSize: $packageSize, ')
+          ..write('trackBatchNumber: $trackBatchNumber, ')
+          ..write('trackWeight: $trackWeight, ')
+          ..write('useTimer: $useTimer')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, pzn, stock, minStock, unit, type, packageSize);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    pzn,
+    stock,
+    minStock,
+    unit,
+    type,
+    packageSize,
+    trackBatchNumber,
+    trackWeight,
+    useTimer,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -373,7 +502,10 @@ class Medication extends DataClass implements Insertable<Medication> {
           other.minStock == this.minStock &&
           other.unit == this.unit &&
           other.type == this.type &&
-          other.packageSize == this.packageSize);
+          other.packageSize == this.packageSize &&
+          other.trackBatchNumber == this.trackBatchNumber &&
+          other.trackWeight == this.trackWeight &&
+          other.useTimer == this.useTimer);
 }
 
 class MedicationsCompanion extends UpdateCompanion<Medication> {
@@ -385,6 +517,9 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
   final Value<String> unit;
   final Value<MedicationType> type;
   final Value<double> packageSize;
+  final Value<bool> trackBatchNumber;
+  final Value<bool> trackWeight;
+  final Value<bool> useTimer;
   const MedicationsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -394,6 +529,9 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     this.unit = const Value.absent(),
     this.type = const Value.absent(),
     this.packageSize = const Value.absent(),
+    this.trackBatchNumber = const Value.absent(),
+    this.trackWeight = const Value.absent(),
+    this.useTimer = const Value.absent(),
   });
   MedicationsCompanion.insert({
     this.id = const Value.absent(),
@@ -404,6 +542,9 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     required String unit,
     this.type = const Value.absent(),
     this.packageSize = const Value.absent(),
+    this.trackBatchNumber = const Value.absent(),
+    this.trackWeight = const Value.absent(),
+    this.useTimer = const Value.absent(),
   }) : name = Value(name),
        unit = Value(unit);
   static Insertable<Medication> custom({
@@ -415,6 +556,9 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     Expression<String>? unit,
     Expression<int>? type,
     Expression<double>? packageSize,
+    Expression<bool>? trackBatchNumber,
+    Expression<bool>? trackWeight,
+    Expression<bool>? useTimer,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -425,6 +569,9 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       if (unit != null) 'unit': unit,
       if (type != null) 'type': type,
       if (packageSize != null) 'package_size': packageSize,
+      if (trackBatchNumber != null) 'track_batch_number': trackBatchNumber,
+      if (trackWeight != null) 'track_weight': trackWeight,
+      if (useTimer != null) 'use_timer': useTimer,
     });
   }
 
@@ -437,6 +584,9 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     Value<String>? unit,
     Value<MedicationType>? type,
     Value<double>? packageSize,
+    Value<bool>? trackBatchNumber,
+    Value<bool>? trackWeight,
+    Value<bool>? useTimer,
   }) {
     return MedicationsCompanion(
       id: id ?? this.id,
@@ -447,6 +597,9 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       unit: unit ?? this.unit,
       type: type ?? this.type,
       packageSize: packageSize ?? this.packageSize,
+      trackBatchNumber: trackBatchNumber ?? this.trackBatchNumber,
+      trackWeight: trackWeight ?? this.trackWeight,
+      useTimer: useTimer ?? this.useTimer,
     );
   }
 
@@ -479,6 +632,15 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     if (packageSize.present) {
       map['package_size'] = Variable<double>(packageSize.value);
     }
+    if (trackBatchNumber.present) {
+      map['track_batch_number'] = Variable<bool>(trackBatchNumber.value);
+    }
+    if (trackWeight.present) {
+      map['track_weight'] = Variable<bool>(trackWeight.value);
+    }
+    if (useTimer.present) {
+      map['use_timer'] = Variable<bool>(useTimer.value);
+    }
     return map;
   }
 
@@ -492,7 +654,10 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
           ..write('minStock: $minStock, ')
           ..write('unit: $unit, ')
           ..write('type: $type, ')
-          ..write('packageSize: $packageSize')
+          ..write('packageSize: $packageSize, ')
+          ..write('trackBatchNumber: $trackBatchNumber, ')
+          ..write('trackWeight: $trackWeight, ')
+          ..write('useTimer: $useTimer')
           ..write(')'))
         .toString();
   }
@@ -4326,6 +4491,9 @@ typedef $$MedicationsTableCreateCompanionBuilder =
       required String unit,
       Value<MedicationType> type,
       Value<double> packageSize,
+      Value<bool> trackBatchNumber,
+      Value<bool> trackWeight,
+      Value<bool> useTimer,
     });
 typedef $$MedicationsTableUpdateCompanionBuilder =
     MedicationsCompanion Function({
@@ -4337,6 +4505,9 @@ typedef $$MedicationsTableUpdateCompanionBuilder =
       Value<String> unit,
       Value<MedicationType> type,
       Value<double> packageSize,
+      Value<bool> trackBatchNumber,
+      Value<bool> trackWeight,
+      Value<bool> useTimer,
     });
 
 final class $$MedicationsTableReferences
@@ -4532,6 +4703,21 @@ class $$MedicationsTableFilterComposer
 
   ColumnFilters<double> get packageSize => $composableBuilder(
     column: $table.packageSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get trackBatchNumber => $composableBuilder(
+    column: $table.trackBatchNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get trackWeight => $composableBuilder(
+    column: $table.trackWeight,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get useTimer => $composableBuilder(
+    column: $table.useTimer,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4735,6 +4921,21 @@ class $$MedicationsTableOrderingComposer
     column: $table.packageSize,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get trackBatchNumber => $composableBuilder(
+    column: $table.trackBatchNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get trackWeight => $composableBuilder(
+    column: $table.trackWeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get useTimer => $composableBuilder(
+    column: $table.useTimer,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MedicationsTableAnnotationComposer
@@ -4771,6 +4972,19 @@ class $$MedicationsTableAnnotationComposer
     column: $table.packageSize,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get trackBatchNumber => $composableBuilder(
+    column: $table.trackBatchNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get trackWeight => $composableBuilder(
+    column: $table.trackWeight,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get useTimer =>
+      $composableBuilder(column: $table.useTimer, builder: (column) => column);
 
   Expression<T> infusionLogRefs<T extends Object>(
     Expression<T> Function($$InfusionLogTableAnnotationComposer a) f,
@@ -4969,6 +5183,9 @@ class $$MedicationsTableTableManager
                 Value<String> unit = const Value.absent(),
                 Value<MedicationType> type = const Value.absent(),
                 Value<double> packageSize = const Value.absent(),
+                Value<bool> trackBatchNumber = const Value.absent(),
+                Value<bool> trackWeight = const Value.absent(),
+                Value<bool> useTimer = const Value.absent(),
               }) => MedicationsCompanion(
                 id: id,
                 name: name,
@@ -4978,6 +5195,9 @@ class $$MedicationsTableTableManager
                 unit: unit,
                 type: type,
                 packageSize: packageSize,
+                trackBatchNumber: trackBatchNumber,
+                trackWeight: trackWeight,
+                useTimer: useTimer,
               ),
           createCompanionCallback:
               ({
@@ -4989,6 +5209,9 @@ class $$MedicationsTableTableManager
                 required String unit,
                 Value<MedicationType> type = const Value.absent(),
                 Value<double> packageSize = const Value.absent(),
+                Value<bool> trackBatchNumber = const Value.absent(),
+                Value<bool> trackWeight = const Value.absent(),
+                Value<bool> useTimer = const Value.absent(),
               }) => MedicationsCompanion.insert(
                 id: id,
                 name: name,
@@ -4998,6 +5221,9 @@ class $$MedicationsTableTableManager
                 unit: unit,
                 type: type,
                 packageSize: packageSize,
+                trackBatchNumber: trackBatchNumber,
+                trackWeight: trackWeight,
+                useTimer: useTimer,
               ),
           withReferenceMapper: (p0) => p0
               .map(
