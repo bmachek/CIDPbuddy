@@ -92,62 +92,73 @@ class InventoryPage extends StatelessWidget {
   Widget _buildMedicationItem(BuildContext context, Medication med, InventoryProvider provider, AppDatabase db) {
     final isLowStock = med.stock <= med.minStock && med.minStock > 0;
     
+    return StreamBuilder<List<MedicationAccessory>>(
+      stream: db.watchAccessoriesForMedication(med.id),
+      builder: (context, snapshot) {
+        final links = snapshot.data ?? [];
+        final hasAccessories = links.isNotEmpty;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          decoration: BoxDecoration(
+            color: isLowStock ? Colors.orange.withOpacity(0.05) : Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: isLowStock ? Colors.orange.withOpacity(0.2) : Theme.of(context).dividerColor.withOpacity(0.05)),
+          ),
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: hasAccessories 
+              ? ExpansionTile(
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
+                  collapsedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
+                  leading: _buildMedicationLeading(isLowStock, Theme.of(context).primaryColor),
+                  title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(isLowStock ? 'Niedriger Bestand!' : 'PZN: ${med.pzn ?? "-"}'),
+                  trailing: _buildMedicationTrailing(context, med, provider),
+                  childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                    const Divider(height: 1),
+                    const SizedBox(height: 12),
+                    ...links.map((link) => _buildEmbeddedAccessoryItem(context, db, link, provider)),
+                  ],
+                )
+              : ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: _buildMedicationLeading(isLowStock, Theme.of(context).primaryColor),
+                  title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(isLowStock ? 'Niedriger Bestand!' : 'PZN: ${med.pzn ?? "-"}'),
+                  trailing: _buildMedicationTrailing(context, med, provider),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
+                ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMedicationLeading(bool isLowStock, Color primaryColor) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        color: isLowStock ? Colors.orange.withOpacity(0.05) : Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isLowStock ? Colors.orange.withOpacity(0.2) : Theme.of(context).dividerColor.withOpacity(0.05)),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
-          collapsedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
-          leading: Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(color: (isLowStock ? Colors.orange : Theme.of(context).primaryColor).withOpacity(0.1), shape: BoxShape.circle),
-            child: Icon(isLowStock ? Icons.warning_amber_rounded : Icons.medication_rounded, color: isLowStock ? Colors.orange : Theme.of(context).primaryColor, size: 20),
-          ),
-          title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text(isLowStock ? 'Niedriger Bestand!' : 'PZN: ${med.pzn ?? "-"}'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _StockCounter(
-                stock: med.stock, unit: med.unit,
-                onAdd: () => provider.updateMedicationStock(med, 1),
-                onRemove: () => provider.updateMedicationStock(med, -1),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.chevron_right_rounded),
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
-              ),
-            ],
-          ),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          children: [
-            const Divider(height: 1),
-            const SizedBox(height: 12),
-            StreamBuilder<List<MedicationAccessory>>(
-              stream: db.watchAccessoriesForMedication(med.id),
-              builder: (context, snapshot) {
-                final links = snapshot.data ?? [];
-                if (links.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text('Kein Zubehör verknüpft', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                  );
-                }
-                return Column(
-                  children: links.map((link) => _buildEmbeddedAccessoryItem(context, db, link, provider)).toList(),
-                );
-              },
-            ),
-          ],
+      width: 40, height: 40,
+      decoration: BoxDecoration(color: (isLowStock ? Colors.orange : primaryColor).withOpacity(0.1), shape: BoxShape.circle),
+      child: Icon(isLowStock ? Icons.warning_amber_rounded : Icons.medication_rounded, color: isLowStock ? Colors.orange : primaryColor, size: 20),
+    );
+  }
+
+  Widget _buildMedicationTrailing(BuildContext context, Medication med, InventoryProvider provider) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _StockCounter(
+          stock: med.stock, unit: med.unit,
+          onAdd: () => provider.updateMedicationStock(med, 1),
+          onRemove: () => provider.updateMedicationStock(med, -1),
         ),
-      ),
+        const SizedBox(width: 8),
+        IconButton(
+          icon: const Icon(Icons.chevron_right_rounded),
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
+        ),
+      ],
     );
   }
 
