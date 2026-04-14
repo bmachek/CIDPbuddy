@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/backup_service.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/constants/build_config.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:intl/intl.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -116,16 +119,62 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const Divider(),
           _buildSectionHeader('Über CIDP Buddy'),
-          const ListTile(
-            leading: Icon(Icons.info_outline),
-            title: Text('Version'),
-            subtitle: Text('1.0.0'),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final version = snapshot.data?.version ?? '...';
+              final buildNumber = snapshot.data?.buildNumber ?? '...';
+              
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Theme.of(context).primaryColor),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Version', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text('$version ($buildNumber)', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Icon(Icons.history, color: Theme.of(context).primaryColor),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Build-Zeitstempel', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text(BuildConfig.buildTimestamp, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           const ListTile(
             leading: Icon(Icons.security),
             title: Text('Datenschutz'),
             subtitle: Text('Alle Daten werden lokal auf diesem Gerät gespeichert.'),
           ),
+          const SizedBox(height: 100), // Padding for bottom bar
         ],
       ),
     );
