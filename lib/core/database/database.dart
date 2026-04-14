@@ -151,7 +151,10 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(medicationAccessories, medicationAccessories.isMandatory);
       }
       if (to >= 11 && from < 11) {
-        await m.addColumn(medications, medications.createdAt);
+        // SQLite doesn't allow adding a NOT NULL column with a non-constant default (like CURRENT_TIMESTAMP)
+        // via ALTER TABLE. We'll add it with a constant timestamp (current time) instead.
+        final nowTs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        await m.issueCustomQuery('ALTER TABLE medications ADD COLUMN created_at INTEGER NOT NULL DEFAULT $nowTs');
         await m.addColumn(medications, medications.discontinuedAt);
       }
     },
