@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:drift/drift.dart' show Value;
 import '../../../core/database/database.dart';
 
 class ShoppingWizardDialog extends StatefulWidget {
@@ -13,6 +15,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   Medication? _selectedMed;
   final _qtyController = TextEditingController(text: '1');
   List<_ShoppingItem>? _results;
+  DateTime? _deliveryDate;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +74,24 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               ),
               keyboardType: TextInputType.number,
               onChanged: (_) => setState(() => _results = null),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              tileColor: Theme.of(context).colorScheme.surface,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.withOpacity(0.1))),
+              leading: const Icon(Icons.event_rounded),
+              title: const Text('Lieferdatum (Optional)', style: TextStyle(fontSize: 14)),
+              subtitle: Text(_deliveryDate == null ? 'Gleich nach Bestätigung' : DateFormat('dd.MM.yyyy').format(_deliveryDate!)),
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: _deliveryDate ?? DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                setState(() => _deliveryDate = date);
+              },
+              trailing: _deliveryDate != null ? IconButton(icon: const Icon(Icons.clear), onPressed: () => setState(() => _deliveryDate = null)) : null,
             ),
             const SizedBox(height: 24),
             if (_results != null) ...[
@@ -145,14 +166,20 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
           child: const Text('Abbrechen'),
         ),
         ElevatedButton(
-          onPressed: _selectedMed == null ? null : () => _calculateBOM(db),
+          onPressed: _selectedMed == null ? null : () {
+            if (_results == null) {
+              _calculateBOM(db);
+            } else {
+              _saveOrder(db);
+            }
+          },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).primaryColor,
+            backgroundColor: _results == null ? Theme.of(context).primaryColor : Colors.green,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-          child: const Text('Berechnen'),
+          child: Text(_results == null ? 'Berechnen' : 'Bestellung speichern'),
         ),
       ],
     );
@@ -166,11 +193,16 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
     
     for (var link in links) {
       final acc = await (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).getSingle();
-      final totalNeeded = orderQty * link.defaultQuantity;
-      final shortfall = totalNeeded - acc.stock;
+      
+      // Calculate how much accessory is "reserved" for current med stock
+      final reservedForExisting = _selectedMed!.stock * link.defaultQuantity;
+      final availableStock = acc.stock - reservedForExisting;
+      
+      final neededForOrder = orderQty * link.defaultQuantity;
+      final shortfall = neededForOrder - availableStock;
       
       if (shortfall > 0) {
-        items.add(_ShoppingItem(acc.name, shortfall, acc.unit, acc.stock));
+        items.add(_ShoppingItem(acc.id, acc.name, shortfall, acc.unit, acc.stock));
       }
     }
 
@@ -178,13 +210,47 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       _results = items;
     });
   }
+
+  void _saveOrder(AppDatabase db) async {
+    final orderQty = double.tryParse(_qtyController.text) ?? 1.0;
+    
+    await db.transaction(() async {
+      final orderId = await db.insertPendingOrder(PendingOrdersCompanion.insert(
+        medicationId: _selectedMed!.id,
+        medicationQty: orderQty,
+        deliveryDate: Value(_deliveryDate),
+      ));
+
+      // Add medication as order item
+      await db.insertPendingOrderItem(PendingOrderItemsCompanion.insert(
+        orderId: orderId,
+        medicationId: Value(_selectedMed!.id),
+        quantity: orderQty,
+      ));
+
+      // Add accessories as order items
+      if (_results != null) {
+        for (var item in _results!) {
+          await db.insertPendingOrderItem(PendingOrderItemsCompanion.insert(
+            orderId: orderId,
+            accessoryId: Value(item.id),
+            quantity: item.neededCount,
+          ));
+        }
+      }
+    });
+
+    if (mounted) Navigator.pop(context);
+    // TODO: Show success snackbar or notification
+  }
 }
 
 class _ShoppingItem {
+  final int id;
   final String name;
   final double neededCount;
   final String unit;
   final double currentStock;
 
-  _ShoppingItem(this.name, this.neededCount, this.unit, this.currentStock);
+  _ShoppingItem(this.id, this.name, this.neededCount, this.unit, this.currentStock);
 }

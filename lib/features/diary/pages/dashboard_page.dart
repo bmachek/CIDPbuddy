@@ -42,6 +42,8 @@ class DashboardPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSummarySection(db),
+                  const SizedBox(height: 24),
+                  _buildPendingOrdersSection(db),
                   const SizedBox(height: 32),
                   const Text(
                     'ANSTEHEND (NÄCHSTE 48H)',
@@ -150,6 +152,107 @@ class DashboardPage extends StatelessWidget {
                 style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+
+  Widget _buildPendingOrdersSection(AppDatabase db) {
+    return StreamBuilder<List<PendingOrder>>(
+      stream: db.watchPendingOrders(),
+      builder: (context, snapshot) {
+        final orders = snapshot.data ?? [];
+        if (orders.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'AUSSTEHENDE LIEFERUNGEN',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.5,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...orders.map((order) => _buildOrderCard(context, db, order)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildOrderCard(BuildContext context, AppDatabase db, PendingOrder order) {
+    final now = DateTime.now();
+    final isOverdue = order.deliveryDate != null && order.deliveryDate!.isBefore(DateTime(now.year, now.month, now.day));
+    
+    return FutureBuilder<Medication>(
+      future: (db.select(db.medications)..where((t) => t.id.equals(order.medicationId))).getSingle(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox();
+        final med = snapshot.data!;
+        
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: isOverdue ? Colors.orange.withOpacity(0.5) : Theme.of(context).dividerColor.withOpacity(0.05)),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: CircleAvatar(
+              backgroundColor: Colors.orange.withOpacity(0.1),
+              child: const Icon(Icons.local_shipping_rounded, color: Colors.orange),
+            ),
+            title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Menge: ${order.medicationQty.toStringAsFixed(0)} ${med.unit}'),
+                if (order.deliveryDate != null)
+                  Text(
+                    'Lieferdatum: ${DateFormat('dd.MM.yyyy').format(order.deliveryDate!)}',
+                    style: TextStyle(
+                      color: isOverdue ? Colors.red : Colors.grey,
+                      fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  )
+                else
+                  const Text('Noch kein Datum festgelegt'),
+              ],
+            ),
+            trailing: ElevatedButton(
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Lieferung bestätigt?'),
+                    content: const Text('Möchtest du den Empfang dieser Lieferung bestätigen? Der Bestand wird automatisch aktualisiert.'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Nein')),
+                      ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Ja, erhalten')),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  await db.confirmOrder(order.id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bestand wurde aktualisiert!')));
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.withOpacity(0.1),
+                foregroundColor: Colors.orange,
+                elevation: 0,
+              ),
+              child: const Text('Erhalten'),
+            ),
           ),
         );
       },

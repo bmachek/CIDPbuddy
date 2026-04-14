@@ -65,12 +65,28 @@ class InfusionSchedules extends Table {
   TextColumn get intakeTimes => text().nullable()(); // comma separated: '08:00,20:00'
 }
 
-@DriftDatabase(tables: [Medications, Accessories, InfusionLog, MedicationAccessories, PlannedInfusions, InfusionSchedules])
+class PendingOrders extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get medicationId => integer().references(Medications, #id)();
+  RealColumn get medicationQty => real()();
+  DateTimeColumn get deliveryDate => dateTime().nullable()();
+  BoolColumn get isConfirmed => boolean().withDefault(const Constant(false))();
+}
+
+class PendingOrderItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get orderId => integer().references(PendingOrders, #id)();
+  IntColumn get medicationId => integer().nullable().references(Medications, #id)();
+  IntColumn get accessoryId => integer().nullable().references(Accessories, #id)();
+  RealColumn get quantity => real()();
+}
+
+@DriftDatabase(tables: [Medications, Accessories, InfusionLog, MedicationAccessories, PlannedInfusions, InfusionSchedules, PendingOrders, PendingOrderItems])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4; // Incremented schema version to 4 for bodyWeight
+  int get schemaVersion => 6; // Incremented schema version to 6 for PendingOrderItems
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -86,6 +102,12 @@ class AppDatabase extends _$AppDatabase {
       if (to >= 4 && from < 4) {
         await m.addColumn(infusionLog, infusionLog.bodyWeight);
         await m.addColumn(plannedInfusions, plannedInfusions.bodyWeight);
+      }
+      if (to >= 5 && from < 5) {
+        await m.createTable(pendingOrders);
+      }
+      if (to >= 6 && from < 6) {
+        await m.createTable(pendingOrderItems);
       }
     },
   );
@@ -162,6 +184,34 @@ class AppDatabase extends _$AppDatabase {
   Future<int> insertSchedule(InfusionSchedulesCompanion entry) => into(infusionSchedules).insert(entry);
   Future deleteSchedule(int id) => (delete(infusionSchedules)..where((t) => t.id.equals(id))).go();
   Future updateSchedule(InfusionSchedule schedule) => update(infusionSchedules).replace(schedule);
+
+  // Pending Orders
+  Stream<List<PendingOrder>> watchPendingOrders() =>
+      (select(pendingOrders)..where((t) => t.isConfirmed.equals(false))..orderBy([(t) => OrderingTerm(expression: t.deliveryDate)])).watch();
+  Future<int> insertPendingOrder(PendingOrdersCompanion entry) => into(pendingOrders).insert(entry);
+  Future deletePendingOrder(int id) => (delete(pendingOrders)..where((t) => t.id.equals(id))).go();
+  Future updatePendingOrder(PendingOrder entry) => update(pendingOrders).replace(entry);
+
+  Future<int> insertPendingOrderItem(PendingOrderItemsCompanion entry) => into(pendingOrderItems).insert(entry);
+  Future<List<PendingOrderItem>> getPendingOrderItems(int orderId) => (select(pendingOrderItems)..where((t) => t.orderId.equals(orderId))).get();
+
+  Future confirmOrder(int orderId) async {
+    final order = await (select(pendingOrders)..where((t) => t.id.equals(orderId))).getSingle();
+    final items = await getPendingOrderItems(orderId);
+    
+    await transaction(() async {
+      for (var item in items) {
+        if (item.medicationId != null) {
+          final med = await (select(medications)..where((t) => t.id.equals(item.medicationId!))).getSingle();
+          await update(medications).replace(med.copyWith(stock: med.stock + item.quantity));
+        } else if (item.accessoryId != null) {
+          final acc = await (select(accessories)..where((t) => t.id.equals(item.accessoryId!))).getSingle();
+          await update(accessories).replace(acc.copyWith(stock: acc.stock + item.quantity));
+        }
+      }
+      await (update(pendingOrders)..where((t) => t.id.equals(orderId))).write(const PendingOrdersCompanion(isConfirmed: Value(true)));
+    });
+  }
 }
 
 LazyDatabase _openConnection() {
