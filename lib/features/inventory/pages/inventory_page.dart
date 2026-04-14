@@ -160,19 +160,9 @@ class InventoryPage extends StatelessWidget {
                           ),
                           title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text('Bestand: ${acc.stock.toStringAsFixed(0)} ${acc.unit}'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _StockCounter(
-                                stock: acc.stock, unit: acc.unit,
-                                onAdd: () => provider.updateAccessoryStock(acc, 1),
-                                onRemove: () => provider.updateAccessoryStock(acc, -1),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.grey),
-                                onPressed: () => _showEditAccessoryDialog(context, db, acc),
-                              ),
-                            ],
+                          trailing: IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.grey),
+                            onPressed: () => _showEditAccessoryDialog(context, db, acc),
                           ),
                         ),
                       ),
@@ -244,7 +234,7 @@ class InventoryPage extends StatelessWidget {
                           subtitle: RichText(
                             text: TextSpan(
                               style: TextStyle(
-                                color: isLowStock ? Colors.orange : (daysRemaining != null ? Colors.teal : Colors.grey),
+                                color: isLowStock ? Colors.orange : (daysRemaining != null ? Colors.teal : Theme.of(context).colorScheme.onSurfaceVariant),
                                 fontSize: 12,
                                 height: 1.4,
                               ),
@@ -256,7 +246,7 @@ class InventoryPage extends StatelessWidget {
                                 if (nextInf != null)
                                   TextSpan(
                                     text: nextInfText,
-                                    style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.w500),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.primary.withOpacity(0.8), fontWeight: FontWeight.w500),
                                   ),
                               ],
                             ),
@@ -276,7 +266,7 @@ class InventoryPage extends StatelessWidget {
                           subtitle: RichText(
                             text: TextSpan(
                               style: TextStyle(
-                                color: isLowStock ? Colors.orange : (daysRemaining != null ? Colors.teal : Colors.grey),
+                                color: isLowStock ? Colors.orange : (daysRemaining != null ? Colors.teal : Theme.of(context).colorScheme.onSurfaceVariant),
                                 fontSize: 12,
                                 height: 1.4,
                               ),
@@ -288,7 +278,7 @@ class InventoryPage extends StatelessWidget {
                                 if (nextInf != null)
                                   TextSpan(
                                     text: nextInfText,
-                                    style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.w500),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.primary.withOpacity(0.8), fontWeight: FontWeight.w500),
                                   ),
                               ],
                             ),
@@ -315,20 +305,9 @@ class InventoryPage extends StatelessWidget {
   }
 
   Widget _buildMedicationTrailing(BuildContext context, Medication med, InventoryProvider provider) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _StockCounter(
-          stock: med.stock, unit: med.unit,
-          onAdd: () => provider.updateMedicationStock(med, 1),
-          onRemove: () => provider.updateMedicationStock(med, -1),
-        ),
-        const SizedBox(width: 8),
-        IconButton(
-          icon: const Icon(Icons.chevron_right_rounded),
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
-        ),
-      ],
+    return IconButton(
+      icon: const Icon(Icons.chevron_right_rounded),
+      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
     );
   }
 
@@ -345,13 +324,10 @@ class InventoryPage extends StatelessWidget {
               const Icon(Icons.build_circle_rounded, color: Colors.teal, size: 16),
               const SizedBox(width: 12),
               Expanded(child: Text(acc.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
-              _StockCounter(
-                stock: acc.stock, unit: acc.unit,
-                onAdd: () => provider.updateAccessoryStock(acc, 1),
-                onRemove: () => provider.updateAccessoryStock(acc, -1),
-              ),
+              Text('${acc.stock.toStringAsFixed(0)} ${acc.unit}', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+              const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 16, color: Colors.grey),
+                icon: Icon(Icons.edit_outlined, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 onPressed: () => _showEditAccessoryDialog(context, db, acc),
               ),
             ],
@@ -414,7 +390,7 @@ class _EmptySection extends StatelessWidget {
   final String message;
   const _EmptySection({required this.message});
   @override
-  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.all(20), child: Center(child: Text(message, style: const TextStyle(color: Colors.grey))));
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.all(20), child: Center(child: Text(message, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))));
 }
 
 class _StockCounter extends StatelessWidget {

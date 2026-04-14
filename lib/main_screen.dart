@@ -84,15 +84,15 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.history_edu_rounded),
-                  label: 'History',
+                  label: 'Tagebuch',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.medication_liquid_rounded),
-                  label: 'Inventory',
+                  label: 'Medikation',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.tune_rounded),
-                  label: 'Settings',
+                  label: 'Einstellungen',
                 ),
               ],
             ),

@@ -19,10 +19,14 @@ class AppTheme {
       seedColor: primaryBase,
       brightness: Brightness.light,
       primary: primaryBase,
+      onPrimary: Colors.white,
       secondary: primaryLight,
+      onSecondary: Colors.black,
       tertiary: accentEmerald,
+      onTertiary: Colors.white,
       surface: surfaceLight,
       onSurface: const Color(0xFF1A1A1A),
+      onSurfaceVariant: const Color(0xFF4A4A4A),
     ),
     textTheme: GoogleFonts.outfitTextTheme(),
     appBarTheme: AppBarTheme(
@@ -65,8 +69,12 @@ class AppTheme {
         if (states.contains(WidgetState.selected)) {
           return const IconThemeData(color: primaryBase, size: 28);
         }
-        return IconThemeData(color: Colors.grey.shade600, size: 24);
+        return IconThemeData(color: const Color(0xFF5A5A5A), size: 24);
       }),
+    ),
+    dividerTheme: DividerThemeData(
+      color: Colors.grey.withOpacity(0.2),
+      thickness: 1,
     ),
   );
 
@@ -76,10 +84,14 @@ class AppTheme {
       seedColor: primaryBase,
       brightness: Brightness.dark,
       primary: primaryLight,
+      onPrimary: Colors.black,
       secondary: primaryBase,
+      onSecondary: Colors.white,
       tertiary: accentEmerald,
+      onTertiary: Colors.black,
       surface: surfaceDark,
       onSurface: Colors.white,
+      onSurfaceVariant: const Color(0xFFB0B0B0),
     ),
     textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
     appBarTheme: AppBarTheme(
@@ -122,8 +134,12 @@ class AppTheme {
         if (states.contains(WidgetState.selected)) {
           return const IconThemeData(color: primaryLight, size: 28);
         }
-        return IconThemeData(color: Colors.white70, size: 24);
+        return const IconThemeData(color: Color(0xFFB0B0B0), size: 24);
       }),
+    ),
+    dividerTheme: DividerThemeData(
+      color: Colors.white.withOpacity(0.1),
+      thickness: 1,
     ),
   );
 }

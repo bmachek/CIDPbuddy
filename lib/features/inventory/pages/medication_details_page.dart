@@ -82,7 +82,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 _buildSectionHeader('Verknüpftes Zubehör'),
                 const Text(
                   'Dieses Zubehör wird bei jeder Infusion automatisch vom Bestand abgezogen.',
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
                 FutureBuilder<List<MedicationAccessory>>(
@@ -97,7 +97,7 @@ class MedicationDetailsPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: const Center(
-                          child: Text('Noch kein Zubehör verknüpft', style: TextStyle(color: Colors.grey)),
+                          child: Text('Noch kein Zubehör verknüpft', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                         ),
                       );
                     }
@@ -143,7 +143,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 _buildSectionHeader('Einnahme-Workflow'),
                 const Text(
                   'Konfiguriere hier, welche Felder beim Erfassen einer Einnahme angezeigt werden.',
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
                 const SizedBox(height: 12),
                 _buildWorkflowConfig(context, db, invProvider, medication),
@@ -151,7 +151,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 _buildSectionHeader('Zeitpläne'),
                 const Text(
                   'Lege hier fest, in welchem Rhythmus du dieses Medikament einnimmst.',
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
                 StreamBuilder<List<InfusionSchedule>>(
@@ -166,7 +166,7 @@ class MedicationDetailsPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: const Center(
-                          child: Text('Keine Zeitpläne aktiv', style: TextStyle(color: Colors.grey)),
+                          child: Text('Keine Zeitpläne aktiv', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                         ),
                       );
                     }
@@ -249,7 +249,7 @@ class MedicationDetailsPage extends StatelessWidget {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Colors.grey),
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Theme.of(context).colorScheme.primary),
     );
   }
 

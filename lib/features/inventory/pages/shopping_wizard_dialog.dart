@@ -70,7 +70,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 widget.orderToEdit == null 
                   ? 'Berechne den Zubehörbedarf basierend auf deiner geplanten Medikamenten-Bestellung.'
                   : 'Passe deine Bestellung und den Zubehörbedarf an.',
-                style: const TextStyle(fontSize: 13, color: Colors.grey),
+                style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
               FutureBuilder<List<Medication>>(
@@ -166,7 +166,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 if (_results!.any((it) => it.isSystemRecommended)) ...[
                   const Padding(
                     padding: EdgeInsets.only(bottom: 8),
-                    child: Text('Notwendig für diese Bestellung:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                    child: Text('Notwendig für diese Bestellung:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ),
                   ..._results!.where((it) => it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
                   const SizedBox(height: 16),
@@ -175,7 +175,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 if (_results!.any((it) => !it.isSystemRecommended)) ...[
                   const Padding(
                     padding: EdgeInsets.only(bottom: 8),
-                    child: Text('Weiteres Zubehör (Optional):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                    child: Text('Weiteres Zubehör (Optional):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ),
                   ..._results!.where((it) => !it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
                 ],
@@ -190,7 +190,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     ),
                     child: const Text(
                       'Kein Zubehör automatisch vorgeschlagen.', 
-                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -322,7 +322,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 child: Icon(
                   item.isSystemRecommended ? Icons.star_rounded : Icons.add_circle_outline_rounded, 
                   size: 20, 
-                  color: item.isSystemRecommended ? Colors.orange : Colors.grey
+                  color: item.isSystemRecommended ? Colors.orange : Theme.of(context).colorScheme.onSurfaceVariant
                 ),
               ),
               const SizedBox(width: 12),
@@ -361,7 +361,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontWeight: FontWeight.w900, 
-                          color: item.isActuallySelected ? Theme.of(context).colorScheme.primary : Colors.grey
+                          color: item.isActuallySelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant
                         ),
                         decoration: const InputDecoration(
                           isDense: true,
@@ -378,7 +378,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Text(item.unit, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                    Text(item.unit, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ],
                 ),
               ),
