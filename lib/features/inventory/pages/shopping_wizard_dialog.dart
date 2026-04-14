@@ -68,8 +68,8 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             children: [
               Text(
                 widget.orderToEdit == null 
-                  ? 'Berechne den Zubehörbedarf basierend auf deiner geplanten Medikamenten-Bestellung.'
-                  : 'Passe deine Bestellung und den Zubehörbedarf an.',
+                  ? 'Berechne den Bedarf an Verbrauchsmaterial basierend auf deiner geplanten Medikamenten-Bestellung.'
+                  : 'Passe deine Bestellung und den Bedarf an Verbrauchsmaterial an.',
                 style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
@@ -80,7 +80,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   final items = [
                     const DropdownMenuItem<int?>(
                       value: null, 
-                      child: Text('Nur Zubehör bestellen (Kein Medikament)')
+                      child: Text('Nur Verbrauchsmaterial bestellen (Kein Medikament)')
                     ),
                     ...meds.map((m) => DropdownMenuItem<int?>(value: m.id, child: Text(m.name))),
                   ];
@@ -160,7 +160,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               if (_results != null) ...[
                 const Divider(),
                 const SizedBox(height: 12),
-                const Text('Zubehör-Vorschlag:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Verbrauchsmaterial-Vorschlag:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 12),
                 
                 if (_results!.any((it) => it.isSystemRecommended)) ...[
@@ -175,7 +175,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 if (_results!.any((it) => !it.isSystemRecommended)) ...[
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Text('Weiteres Zubehör (Optional):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    child: Text('Weiteres Verbrauchsmaterial (Optional):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ),
                   ..._results!.where((it) => !it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
                 ],
@@ -189,7 +189,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      'Kein Zubehör automatisch vorgeschlagen.', 
+                      'Kein Verbrauchsmaterial automatisch vorgeschlagen.', 
                       style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                       textAlign: TextAlign.center,
                     ),
@@ -200,7 +200,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   child: OutlinedButton.icon(
                     onPressed: () => _addManualAccessory(db),
                     icon: const Icon(Icons.add_shopping_cart_rounded),
-                    label: const Text('Anderes Zubehör hinzufügen'),
+                    label: const Text('Anderes Verbrauchsmaterial hinzufügen'),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
@@ -238,7 +238,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
     final Accessory? selected = await showDialog<Accessory>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Zubehör auswählen'),
+        title: const Text('Verbrauchsmaterial auswählen'),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(

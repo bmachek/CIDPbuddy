@@ -73,7 +73,7 @@ class InventoryPage extends StatelessWidget {
               Icon(Icons.medication_rounded, color: Theme.of(context).primaryColor, size: 20),
               const SizedBox(width: 8),
               const Text(
-                'Medikamente & Zubehör',
+                'Medikamente & Verbrauchsmaterial',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
@@ -136,7 +136,7 @@ class InventoryPage extends StatelessWidget {
                           Icon(Icons.inventory_2_rounded, color: Theme.of(context).primaryColor, size: 20),
                           const SizedBox(width: 8),
                           const Text(
-                            'Allgemeines Zubehör',
+                            'Allgemeines Verbrauchsmaterial',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ],
@@ -160,9 +160,18 @@ class InventoryPage extends StatelessWidget {
                           ),
                           title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text('Bestand: ${acc.stock.toStringAsFixed(0)} ${acc.unit}'),
-                          trailing: IconButton(
-                            icon: Icon(Icons.edit_outlined, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                            onPressed: () => _showEditAccessoryDialog(context, db, acc),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit_outlined, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                onPressed: () => _showEditAccessoryDialog(context, db, acc),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
+                                onPressed: () => _confirmDeleteAccessory(context, db, acc),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -340,12 +349,13 @@ class InventoryPage extends StatelessWidget {
   void _showEditAccessoryDialog(BuildContext context, AppDatabase db, Accessory acc) {
     final nameController = TextEditingController(text: acc.name);
     final unitController = TextEditingController(text: acc.unit);
+    final stockController = TextEditingController(text: acc.stock.toStringAsFixed(1));
     final pkgSizeController = TextEditingController(text: acc.packageSize.toStringAsFixed(1));
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Zubehör bearbeiten'),
+        title: const Text('Verbrauchsmaterial bearbeiten'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -358,6 +368,12 @@ class InventoryPage extends StatelessWidget {
             TextField(
               controller: unitController,
               decoration: const InputDecoration(labelText: 'Einheit', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: stockController,
+              decoration: const InputDecoration(labelText: 'Momentaner Lagerstand', border: OutlineInputBorder()),
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             TextField(
@@ -374,11 +390,32 @@ class InventoryPage extends StatelessWidget {
               await db.updateAccessory(acc.copyWith(
                 name: nameController.text,
                 unit: unitController.text,
+                stock: double.tryParse(stockController.text) ?? acc.stock,
                 packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
               ));
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccessory(BuildContext context, AppDatabase db, Accessory acc) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Verbrauchsmaterial löschen?'),
+        content: Text('Möchtest du "${acc.name}" wirklich löschen?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(
+            onPressed: () async {
+              await (db.delete(db.accessories)..where((t) => t.id.equals(acc.id))).go();
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

@@ -33,7 +33,7 @@ class _AddItemPageState extends State<AddItemPage> {
             DropdownButtonFormField<String>(
               value: _type,
               decoration: const InputDecoration(labelText: 'Kategorie'),
-              items: ['Medikament', 'Zubehör']
+              items: ['Medikament', 'Verbrauchsmaterial']
                   .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                   .toList(),
               onChanged: (val) {

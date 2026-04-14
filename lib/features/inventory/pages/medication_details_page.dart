@@ -79,9 +79,9 @@ class MedicationDetailsPage extends StatelessWidget {
                 const SizedBox(height: 12),
                 _StockManagementCard(medication: medication),
                 const SizedBox(height: 32),
-                _buildSectionHeader(context, 'Verknüpftes Zubehör'),
+                _buildSectionHeader(context, 'Verknüpftes Verbrauchsmaterial'),
                 Text(
-                  'Dieses Zubehör wird bei jeder Infusion automatisch vom Bestand abgezogen.',
+                  'Dieses Verbrauchsmaterial wird bei jeder Einnahme automatisch vom Bestand abgezogen.',
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
@@ -97,7 +97,7 @@ class MedicationDetailsPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Center(
-                          child: Text('Noch kein Zubehör verknüpft', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          child: Text('Noch kein Verbrauchsmaterial verknüpft', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                         ),
                       );
                     }
@@ -140,14 +140,16 @@ class MedicationDetailsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 48),
                 const SizedBox(height: 48),
-                _buildSectionHeader(context, 'Einnahme-Workflow'),
-                Text(
-                  'Konfiguriere hier, welche Felder beim Erfassen einer Einnahme angezeigt werden.',
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
-                ),
-                const SizedBox(height: 12),
-                _buildWorkflowConfig(context, db, invProvider, medication),
-                const SizedBox(height: 32),
+                if (medication.type != MedicationType.pill) ...[
+                  _buildSectionHeader(context, 'Einnahme-Workflow'),
+                  Text(
+                    'Konfiguriere hier, welche Felder beim Erfassen einer Einnahme angezeigt werden.',
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildWorkflowConfig(context, db, invProvider, medication),
+                  const SizedBox(height: 32),
+                ],
                 _buildSectionHeader(context, 'Zeitpläne'),
                 Text(
                   'Lege hier fest, in welchem Rhythmus du dieses Medikament einnimmst.',
@@ -305,12 +307,13 @@ class MedicationDetailsPage extends StatelessWidget {
   void _showEditAccessoryDialog(BuildContext context, AppDatabase db, Accessory acc) {
     final nameController = TextEditingController(text: acc.name);
     final unitController = TextEditingController(text: acc.unit);
+    final stockController = TextEditingController(text: acc.stock.toStringAsFixed(1));
     final pkgSizeController = TextEditingController(text: acc.packageSize.toStringAsFixed(1));
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Zubehör bearbeiten'),
+        title: const Text('Verbrauchsmaterial bearbeiten'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -323,6 +326,12 @@ class MedicationDetailsPage extends StatelessWidget {
             TextField(
               controller: unitController,
               decoration: const InputDecoration(labelText: 'Einheit', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: stockController,
+              decoration: const InputDecoration(labelText: 'Momentaner Lagerstand', border: OutlineInputBorder()),
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             TextField(
@@ -339,6 +348,7 @@ class MedicationDetailsPage extends StatelessWidget {
               await db.updateAccessory(acc.copyWith(
                 name: nameController.text,
                 unit: unitController.text,
+                stock: double.tryParse(stockController.text) ?? acc.stock,
                 packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
               ));
               if (context.mounted) Navigator.pop(context);
@@ -357,7 +367,7 @@ class MedicationDetailsPage extends StatelessWidget {
     if (!context.mounted) return;
 
     if (allAcc.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Zuerst Zubehör anlegen!')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Zuerst Verbrauchsmaterial anlegen!')));
       return;
     }
 
@@ -370,7 +380,7 @@ class MedicationDetailsPage extends StatelessWidget {
         bool isMandatory = false;
 
         return AlertDialog(
-          title: const Text('Zubehör verknüpfen'),
+          title: const Text('Verbrauchsmaterial verknüpfen'),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: StatefulBuilder(
             builder: (context, setDialogState) => Column(
@@ -379,12 +389,12 @@ class MedicationDetailsPage extends StatelessWidget {
                 DropdownButtonFormField<Accessory>(
                   items: allAcc.map((a) => DropdownMenuItem(value: a, child: Text(a.name))).toList(),
                   onChanged: (val) => selected = val,
-                  decoration: const InputDecoration(labelText: 'Zubehör wählen', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: 'Verbrauchsmaterial wählen', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: qtyController,
-                  decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: 'Bedarf pro Einnahme', border: OutlineInputBorder()),
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 12),
@@ -437,7 +447,7 @@ class MedicationDetailsPage extends StatelessWidget {
         bool isMandatory = false;
 
         return AlertDialog(
-          title: const Text('Neues Zubehör anlegen'),
+          title: const Text('Neues Verbrauchsmaterial anlegen'),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: StatefulBuilder(
             builder: (context, setDialogState) => SingleChildScrollView(
@@ -446,7 +456,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 children: [
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Name des Zubehörs', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(labelText: 'Name des Verbrauchsmaterials', border: OutlineInputBorder()),
                     autofocus: true,
                   ),
                   const SizedBox(height: 12),
@@ -463,7 +473,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   TextField(
                     controller: qtyController,
-                    decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(labelText: 'Bedarf pro Einnahme', border: OutlineInputBorder()),
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 12),
@@ -779,7 +789,7 @@ class MedicationDetailsPage extends StatelessWidget {
           const Divider(height: 1),
           SwitchListTile(
             title: const Text('Körpergewicht erfassen'),
-            subtitle: const Text('Gewicht bei der Infusion protokollieren'),
+            subtitle: const Text('Gewicht bei der Einnahme protokollieren'),
             value: medication.trackWeight,
             onChanged: (val) => provider.updateMedication(medication.copyWith(trackWeight: val)),
             secondary: Icon(Icons.monitor_weight_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
@@ -787,7 +797,7 @@ class MedicationDetailsPage extends StatelessWidget {
           const Divider(height: 1),
           SwitchListTile(
             title: const Text('Einnahmetimer nutzen'),
-            subtitle: const Text('Premedikation-Timer vor der Infusion'),
+            subtitle: const Text('Premedikation-Timer vor der Einnahme'),
             value: medication.useTimer,
             onChanged: (val) => provider.updateMedication(medication.copyWith(useTimer: val)),
             secondary: Icon(Icons.av_timer_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),

@@ -39,9 +39,9 @@ class InventoryProvider extends ChangeNotifier {
       unit: unit,
       type: Value(type),
       packageSize: Value(packageSize),
-      trackBatchNumber: Value(trackBatchNumber),
-      trackWeight: Value(trackWeight),
-      useTimer: Value(useTimer),
+      trackBatchNumber: Value(type == MedicationType.pill ? false : trackBatchNumber),
+      trackWeight: Value(type == MedicationType.pill ? false : trackWeight),
+      useTimer: Value(type == MedicationType.pill ? false : useTimer),
     ));
     notifyListeners();
     return id;
