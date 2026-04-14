@@ -55,6 +55,7 @@ class InventoryPage extends StatelessWidget {
   }
 
   Widget _buildInventoryContent(BuildContext context, InventoryProvider provider) {
+    final db = Provider.of<AppDatabase>(context);
     return Column(
       children: [
         Padding(
@@ -64,7 +65,7 @@ class InventoryPage extends StatelessWidget {
               Icon(Icons.medication_rounded, color: Theme.of(context).primaryColor, size: 20),
               const SizedBox(width: 8),
               const Text(
-                'Medikamente',
+                'Medikamente & Zubehör',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
@@ -78,33 +79,7 @@ class InventoryPage extends StatelessWidget {
             return Column(
               children: meds.map((med) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildMedicationItem(context, med, provider),
-              )).toList(),
-            );
-          },
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-          child: Row(
-            children: [
-              Icon(Icons.category_rounded, color: Theme.of(context).primaryColor, size: 20),
-              const SizedBox(width: 8),
-              const Text(
-                'Zubehör',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
-        StreamBuilder<List<Accessory>>(
-          stream: provider.accessoriesStream,
-          builder: (context, snapshot) {
-            final accs = snapshot.data ?? [];
-            if (accs.isEmpty) return const _EmptySection(message: 'Kein Zubehör angelegt');
-            return Column(
-              children: accs.map((acc) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildAccessoryItem(context, acc, provider),
+                child: _buildMedicationItem(context, med, provider, db),
               )).toList(),
             );
           },
@@ -114,8 +89,9 @@ class InventoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMedicationItem(BuildContext context, Medication med, InventoryProvider provider) {
+  Widget _buildMedicationItem(BuildContext context, Medication med, InventoryProvider provider, AppDatabase db) {
     final isLowStock = med.stock <= med.minStock && med.minStock > 0;
+    
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
@@ -123,46 +99,83 @@ class InventoryPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: isLowStock ? Colors.orange.withOpacity(0.2) : Theme.of(context).dividerColor.withOpacity(0.05)),
       ),
-      child: ListTile(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
-        leading: Container(
-          width: 40, height: 40,
-          decoration: BoxDecoration(color: (isLowStock ? Colors.orange : Theme.of(context).primaryColor).withOpacity(0.1), shape: BoxShape.circle),
-          child: Icon(isLowStock ? Icons.warning_amber_rounded : Icons.medication_rounded, color: isLowStock ? Colors.orange : Theme.of(context).primaryColor, size: 20),
-        ),
-        title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(isLowStock ? 'Niedriger Bestand!' : 'PZN: ${med.pzn ?? "-"}'),
-        trailing: _StockCounter(
-          stock: med.stock, unit: med.unit,
-          onAdd: () => provider.updateMedicationStock(med, 1),
-          onRemove: () => provider.updateMedicationStock(med, -1),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
+          collapsedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
+          leading: Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(color: (isLowStock ? Colors.orange : Theme.of(context).primaryColor).withOpacity(0.1), shape: BoxShape.circle),
+            child: Icon(isLowStock ? Icons.warning_amber_rounded : Icons.medication_rounded, color: isLowStock ? Colors.orange : Theme.of(context).primaryColor, size: 20),
+          ),
+          title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(isLowStock ? 'Niedriger Bestand!' : 'PZN: ${med.pzn ?? "-"}'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _StockCounter(
+                stock: med.stock, unit: med.unit,
+                onAdd: () => provider.updateMedicationStock(med, 1),
+                onRemove: () => provider.updateMedicationStock(med, -1),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.chevron_right_rounded),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
+              ),
+            ],
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          children: [
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            StreamBuilder<List<MedicationAccessory>>(
+              stream: db.watchAccessoriesForMedication(med.id),
+              builder: (context, snapshot) {
+                final links = snapshot.data ?? [];
+                if (links.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child: Text('Kein Zubehör verknüpft', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  );
+                }
+                return Column(
+                  children: links.map((link) => _buildEmbeddedAccessoryItem(context, db, link, provider)).toList(),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildAccessoryItem(BuildContext context, Accessory acc, InventoryProvider provider) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 40, height: 40,
-          decoration: BoxDecoration(color: Colors.teal.withOpacity(0.1), shape: BoxShape.circle),
-          child: const Icon(Icons.build_circle_rounded, color: Colors.teal, size: 20),
-        ),
-        title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        trailing: _StockCounter(
-          stock: acc.stock, unit: acc.unit,
-          onAdd: () => provider.updateAccessoryStock(acc, 1),
-          onRemove: () => provider.updateAccessoryStock(acc, -1),
-        ),
-      ),
+  Widget _buildEmbeddedAccessoryItem(BuildContext context, AppDatabase db, MedicationAccessory link, InventoryProvider provider) {
+    return FutureBuilder<Accessory>(
+      future: (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).getSingle(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox();
+        final acc = snapshot.data!;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: Row(
+            children: [
+              const Icon(Icons.build_circle_rounded, color: Colors.teal, size: 16),
+              const SizedBox(width: 12),
+              Expanded(child: Text(acc.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
+              _StockCounter(
+                stock: acc.stock, unit: acc.unit,
+                onAdd: () => provider.updateAccessoryStock(acc, 1),
+                onRemove: () => provider.updateAccessoryStock(acc, -1),
+              ),
+            ],
+          ),
+        );
+      },
     );
+  }
+
   }
 }
 

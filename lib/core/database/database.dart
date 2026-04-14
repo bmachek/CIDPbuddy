@@ -119,6 +119,8 @@ class AppDatabase extends _$AppDatabase {
   // Medication - Accessory Link (BOM)
   Future<List<MedicationAccessory>> getAccessoriesForMedication(int medId) =>
       (select(medicationAccessories)..where((t) => t.medicationId.equals(medId))).get();
+  Stream<List<MedicationAccessory>> watchAccessoriesForMedication(int medId) =>
+      (select(medicationAccessories)..where((t) => t.medicationId.equals(medId))).watch();
   Future<int> insertMedicationAccessory(MedicationAccessoriesCompanion entry) =>
       into(medicationAccessories).insert(entry);
   Future updateMedicationAccessory(MedicationAccessory entry) =>
