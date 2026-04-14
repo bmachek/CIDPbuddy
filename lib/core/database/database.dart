@@ -45,6 +45,7 @@ class MedicationAccessories extends Table {
   IntColumn get medicationId => integer().references(Medications, #id)();
   IntColumn get accessoryId => integer().references(Accessories, #id)();
   RealColumn get defaultQuantity => real().withDefault(const Constant(1.0))();
+  BoolColumn get isMandatory => boolean().withDefault(const Constant(false))();
 }
 
 class PlannedInfusions extends Table {
@@ -112,7 +113,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 9; // Incremented schema version to 9 for Medication workflow config
+  int get schemaVersion => 10; // Incremented schema version to 10 for MedicationAccessories mandatory flag
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -143,6 +144,9 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(medications, medications.trackBatchNumber);
         await m.addColumn(medications, medications.trackWeight);
         await m.addColumn(medications, medications.useTimer);
+      }
+      if (to >= 10 && from < 10) {
+        await m.addColumn(medicationAccessories, medicationAccessories.isMandatory);
       }
     },
   );

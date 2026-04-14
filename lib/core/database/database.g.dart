@@ -1537,12 +1537,28 @@ class $MedicationAccessoriesTable extends MedicationAccessories
     requiredDuringInsert: false,
     defaultValue: const Constant(1.0),
   );
+  static const VerificationMeta _isMandatoryMeta = const VerificationMeta(
+    'isMandatory',
+  );
+  @override
+  late final GeneratedColumn<bool> isMandatory = GeneratedColumn<bool>(
+    'is_mandatory',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_mandatory" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     medicationId,
     accessoryId,
     defaultQuantity,
+    isMandatory,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1590,6 +1606,15 @@ class $MedicationAccessoriesTable extends MedicationAccessories
         ),
       );
     }
+    if (data.containsKey('is_mandatory')) {
+      context.handle(
+        _isMandatoryMeta,
+        isMandatory.isAcceptableOrUnknown(
+          data['is_mandatory']!,
+          _isMandatoryMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1615,6 +1640,10 @@ class $MedicationAccessoriesTable extends MedicationAccessories
         DriftSqlType.double,
         data['${effectivePrefix}default_quantity'],
       )!,
+      isMandatory: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_mandatory'],
+      )!,
     );
   }
 
@@ -1630,11 +1659,13 @@ class MedicationAccessory extends DataClass
   final int medicationId;
   final int accessoryId;
   final double defaultQuantity;
+  final bool isMandatory;
   const MedicationAccessory({
     required this.id,
     required this.medicationId,
     required this.accessoryId,
     required this.defaultQuantity,
+    required this.isMandatory,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1643,6 +1674,7 @@ class MedicationAccessory extends DataClass
     map['medication_id'] = Variable<int>(medicationId);
     map['accessory_id'] = Variable<int>(accessoryId);
     map['default_quantity'] = Variable<double>(defaultQuantity);
+    map['is_mandatory'] = Variable<bool>(isMandatory);
     return map;
   }
 
@@ -1652,6 +1684,7 @@ class MedicationAccessory extends DataClass
       medicationId: Value(medicationId),
       accessoryId: Value(accessoryId),
       defaultQuantity: Value(defaultQuantity),
+      isMandatory: Value(isMandatory),
     );
   }
 
@@ -1665,6 +1698,7 @@ class MedicationAccessory extends DataClass
       medicationId: serializer.fromJson<int>(json['medicationId']),
       accessoryId: serializer.fromJson<int>(json['accessoryId']),
       defaultQuantity: serializer.fromJson<double>(json['defaultQuantity']),
+      isMandatory: serializer.fromJson<bool>(json['isMandatory']),
     );
   }
   @override
@@ -1675,6 +1709,7 @@ class MedicationAccessory extends DataClass
       'medicationId': serializer.toJson<int>(medicationId),
       'accessoryId': serializer.toJson<int>(accessoryId),
       'defaultQuantity': serializer.toJson<double>(defaultQuantity),
+      'isMandatory': serializer.toJson<bool>(isMandatory),
     };
   }
 
@@ -1683,11 +1718,13 @@ class MedicationAccessory extends DataClass
     int? medicationId,
     int? accessoryId,
     double? defaultQuantity,
+    bool? isMandatory,
   }) => MedicationAccessory(
     id: id ?? this.id,
     medicationId: medicationId ?? this.medicationId,
     accessoryId: accessoryId ?? this.accessoryId,
     defaultQuantity: defaultQuantity ?? this.defaultQuantity,
+    isMandatory: isMandatory ?? this.isMandatory,
   );
   MedicationAccessory copyWithCompanion(MedicationAccessoriesCompanion data) {
     return MedicationAccessory(
@@ -1701,6 +1738,9 @@ class MedicationAccessory extends DataClass
       defaultQuantity: data.defaultQuantity.present
           ? data.defaultQuantity.value
           : this.defaultQuantity,
+      isMandatory: data.isMandatory.present
+          ? data.isMandatory.value
+          : this.isMandatory,
     );
   }
 
@@ -1710,14 +1750,15 @@ class MedicationAccessory extends DataClass
           ..write('id: $id, ')
           ..write('medicationId: $medicationId, ')
           ..write('accessoryId: $accessoryId, ')
-          ..write('defaultQuantity: $defaultQuantity')
+          ..write('defaultQuantity: $defaultQuantity, ')
+          ..write('isMandatory: $isMandatory')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, medicationId, accessoryId, defaultQuantity);
+      Object.hash(id, medicationId, accessoryId, defaultQuantity, isMandatory);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1725,7 +1766,8 @@ class MedicationAccessory extends DataClass
           other.id == this.id &&
           other.medicationId == this.medicationId &&
           other.accessoryId == this.accessoryId &&
-          other.defaultQuantity == this.defaultQuantity);
+          other.defaultQuantity == this.defaultQuantity &&
+          other.isMandatory == this.isMandatory);
 }
 
 class MedicationAccessoriesCompanion
@@ -1734,17 +1776,20 @@ class MedicationAccessoriesCompanion
   final Value<int> medicationId;
   final Value<int> accessoryId;
   final Value<double> defaultQuantity;
+  final Value<bool> isMandatory;
   const MedicationAccessoriesCompanion({
     this.id = const Value.absent(),
     this.medicationId = const Value.absent(),
     this.accessoryId = const Value.absent(),
     this.defaultQuantity = const Value.absent(),
+    this.isMandatory = const Value.absent(),
   });
   MedicationAccessoriesCompanion.insert({
     this.id = const Value.absent(),
     required int medicationId,
     required int accessoryId,
     this.defaultQuantity = const Value.absent(),
+    this.isMandatory = const Value.absent(),
   }) : medicationId = Value(medicationId),
        accessoryId = Value(accessoryId);
   static Insertable<MedicationAccessory> custom({
@@ -1752,12 +1797,14 @@ class MedicationAccessoriesCompanion
     Expression<int>? medicationId,
     Expression<int>? accessoryId,
     Expression<double>? defaultQuantity,
+    Expression<bool>? isMandatory,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (medicationId != null) 'medication_id': medicationId,
       if (accessoryId != null) 'accessory_id': accessoryId,
       if (defaultQuantity != null) 'default_quantity': defaultQuantity,
+      if (isMandatory != null) 'is_mandatory': isMandatory,
     });
   }
 
@@ -1766,12 +1813,14 @@ class MedicationAccessoriesCompanion
     Value<int>? medicationId,
     Value<int>? accessoryId,
     Value<double>? defaultQuantity,
+    Value<bool>? isMandatory,
   }) {
     return MedicationAccessoriesCompanion(
       id: id ?? this.id,
       medicationId: medicationId ?? this.medicationId,
       accessoryId: accessoryId ?? this.accessoryId,
       defaultQuantity: defaultQuantity ?? this.defaultQuantity,
+      isMandatory: isMandatory ?? this.isMandatory,
     );
   }
 
@@ -1790,6 +1839,9 @@ class MedicationAccessoriesCompanion
     if (defaultQuantity.present) {
       map['default_quantity'] = Variable<double>(defaultQuantity.value);
     }
+    if (isMandatory.present) {
+      map['is_mandatory'] = Variable<bool>(isMandatory.value);
+    }
     return map;
   }
 
@@ -1799,7 +1851,8 @@ class MedicationAccessoriesCompanion
           ..write('id: $id, ')
           ..write('medicationId: $medicationId, ')
           ..write('accessoryId: $accessoryId, ')
-          ..write('defaultQuantity: $defaultQuantity')
+          ..write('defaultQuantity: $defaultQuantity, ')
+          ..write('isMandatory: $isMandatory')
           ..write(')'))
         .toString();
   }
@@ -6191,6 +6244,7 @@ typedef $$MedicationAccessoriesTableCreateCompanionBuilder =
       required int medicationId,
       required int accessoryId,
       Value<double> defaultQuantity,
+      Value<bool> isMandatory,
     });
 typedef $$MedicationAccessoriesTableUpdateCompanionBuilder =
     MedicationAccessoriesCompanion Function({
@@ -6198,6 +6252,7 @@ typedef $$MedicationAccessoriesTableUpdateCompanionBuilder =
       Value<int> medicationId,
       Value<int> accessoryId,
       Value<double> defaultQuantity,
+      Value<bool> isMandatory,
     });
 
 final class $$MedicationAccessoriesTableReferences
@@ -6277,6 +6332,11 @@ class $$MedicationAccessoriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get isMandatory => $composableBuilder(
+    column: $table.isMandatory,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$MedicationsTableFilterComposer get medicationId {
     final $$MedicationsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -6343,6 +6403,11 @@ class $$MedicationAccessoriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isMandatory => $composableBuilder(
+    column: $table.isMandatory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$MedicationsTableOrderingComposer get medicationId {
     final $$MedicationsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6404,6 +6469,11 @@ class $$MedicationAccessoriesTableAnnotationComposer
 
   GeneratedColumn<double> get defaultQuantity => $composableBuilder(
     column: $table.defaultQuantity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isMandatory => $composableBuilder(
+    column: $table.isMandatory,
     builder: (column) => column,
   );
 
@@ -6497,11 +6567,13 @@ class $$MedicationAccessoriesTableTableManager
                 Value<int> medicationId = const Value.absent(),
                 Value<int> accessoryId = const Value.absent(),
                 Value<double> defaultQuantity = const Value.absent(),
+                Value<bool> isMandatory = const Value.absent(),
               }) => MedicationAccessoriesCompanion(
                 id: id,
                 medicationId: medicationId,
                 accessoryId: accessoryId,
                 defaultQuantity: defaultQuantity,
+                isMandatory: isMandatory,
               ),
           createCompanionCallback:
               ({
@@ -6509,11 +6581,13 @@ class $$MedicationAccessoriesTableTableManager
                 required int medicationId,
                 required int accessoryId,
                 Value<double> defaultQuantity = const Value.absent(),
+                Value<bool> isMandatory = const Value.absent(),
               }) => MedicationAccessoriesCompanion.insert(
                 id: id,
                 medicationId: medicationId,
                 accessoryId: accessoryId,
                 defaultQuantity: defaultQuantity,
+                isMandatory: isMandatory,
               ),
           withReferenceMapper: (p0) => p0
               .map(

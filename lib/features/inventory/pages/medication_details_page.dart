@@ -210,9 +210,17 @@ class MedicationDetailsPage extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (link.isMandatory)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 8.0),
+                    child: Tooltip(
+                      message: 'Muss mitbestellt werden',
+                      child: Icon(Icons.star_rounded, color: Colors.orange, size: 20),
+                    ),
+                  ),
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined, color: Colors.grey),
-                  onPressed: () => _showEditAccessoryDialog(context, db, acc),
+                  icon: const Icon(Icons.settings_outlined, color: Colors.grey),
+                  onPressed: () => _showEditLinkDialog(context, db, link, acc),
                 ),
                 IconButton(
                   icon: const Icon(Icons.link_off_rounded, color: Colors.grey),
@@ -292,24 +300,36 @@ class MedicationDetailsPage extends StatelessWidget {
         Accessory? selected;
         final qtyController = TextEditingController(text: '1');
 
+        bool isMandatory = false;
+
         return AlertDialog(
           title: const Text('Zubehör verknüpfen'),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<Accessory>(
-                items: allAcc.map((a) => DropdownMenuItem(value: a, child: Text(a.name))).toList(),
-                onChanged: (val) => selected = val,
-                decoration: const InputDecoration(labelText: 'Zubehör wählen', border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: qtyController,
-                decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
-                keyboardType: TextInputType.number,
-              ),
-            ],
+          content: StatefulBuilder(
+            builder: (context, setDialogState) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<Accessory>(
+                  items: allAcc.map((a) => DropdownMenuItem(value: a, child: Text(a.name))).toList(),
+                  onChanged: (val) => selected = val,
+                  decoration: const InputDecoration(labelText: 'Zubehör wählen', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: qtyController,
+                  decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  title: const Text('Immer mitbestellen', style: TextStyle(fontSize: 14)),
+                  subtitle: const Text('Wird im Einkaufsassistent hervorgehoben', style: TextStyle(fontSize: 12)),
+                  value: isMandatory,
+                  onChanged: (val) => setDialogState(() => isMandatory = val),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
@@ -320,6 +340,7 @@ class MedicationDetailsPage extends StatelessWidget {
                     medicationId: medication.id,
                     accessoryId: selected!.id,
                     defaultQuantity: drift.Value(double.tryParse(qtyController.text) ?? 1.0),
+                    isMandatory: drift.Value(isMandatory),
                   ));
                   if (context.mounted) Navigator.pop(context);
                 }
@@ -344,42 +365,54 @@ class MedicationDetailsPage extends StatelessWidget {
         final qtyController = TextEditingController(text: '1');
         final pkgSizeController = TextEditingController(text: '1.0');
 
+        bool isMandatory = false;
+
         return AlertDialog(
           title: const Text('Neues Zubehör anlegen'),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name des Zubehörs', border: OutlineInputBorder()),
-                  autofocus: true,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: unitController,
-                  decoration: const InputDecoration(labelText: 'Einheit (z.B. Stk, Set)', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: stockController,
-                  decoration: const InputDecoration(labelText: 'Aktueller Lagerstand', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: qtyController,
-                  decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: pkgSizeController,
-                  decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                ),
-              ],
+          content: StatefulBuilder(
+            builder: (context, setDialogState) => SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Name des Zubehörs', border: OutlineInputBorder()),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: unitController,
+                    decoration: const InputDecoration(labelText: 'Einheit (z.B. Stk, Set)', border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: stockController,
+                    decoration: const InputDecoration(labelText: 'Aktueller Lagerstand', border: OutlineInputBorder()),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: qtyController,
+                    decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: pkgSizeController,
+                    decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    title: const Text('Immer mitbestellen', style: TextStyle(fontSize: 14)),
+                    subtitle: const Text('Wird im Einkaufsassistent hervorgehoben', style: TextStyle(fontSize: 12)),
+                    value: isMandatory,
+                    onChanged: (val) => setDialogState(() => isMandatory = val),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -399,6 +432,7 @@ class MedicationDetailsPage extends StatelessWidget {
                     medicationId: medication.id,
                     accessoryId: accId,
                     defaultQuantity: drift.Value(double.tryParse(qtyController.text) ?? 1.0),
+                    isMandatory: drift.Value(isMandatory),
                   ));
                   
                   if (context.mounted) Navigator.pop(context);
@@ -727,8 +761,73 @@ class MedicationDetailsPage extends StatelessWidget {
               )
             ],
           ),
-        ],
-      ),
     );
+  }
+
+  void _showEditLinkDialog(BuildContext context, AppDatabase db, MedicationAccessory link, Accessory acc) {
+    final qtyController = TextEditingController(text: link.defaultQuantity.toStringAsFixed(1));
+    bool isMandatory = link.isMandatory;
+    final pkgSizeController = TextEditingController(text: acc.packageSize.toStringAsFixed(1));
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('${acc.name} konfigurieren'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: qtyController,
+                decoration: InputDecoration(labelText: 'Bedarf pro Infusion (${acc.unit})', border: const OutlineInputBorder()),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: pkgSizeController,
+                decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                title: const Text('Immer mitbestellen', style: TextStyle(fontSize: 14)),
+                subtitle: const Text('Wird im Einkaufsassistent hervorgehoben', style: TextStyle(fontSize: 12)),
+                value: isMandatory,
+                onChanged: (val) => setState(() => isMandatory = val),
+                contentPadding: EdgeInsets.zero,
+              ),
+              const Divider(),
+              TextButton.icon(
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Zubehör global bearbeiten (Name, Einheit)'),
+                onPressed: () {
+                   Navigator.pop(context);
+                   _showEditAccessoryDialog(context, db, acc);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            ElevatedButton(
+              onPressed: () async {
+                await db.updateMedicationAccessory(link.copyWith(
+                  defaultQuantity: double.tryParse(qtyController.text) ?? 1.0,
+                  isMandatory: isMandatory,
+                ));
+                // Also update accessory package size if changed
+                final newPkgSize = double.tryParse(pkgSizeController.text) ?? 1.0;
+                if (newPkgSize != acc.packageSize) {
+                  await db.updateAccessory(acc.copyWith(packageSize: newPkgSize));
+                }
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: const Text('Speichern'),
+            ),
+          ],
+        ),
+      ),
+    ).then((_) => (context as Element).markNeedsBuild());
   }
 }
