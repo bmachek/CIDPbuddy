@@ -80,7 +80,25 @@ class $MedicationsTable extends Medications
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, name, pzn, stock, minStock, unit];
+  late final GeneratedColumnWithTypeConverter<MedicationType, int> type =
+      GeneratedColumn<int>(
+        'type',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      ).withConverter<MedicationType>($MedicationsTable.$convertertype);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    pzn,
+    stock,
+    minStock,
+    unit,
+    type,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -163,6 +181,12 @@ class $MedicationsTable extends Medications
         DriftSqlType.string,
         data['${effectivePrefix}unit'],
       )!,
+      type: $MedicationsTable.$convertertype.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}type'],
+        )!,
+      ),
     );
   }
 
@@ -170,6 +194,9 @@ class $MedicationsTable extends Medications
   $MedicationsTable createAlias(String alias) {
     return $MedicationsTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<MedicationType, int, int> $convertertype =
+      const EnumIndexConverter<MedicationType>(MedicationType.values);
 }
 
 class Medication extends DataClass implements Insertable<Medication> {
@@ -179,6 +206,7 @@ class Medication extends DataClass implements Insertable<Medication> {
   final double stock;
   final double minStock;
   final String unit;
+  final MedicationType type;
   const Medication({
     required this.id,
     required this.name,
@@ -186,6 +214,7 @@ class Medication extends DataClass implements Insertable<Medication> {
     required this.stock,
     required this.minStock,
     required this.unit,
+    required this.type,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -198,6 +227,9 @@ class Medication extends DataClass implements Insertable<Medication> {
     map['stock'] = Variable<double>(stock);
     map['min_stock'] = Variable<double>(minStock);
     map['unit'] = Variable<String>(unit);
+    {
+      map['type'] = Variable<int>($MedicationsTable.$convertertype.toSql(type));
+    }
     return map;
   }
 
@@ -209,6 +241,7 @@ class Medication extends DataClass implements Insertable<Medication> {
       stock: Value(stock),
       minStock: Value(minStock),
       unit: Value(unit),
+      type: Value(type),
     );
   }
 
@@ -224,6 +257,9 @@ class Medication extends DataClass implements Insertable<Medication> {
       stock: serializer.fromJson<double>(json['stock']),
       minStock: serializer.fromJson<double>(json['minStock']),
       unit: serializer.fromJson<String>(json['unit']),
+      type: $MedicationsTable.$convertertype.fromJson(
+        serializer.fromJson<int>(json['type']),
+      ),
     );
   }
   @override
@@ -236,6 +272,9 @@ class Medication extends DataClass implements Insertable<Medication> {
       'stock': serializer.toJson<double>(stock),
       'minStock': serializer.toJson<double>(minStock),
       'unit': serializer.toJson<String>(unit),
+      'type': serializer.toJson<int>(
+        $MedicationsTable.$convertertype.toJson(type),
+      ),
     };
   }
 
@@ -246,6 +285,7 @@ class Medication extends DataClass implements Insertable<Medication> {
     double? stock,
     double? minStock,
     String? unit,
+    MedicationType? type,
   }) => Medication(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -253,6 +293,7 @@ class Medication extends DataClass implements Insertable<Medication> {
     stock: stock ?? this.stock,
     minStock: minStock ?? this.minStock,
     unit: unit ?? this.unit,
+    type: type ?? this.type,
   );
   Medication copyWithCompanion(MedicationsCompanion data) {
     return Medication(
@@ -262,6 +303,7 @@ class Medication extends DataClass implements Insertable<Medication> {
       stock: data.stock.present ? data.stock.value : this.stock,
       minStock: data.minStock.present ? data.minStock.value : this.minStock,
       unit: data.unit.present ? data.unit.value : this.unit,
+      type: data.type.present ? data.type.value : this.type,
     );
   }
 
@@ -273,13 +315,14 @@ class Medication extends DataClass implements Insertable<Medication> {
           ..write('pzn: $pzn, ')
           ..write('stock: $stock, ')
           ..write('minStock: $minStock, ')
-          ..write('unit: $unit')
+          ..write('unit: $unit, ')
+          ..write('type: $type')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, pzn, stock, minStock, unit);
+  int get hashCode => Object.hash(id, name, pzn, stock, minStock, unit, type);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -289,7 +332,8 @@ class Medication extends DataClass implements Insertable<Medication> {
           other.pzn == this.pzn &&
           other.stock == this.stock &&
           other.minStock == this.minStock &&
-          other.unit == this.unit);
+          other.unit == this.unit &&
+          other.type == this.type);
 }
 
 class MedicationsCompanion extends UpdateCompanion<Medication> {
@@ -299,6 +343,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
   final Value<double> stock;
   final Value<double> minStock;
   final Value<String> unit;
+  final Value<MedicationType> type;
   const MedicationsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -306,6 +351,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     this.stock = const Value.absent(),
     this.minStock = const Value.absent(),
     this.unit = const Value.absent(),
+    this.type = const Value.absent(),
   });
   MedicationsCompanion.insert({
     this.id = const Value.absent(),
@@ -314,6 +360,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     this.stock = const Value.absent(),
     this.minStock = const Value.absent(),
     required String unit,
+    this.type = const Value.absent(),
   }) : name = Value(name),
        unit = Value(unit);
   static Insertable<Medication> custom({
@@ -323,6 +370,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     Expression<double>? stock,
     Expression<double>? minStock,
     Expression<String>? unit,
+    Expression<int>? type,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -331,6 +379,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       if (stock != null) 'stock': stock,
       if (minStock != null) 'min_stock': minStock,
       if (unit != null) 'unit': unit,
+      if (type != null) 'type': type,
     });
   }
 
@@ -341,6 +390,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     Value<double>? stock,
     Value<double>? minStock,
     Value<String>? unit,
+    Value<MedicationType>? type,
   }) {
     return MedicationsCompanion(
       id: id ?? this.id,
@@ -349,6 +399,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       stock: stock ?? this.stock,
       minStock: minStock ?? this.minStock,
       unit: unit ?? this.unit,
+      type: type ?? this.type,
     );
   }
 
@@ -373,6 +424,11 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
     }
+    if (type.present) {
+      map['type'] = Variable<int>(
+        $MedicationsTable.$convertertype.toSql(type.value),
+      );
+    }
     return map;
   }
 
@@ -384,7 +440,8 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
           ..write('pzn: $pzn, ')
           ..write('stock: $stock, ')
           ..write('minStock: $minStock, ')
-          ..write('unit: $unit')
+          ..write('unit: $unit, ')
+          ..write('type: $type')
           ..write(')'))
         .toString();
   }
@@ -1523,6 +1580,17 @@ class $InfusionSchedulesTable extends InfusionSchedules
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _intakeTimesMeta = const VerificationMeta(
+    'intakeTimes',
+  );
+  @override
+  late final GeneratedColumn<String> intakeTimes = GeneratedColumn<String>(
+    'intake_times',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1533,6 +1601,7 @@ class $InfusionSchedulesTable extends InfusionSchedules
     selectedWeekdays,
     startDate,
     isActive,
+    intakeTimes,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1611,6 +1680,15 @@ class $InfusionSchedulesTable extends InfusionSchedules
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
       );
     }
+    if (data.containsKey('intake_times')) {
+      context.handle(
+        _intakeTimesMeta,
+        intakeTimes.isAcceptableOrUnknown(
+          data['intake_times']!,
+          _intakeTimesMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1652,6 +1730,10 @@ class $InfusionSchedulesTable extends InfusionSchedules
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
       )!,
+      intakeTimes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}intake_times'],
+      ),
     );
   }
 
@@ -1671,6 +1753,7 @@ class InfusionSchedule extends DataClass
   final String? selectedWeekdays;
   final DateTime startDate;
   final bool isActive;
+  final String? intakeTimes;
   const InfusionSchedule({
     required this.id,
     required this.medicationId,
@@ -1680,6 +1763,7 @@ class InfusionSchedule extends DataClass
     this.selectedWeekdays,
     required this.startDate,
     required this.isActive,
+    this.intakeTimes,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1696,6 +1780,9 @@ class InfusionSchedule extends DataClass
     }
     map['start_date'] = Variable<DateTime>(startDate);
     map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || intakeTimes != null) {
+      map['intake_times'] = Variable<String>(intakeTimes);
+    }
     return map;
   }
 
@@ -1713,6 +1800,9 @@ class InfusionSchedule extends DataClass
           : Value(selectedWeekdays),
       startDate: Value(startDate),
       isActive: Value(isActive),
+      intakeTimes: intakeTimes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(intakeTimes),
     );
   }
 
@@ -1730,6 +1820,7 @@ class InfusionSchedule extends DataClass
       selectedWeekdays: serializer.fromJson<String?>(json['selectedWeekdays']),
       startDate: serializer.fromJson<DateTime>(json['startDate']),
       isActive: serializer.fromJson<bool>(json['isActive']),
+      intakeTimes: serializer.fromJson<String?>(json['intakeTimes']),
     );
   }
   @override
@@ -1744,6 +1835,7 @@ class InfusionSchedule extends DataClass
       'selectedWeekdays': serializer.toJson<String?>(selectedWeekdays),
       'startDate': serializer.toJson<DateTime>(startDate),
       'isActive': serializer.toJson<bool>(isActive),
+      'intakeTimes': serializer.toJson<String?>(intakeTimes),
     };
   }
 
@@ -1756,6 +1848,7 @@ class InfusionSchedule extends DataClass
     Value<String?> selectedWeekdays = const Value.absent(),
     DateTime? startDate,
     bool? isActive,
+    Value<String?> intakeTimes = const Value.absent(),
   }) => InfusionSchedule(
     id: id ?? this.id,
     medicationId: medicationId ?? this.medicationId,
@@ -1769,6 +1862,7 @@ class InfusionSchedule extends DataClass
         : this.selectedWeekdays,
     startDate: startDate ?? this.startDate,
     isActive: isActive ?? this.isActive,
+    intakeTimes: intakeTimes.present ? intakeTimes.value : this.intakeTimes,
   );
   InfusionSchedule copyWithCompanion(InfusionSchedulesCompanion data) {
     return InfusionSchedule(
@@ -1788,6 +1882,9 @@ class InfusionSchedule extends DataClass
           : this.selectedWeekdays,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      intakeTimes: data.intakeTimes.present
+          ? data.intakeTimes.value
+          : this.intakeTimes,
     );
   }
 
@@ -1801,7 +1898,8 @@ class InfusionSchedule extends DataClass
           ..write('intervalValue: $intervalValue, ')
           ..write('selectedWeekdays: $selectedWeekdays, ')
           ..write('startDate: $startDate, ')
-          ..write('isActive: $isActive')
+          ..write('isActive: $isActive, ')
+          ..write('intakeTimes: $intakeTimes')
           ..write(')'))
         .toString();
   }
@@ -1816,6 +1914,7 @@ class InfusionSchedule extends DataClass
     selectedWeekdays,
     startDate,
     isActive,
+    intakeTimes,
   );
   @override
   bool operator ==(Object other) =>
@@ -1828,7 +1927,8 @@ class InfusionSchedule extends DataClass
           other.intervalValue == this.intervalValue &&
           other.selectedWeekdays == this.selectedWeekdays &&
           other.startDate == this.startDate &&
-          other.isActive == this.isActive);
+          other.isActive == this.isActive &&
+          other.intakeTimes == this.intakeTimes);
 }
 
 class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
@@ -1840,6 +1940,7 @@ class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
   final Value<String?> selectedWeekdays;
   final Value<DateTime> startDate;
   final Value<bool> isActive;
+  final Value<String?> intakeTimes;
   const InfusionSchedulesCompanion({
     this.id = const Value.absent(),
     this.medicationId = const Value.absent(),
@@ -1849,6 +1950,7 @@ class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
     this.selectedWeekdays = const Value.absent(),
     this.startDate = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.intakeTimes = const Value.absent(),
   });
   InfusionSchedulesCompanion.insert({
     this.id = const Value.absent(),
@@ -1859,6 +1961,7 @@ class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
     this.selectedWeekdays = const Value.absent(),
     required DateTime startDate,
     this.isActive = const Value.absent(),
+    this.intakeTimes = const Value.absent(),
   }) : medicationId = Value(medicationId),
        dosage = Value(dosage),
        frequencyType = Value(frequencyType),
@@ -1872,6 +1975,7 @@ class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
     Expression<String>? selectedWeekdays,
     Expression<DateTime>? startDate,
     Expression<bool>? isActive,
+    Expression<String>? intakeTimes,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1882,6 +1986,7 @@ class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
       if (selectedWeekdays != null) 'selected_weekdays': selectedWeekdays,
       if (startDate != null) 'start_date': startDate,
       if (isActive != null) 'is_active': isActive,
+      if (intakeTimes != null) 'intake_times': intakeTimes,
     });
   }
 
@@ -1894,6 +1999,7 @@ class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
     Value<String?>? selectedWeekdays,
     Value<DateTime>? startDate,
     Value<bool>? isActive,
+    Value<String?>? intakeTimes,
   }) {
     return InfusionSchedulesCompanion(
       id: id ?? this.id,
@@ -1904,6 +2010,7 @@ class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
       selectedWeekdays: selectedWeekdays ?? this.selectedWeekdays,
       startDate: startDate ?? this.startDate,
       isActive: isActive ?? this.isActive,
+      intakeTimes: intakeTimes ?? this.intakeTimes,
     );
   }
 
@@ -1934,6 +2041,9 @@ class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
+    if (intakeTimes.present) {
+      map['intake_times'] = Variable<String>(intakeTimes.value);
+    }
     return map;
   }
 
@@ -1947,7 +2057,8 @@ class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
           ..write('intervalValue: $intervalValue, ')
           ..write('selectedWeekdays: $selectedWeekdays, ')
           ..write('startDate: $startDate, ')
-          ..write('isActive: $isActive')
+          ..write('isActive: $isActive, ')
+          ..write('intakeTimes: $intakeTimes')
           ..write(')'))
         .toString();
   }
@@ -2457,6 +2568,7 @@ typedef $$MedicationsTableCreateCompanionBuilder =
       Value<double> stock,
       Value<double> minStock,
       required String unit,
+      Value<MedicationType> type,
     });
 typedef $$MedicationsTableUpdateCompanionBuilder =
     MedicationsCompanion Function({
@@ -2466,6 +2578,7 @@ typedef $$MedicationsTableUpdateCompanionBuilder =
       Value<double> stock,
       Value<double> minStock,
       Value<String> unit,
+      Value<MedicationType> type,
     });
 
 final class $$MedicationsTableReferences
@@ -2608,6 +2721,12 @@ class $$MedicationsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnWithTypeConverterFilters<MedicationType, MedicationType, int>
+  get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
   Expression<bool> infusionLogRefs(
     Expression<bool> Function($$InfusionLogTableFilterComposer f) f,
   ) {
@@ -2748,6 +2867,11 @@ class $$MedicationsTableOrderingComposer
     column: $table.unit,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MedicationsTableAnnotationComposer
@@ -2776,6 +2900,9 @@ class $$MedicationsTableAnnotationComposer
 
   GeneratedColumn<String> get unit =>
       $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<MedicationType, int> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
 
   Expression<T> infusionLogRefs<T extends Object>(
     Expression<T> Function($$InfusionLogTableAnnotationComposer a) f,
@@ -2919,6 +3046,7 @@ class $$MedicationsTableTableManager
                 Value<double> stock = const Value.absent(),
                 Value<double> minStock = const Value.absent(),
                 Value<String> unit = const Value.absent(),
+                Value<MedicationType> type = const Value.absent(),
               }) => MedicationsCompanion(
                 id: id,
                 name: name,
@@ -2926,6 +3054,7 @@ class $$MedicationsTableTableManager
                 stock: stock,
                 minStock: minStock,
                 unit: unit,
+                type: type,
               ),
           createCompanionCallback:
               ({
@@ -2935,6 +3064,7 @@ class $$MedicationsTableTableManager
                 Value<double> stock = const Value.absent(),
                 Value<double> minStock = const Value.absent(),
                 required String unit,
+                Value<MedicationType> type = const Value.absent(),
               }) => MedicationsCompanion.insert(
                 id: id,
                 name: name,
@@ -2942,6 +3072,7 @@ class $$MedicationsTableTableManager
                 stock: stock,
                 minStock: minStock,
                 unit: unit,
+                type: type,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -4130,6 +4261,7 @@ typedef $$InfusionSchedulesTableCreateCompanionBuilder =
       Value<String?> selectedWeekdays,
       required DateTime startDate,
       Value<bool> isActive,
+      Value<String?> intakeTimes,
     });
 typedef $$InfusionSchedulesTableUpdateCompanionBuilder =
     InfusionSchedulesCompanion Function({
@@ -4141,6 +4273,7 @@ typedef $$InfusionSchedulesTableUpdateCompanionBuilder =
       Value<String?> selectedWeekdays,
       Value<DateTime> startDate,
       Value<bool> isActive,
+      Value<String?> intakeTimes,
     });
 
 final class $$InfusionSchedulesTableReferences
@@ -4246,6 +4379,11 @@ class $$InfusionSchedulesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get intakeTimes => $composableBuilder(
+    column: $table.intakeTimes,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$MedicationsTableFilterComposer get medicationId {
     final $$MedicationsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -4339,6 +4477,11 @@ class $$InfusionSchedulesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get intakeTimes => $composableBuilder(
+    column: $table.intakeTimes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$MedicationsTableOrderingComposer get medicationId {
     final $$MedicationsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4398,6 +4541,11 @@ class $$InfusionSchedulesTableAnnotationComposer
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<String> get intakeTimes => $composableBuilder(
+    column: $table.intakeTimes,
+    builder: (column) => column,
+  );
 
   $$MedicationsTableAnnotationComposer get medicationId {
     final $$MedicationsTableAnnotationComposer composer = $composerBuilder(
@@ -4489,6 +4637,7 @@ class $$InfusionSchedulesTableTableManager
                 Value<String?> selectedWeekdays = const Value.absent(),
                 Value<DateTime> startDate = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<String?> intakeTimes = const Value.absent(),
               }) => InfusionSchedulesCompanion(
                 id: id,
                 medicationId: medicationId,
@@ -4498,6 +4647,7 @@ class $$InfusionSchedulesTableTableManager
                 selectedWeekdays: selectedWeekdays,
                 startDate: startDate,
                 isActive: isActive,
+                intakeTimes: intakeTimes,
               ),
           createCompanionCallback:
               ({
@@ -4509,6 +4659,7 @@ class $$InfusionSchedulesTableTableManager
                 Value<String?> selectedWeekdays = const Value.absent(),
                 required DateTime startDate,
                 Value<bool> isActive = const Value.absent(),
+                Value<String?> intakeTimes = const Value.absent(),
               }) => InfusionSchedulesCompanion.insert(
                 id: id,
                 medicationId: medicationId,
@@ -4518,6 +4669,7 @@ class $$InfusionSchedulesTableTableManager
                 selectedWeekdays: selectedWeekdays,
                 startDate: startDate,
                 isActive: isActive,
+                intakeTimes: intakeTimes,
               ),
           withReferenceMapper: (p0) => p0
               .map(
