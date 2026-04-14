@@ -77,22 +77,36 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 future: db.getAllMedications(),
                 builder: (context, snapshot) {
                   final meds = snapshot.data ?? [];
-                  return DropdownButtonFormField<Medication?>(
-                    value: _selectedMed,
-                    items: [
-                      const DropdownMenuItem<Medication?>(
-                        value: null, 
-                        child: Text('Nur Zubehör bestellen (Kein Medikament)')
-                      ),
-                      ...meds.map((m) => DropdownMenuItem<Medication?>(value: m, child: Text(m.name))),
-                    ],
+                  final items = [
+                    const DropdownMenuItem<int?>(
+                      value: null, 
+                      child: Text('Nur Zubehör bestellen (Kein Medikament)')
+                    ),
+                    ...meds.map((m) => DropdownMenuItem<int?>(value: m.id, child: Text(m.name))),
+                  ];
+
+                  // Safety: Ensure _selectedMed.id is in items to prevent Flutter crash if still loading
+                  if (_selectedMed != null && !items.any((it) => it.value == _selectedMed!.id)) {
+                    items.add(DropdownMenuItem<int?>(
+                      value: _selectedMed!.id, 
+                      child: Text(_selectedMed!.name)
+                    ));
+                  }
+
+                  return DropdownButtonFormField<int?>(
+                    value: _selectedMed?.id,
+                    items: items,
                     onChanged: (val) {
                       setState(() {
-                        _selectedMed = val;
-                        if (_selectedMed != null) {
-                          _qtyController.text = _selectedMed!.packageSize.toStringAsFixed(0);
-                        } else {
+                        if (val == null) {
+                          _selectedMed = null;
                           _qtyController.text = '0';
+                        } else {
+                          // Find in recently loaded meds or keep current
+                          _selectedMed = meds.where((m) => m.id == val).firstOrNull ?? _selectedMed;
+                          if (_selectedMed != null) {
+                            _qtyController.text = _selectedMed!.packageSize.toStringAsFixed(0);
+                          }
                         }
                       });
                       _calculateBOM(db);

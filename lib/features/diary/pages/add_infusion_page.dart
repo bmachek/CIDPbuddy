@@ -85,6 +85,13 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   }
                 }
 
+                final items = meds.map((m) => DropdownMenuItem<Medication>(value: m, child: Text(m.name))).toList();
+                
+                // Safety check: Ensure current selection is in the items list to prevent Flutter's assertion error
+                if (_selectedMed != null && !meds.any((m) => m.id == _selectedMed!.id)) {
+                  items.add(DropdownMenuItem<Medication>(value: _selectedMed!, child: Text(_selectedMed!.name)));
+                }
+
                 return DropdownButtonFormField<Medication>(
                   value: _selectedMed,
                   decoration: InputDecoration(
@@ -94,7 +101,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                     filled: true,
                     fillColor: Theme.of(context).cardColor,
                   ),
-                  items: meds.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
+                  items: items,
                   onChanged: (val) => setState(() => _selectedMed = val),
                   validator: (val) => val == null ? 'Bitte wählen' : null,
                 );
