@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../../core/database/database.dart';
+import 'package:igkeeper/core/database/database.dart';
 import '../providers/diary_provider.dart';
 import 'add_infusion_page.dart';
 import '../../reminders/services/notification_service.dart';
 import '../../inventory/pages/shopping_wizard_dialog.dart';
 import 'package:drift/drift.dart' show Value;
-import '../../../core/services/medication_service.dart';
+import 'package:igkeeper/core/services/medication_service.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -292,56 +292,107 @@ class DashboardPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: isOverdue ? Colors.orange.withOpacity(0.5) : Theme.of(context).dividerColor.withOpacity(0.05)),
           ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: CircleAvatar(
-              backgroundColor: Colors.orange.withOpacity(0.1),
-              child: const Icon(Icons.local_shipping_rounded, color: Colors.orange),
-            ),
-            title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Menge: ${order.medicationQty.toStringAsFixed(0)} ${med.unit}'),
-                if (order.deliveryDate != null)
-                  Text(
-                    'Lieferdatum: ${DateFormat('dd.MM.yyyy').format(order.deliveryDate!)}',
-                    style: TextStyle(
-                      color: isOverdue ? Colors.red : Colors.grey,
-                      fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
+          child: Column(
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                leading: CircleAvatar(
+                  backgroundColor: Colors.orange.withOpacity(0.1),
+                  child: const Icon(Icons.local_shipping_rounded, color: Colors.orange),
+                ),
+                title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Menge: ${order.medicationQty.toStringAsFixed(0)} ${med.unit}'),
+                    if (order.deliveryDate != null)
+                      Text(
+                        'Lieferdatum: ${DateFormat('dd.MM.yyyy').format(order.deliveryDate!)}',
+                        style: TextStyle(
+                          color: isOverdue ? Colors.red : Colors.grey,
+                          fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      )
+                    else
+                      const Text('Noch kein Datum festgelegt'),
+                  ],
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_note_rounded, color: Colors.blue),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => ShoppingWizardDialog(orderToEdit: order),
+                        );
+                      },
+                      tooltip: 'Bestellung bearbeiten',
                     ),
-                  )
-                else
-                  const Text('Noch kein Datum festgelegt'),
-              ],
-            ),
-            trailing: ElevatedButton(
-              onPressed: () async {
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Lieferung bestätigt?'),
-                    content: const Text('Möchtest du den Empfang dieser Lieferung bestätigen? Der Bestand wird automatisch aktualisiert.'),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Nein')),
-                      ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Ja, erhalten')),
-                    ],
-                  ),
-                );
-                if (confirmed == true) {
-                  await db.confirmOrder(order.id);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bestand wurde aktualisiert!')));
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange.withOpacity(0.1),
-                foregroundColor: Colors.orange,
-                elevation: 0,
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Bestellung löschen?'),
+                            content: const Text('Möchtest du diese ausstehende Bestellung wirklich entfernen?'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true), 
+                                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                child: const Text('Löschen')
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          await db.deletePendingOrder(order.id);
+                        }
+                      },
+                      tooltip: 'Bestellung löschen',
+                    ),
+                  ],
+                ),
               ),
-              child: const Text('Erhalten'),
-            ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: SizedBox(
+                   width: double.infinity,
+                   child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Lieferung bestätigt?'),
+                            content: const Text('Möchtest du den Empfang dieser Lieferung bestätigen? Der Bestand wird automatisch aktualisiert.'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Nein')),
+                              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Ja, erhalten')),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          await db.confirmOrder(order.id);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bestand wurde aktualisiert!')));
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.check_circle_outline_rounded),
+                      label: const Text('Lieferung erhalten'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange.withOpacity(0.1),
+                        foregroundColor: Colors.orange,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                   ),
+                ),
+              ),
+            ],
           ),
         );
       },

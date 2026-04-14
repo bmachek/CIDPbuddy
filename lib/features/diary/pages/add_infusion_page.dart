@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/diary_provider.dart';
 import '../../inventory/providers/inventory_provider.dart';
-import '../../../core/database/database.dart';
+import 'package:igkeeper/core/database/database.dart';
 import '../widgets/premedication_timer_modal.dart';
 
 class AddInfusionPage extends StatefulWidget {

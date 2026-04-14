@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' hide Column, Table;
-import '../../../core/services/medication_service.dart';
-import '../../../core/database/database.dart';
+import 'package:igkeeper/core/services/medication_service.dart';
+import 'package:igkeeper/core/database/database.dart';
 
 class ShoppingWizardDialog extends StatefulWidget {
   final Medication? initialMedication;
-  const ShoppingWizardDialog({super.key, this.initialMedication});
+  final PendingOrder? orderToEdit;
+  const ShoppingWizardDialog({super.key, this.initialMedication, this.orderToEdit});
 
   @override
   State<ShoppingWizardDialog> createState() => _ShoppingWizardDialogState();
@@ -24,9 +25,14 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedMed = widget.initialMedication;
-    if (_selectedMed != null) {
-      _qtyController.text = _selectedMed!.packageSize.toStringAsFixed(0);
+    if (widget.orderToEdit != null) {
+      _deliveryDate = widget.orderToEdit!.deliveryDate;
+      _qtyController.text = widget.orderToEdit!.medicationQty.toStringAsFixed(0);
+    } else {
+      _selectedMed = widget.initialMedication;
+      if (_selectedMed != null) {
+        _qtyController.text = _selectedMed!.packageSize.toStringAsFixed(0);
+      }
     }
   }
 
@@ -34,19 +40,22 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   Widget build(BuildContext context) {
     final db = Provider.of<AppDatabase>(context);
 
-    if (_isFirstBuild && _selectedMed != null) {
+    if (_isFirstBuild) {
       _isFirstBuild = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _calculateBOM(db);
+        _calculateInitialData(db);
       });
     }
 
     return AlertDialog(
       title: Row(
         children: [
-          Icon(Icons.auto_awesome_rounded, color: Theme.of(context).colorScheme.primary),
+          Icon(
+            widget.orderToEdit == null ? Icons.auto_awesome_rounded : Icons.edit_note_rounded, 
+            color: Theme.of(context).colorScheme.primary
+          ),
           const SizedBox(width: 12),
-          const Text('Einkaufs-Assistent'),
+          Text(widget.orderToEdit == null ? 'Einkaufs-Assistent' : 'Bestellung bearbeiten'),
         ],
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
@@ -57,23 +66,33 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Berechne den Zubehörbedarf basierend auf deiner geplanten Medikamenten-Bestellung.',
-                style: TextStyle(fontSize: 13, color: Colors.grey),
+              Text(
+                widget.orderToEdit == null 
+                  ? 'Berechne den Zubehörbedarf basierend auf deiner geplanten Medikamenten-Bestellung.'
+                  : 'Passe deine Bestellung und den Zubehörbedarf an.',
+                style: const TextStyle(fontSize: 13, color: Colors.grey),
               ),
               const SizedBox(height: 24),
               FutureBuilder<List<Medication>>(
                 future: db.getAllMedications(),
                 builder: (context, snapshot) {
                   final meds = snapshot.data ?? [];
-                  return DropdownButtonFormField<Medication>(
+                  return DropdownButtonFormField<Medication?>(
                     value: _selectedMed,
-                    items: meds.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
+                    items: [
+                      const DropdownMenuItem<Medication?>(
+                        value: null, 
+                        child: Text('Nur Zubehör bestellen (Kein Medikament)')
+                      ),
+                      ...meds.map((m) => DropdownMenuItem<Medication?>(value: m, child: Text(m.name))),
+                    ],
                     onChanged: (val) {
                       setState(() {
                         _selectedMed = val;
                         if (_selectedMed != null) {
                           _qtyController.text = _selectedMed!.packageSize.toStringAsFixed(0);
+                        } else {
+                          _qtyController.text = '0';
                         }
                       });
                       _calculateBOM(db);
@@ -88,21 +107,23 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   );
                 },
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _qtyController,
-                decoration: InputDecoration(
-                  labelText: 'Bestellmenge (${_selectedMed?.unit ?? 'Flaschen'})',
-                  prefixIcon: const Icon(Icons.shopping_basket_rounded),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
-                  helperText: _getMedReachText(),
-                  helperStyle: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+              if (_selectedMed != null) ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _qtyController,
+                  decoration: InputDecoration(
+                    labelText: 'Bestellmenge (${_selectedMed?.unit ?? 'Flaschen'})',
+                    prefixIcon: const Icon(Icons.shopping_basket_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surface,
+                    helperText: _getMedReachText(),
+                    helperStyle: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => _calculateBOM(db),
                 ),
-                keyboardType: TextInputType.number,
-                onChanged: (_) => _calculateBOM(db),
-              ),
+              ],
               const SizedBox(height: 16),
               ListTile(
                 tileColor: Theme.of(context).colorScheme.surface,
@@ -114,7 +135,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   final date = await showDatePicker(
                     context: context,
                     initialDate: _deliveryDate ?? DateTime.now(),
-                    firstDate: DateTime.now(),
+                    firstDate: DateTime.now().subtract(const Duration(days: 30)),
                     lastDate: DateTime.now().add(const Duration(days: 365)),
                   );
                   setState(() => _deliveryDate = date);
@@ -128,7 +149,6 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 const Text('Zubehör-Vorschlag:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 12),
                 
-                // Group 1: Notwendig (System recommended)
                 if (_results!.any((it) => it.isSystemRecommended)) ...[
                   const Padding(
                     padding: EdgeInsets.only(bottom: 8),
@@ -138,7 +158,6 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   const SizedBox(height: 16),
                 ],
 
-                // Group 2: Zusätzlich (Linked but not strictly recommended by system)
                 if (_results!.any((it) => !it.isSystemRecommended)) ...[
                   const Padding(
                     padding: EdgeInsets.only(bottom: 8),
@@ -150,18 +169,29 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 if (_results!.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(16),
+                    width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.check_circle_rounded, color: Colors.green),
-                        SizedBox(width: 12),
-                        Expanded(child: Text('Kein Zubehör verknüpft.', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
-                      ],
+                    child: const Text(
+                      'Kein Zubehör automatisch vorgeschlagen.', 
+                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                      textAlign: TextAlign.center,
                     ),
                   ),
+                
+                const SizedBox(height: 20),
+                Center(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _addManualAccessory(db),
+                    icon: const Icon(Icons.add_shopping_cart_rounded),
+                    label: const Text('Anderes Zubehör hinzufügen'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
               ],
             ],
           ),
@@ -174,17 +204,78 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
           child: const Text('Abbrechen'),
         ),
         ElevatedButton(
-          onPressed: _selectedMed == null ? null : () => _saveOrder(db),
+          onPressed: (_selectedMed == null && (_results == null || !_results!.any((it) => it.isActuallySelected))) ? null : () => _saveOrder(db),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-          child: const Text('Bestellung speichern'),
+          child: Text(widget.orderToEdit == null ? 'Bestellung speichern' : 'Änderungen speichern'),
         ),
       ],
     );
+  }
+
+  void _addManualAccessory(AppDatabase db) async {
+    final allAcc = await db.getAllAccessories();
+    if (!mounted) return;
+
+    final Accessory? selected = await showDialog<Accessory>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zubehör auswählen'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: allAcc.length,
+            itemBuilder: (context, index) {
+              final acc = allAcc[index];
+              return ListTile(
+                title: Text(acc.name),
+                subtitle: Text('Bestand: ${acc.stock} ${acc.unit}'),
+                onTap: () => Navigator.pop(context, acc),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    if (selected != null) {
+      setState(() {
+        _results ??= [];
+        // Check if already in list
+        if (_results!.any((it) => it.id == selected.id)) {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bereits in der Liste!')));
+           return;
+        }
+
+        _results!.add(_ShoppingItem(
+          selected.id, 
+          selected.name, 
+          selected.packageSize, 
+          selected.unit, 
+          selected.stock, 
+          false, 
+          false, 
+          selected.packageSize, 
+          0,
+          true
+        ));
+      });
+    }
+  }
+
+  void _calculateInitialData(AppDatabase db) async {
+    if (widget.orderToEdit != null) {
+      final med = await (db.select(db.medications)..where((t) => t.id.equals(widget.orderToEdit!.medicationId))).getSingle();
+      setState(() {
+        _selectedMed = med;
+      });
+    }
+    _calculateBOM(db);
   }
 
   Widget _buildAccessoryRow(_ShoppingItem item) {
@@ -303,7 +394,16 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   }
 
   void _calculateBOM(AppDatabase db) async {
-    if (_selectedMed == null) return;
+    // Keep manual additions if they exist
+    final manualAdditions = _results?.where((it) => it.isManualAddition).toList() ?? [];
+    
+    if (_selectedMed == null) {
+      setState(() {
+        _results = manualAdditions;
+      });
+      return;
+    }
+    
     final orderQty = double.tryParse(_qtyController.text) ?? 0.0;
     final medService = Provider.of<MedicationService>(context, listen: false);
     
@@ -311,6 +411,12 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
 
     // Med reach date
     _medReachDate = await medService.calculateReachDate(_selectedMed!, additionalStock: orderQty);
+
+    // If editing, load existing order items to set initial counts
+    List<PendingOrderItem> existingItems = [];
+    if (widget.orderToEdit != null) {
+      existingItems = await db.getPendingOrderItems(widget.orderToEdit!.id);
+    }
 
     final links = await db.getAccessoriesForMedication(_selectedMed!.id);
     List<_ShoppingItem> items = [];
@@ -328,17 +434,28 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       double plannedQty = 0;
       bool isSystemRecommended = false;
       
-      if (shortfall > 0) {
-        isSystemRecommended = true;
-        if (acc.packageSize > 0) {
-          plannedQty = (shortfall / acc.packageSize).ceil() * acc.packageSize;
-        } else {
-          plannedQty = shortfall;
+      // Check if we already have this in the existing order (if editing)
+      final existingItem = existingItems.where((it) => it.accessoryId == acc.id).firstOrNull;
+      
+      if (existingItem != null) {
+        plannedQty = existingItem.quantity;
+        // Logic for recommendation still applies for visual styling
+        if (shortfall > 0 || link.isMandatory) {
+          isSystemRecommended = true;
         }
-      } else if (link.isMandatory) {
-        if (orderQty > 0) {
-           isSystemRecommended = true;
-           plannedQty = acc.packageSize > 0 ? acc.packageSize : 1.0;
+      } else {
+        if (shortfall > 0) {
+          isSystemRecommended = true;
+          if (acc.packageSize > 0) {
+            plannedQty = (shortfall / acc.packageSize).ceil() * acc.packageSize;
+          } else {
+            plannedQty = shortfall;
+          }
+        } else if (link.isMandatory) {
+          if (orderQty > 0) {
+             isSystemRecommended = true;
+             plannedQty = acc.packageSize > 0 ? acc.packageSize : 1.0;
+          }
         }
       }
       
@@ -355,6 +472,13 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       
       items.add(item);
     }
+    
+    // Add manual additions that were not part of the medication links
+    for (var manual in manualAdditions) {
+      if (!items.any((it) => it.id == manual.id)) {
+        items.add(manual);
+      }
+    }
 
     if (mounted) {
       setState(() {
@@ -367,18 +491,32 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
     final orderQty = double.tryParse(_qtyController.text) ?? 1.0;
     
     await db.transaction(() async {
-      final orderId = await db.insertPendingOrder(PendingOrdersCompanion.insert(
-        medicationId: _selectedMed!.id,
-        medicationQty: orderQty,
-        deliveryDate: Value(_deliveryDate),
-      ));
+      int orderId;
+      if (widget.orderToEdit != null) {
+        orderId = widget.orderToEdit!.id;
+        await db.updatePendingOrder(widget.orderToEdit!.copyWith(
+          medicationId: _selectedMed!.id,
+          medicationQty: orderQty,
+          deliveryDate: Value(_deliveryDate),
+        ));
+        // Clear existing items to re-add them (simplest way to update)
+        await (db.delete(db.pendingOrderItems)..where((t) => t.orderId.equals(orderId))).go();
+      } else {
+        orderId = await db.insertPendingOrder(PendingOrdersCompanion.insert(
+          medicationId: _selectedMed!.id,
+          medicationQty: orderQty,
+          deliveryDate: Value(_deliveryDate),
+        ));
+      }
 
-      // Add medication as order item
-      await db.insertPendingOrderItem(PendingOrderItemsCompanion.insert(
-        orderId: orderId,
-        medicationId: Value(_selectedMed!.id),
-        quantity: orderQty,
-      ));
+        // Add medication as order item (if selected)
+        if (_selectedMed != null) {
+          await db.insertPendingOrderItem(PendingOrderItemsCompanion.insert(
+            orderId: orderId,
+            medicationId: Value(_selectedMed!.id),
+            quantity: orderQty,
+          ));
+        }
 
       // Add accessories as order items
       if (_results != null) {
@@ -409,10 +547,11 @@ class _ShoppingItem {
   final bool isSystemRecommended;
   final double packageSize;
   final double dailyUsage;
+  final bool isManualAddition;
   final TextEditingController controller;
   DateTime? reachDate;
 
-  _ShoppingItem(this.id, this.name, this.neededCount, this.unit, this.currentStock, this.isMandatoryInDb, this.isSystemRecommended, this.packageSize, this.dailyUsage) 
+  _ShoppingItem(this.id, this.name, this.neededCount, this.unit, this.currentStock, this.isMandatoryInDb, this.isSystemRecommended, this.packageSize, this.dailyUsage, [this.isManualAddition = false]) 
     : controller = TextEditingController(text: neededCount.toStringAsFixed(0));
 
   bool get isActuallySelected {
@@ -420,7 +559,7 @@ class _ShoppingItem {
     return val > 0;
   }
 
-  bool get isUserAddition => isActuallySelected && !isSystemRecommended;
+  bool get isUserAddition => (isActuallySelected && !isSystemRecommended) || isManualAddition;
 
   void updateReach(double usage, double newQty) {
     if (usage > 0) {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' as drift;
-import '../../../core/database/database.dart';
-import '../../../core/services/scheduler_service.dart';
+import 'package:igkeeper/core/database/database.dart';
+import 'package:igkeeper/core/services/scheduler_service.dart';
 
 class AddSchedulePage extends StatefulWidget {
   final InfusionSchedule? initialSchedule;

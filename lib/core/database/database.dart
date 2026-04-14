@@ -184,6 +184,7 @@ class AppDatabase extends _$AppDatabase {
       (select(medicationAccessories)..where((t) => t.medicationId.equals(medId))).watch();
   Future<int> insertMedicationAccessory(MedicationAccessoriesCompanion entry) =>
       into(medicationAccessories).insert(entry);
+  Future<List<MedicationAccessory>> getAllMedicationAccessories() => select(medicationAccessories).get();
   Future updateMedicationAccessory(MedicationAccessory entry) =>
       update(medicationAccessories).replace(entry);
 

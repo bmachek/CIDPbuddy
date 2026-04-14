@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:igkeeper/features/reminders/services/notification_service.dart';
 import '../providers/inventory_provider.dart';
-import '../../../core/database/database.dart';
+import 'package:igkeeper/core/database/database.dart';
 import 'package:drift/drift.dart' as drift;
-import '../../diary/pages/add_schedule_page.dart';
+import 'package:igkeeper/features/diary/pages/add_schedule_page.dart';
 import 'package:intl/intl.dart';
 
 class MedicationDetailsPage extends StatelessWidget {

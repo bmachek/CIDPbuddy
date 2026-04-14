@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/inventory_provider.dart';
-import '../../../core/database/database.dart';
-import '../../../core/services/medication_service.dart';
+import 'package:igkeeper/core/database/database.dart';
+import 'package:igkeeper/core/services/medication_service.dart';
 import 'add_item_page.dart';
 import 'medication_details_page.dart';
 import 'shopping_wizard_dialog.dart';
@@ -72,12 +72,84 @@ class InventoryPage extends StatelessWidget {
           stream: provider.medicationsStream,
           builder: (context, snapshot) {
             final meds = snapshot.data ?? [];
-            if (meds.isEmpty) return const _EmptySection(message: 'Keine Medikamente angelegt');
+            if (meds.isEmpty && snapshot.connectionState == ConnectionState.done) {
+               return const _EmptySection(message: 'Keine Medikamente angelegt');
+            }
             return Column(
               children: meds.map((med) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _buildMedicationItem(context, med, provider, db),
               )).toList(),
+            );
+          },
+        ),
+        const SizedBox(height: 24),
+        StreamBuilder<List<Accessory>>(
+          stream: db.watchAllAccessories(),
+          builder: (context, snapshot) {
+            final allAcc = snapshot.data ?? [];
+            if (allAcc.isEmpty) return const SizedBox();
+            
+            return FutureBuilder<List<MedicationAccessory>>(
+              future: db.getAllMedicationAccessories(),
+              builder: (context, linksSnapshot) {
+                final links = linksSnapshot.data ?? [];
+                final linkedIds = links.map((l) => l.accessoryId).toSet();
+                final standaloneAcc = allAcc.where((a) => !linkedIds.contains(a.id)).toList();
+                
+                if (standaloneAcc.isEmpty) return const SizedBox();
+                
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2_rounded, color: Theme.of(context).primaryColor, size: 20),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Allgemeines Zubehör',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ...standaloneAcc.map((acc) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+                        ),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.teal.withOpacity(0.1),
+                            child: const Icon(Icons.build_circle_rounded, color: Colors.teal, size: 20),
+                          ),
+                          title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text('Bestand: ${acc.stock.toStringAsFixed(0)} ${acc.unit}'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _StockCounter(
+                                stock: acc.stock, unit: acc.unit,
+                                onAdd: () => provider.updateAccessoryStock(acc, 1),
+                                onRemove: () => provider.updateAccessoryStock(acc, -1),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.grey),
+                                onPressed: () => _showEditAccessoryDialog(context, db, acc),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )),
+                  ],
+                );
+              },
             );
           },
         ),
