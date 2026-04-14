@@ -15,16 +15,22 @@ class SchedulerService {
     final today = DateTime(now.year, now.month, now.day);
     final lookAhead = today.add(const Duration(days: 90));
 
+    // Bulk fetch existing entries for efficiency
+    final existingEntries = await (db.select(db.plannedInfusions)
+          ..where((t) => t.date.isBetweenValues(today, lookAhead)))
+        .get();
+
+    // Create a lookup for efficiency
+    final existingSet = existingEntries
+        .map((e) => '${e.scheduleId}_${e.date.toIso8601String()}')
+        .toSet();
+
     for (final schedule in activeSchedules) {
       final dates = _calculateDates(schedule, today, lookAhead);
       for (final date in dates) {
-        // Find existing entries for this EXACT time
-        final existingEvents = await (db.select(db.plannedInfusions)
-          ..where((t) => t.scheduleId.equals(schedule.id) & 
-                         t.date.equals(date)))
-          .get();
-
-        if (existingEvents.isEmpty) {
+        final key = '${schedule.id}_${date.toIso8601String()}';
+        
+        if (!existingSet.contains(key)) {
           final id = await db.insertPlannedInfusion(PlannedInfusionsCompanion.insert(
             date: date,
             medicationId: schedule.medicationId,
@@ -34,7 +40,17 @@ class SchedulerService {
           
           // Schedule notifications for this specific treatment
           if (date.isAfter(now)) {
-            final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(id))).getSingle();
+            // Re-fetch or create a lightweight treatment object for notification
+            final treatment = PlannedInfusion(
+              id: id,
+              date: date,
+              medicationId: schedule.medicationId,
+              dosage: schedule.dosage,
+              scheduleId: schedule.id,
+              isCompleted: false,
+              notes: null,
+              bodyWeight: null,
+            );
             await NotificationService().scheduleTreatmentReminders(treatment);
           }
         }

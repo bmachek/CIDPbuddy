@@ -13,30 +13,47 @@ import 'package:igkeeper/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final db = AppDatabase();
-  await NotificationService().init();
   
-  // Initialize and sync infusion schedules
-  await SchedulerService(db).syncPlannedInfusions();
-  
-  runApp(
-    MultiProvider(
-      providers: [
-        Provider.value(value: db),
-        Provider(create: (_) => MedicationService(db)),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProxyProvider<AppDatabase, InventoryProvider>(
-          create: (context) => InventoryProvider(db),
-          update: (context, database, previous) => InventoryProvider(database),
+  try {
+    final db = AppDatabase();
+    await NotificationService().init();
+    
+    // Initialize and sync infusion schedules
+    await SchedulerService(db).syncPlannedInfusions();
+    
+    runApp(
+      MultiProvider(
+        providers: [
+          Provider.value(value: db),
+          Provider(create: (_) => MedicationService(db)),
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProxyProvider<AppDatabase, InventoryProvider>(
+            create: (context) => InventoryProvider(db),
+            update: (context, database, previous) => InventoryProvider(database),
+          ),
+          ChangeNotifierProxyProvider<AppDatabase, DiaryProvider>(
+            create: (context) => DiaryProvider(db),
+            update: (context, database, previous) => DiaryProvider(database),
+          ),
+        ],
+        child: const CIDPBuddyApp(),
+      ),
+    );
+  } catch (e, stack) {
+    debugPrint('Initialization error: $e');
+    debugPrint('Stack trace: $stack');
+    // Fallback to minimal app to show error if possible
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text('App konnte nicht initialisiert werden:\n$e'),
+          ),
         ),
-        ChangeNotifierProxyProvider<AppDatabase, DiaryProvider>(
-          create: (context) => DiaryProvider(db),
-          update: (context, database, previous) => DiaryProvider(database),
-        ),
-      ],
-      child: const CIDPBuddyApp(),
-    ),
-  );
+      ),
+    ));
+  }
 }
 
 class CIDPBuddyApp extends StatelessWidget {
