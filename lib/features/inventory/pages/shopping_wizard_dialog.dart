@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' hide Column, Table;
+import '../../../core/services/medication_service.dart';
 import '../../../core/database/database.dart';
 
 class ShoppingWizardDialog extends StatefulWidget {
@@ -18,6 +19,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   List<_ShoppingItem>? _results;
   DateTime? _deliveryDate;
   bool _isFirstBuild = true;
+  DateTime? _medReachDate;
 
   @override
   void initState() {
@@ -123,8 +125,28 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               if (_results != null) ...[
                 const Divider(),
                 const SizedBox(height: 12),
-                const Text('Ergebnis:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 8),
+                const Text('Zubehör-Vorschlag:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 12),
+                
+                // Group 1: Notwendig (System recommended)
+                if (_results!.any((it) => it.isSystemRecommended)) ...[
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text('Notwendig für diese Bestellung:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  ),
+                  ..._results!.where((it) => it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
+                  const SizedBox(height: 16),
+                ],
+
+                // Group 2: Zusätzlich (Linked but not strictly recommended by system)
+                if (_results!.any((it) => !it.isSystemRecommended)) ...[
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text('Weiteres Zubehör (Optional):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  ),
+                  ..._results!.where((it) => !it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
+                ],
+
                 if (_results!.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -136,120 +158,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       children: [
                         Icon(Icons.check_circle_rounded, color: Colors.green),
                         SizedBox(width: 12),
-                        Expanded(child: Text('Kein Zubehör zusätzlich nötig.', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
+                        Expanded(child: Text('Kein Zubehör verknüpft.', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
                       ],
                     ),
-                  )
-                else
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _results!.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final item = _results![index];
-                      return Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: item.isMandatory 
-                            ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-                            : Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: item.isMandatory 
-                              ? Theme.of(context).colorScheme.primary.withOpacity(0.3) 
-                              : Colors.grey.withOpacity(0.1),
-                            width: item.isMandatory ? 2 : 1,
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: item.isMandatory ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.white, 
-                                    shape: BoxShape.circle, 
-                                    border: Border.all(color: Colors.grey.withOpacity(0.1))
-                                  ),
-                                  child: Icon(
-                                    item.isMandatory ? Icons.star_rounded : Icons.build_circle_rounded, 
-                                    size: 20, 
-                                    color: item.isMandatory ? Colors.orange : Theme.of(context).primaryColor
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.name, 
-                                        style: TextStyle(
-                                          fontWeight: item.isMandatory ? FontWeight.bold : FontWeight.w500,
-                                          color: item.isMandatory ? Theme.of(context).primaryColor : null,
-                                        )
-                                      ),
-                                      if (item.isMandatory)
-                                        const Text('Wird mitbestellt', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  width: 80,
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.surface,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Expanded(
-                                        child: TextField(
-                                          controller: item.controller,
-                                          textAlign: TextAlign.right,
-                                          style: TextStyle(fontWeight: FontWeight.w900, color: Theme.of(context).primaryColor),
-                                          decoration: const InputDecoration(
-                                            isDense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            border: InputBorder.none,
-                                          ),
-                                          keyboardType: TextInputType.number,
-                                          onChanged: (val) {
-                                            final qty = double.tryParse(val) ?? 0;
-                                            setState(() {
-                                              item.updateReach(_dailyReq * (item.neededCount / (_calculateNeededQtyForMed(double.tryParse(_qtyController.text) ?? 0, item)) == 0 ? 1 : (item.neededCount / (_calculateNeededQtyForMed(double.tryParse(_qtyController.text) ?? 0, item)))), qty);
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(item.unit, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (item.reachDate != null) ...[
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.date_range_rounded, size: 14, color: Colors.teal),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Reicht bis: ${DateFormat('dd.MM.yyyy').format(item.reachDate!)}',
-                                    style: const TextStyle(fontSize: 11, color: Colors.teal, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ],
-                        ),
-                      );
-                    },
                   ),
               ],
             ],
@@ -276,6 +187,116 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
     );
   }
 
+  Widget _buildAccessoryRow(_ShoppingItem item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: item.isSystemRecommended || item.isUserAddition
+          ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+          : Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: item.isSystemRecommended || item.isUserAddition
+            ? Theme.of(context).colorScheme.primary.withOpacity(0.3) 
+            : Colors.grey.withOpacity(0.1),
+          width: item.isSystemRecommended || item.isUserAddition ? 2 : 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: item.isSystemRecommended ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.white, 
+                  shape: BoxShape.circle, 
+                  border: Border.all(color: Colors.grey.withOpacity(0.1))
+                ),
+                child: Icon(
+                  item.isSystemRecommended ? Icons.star_rounded : Icons.add_circle_outline_rounded, 
+                  size: 20, 
+                  color: item.isSystemRecommended ? Colors.orange : Colors.grey
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name, 
+                      style: TextStyle(
+                        fontWeight: item.isSystemRecommended ? FontWeight.bold : FontWeight.w500,
+                        color: item.isSystemRecommended ? Theme.of(context).primaryColor : null,
+                      )
+                    ),
+                    if (item.isSystemRecommended)
+                      const Text('Empfohlene Menge', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
+                    if (item.isUserAddition)
+                      const Text('Zusätzlich ausgewählt', style: TextStyle(fontSize: 10, color: Colors.teal, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              Container(
+                width: 80,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: item.controller,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900, 
+                          color: item.isActuallySelected ? Theme.of(context).primaryColor : Colors.grey
+                        ),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                          border: InputBorder.none,
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (val) {
+                          final qty = double.tryParse(val) ?? 0;
+                          setState(() {
+                            item.updateReach(item.dailyUsage, qty);
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(item.unit, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (item.reachDate != null && item.isActuallySelected) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.date_range_rounded, size: 14, color: Colors.teal),
+                const SizedBox(width: 6),
+                Text(
+                  'Reicht bis: ${DateFormat('dd.MM.yyyy').format(item.reachDate!)}',
+                  style: const TextStyle(fontSize: 11, color: Colors.teal, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   String _getMedReachText() {
     if (_selectedMed == null || _medReachDate == null) return '';
     return 'Reicht bis: ${DateFormat('dd.MM.yyyy').format(_medReachDate!)}';
@@ -284,40 +305,13 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   void _calculateBOM(AppDatabase db) async {
     if (_selectedMed == null) return;
     final orderQty = double.tryParse(_qtyController.text) ?? 0.0;
+    final medService = Provider.of<MedicationService>(context, listen: false);
     
-    // Calculate daily requirement for medication
-    final activeSchedules = await (db.select(db.infusionSchedules)..where((t) => t.medicationId.equals(_selectedMed!.id) & t.isActive.equals(true))).get();
-    
-    double dailyReq = 0;
-    for (var s in activeSchedules) {
-      final intakeCount = s.intakeTimes?.split(',').where((t) => t.isNotEmpty).length ?? 1;
-      final dosagePerDay = s.dosage * intakeCount;
-      
-      switch (s.frequencyType) {
-        case 'daily':
-          dailyReq += dosagePerDay;
-          break;
-        case 'interval':
-          dailyReq += dosagePerDay / (s.intervalValue ?? 1);
-          break;
-        case 'weekly':
-          dailyReq += dosagePerDay / (7 * (s.intervalValue ?? 1));
-          break;
-        case 'weekdays':
-          final weekdayCount = s.selectedWeekdays?.split(',').where((t) => t.isNotEmpty).length ?? 0;
-          dailyReq += (dosagePerDay * weekdayCount) / 7.0;
-          break;
-      }
-    }
-    
+    final dailyReq = await medService.getDailyRequirement(_selectedMed!.id);
     _dailyReq = dailyReq;
 
     // Med reach date
-    DateTime? medReach;
-    if (dailyReq > 0) {
-      final days = (_selectedMed!.stock + orderQty) / dailyReq;
-      medReach = DateTime.now().add(Duration(days: days.floor()));
-    }
+    _medReachDate = await medService.calculateReachDate(_selectedMed!, additionalStock: orderQty);
 
     final links = await db.getAccessoriesForMedication(_selectedMed!.id);
     List<_ShoppingItem> items = [];
@@ -333,7 +327,10 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       final shortfall = neededForOrder - availableStock;
       
       double plannedQty = 0;
+      bool isSystemRecommended = false;
+      
       if (shortfall > 0) {
+        isSystemRecommended = true;
         if (acc.packageSize > 0) {
           plannedQty = (shortfall / acc.packageSize).ceil() * acc.packageSize;
         } else {
@@ -341,12 +338,16 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
         }
       } else if (link.isMandatory) {
         if (orderQty > 0) {
+           isSystemRecommended = true;
            plannedQty = acc.packageSize > 0 ? acc.packageSize : 1.0;
         }
       }
       
       final accDailyReq = dailyReq * link.defaultQuantity;
-      final item = _ShoppingItem(acc.id, acc.name, plannedQty, acc.unit, acc.stock, link.isMandatory, acc.packageSize, accDailyReq);
+      final item = _ShoppingItem(
+        acc.id, acc.name, plannedQty, acc.unit, acc.stock, 
+        link.isMandatory, isSystemRecommended, acc.packageSize, accDailyReq
+      );
       
       if (accDailyReq > 0) {
         final days = (acc.stock + plannedQty) / accDailyReq;
@@ -359,7 +360,6 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
     if (mounted) {
       setState(() {
         _results = items;
-        _medReachDate = medReach;
       });
     }
   }
@@ -406,14 +406,22 @@ class _ShoppingItem {
   final double neededCount;
   final String unit;
   final double currentStock;
-  final bool isMandatory;
+  final bool isMandatoryInDb;
+  final bool isSystemRecommended;
   final double packageSize;
   final double dailyUsage;
   final TextEditingController controller;
   DateTime? reachDate;
 
-  _ShoppingItem(this.id, this.name, this.neededCount, this.unit, this.currentStock, this.isMandatory, this.packageSize, this.dailyUsage) 
+  _ShoppingItem(this.id, this.name, this.neededCount, this.unit, this.currentStock, this.isMandatoryInDb, this.isSystemRecommended, this.packageSize, this.dailyUsage) 
     : controller = TextEditingController(text: neededCount.toStringAsFixed(0));
+
+  bool get isActuallySelected {
+    final val = double.tryParse(controller.text) ?? 0;
+    return val > 0;
+  }
+
+  bool get isUserAddition => isActuallySelected && !isSystemRecommended;
 
   void updateReach(double usage, double newQty) {
     if (usage > 0) {

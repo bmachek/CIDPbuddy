@@ -758,9 +758,11 @@ class MedicationDetailsPage extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: const Text('OK'),
-              )
+              ),
             ],
           ),
+        ],
+      ),
     );
   }
 
