@@ -308,7 +308,6 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
     final medService = Provider.of<MedicationService>(context, listen: false);
     
     final dailyReq = await medService.getDailyRequirement(_selectedMed!.id);
-    _dailyReq = dailyReq;
 
     // Med reach date
     _medReachDate = await medService.calculateReachDate(_selectedMed!, additionalStock: orderQty);
