@@ -98,33 +98,32 @@ class _DashboardPageState extends State<DashboardPage> {
                   final now = DateTime.now();
                   final todayStart = DateTime(now.year, now.month, now.day);
                   final todayEnd = todayStart.add(const Duration(days: 1));
-
-                  // Urgent/Focus Section: Today's Infusions + Overdue Pills
+                  // Focus Section: Missed (Past Incomplete), Today's Infusions, Today's Overdue Pills
                   final focusTreatments = allTreatments.where((t) {
                     final med = medicationMap[t.medicationId];
                     if (med == null) return false;
                     final isInfusion = med.type != MedicationType.pill;
                     
+                    // Past incomplete treatments (Verpasst)
+                    if (t.date.isBefore(now)) return true;
                     // Infusions planned for today (regardless of time)
                     if (isInfusion && t.date.isAfter(todayStart) && t.date.isBefore(todayEnd)) return true;
-                    // Overdue pills
-                    if (!isInfusion && t.date.isBefore(now)) return true;
                     
                     return false;
                   }).toList();
 
-                  // Future Section: Future Pills + Future Infusions (beyond today)
+                  // Future Section: Future Pills (after now) + Future Infusions (after today)
                   final futureTreatments = allTreatments.where((t) {
                     if (focusTreatments.contains(t)) return false;
-                    final med = medicationMap[t.medicationId];
-                    if (med == null) return false;
-                    
                     return t.date.isAfter(now);
                   }).toList();
 
-                  // Past Section: Finished or missed past treatments not in focus
+                  // Past Section: Historical (usually done or hidden from focus)
+                  // For now, let's keep it for everything that is completed in the past
+                  // or past items if we ever decide to move them out of focus once 'done' 
+                  // but here they are still incomplete from the stream.
                   final pastTreatments = allTreatments.where((t) {
-                    if (focusTreatments.contains(t)) return false;
+                    if (focusTreatments.contains(t) || futureTreatments.contains(t)) return false;
                     return t.date.isBefore(todayStart);
                   }).toList();
 
@@ -132,10 +131,16 @@ class _DashboardPageState extends State<DashboardPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
+                        // Notification Center / Orders
+                        _buildNotificationCenter(db),
+                        const SizedBox(height: 24),
+                        _buildPendingOrdersSection(db),
+                        const SizedBox(height: 32),
+
                         // Focus Section Title
                         if (focusTreatments.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.only(bottom: 16, left: 4),
                             child: Text(
                               'ANSTEHENDE EINNAHMEN',
                               style: TextStyle(
@@ -150,7 +155,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         if (focusTreatments.isEmpty && futureTreatments.isEmpty && pastTreatments.isEmpty)
                           _buildEmptyState(context)
                         else ...[
-                          // Display Focus Treatments (Today's Infusions & Overdue Pills)
                           ...focusTreatments.map((t) => _buildFocusTreatmentCard(context, db, t, medicationMap[t.medicationId])).toList(),
                           
                           const SizedBox(height: 24),
@@ -205,115 +209,111 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildNotificationCenter(AppDatabase db) {
-    return StreamBuilder<List<PlannedInfusion>>(
-      stream: db.watchUpcomingPlannedTreatments(48),
-      builder: (context, upcomingSnapshot) {
-        return StreamBuilder<List<PendingOrderItem>>(
-          stream: db.watchAllPendingOrderItems(),
-          builder: (context, pendingSnapshot) {
-            final pendingItems = pendingSnapshot.data ?? [];
-            final pendingMedIds = pendingItems.map((o) => o.medicationId).whereType<int>().toSet();
-            final pendingAccIds = pendingItems.map((o) => o.accessoryId).whereType<int>().toSet();
+    return StreamBuilder<List<PendingOrderItem>>(
+      stream: db.watchAllPendingOrderItems(),
+      builder: (context, pendingSnapshot) {
+        final pendingItems = pendingSnapshot.data ?? [];
+        final pendingMedIds = pendingItems.map((o) => o.medicationId).whereType<int>().toSet();
+        final pendingAccIds = pendingItems.map((o) => o.accessoryId).whereType<int>().toSet();
 
-            return StreamBuilder<List<Medication>>(
-              stream: db.watchAllMedications(),
-              builder: (context, medsSnapshot) {
-                return StreamBuilder<List<Accessory>>(
-                  stream: db.watchAllAccessories(),
-                  builder: (context, accSnapshot) {
-                    return StreamBuilder<List<MedicationAccessory>>(
-                      stream: db.watchAllMedicationAccessories(),
-                      builder: (context, linksSnapshot) {
-                        final medService = Provider.of<MedicationService>(context, listen: false);
+        return StreamBuilder<List<Medication>>(
+          stream: db.watchAllMedications(),
+          builder: (context, medsSnapshot) {
+            return StreamBuilder<List<Accessory>>(
+              stream: db.watchAllAccessories(),
+              builder: (context, accSnapshot) {
+                return StreamBuilder<List<MedicationAccessory>>(
+                  stream: db.watchAllMedicationAccessories(),
+                  builder: (context, linksSnapshot) {
+                    final medService = Provider.of<MedicationService>(context, listen: false);
+                    
+                    return FutureBuilder<List<Medication>>(
+                      future: medService.getLowStockMedications(),
+                      builder: (context, lowMedsSnapshot) {
+                        final allAccs = accSnapshot.data ?? [];
+                        final allLinks = linksSnapshot.data ?? [];
                         
-                        return FutureBuilder<List<Medication>>(
-                          future: medService.getLowStockMedications(),
-                          builder: (context, lowMedsSnapshot) {
-                            final upcomingCount = upcomingSnapshot.data?.length ?? 0;
-                            final allAccs = accSnapshot.data ?? [];
-                            final allLinks = linksSnapshot.data ?? [];
+                        // Filter out items that already have a pending order
+                        final lowMeds = (lowMedsSnapshot.data ?? [])
+                            .where((m) => !pendingMedIds.contains(m.id))
+                            .toList();
                             
-                            // Filter out items that already have a pending order
-                            final lowMeds = (lowMedsSnapshot.data ?? [])
-                                .where((m) => !pendingMedIds.contains(m.id))
-                                .toList();
-                                
-                            final lowAccs = allAccs.where((a) {
-                                if (pendingAccIds.contains(a.id)) return false;
-                                
-                                // Check if this accessory has any link with consumption > 0
-                                final hasPositiveConsumption = allLinks
-                                    .where((l) => l.accessoryId == a.id)
-                                    .any((l) => l.defaultQuantity > 0);
-                                
-                                if (!hasPositiveConsumption) {
-                                  // For items with 0 consumption (or not linked), only warn at stock 0
-                                  return a.stock <= 0;
-                                } else {
-                                  // For items with consumption, warn at stock < 5 (standard threshold)
-                                  return a.stock < 5;
-                                }
-                            }).toList();
+                        final lowAccs = allAccs.where((a) {
+                            if (pendingAccIds.contains(a.id)) return false;
+                            
+                            // Check if this accessory has any link with consumption > 0
+                            final hasPositiveConsumption = allLinks
+                                .where((l) => l.accessoryId == a.id)
+                                .any((l) => l.defaultQuantity > 0);
+                            
+                            if (!hasPositiveConsumption) {
+                              // For items with 0 consumption (or not linked), only warn at stock 0
+                              return a.stock <= 0;
+                            } else {
+                              // For items with consumption, warn at stock < 5 (standard threshold)
+                              return a.stock < 5;
+                            }
+                        }).toList();
 
-                        final isStockProblem = lowMeds.isNotEmpty || lowAccs.isNotEmpty;
+                    final isStockProblem = lowMeds.isNotEmpty || lowAccs.isNotEmpty;
 
-                        return Column(
-                          children: [
-                            // Main Summary Card
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: isStockProblem 
-                                    ? [Colors.orange.shade700, Colors.orange.shade500]
-                                    : [AppTheme.primaryBase, AppTheme.primaryLight],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(32),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: (isStockProblem ? Colors.orange : AppTheme.primaryBase).withOpacity(0.3),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Icon(
-                                        isStockProblem ? Icons.shopping_cart_checkout_rounded : Icons.auto_awesome_rounded, 
-                                        color: Colors.white, 
-                                        size: 24
-                                      ),
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.asset('assets/images/app_icon.png', height: 48, width: 48),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    upcomingCount > 0 
-                                      ? 'Noch $upcomingCount Termine bald' 
-                                      : 'Keine anstehenden Termine',
-                                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    isStockProblem 
-                                      ? 'Bestand prüfen!'
-                                      : (upcomingCount > 0 ? 'Vergiss nicht deine Medikamente!' : 'Du bist voll im Plan.'),
-                                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
-                                  ),
-                                ],
-                              ),
+                    return Column(
+                      children: [
+                        // Main Summary Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: isStockProblem 
+                                ? [Colors.orange.shade700, Colors.orange.shade500]
+                                : [AppTheme.primaryBase, AppTheme.primaryLight],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            borderRadius: BorderRadius.circular(32),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isStockProblem ? Colors.orange : AppTheme.primaryBase).withOpacity(0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Icon(
+                                    isStockProblem ? Icons.shopping_cart_checkout_rounded : Icons.auto_awesome_rounded, 
+                                    color: Colors.white, 
+                                    size: 24
+                                  ),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.asset('assets/images/app_icon.png', height: 48, width: 48),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                isStockProblem 
+                                  ? 'Bestand prüfen!'
+                                  : 'Willkommen zurück',
+                                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                isStockProblem 
+                                  ? 'Einige Artikel gehen zur Neige.'
+                                  : 'Du bist voll im Plan.',
+                                style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
                             
                             const SizedBox(height: 16),
                             
@@ -565,23 +565,22 @@ class _DashboardPageState extends State<DashboardPage> {
     final medDate = treatment.date;
     final now = DateTime.now();
     final isPill = med.type == MedicationType.pill;
-    final isOverdue = isPill && medDate.isBefore(now);
+    final isMissed = medDate.isBefore(now);
+    
+    // Primary color for this card
+    final Color accentColor = isMissed ? Colors.orange : (isPill ? Colors.blue : Colors.indigo);
     
     // Status text
     String statusText;
-    Color statusColor;
     if (isPill) {
-      if (isOverdue) {
-        statusText = 'Fällig seit ${DateFormat('HH:mm').format(medDate)} Uhr';
-        statusColor = Colors.redAccent;
+      if (isMissed) {
+        statusText = 'Verpasst (geplant ${DateFormat('HH:mm').format(medDate)} Uhr)';
       } else {
         statusText = 'Heute um ${DateFormat('HH:mm').format(medDate)} Uhr';
-        statusColor = Theme.of(context).colorScheme.primary;
       }
     } else {
       // Infusion Forecast
-      statusText = 'Heute geplant (${treatment.dosage} ${med.unit})';
-      statusColor = Colors.blue;
+      statusText = isMissed ? 'Verpasste Infusion (geplant für heute)' : 'Heute geplant (${treatment.dosage} ${med.unit})';
     }
 
     final onAction = () async {
@@ -628,12 +627,9 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withOpacity(0.8),
+        color: accentColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: (isOverdue ? Colors.redAccent : statusColor).withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(color: (isOverdue ? Colors.redAccent : Colors.black).withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
+        border: Border.all(color: accentColor.withOpacity(0.1)),
       ),
       child: ListTile(
         onTap: onAction,
@@ -642,28 +638,27 @@ class _DashboardPageState extends State<DashboardPage> {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.1),
+            color: Colors.white.withOpacity(0.5),
             shape: BoxShape.circle,
-            border: Border.all(color: statusColor.withOpacity(0.2)),
           ),
           child: Icon(
             isPill ? Icons.medication_rounded : Icons.vaccines_rounded,
-            color: statusColor,
+            color: accentColor,
             size: 28,
           ),
         ),
         title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(statusText, style: TextStyle(color: statusColor, fontWeight: FontWeight.w600, fontSize: 13)),
+          child: Text(statusText, style: TextStyle(color: accentColor.withOpacity(0.8), fontWeight: FontWeight.w600, fontSize: 13)),
         ),
         trailing: ElevatedButton(
           onPressed: onAction,
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 0,
-            backgroundColor: statusColor.withOpacity(0.1),
-            foregroundColor: statusColor,
+            backgroundColor: accentColor.withOpacity(0.12),
+            foregroundColor: accentColor,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           ),
           child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
