@@ -31,18 +31,27 @@ class _DashboardPageState extends State<DashboardPage> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
             title: Row(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset('assets/images/app_icon.png', height: 32, width: 32),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset('assets/images/app_icon.png', height: 32, width: 32),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(greeting, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal)),
+                    Text(greeting, style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7))),
                     const Text('Deine Übersicht', style: TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
@@ -50,7 +59,14 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.notifications_none_rounded),
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.notifications_none_rounded),
+                ),
                 onPressed: () {}, // Future settings link
               ),
             ],
@@ -64,83 +80,119 @@ class _DashboardPageState extends State<DashboardPage> {
                   _buildNotificationCenter(db),
                   const SizedBox(height: 24),
                   _buildPendingOrdersSection(db),
-                  const SizedBox(height: 32),
-                  Text(
-                    'ANSTEHEND (NÄCHSTE 48H)',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.5,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
                   const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
-          StreamBuilder<List<PlannedInfusion>>(
-            stream: db.watchPlannedTreatmentsRange(daysBack: 7, daysForward: 30),
-            builder: (context, snapshot) {
-              final allTreatments = snapshot.data ?? [];
-              final now = DateTime.now();
-              final todayStart = DateTime(now.year, now.month, now.day);
-              final todayEnd = todayStart.add(const Duration(days: 1));
+          StreamBuilder<List<Medication>>(
+            stream: db.watchAllMedications(),
+            builder: (context, medsSnapshot) {
+              final medications = medsSnapshot.data ?? [];
+              final medicationMap = {for (var m in medications) m.id: m};
 
-              final pastTreatments = allTreatments.where((t) => t.date.isBefore(todayStart)).toList();
-              final todayTreatments = allTreatments.where((t) => t.date.isAfter(todayStart) && t.date.isBefore(todayEnd)).toList();
-              final futureTreatments = allTreatments.where((t) => t.date.isAfter(todayEnd)).toList();
+              return StreamBuilder<List<PlannedInfusion>>(
+                stream: db.watchPlannedTreatmentsRange(daysBack: 7, daysForward: 30),
+                builder: (context, snapshot) {
+                  final allTreatments = snapshot.data ?? [];
+                  final now = DateTime.now();
+                  final todayStart = DateTime(now.year, now.month, now.day);
+                  final todayEnd = todayStart.add(const Duration(days: 1));
 
-              return SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    if (pastTreatments.isNotEmpty)
-                      _buildExpansionSection(
-                        title: 'VERGANGENE TERMINE (${pastTreatments.length})',
-                        icon: Icons.history_rounded,
-                        isExpanded: _showPast,
-                        onToggle: (val) => setState(() => _showPast = val),
-                        children: pastTreatments.map((t) => _buildDatedTreatmentCard(context, db, t)).toList(),
-                      ),
+                  // Urgent/Focus Section: Today's Infusions + Overdue Pills
+                  final focusTreatments = allTreatments.where((t) {
+                    final med = medicationMap[t.medicationId];
+                    if (med == null) return false;
+                    final isInfusion = med.type != MedicationType.pill;
                     
-                    if (todayTreatments.isEmpty && !_showPast && !_showFuture)
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 40),
-                        child: Center(
-                          child: Column(
-                            children: [
-                              const Icon(Icons.check_circle_outline_rounded, size: 48, color: Colors.teal),
-                              const SizedBox(height: 16),
-                              Text('Alles erledigt für heute!', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                            ],
+                    // Infusions planned for today (regardless of time)
+                    if (isInfusion && t.date.isAfter(todayStart) && t.date.isBefore(todayEnd)) return true;
+                    // Overdue pills
+                    if (!isInfusion && t.date.isBefore(now)) return true;
+                    
+                    return false;
+                  }).toList();
+
+                  // Future Section: Future Pills + Future Infusions (beyond today)
+                  final futureTreatments = allTreatments.where((t) {
+                    if (focusTreatments.contains(t)) return false;
+                    final med = medicationMap[t.medicationId];
+                    if (med == null) return false;
+                    
+                    return t.date.isAfter(now);
+                  }).toList();
+
+                  // Past Section: Finished or missed past treatments not in focus
+                  final pastTreatments = allTreatments.where((t) {
+                    if (focusTreatments.contains(t)) return false;
+                    return t.date.isBefore(todayStart);
+                  }).toList();
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        // Focus Section Title
+                        if (focusTreatments.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Text(
+                              'ANSTEHENDE EINNAHMEN',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.2,
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                              ),
+                            ),
                           ),
-                        ),
-                      )
-                    else
-                      ..._buildTodayList(context, db, todayTreatments),
 
-                    if (futureTreatments.isNotEmpty)
-                      _buildExpansionSection(
-                        title: 'ZUKÜNFTIGE TERMINE (${futureTreatments.length})',
-                        icon: Icons.event_repeat_rounded,
-                        isExpanded: _showFuture,
-                        onToggle: (val) => setState(() => _showFuture = val),
-                        children: _groupAndBuildFutureList(context, db, futureTreatments),
-                      ),
-                    
-                    const SizedBox(height: 100),
-                  ]),
-                ),
+                        if (focusTreatments.isEmpty && futureTreatments.isEmpty && pastTreatments.isEmpty)
+                          _buildEmptyState(context)
+                        else ...[
+                          // Display Focus Treatments (Today's Infusions & Overdue Pills)
+                          ...focusTreatments.map((t) => _buildFocusTreatmentCard(context, db, t, medicationMap[t.medicationId])).toList(),
+                          
+                          const SizedBox(height: 24),
+
+                          if (futureTreatments.isNotEmpty)
+                            _buildExpansionSection(
+                              title: 'SPÄTER GEPLANT (${futureTreatments.length})',
+                              icon: Icons.event_repeat_rounded,
+                              isExpanded: _showFuture,
+                              onToggle: (val) => setState(() => _showFuture = val),
+                              children: _groupAndBuildFutureList(context, db, futureTreatments),
+                            ),
+
+                          if (pastTreatments.isNotEmpty)
+                            _buildExpansionSection(
+                              title: 'VERGANGENE TERMINE (${pastTreatments.length})',
+                              icon: Icons.history_rounded,
+                              isExpanded: _showPast,
+                              onToggle: (val) => setState(() => _showPast = val),
+                              children: pastTreatments.map((t) => _buildDatedTreatmentCard(context, db, t)).toList(),
+                            ),
+                        ],
+                        
+                        const SizedBox(height: 120),
+                      ]),
+                    ),
+                  );
+                },
               );
-            },
+            }
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddAppointmentDialog(context, db),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Termin planen'),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showAddAppointmentDialog(context, db),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Termin planen'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
     );
   }
@@ -387,33 +439,41 @@ class _DashboardPageState extends State<DashboardPage> {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: isOverdue ? Colors.orange.withOpacity(0.5) : Theme.of(context).dividerColor.withOpacity(0.05)),
+            color: Theme.of(context).cardColor.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: isOverdue ? Colors.orange.withOpacity(0.5) : Colors.white.withOpacity(0.1)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+            ],
           ),
           child: Column(
             children: [
               ListTile(
                 contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                leading: CircleAvatar(
-                  backgroundColor: Colors.orange.withOpacity(0.1),
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
                   child: const Icon(Icons.local_shipping_rounded, color: Colors.orange),
                 ),
                 title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Menge: ${order.medicationQty.toStringAsFixed(0)} ${med.unit}'),
+                    Text('Menge: ${order.medicationQty.toStringAsFixed(0)} ${med.unit}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                     if (order.deliveryDate != null)
                       Text(
                         'Lieferdatum: ${DateFormat('dd.MM.yyyy').format(order.deliveryDate!)}',
                         style: TextStyle(
+                          fontSize: 13,
                           color: isOverdue ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
                         ),
                       )
                     else
-                      const Text('Noch kein Datum festgelegt'),
+                      Text('Noch kein Datum festgelegt', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7))),
                   ],
                 ),
                 trailing: Row(
@@ -457,7 +517,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 child: SizedBox(
                    width: double.infinity,
                    child: ElevatedButton.icon(
@@ -480,13 +540,14 @@ class _DashboardPageState extends State<DashboardPage> {
                           }
                         }
                       },
-                      icon: const Icon(Icons.check_circle_outline_rounded),
-                      label: const Text('Lieferung erhalten'),
+                      icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                      label: const Text('Lieferung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange.withOpacity(0.1),
                         foregroundColor: Colors.orange,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                    ),
                 ),
@@ -495,6 +556,154 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildFocusTreatmentCard(BuildContext context, AppDatabase db, PlannedInfusion treatment, Medication? med) {
+    if (med == null) return const SizedBox();
+    
+    final medDate = treatment.date;
+    final now = DateTime.now();
+    final isPill = med.type == MedicationType.pill;
+    final isOverdue = isPill && medDate.isBefore(now);
+    
+    // Status text
+    String statusText;
+    Color statusColor;
+    if (isPill) {
+      if (isOverdue) {
+        statusText = 'Fällig seit ${DateFormat('HH:mm').format(medDate)} Uhr';
+        statusColor = Colors.redAccent;
+      } else {
+        statusText = 'Heute um ${DateFormat('HH:mm').format(medDate)} Uhr';
+        statusColor = Theme.of(context).colorScheme.primary;
+      }
+    } else {
+      // Infusion Forecast
+      statusText = 'Heute geplant (${treatment.dosage} ${med.unit})';
+      statusColor = Colors.blue;
+    }
+
+    final onAction = () async {
+      if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
+        final diaryProvider = Provider.of<DiaryProvider>(context, listen: false);
+        await diaryProvider.logInfusion(
+          medicationId: treatment.medicationId,
+          dosage: treatment.dosage,
+          date: treatment.date,
+        );
+        await db.completePlannedInfusion(treatment.id);
+        await NotificationService().cancelTreatmentReminders(treatment.id);
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${med.name} erledigt!'),
+              backgroundColor: Colors.green.shade800,
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+            ),
+          );
+        }
+        return;
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AddInfusionPage(
+            initialMedicationId: treatment.medicationId,
+            initialDosage: treatment.dosage,
+            initialDate: treatment.date,
+          ),
+        ),
+      ).then((result) async {
+        if (result == true) {
+          await db.completePlannedInfusion(treatment.id);
+          await NotificationService().cancelTreatmentReminders(treatment.id);
+        }
+      });
+    };
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: (isOverdue ? Colors.redAccent : statusColor).withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(color: (isOverdue ? Colors.redAccent : Colors.black).withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: ListTile(
+        onTap: onAction,
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: statusColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+            border: Border.all(color: statusColor.withOpacity(0.2)),
+          ),
+          child: Icon(
+            isPill ? Icons.medication_rounded : Icons.vaccines_rounded,
+            color: statusColor,
+            size: 28,
+          ),
+        ),
+        title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(statusText, style: TextStyle(color: statusColor, fontWeight: FontWeight.w600, fontSize: 13)),
+        ),
+        trailing: ElevatedButton(
+          onPressed: onAction,
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 0,
+            backgroundColor: statusColor.withOpacity(0.1),
+            foregroundColor: statusColor,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          ),
+          child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 60),
+      child: Center(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.auto_awesome_rounded, size: 48, color: Colors.green),
+            ),
+            const SizedBox(height: 20),
+            Text('Alles erledigt!', 
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurface
+              )
+            ),
+            const SizedBox(height: 4),
+            Text('Keine anstehenden Aufgaben.', 
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+              )
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -563,9 +772,12 @@ class _DashboardPageState extends State<DashboardPage> {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+            color: Theme.of(context).cardColor.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+            ],
           ),
           child: ListTile(
             onTap: onAction,
@@ -576,6 +788,7 @@ class _DashboardPageState extends State<DashboardPage> {
               decoration: BoxDecoration(
                 color: (isPill ? Colors.orange : Colors.blue).withOpacity(0.1),
                 shape: BoxShape.circle,
+                border: Border.all(color: (isPill ? Colors.orange : Colors.blue).withOpacity(0.2)),
               ),
               child: Icon(
                 isPill ? Icons.medication_rounded : Icons.vaccines_rounded,
@@ -583,16 +796,17 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
             title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('$dateStr um $timeStr Uhr • ${treatment.dosage} ${med.unit}'),
+            subtitle: Text('$dateStr um $timeStr Uhr • ${treatment.dosage} ${med.unit}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
             trailing: ElevatedButton(
               onPressed: onAction,
               style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
                 backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
                 foregroundColor: Theme.of(context).primaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
-              child: const Text('Erledigt'),
+              child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         );

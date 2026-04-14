@@ -28,11 +28,20 @@ class InventoryPage extends StatelessWidget {
           body: CustomScrollView(
             slivers: [
               SliverAppBar.large(
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
                 title: const Text('Medikation'),
                 pinned: true,
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.shopping_cart_checkout_rounded),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.shopping_cart_checkout_rounded),
+                    ),
                     tooltip: 'Einkaufs-Assistent',
                     onPressed: () => showDialog(
                       context: context,
@@ -46,16 +55,19 @@ class InventoryPage extends StatelessWidget {
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            heroTag: 'medication_fab',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddItemPage()),
-              );
-            },
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Hinzufügen'),
+          floatingActionButton: Padding(
+            padding: const EdgeInsets.only(bottom: 80),
+            child: FloatingActionButton.extended(
+              heroTag: 'medication_fab',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddItemPage()),
+                );
+              },
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Hinzufügen'),
+            ),
           ),
         );
       }
@@ -67,14 +79,18 @@ class InventoryPage extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
           child: Row(
             children: [
-              Icon(Icons.medication_rounded, color: Theme.of(context).primaryColor, size: 20),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: Icon(Icons.medication_rounded, color: Theme.of(context).primaryColor, size: 20),
+              ),
+              const SizedBox(width: 12),
               const Text(
-                'Medikamente & Verbrauchsmaterial',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                'MEDIKAMENTE',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2),
               ),
             ],
           ),
@@ -130,14 +146,18 @@ class InventoryPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      padding: const EdgeInsets.fromLTRB(20, 32, 20, 12),
                       child: Row(
                         children: [
-                          Icon(Icons.inventory_2_rounded, color: Theme.of(context).primaryColor, size: 20),
-                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: Colors.teal.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                            child: const Icon(Icons.inventory_2_rounded, color: Colors.teal, size: 20),
+                          ),
+                          const SizedBox(width: 12),
                           const Text(
-                            'Allgemeines Verbrauchsmaterial',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            'STANDALONE MATERIAL',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2),
                           ),
                         ],
                       ),
@@ -222,14 +242,14 @@ class InventoryPage extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
                     color: isLowStock 
-                        ? Colors.orange.withOpacity(0.15) 
-                        : Theme.of(context).cardColor.withOpacity(0.8),
+                        ? Colors.orange.withOpacity(0.1) 
+                        : Theme.of(context).cardColor.withOpacity(0.7),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
                       color: isLowStock ? Colors.orange.withOpacity(0.3) : Colors.white.withOpacity(0.1),
                     ),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6)),
+                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: Theme(
