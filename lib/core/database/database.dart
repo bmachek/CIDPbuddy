@@ -97,12 +97,18 @@ class AppDatabase extends _$AppDatabase {
       (select(infusionLog)..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)])).watch();
   Future<int> insertInfusionLog(InfusionLogCompanion log) =>
       into(infusionLog).insert(log);
+  Future deleteInfusionLog(int id) =>
+      (delete(infusionLog)..where((t) => t.id.equals(id))).go();
+  Future updateInfusionLog(InfusionLogData log) =>
+      update(infusionLog).replace(log);
 
   // Medication - Accessory Link (BOM)
   Future<List<MedicationAccessory>> getAccessoriesForMedication(int medId) =>
       (select(medicationAccessories)..where((t) => t.medicationId.equals(medId))).get();
   Future<int> insertMedicationAccessory(MedicationAccessoriesCompanion entry) =>
       into(medicationAccessories).insert(entry);
+  Future updateMedicationAccessory(MedicationAccessory entry) =>
+      update(medicationAccessories).replace(entry);
 
   // Planned Infusions
   Stream<List<PlannedInfusion>> watchPlannedInfusions() =>
@@ -115,6 +121,8 @@ class AppDatabase extends _$AppDatabase {
       (delete(plannedInfusions)..where((t) => t.scheduleId.equals(scheduleId) & t.isCompleted.equals(false))).go();
   Future deletePlannedInfusion(int id) =>
       (delete(plannedInfusions)..where((t) => t.id.equals(id))).go();
+  Future updatePlannedInfusion(PlannedInfusion entry) =>
+      update(plannedInfusions).replace(entry);
 
   // Schedules
   Stream<List<InfusionSchedule>> watchSchedules() => select(infusionSchedules).watch();

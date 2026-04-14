@@ -173,9 +173,18 @@ class PlanningPage extends StatelessWidget {
                 ),
                 title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text('Geplant für den $dateStr'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                  onPressed: () => _confirmDeleteAppointment(context, db, appt),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      onPressed: () => _showEditAppointmentDialog(context, db, appt, med),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                      onPressed: () => _confirmDeleteAppointment(context, db, appt),
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -240,6 +249,71 @@ class PlanningPage extends StatelessWidget {
     if (confirm == true) {
       await db.deletePlannedInfusion(appt.id);
     }
+  }
+
+  void _showEditAppointmentDialog(BuildContext context, AppDatabase db, PlannedInfusion appt, Medication med) {
+    DateTime selectedDate = appt.date;
+    final dosageController = TextEditingController(text: appt.dosage.toString());
+    final notesController = TextEditingController(text: appt.notes ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Termin bearbeiten'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 16),
+              ListTile(
+                title: const Text('Datum'),
+                subtitle: Text(DateFormat('dd.MM.yyyy').format(selectedDate)),
+                trailing: const Icon(Icons.edit_calendar_rounded),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (date != null) {
+                    setState(() => selectedDate = date);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: dosageController,
+                decoration: InputDecoration(labelText: 'Dosis (${med.unit})', border: const OutlineInputBorder()),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: notesController,
+                decoration: const InputDecoration(labelText: 'Notizen', border: OutlineInputBorder()),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            ElevatedButton(
+              onPressed: () async {
+                await db.updatePlannedInfusion(appt.copyWith(
+                  date: selectedDate,
+                  dosage: double.tryParse(dosageController.text) ?? appt.dosage,
+                  notes: drift.Value(notesController.text),
+                ));
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: const Text('Speichern'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildScheduleCard(BuildContext context, AppDatabase db, InfusionSchedule schedule) {

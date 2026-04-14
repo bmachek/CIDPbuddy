@@ -137,14 +137,144 @@ class DiaryPage extends StatelessWidget {
             ],
           ),
         ),
-        trailing: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.check_rounded, color: Theme.of(context).primaryColor, size: 20),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      onPressed: () => _showEditLogDialog(context, Provider.of<AppDatabase>(context, listen: false), log),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 18),
+                      onPressed: () => _confirmDeleteLog(context, Provider.of<AppDatabase>(context, listen: false), log),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+                Text(
+                  '${log.dosage.toStringAsFixed(1)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  void _showEditLogDialog(BuildContext context, AppDatabase db, InfusionLogData log) {
+    final batchController = TextEditingController(text: log.batchNumber ?? '');
+    final notesController = TextEditingController(text: log.notes ?? '');
+    DateTime selectedDate = log.date;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Eintrag bearbeiten'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Datum & Uhrzeit'),
+                subtitle: Text(DateFormat('dd.MM.yyyy HH:mm').format(selectedDate)),
+                trailing: const Icon(Icons.edit_calendar_rounded),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                    lastDate: DateTime.now(),
+                  );
+                  if (date != null) {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(selectedDate),
+                    );
+                    if (time != null) {
+                      setState(() {
+                        selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+                      });
+                    }
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: batchController,
+                decoration: const InputDecoration(labelText: 'Chargennummer', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: notesController,
+                decoration: const InputDecoration(labelText: 'Notizen', border: OutlineInputBorder()),
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            ElevatedButton(
+              onPressed: () async {
+                await db.updateInfusionLog(log.copyWith(
+                  date: selectedDate,
+                  batchNumber: drift.Value(batchController.text),
+                  notes: drift.Value(notesController.text),
+                ));
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: const Text('Speichern'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteLog(BuildContext context, AppDatabase db, InfusionLogData log) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eintrag löschen?'),
+        content: const Text('Möchtest du diesen Eintrag wirklich löschen? Der Bestand wird automatisch zurückgebucht.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(
+            onPressed: () async {
+              await db.transaction(() async {
+                // 1. Revert medication stock
+                final med = await (db.select(db.medications)..where((t) => t.id.equals(log.medicationId))).getSingle();
+                await db.updateMedication(med.copyWith(stock: med.stock + log.dosage));
+
+                // 2. Revert accessory stock (based on CURRENT links as best effort)
+                final links = await db.getAccessoriesForMedication(log.medicationId);
+                for (final link in links) {
+                  final acc = await (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).getSingle();
+                  await db.updateAccessory(acc.copyWith(stock: acc.stock + link.defaultQuantity));
+                }
+
+                // 3. Delete log
+                await db.deleteInfusionLog(log.id);
+              });
+
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

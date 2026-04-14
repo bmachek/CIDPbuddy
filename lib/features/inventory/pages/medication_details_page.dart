@@ -6,29 +6,46 @@ import '../../../core/database/database.dart';
 import 'package:drift/drift.dart' as drift;
 
 class MedicationDetailsPage extends StatelessWidget {
-  final Medication medication;
+  final int medicationId;
 
-  const MedicationDetailsPage({super.key, required this.medication});
+  const MedicationDetailsPage({super.key, required this.medicationId});
 
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<AppDatabase>(context);
     final invProvider = Provider.of<InventoryProvider>(context);
 
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: Text(medication.name),
-            pinned: true,
-          ),
+    return StreamBuilder<Medication>(
+      stream: (db.select(db.medications)..where((t) => t.id.equals(medicationId))).watchSingle(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        final medication = snapshot.data!;
+
+        return Scaffold(
+          body: CustomScrollView(
+            slivers: [
+              SliverAppBar.large(
+                title: Text(medication.name),
+                pinned: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    onPressed: () => _showEditMedicationDialog(context, db, medication),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                    onPressed: () => _confirmDeleteMedication(context, db, medication),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ),
           SliverPadding(
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _buildSectionHeader('Lagerstand & Warnungen'),
                 const SizedBox(height: 12),
-                _buildStockAlertConfig(context, db, invProvider),
+                _buildStockAlertConfig(context, db, invProvider, medication),
                 const SizedBox(height: 32),
                 _buildSectionHeader('Verknüpftes Zubehör'),
                 const Text(
@@ -120,7 +137,9 @@ class MedicationDetailsPage extends StatelessWidget {
         ],
       ),
     );
-  }
+  },
+);
+}
 
   Widget _buildSectionHeader(String title) {
     return Text(
@@ -286,7 +305,77 @@ class MedicationDetailsPage extends StatelessWidget {
     ).then((_) => (context as Element).markNeedsBuild());
   }
 
-  Widget _buildStockAlertConfig(BuildContext context, AppDatabase db, InventoryProvider provider) {
+  void _showEditMedicationDialog(BuildContext context, AppDatabase db, Medication med) {
+    final nameController = TextEditingController(text: med.name);
+    final pznController = TextEditingController(text: med.pzn ?? '');
+    final unitController = TextEditingController(text: med.unit);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Medikament bearbeiten'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: pznController,
+              decoration: const InputDecoration(labelText: 'PZN', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: unitController,
+              decoration: const InputDecoration(labelText: 'Einheit (z.B. Flasche)', border: OutlineInputBorder()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          ElevatedButton(
+            onPressed: () async {
+              await db.updateMedication(med.copyWith(
+                name: nameController.text,
+                pzn: drift.Value(pznController.text),
+                unit: unitController.text,
+              ));
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteMedication(BuildContext context, AppDatabase db, Medication med) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Medikament löschen?'),
+        content: Text('Möchtest du "${med.name}" wirklich löschen? Alle Verknüpfungen gehen verloren.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(
+            onPressed: () async {
+              await db.deleteMedication(med);
+              if (context.mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back to inventory
+              }
+            },
+            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStockAlertConfig(BuildContext context, AppDatabase db, InventoryProvider provider, Medication medication) {
     final controller = TextEditingController(text: medication.minStock.toStringAsFixed(0));
     return Container(
       decoration: BoxDecoration(
