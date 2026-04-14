@@ -146,7 +146,7 @@ class InventoryPage extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
-        leading: const CircleAvatar(
+        leading: CircleAvatar(
           backgroundColor: Colors.teal.withOpacity(0.2),
           child: Icon(Icons.build_circle_outlined, color: Colors.teal),
         ),
