@@ -78,7 +78,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             const SizedBox(height: 16),
             ListTile(
               tileColor: Theme.of(context).colorScheme.surface,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.withOpacity(0.1))),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.withOpacity(0.1))),
               leading: const Icon(Icons.event_rounded),
               title: const Text('Lieferdatum (Optional)', style: TextStyle(fontSize: 14)),
               subtitle: Text(_deliveryDate == null ? 'Gleich nach Bestätigung' : DateFormat('dd.MM.yyyy').format(_deliveryDate!)),

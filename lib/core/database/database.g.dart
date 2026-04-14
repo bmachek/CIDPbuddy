@@ -2641,6 +2641,759 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
   }
 }
 
+class $PendingOrdersTable extends PendingOrders
+    with TableInfo<$PendingOrdersTable, PendingOrder> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingOrdersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _medicationIdMeta = const VerificationMeta(
+    'medicationId',
+  );
+  @override
+  late final GeneratedColumn<int> medicationId = GeneratedColumn<int>(
+    'medication_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES medications (id)',
+    ),
+  );
+  static const VerificationMeta _medicationQtyMeta = const VerificationMeta(
+    'medicationQty',
+  );
+  @override
+  late final GeneratedColumn<double> medicationQty = GeneratedColumn<double>(
+    'medication_qty',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deliveryDateMeta = const VerificationMeta(
+    'deliveryDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deliveryDate = GeneratedColumn<DateTime>(
+    'delivery_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isConfirmedMeta = const VerificationMeta(
+    'isConfirmed',
+  );
+  @override
+  late final GeneratedColumn<bool> isConfirmed = GeneratedColumn<bool>(
+    'is_confirmed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_confirmed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    medicationId,
+    medicationQty,
+    deliveryDate,
+    isConfirmed,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_orders';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingOrder> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('medication_id')) {
+      context.handle(
+        _medicationIdMeta,
+        medicationId.isAcceptableOrUnknown(
+          data['medication_id']!,
+          _medicationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_medicationIdMeta);
+    }
+    if (data.containsKey('medication_qty')) {
+      context.handle(
+        _medicationQtyMeta,
+        medicationQty.isAcceptableOrUnknown(
+          data['medication_qty']!,
+          _medicationQtyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_medicationQtyMeta);
+    }
+    if (data.containsKey('delivery_date')) {
+      context.handle(
+        _deliveryDateMeta,
+        deliveryDate.isAcceptableOrUnknown(
+          data['delivery_date']!,
+          _deliveryDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_confirmed')) {
+      context.handle(
+        _isConfirmedMeta,
+        isConfirmed.isAcceptableOrUnknown(
+          data['is_confirmed']!,
+          _isConfirmedMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PendingOrder map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingOrder(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      medicationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}medication_id'],
+      )!,
+      medicationQty: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}medication_qty'],
+      )!,
+      deliveryDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}delivery_date'],
+      ),
+      isConfirmed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_confirmed'],
+      )!,
+    );
+  }
+
+  @override
+  $PendingOrdersTable createAlias(String alias) {
+    return $PendingOrdersTable(attachedDatabase, alias);
+  }
+}
+
+class PendingOrder extends DataClass implements Insertable<PendingOrder> {
+  final int id;
+  final int medicationId;
+  final double medicationQty;
+  final DateTime? deliveryDate;
+  final bool isConfirmed;
+  const PendingOrder({
+    required this.id,
+    required this.medicationId,
+    required this.medicationQty,
+    this.deliveryDate,
+    required this.isConfirmed,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['medication_id'] = Variable<int>(medicationId);
+    map['medication_qty'] = Variable<double>(medicationQty);
+    if (!nullToAbsent || deliveryDate != null) {
+      map['delivery_date'] = Variable<DateTime>(deliveryDate);
+    }
+    map['is_confirmed'] = Variable<bool>(isConfirmed);
+    return map;
+  }
+
+  PendingOrdersCompanion toCompanion(bool nullToAbsent) {
+    return PendingOrdersCompanion(
+      id: Value(id),
+      medicationId: Value(medicationId),
+      medicationQty: Value(medicationQty),
+      deliveryDate: deliveryDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deliveryDate),
+      isConfirmed: Value(isConfirmed),
+    );
+  }
+
+  factory PendingOrder.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingOrder(
+      id: serializer.fromJson<int>(json['id']),
+      medicationId: serializer.fromJson<int>(json['medicationId']),
+      medicationQty: serializer.fromJson<double>(json['medicationQty']),
+      deliveryDate: serializer.fromJson<DateTime?>(json['deliveryDate']),
+      isConfirmed: serializer.fromJson<bool>(json['isConfirmed']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'medicationId': serializer.toJson<int>(medicationId),
+      'medicationQty': serializer.toJson<double>(medicationQty),
+      'deliveryDate': serializer.toJson<DateTime?>(deliveryDate),
+      'isConfirmed': serializer.toJson<bool>(isConfirmed),
+    };
+  }
+
+  PendingOrder copyWith({
+    int? id,
+    int? medicationId,
+    double? medicationQty,
+    Value<DateTime?> deliveryDate = const Value.absent(),
+    bool? isConfirmed,
+  }) => PendingOrder(
+    id: id ?? this.id,
+    medicationId: medicationId ?? this.medicationId,
+    medicationQty: medicationQty ?? this.medicationQty,
+    deliveryDate: deliveryDate.present ? deliveryDate.value : this.deliveryDate,
+    isConfirmed: isConfirmed ?? this.isConfirmed,
+  );
+  PendingOrder copyWithCompanion(PendingOrdersCompanion data) {
+    return PendingOrder(
+      id: data.id.present ? data.id.value : this.id,
+      medicationId: data.medicationId.present
+          ? data.medicationId.value
+          : this.medicationId,
+      medicationQty: data.medicationQty.present
+          ? data.medicationQty.value
+          : this.medicationQty,
+      deliveryDate: data.deliveryDate.present
+          ? data.deliveryDate.value
+          : this.deliveryDate,
+      isConfirmed: data.isConfirmed.present
+          ? data.isConfirmed.value
+          : this.isConfirmed,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingOrder(')
+          ..write('id: $id, ')
+          ..write('medicationId: $medicationId, ')
+          ..write('medicationQty: $medicationQty, ')
+          ..write('deliveryDate: $deliveryDate, ')
+          ..write('isConfirmed: $isConfirmed')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, medicationId, medicationQty, deliveryDate, isConfirmed);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingOrder &&
+          other.id == this.id &&
+          other.medicationId == this.medicationId &&
+          other.medicationQty == this.medicationQty &&
+          other.deliveryDate == this.deliveryDate &&
+          other.isConfirmed == this.isConfirmed);
+}
+
+class PendingOrdersCompanion extends UpdateCompanion<PendingOrder> {
+  final Value<int> id;
+  final Value<int> medicationId;
+  final Value<double> medicationQty;
+  final Value<DateTime?> deliveryDate;
+  final Value<bool> isConfirmed;
+  const PendingOrdersCompanion({
+    this.id = const Value.absent(),
+    this.medicationId = const Value.absent(),
+    this.medicationQty = const Value.absent(),
+    this.deliveryDate = const Value.absent(),
+    this.isConfirmed = const Value.absent(),
+  });
+  PendingOrdersCompanion.insert({
+    this.id = const Value.absent(),
+    required int medicationId,
+    required double medicationQty,
+    this.deliveryDate = const Value.absent(),
+    this.isConfirmed = const Value.absent(),
+  }) : medicationId = Value(medicationId),
+       medicationQty = Value(medicationQty);
+  static Insertable<PendingOrder> custom({
+    Expression<int>? id,
+    Expression<int>? medicationId,
+    Expression<double>? medicationQty,
+    Expression<DateTime>? deliveryDate,
+    Expression<bool>? isConfirmed,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (medicationId != null) 'medication_id': medicationId,
+      if (medicationQty != null) 'medication_qty': medicationQty,
+      if (deliveryDate != null) 'delivery_date': deliveryDate,
+      if (isConfirmed != null) 'is_confirmed': isConfirmed,
+    });
+  }
+
+  PendingOrdersCompanion copyWith({
+    Value<int>? id,
+    Value<int>? medicationId,
+    Value<double>? medicationQty,
+    Value<DateTime?>? deliveryDate,
+    Value<bool>? isConfirmed,
+  }) {
+    return PendingOrdersCompanion(
+      id: id ?? this.id,
+      medicationId: medicationId ?? this.medicationId,
+      medicationQty: medicationQty ?? this.medicationQty,
+      deliveryDate: deliveryDate ?? this.deliveryDate,
+      isConfirmed: isConfirmed ?? this.isConfirmed,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (medicationId.present) {
+      map['medication_id'] = Variable<int>(medicationId.value);
+    }
+    if (medicationQty.present) {
+      map['medication_qty'] = Variable<double>(medicationQty.value);
+    }
+    if (deliveryDate.present) {
+      map['delivery_date'] = Variable<DateTime>(deliveryDate.value);
+    }
+    if (isConfirmed.present) {
+      map['is_confirmed'] = Variable<bool>(isConfirmed.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingOrdersCompanion(')
+          ..write('id: $id, ')
+          ..write('medicationId: $medicationId, ')
+          ..write('medicationQty: $medicationQty, ')
+          ..write('deliveryDate: $deliveryDate, ')
+          ..write('isConfirmed: $isConfirmed')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PendingOrderItemsTable extends PendingOrderItems
+    with TableInfo<$PendingOrderItemsTable, PendingOrderItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingOrderItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _orderIdMeta = const VerificationMeta(
+    'orderId',
+  );
+  @override
+  late final GeneratedColumn<int> orderId = GeneratedColumn<int>(
+    'order_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES pending_orders (id)',
+    ),
+  );
+  static const VerificationMeta _medicationIdMeta = const VerificationMeta(
+    'medicationId',
+  );
+  @override
+  late final GeneratedColumn<int> medicationId = GeneratedColumn<int>(
+    'medication_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES medications (id)',
+    ),
+  );
+  static const VerificationMeta _accessoryIdMeta = const VerificationMeta(
+    'accessoryId',
+  );
+  @override
+  late final GeneratedColumn<int> accessoryId = GeneratedColumn<int>(
+    'accessory_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES accessories (id)',
+    ),
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    orderId,
+    medicationId,
+    accessoryId,
+    quantity,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_order_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingOrderItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('order_id')) {
+      context.handle(
+        _orderIdMeta,
+        orderId.isAcceptableOrUnknown(data['order_id']!, _orderIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_orderIdMeta);
+    }
+    if (data.containsKey('medication_id')) {
+      context.handle(
+        _medicationIdMeta,
+        medicationId.isAcceptableOrUnknown(
+          data['medication_id']!,
+          _medicationIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('accessory_id')) {
+      context.handle(
+        _accessoryIdMeta,
+        accessoryId.isAcceptableOrUnknown(
+          data['accessory_id']!,
+          _accessoryIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PendingOrderItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingOrderItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      orderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}order_id'],
+      )!,
+      medicationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}medication_id'],
+      ),
+      accessoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}accessory_id'],
+      ),
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quantity'],
+      )!,
+    );
+  }
+
+  @override
+  $PendingOrderItemsTable createAlias(String alias) {
+    return $PendingOrderItemsTable(attachedDatabase, alias);
+  }
+}
+
+class PendingOrderItem extends DataClass
+    implements Insertable<PendingOrderItem> {
+  final int id;
+  final int orderId;
+  final int? medicationId;
+  final int? accessoryId;
+  final double quantity;
+  const PendingOrderItem({
+    required this.id,
+    required this.orderId,
+    this.medicationId,
+    this.accessoryId,
+    required this.quantity,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['order_id'] = Variable<int>(orderId);
+    if (!nullToAbsent || medicationId != null) {
+      map['medication_id'] = Variable<int>(medicationId);
+    }
+    if (!nullToAbsent || accessoryId != null) {
+      map['accessory_id'] = Variable<int>(accessoryId);
+    }
+    map['quantity'] = Variable<double>(quantity);
+    return map;
+  }
+
+  PendingOrderItemsCompanion toCompanion(bool nullToAbsent) {
+    return PendingOrderItemsCompanion(
+      id: Value(id),
+      orderId: Value(orderId),
+      medicationId: medicationId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(medicationId),
+      accessoryId: accessoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accessoryId),
+      quantity: Value(quantity),
+    );
+  }
+
+  factory PendingOrderItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingOrderItem(
+      id: serializer.fromJson<int>(json['id']),
+      orderId: serializer.fromJson<int>(json['orderId']),
+      medicationId: serializer.fromJson<int?>(json['medicationId']),
+      accessoryId: serializer.fromJson<int?>(json['accessoryId']),
+      quantity: serializer.fromJson<double>(json['quantity']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'orderId': serializer.toJson<int>(orderId),
+      'medicationId': serializer.toJson<int?>(medicationId),
+      'accessoryId': serializer.toJson<int?>(accessoryId),
+      'quantity': serializer.toJson<double>(quantity),
+    };
+  }
+
+  PendingOrderItem copyWith({
+    int? id,
+    int? orderId,
+    Value<int?> medicationId = const Value.absent(),
+    Value<int?> accessoryId = const Value.absent(),
+    double? quantity,
+  }) => PendingOrderItem(
+    id: id ?? this.id,
+    orderId: orderId ?? this.orderId,
+    medicationId: medicationId.present ? medicationId.value : this.medicationId,
+    accessoryId: accessoryId.present ? accessoryId.value : this.accessoryId,
+    quantity: quantity ?? this.quantity,
+  );
+  PendingOrderItem copyWithCompanion(PendingOrderItemsCompanion data) {
+    return PendingOrderItem(
+      id: data.id.present ? data.id.value : this.id,
+      orderId: data.orderId.present ? data.orderId.value : this.orderId,
+      medicationId: data.medicationId.present
+          ? data.medicationId.value
+          : this.medicationId,
+      accessoryId: data.accessoryId.present
+          ? data.accessoryId.value
+          : this.accessoryId,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingOrderItem(')
+          ..write('id: $id, ')
+          ..write('orderId: $orderId, ')
+          ..write('medicationId: $medicationId, ')
+          ..write('accessoryId: $accessoryId, ')
+          ..write('quantity: $quantity')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, orderId, medicationId, accessoryId, quantity);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingOrderItem &&
+          other.id == this.id &&
+          other.orderId == this.orderId &&
+          other.medicationId == this.medicationId &&
+          other.accessoryId == this.accessoryId &&
+          other.quantity == this.quantity);
+}
+
+class PendingOrderItemsCompanion extends UpdateCompanion<PendingOrderItem> {
+  final Value<int> id;
+  final Value<int> orderId;
+  final Value<int?> medicationId;
+  final Value<int?> accessoryId;
+  final Value<double> quantity;
+  const PendingOrderItemsCompanion({
+    this.id = const Value.absent(),
+    this.orderId = const Value.absent(),
+    this.medicationId = const Value.absent(),
+    this.accessoryId = const Value.absent(),
+    this.quantity = const Value.absent(),
+  });
+  PendingOrderItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required int orderId,
+    this.medicationId = const Value.absent(),
+    this.accessoryId = const Value.absent(),
+    required double quantity,
+  }) : orderId = Value(orderId),
+       quantity = Value(quantity);
+  static Insertable<PendingOrderItem> custom({
+    Expression<int>? id,
+    Expression<int>? orderId,
+    Expression<int>? medicationId,
+    Expression<int>? accessoryId,
+    Expression<double>? quantity,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (orderId != null) 'order_id': orderId,
+      if (medicationId != null) 'medication_id': medicationId,
+      if (accessoryId != null) 'accessory_id': accessoryId,
+      if (quantity != null) 'quantity': quantity,
+    });
+  }
+
+  PendingOrderItemsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? orderId,
+    Value<int?>? medicationId,
+    Value<int?>? accessoryId,
+    Value<double>? quantity,
+  }) {
+    return PendingOrderItemsCompanion(
+      id: id ?? this.id,
+      orderId: orderId ?? this.orderId,
+      medicationId: medicationId ?? this.medicationId,
+      accessoryId: accessoryId ?? this.accessoryId,
+      quantity: quantity ?? this.quantity,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (orderId.present) {
+      map['order_id'] = Variable<int>(orderId.value);
+    }
+    if (medicationId.present) {
+      map['medication_id'] = Variable<int>(medicationId.value);
+    }
+    if (accessoryId.present) {
+      map['accessory_id'] = Variable<int>(accessoryId.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<double>(quantity.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingOrderItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('orderId: $orderId, ')
+          ..write('medicationId: $medicationId, ')
+          ..write('accessoryId: $accessoryId, ')
+          ..write('quantity: $quantity')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2654,6 +3407,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PlannedInfusionsTable plannedInfusions = $PlannedInfusionsTable(
     this,
   );
+  late final $PendingOrdersTable pendingOrders = $PendingOrdersTable(this);
+  late final $PendingOrderItemsTable pendingOrderItems =
+      $PendingOrderItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2665,6 +3421,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     medicationAccessories,
     infusionSchedules,
     plannedInfusions,
+    pendingOrders,
+    pendingOrderItems,
   ];
 }
 
@@ -2783,6 +3541,51 @@ final class $$MedicationsTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _plannedInfusionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$PendingOrdersTable, List<PendingOrder>>
+  _pendingOrdersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.pendingOrders,
+    aliasName: $_aliasNameGenerator(
+      db.medications.id,
+      db.pendingOrders.medicationId,
+    ),
+  );
+
+  $$PendingOrdersTableProcessedTableManager get pendingOrdersRefs {
+    final manager = $$PendingOrdersTableTableManager(
+      $_db,
+      $_db.pendingOrders,
+    ).filter((f) => f.medicationId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_pendingOrdersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$PendingOrderItemsTable, List<PendingOrderItem>>
+  _pendingOrderItemsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.pendingOrderItems,
+        aliasName: $_aliasNameGenerator(
+          db.medications.id,
+          db.pendingOrderItems.medicationId,
+        ),
+      );
+
+  $$PendingOrderItemsTableProcessedTableManager get pendingOrderItemsRefs {
+    final manager = $$PendingOrderItemsTableTableManager(
+      $_db,
+      $_db.pendingOrderItems,
+    ).filter((f) => f.medicationId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _pendingOrderItemsRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -2927,6 +3730,56 @@ class $$MedicationsTableFilterComposer
           }) => $$PlannedInfusionsTableFilterComposer(
             $db: $db,
             $table: $db.plannedInfusions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> pendingOrdersRefs(
+    Expression<bool> Function($$PendingOrdersTableFilterComposer f) f,
+  ) {
+    final $$PendingOrdersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pendingOrders,
+      getReferencedColumn: (t) => t.medicationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingOrdersTableFilterComposer(
+            $db: $db,
+            $table: $db.pendingOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> pendingOrderItemsRefs(
+    Expression<bool> Function($$PendingOrderItemsTableFilterComposer f) f,
+  ) {
+    final $$PendingOrderItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pendingOrderItems,
+      getReferencedColumn: (t) => t.medicationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingOrderItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.pendingOrderItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3113,6 +3966,57 @@ class $$MedicationsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> pendingOrdersRefs<T extends Object>(
+    Expression<T> Function($$PendingOrdersTableAnnotationComposer a) f,
+  ) {
+    final $$PendingOrdersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pendingOrders,
+      getReferencedColumn: (t) => t.medicationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingOrdersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.pendingOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> pendingOrderItemsRefs<T extends Object>(
+    Expression<T> Function($$PendingOrderItemsTableAnnotationComposer a) f,
+  ) {
+    final $$PendingOrderItemsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.pendingOrderItems,
+          getReferencedColumn: (t) => t.medicationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PendingOrderItemsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.pendingOrderItems,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$MedicationsTableTableManager
@@ -3133,6 +4037,8 @@ class $$MedicationsTableTableManager
             bool medicationAccessoriesRefs,
             bool infusionSchedulesRefs,
             bool plannedInfusionsRefs,
+            bool pendingOrdersRefs,
+            bool pendingOrderItemsRefs,
           })
         > {
   $$MedicationsTableTableManager(_$AppDatabase db, $MedicationsTable table)
@@ -3196,6 +4102,8 @@ class $$MedicationsTableTableManager
                 medicationAccessoriesRefs = false,
                 infusionSchedulesRefs = false,
                 plannedInfusionsRefs = false,
+                pendingOrdersRefs = false,
+                pendingOrderItemsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -3204,6 +4112,8 @@ class $$MedicationsTableTableManager
                     if (medicationAccessoriesRefs) db.medicationAccessories,
                     if (infusionSchedulesRefs) db.infusionSchedules,
                     if (plannedInfusionsRefs) db.plannedInfusions,
+                    if (pendingOrdersRefs) db.pendingOrders,
+                    if (pendingOrderItemsRefs) db.pendingOrderItems,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -3292,6 +4202,48 @@ class $$MedicationsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (pendingOrdersRefs)
+                        await $_getPrefetchedData<
+                          Medication,
+                          $MedicationsTable,
+                          PendingOrder
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MedicationsTableReferences
+                              ._pendingOrdersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MedicationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).pendingOrdersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.medicationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (pendingOrderItemsRefs)
+                        await $_getPrefetchedData<
+                          Medication,
+                          $MedicationsTable,
+                          PendingOrderItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MedicationsTableReferences
+                              ._pendingOrderItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MedicationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).pendingOrderItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.medicationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -3317,6 +4269,8 @@ typedef $$MedicationsTableProcessedTableManager =
         bool medicationAccessoriesRefs,
         bool infusionSchedulesRefs,
         bool plannedInfusionsRefs,
+        bool pendingOrdersRefs,
+        bool pendingOrderItemsRefs,
       })
     >;
 typedef $$AccessoriesTableCreateCompanionBuilder =
@@ -3360,6 +4314,30 @@ final class $$AccessoriesTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _medicationAccessoriesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$PendingOrderItemsTable, List<PendingOrderItem>>
+  _pendingOrderItemsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.pendingOrderItems,
+        aliasName: $_aliasNameGenerator(
+          db.accessories.id,
+          db.pendingOrderItems.accessoryId,
+        ),
+      );
+
+  $$PendingOrderItemsTableProcessedTableManager get pendingOrderItemsRefs {
+    final manager = $$PendingOrderItemsTableTableManager(
+      $_db,
+      $_db.pendingOrderItems,
+    ).filter((f) => f.accessoryId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _pendingOrderItemsRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -3419,6 +4397,31 @@ class $$AccessoriesTableFilterComposer
                     $removeJoinBuilderFromRootComposer,
               ),
         );
+    return f(composer);
+  }
+
+  Expression<bool> pendingOrderItemsRefs(
+    Expression<bool> Function($$PendingOrderItemsTableFilterComposer f) f,
+  ) {
+    final $$PendingOrderItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pendingOrderItems,
+      getReferencedColumn: (t) => t.accessoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingOrderItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.pendingOrderItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
@@ -3499,6 +4502,32 @@ class $$AccessoriesTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> pendingOrderItemsRefs<T extends Object>(
+    Expression<T> Function($$PendingOrderItemsTableAnnotationComposer a) f,
+  ) {
+    final $$PendingOrderItemsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.pendingOrderItems,
+          getReferencedColumn: (t) => t.accessoryId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PendingOrderItemsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.pendingOrderItems,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$AccessoriesTableTableManager
@@ -3514,7 +4543,10 @@ class $$AccessoriesTableTableManager
           $$AccessoriesTableUpdateCompanionBuilder,
           (Accessory, $$AccessoriesTableReferences),
           Accessory,
-          PrefetchHooks Function({bool medicationAccessoriesRefs})
+          PrefetchHooks Function({
+            bool medicationAccessoriesRefs,
+            bool pendingOrderItemsRefs,
+          })
         > {
   $$AccessoriesTableTableManager(_$AppDatabase db, $AccessoriesTable table)
     : super(
@@ -3559,40 +4591,66 @@ class $$AccessoriesTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({medicationAccessoriesRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (medicationAccessoriesRefs) db.medicationAccessories,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (medicationAccessoriesRefs)
-                    await $_getPrefetchedData<
-                      Accessory,
-                      $AccessoriesTable,
-                      MedicationAccessory
-                    >(
-                      currentTable: table,
-                      referencedTable: $$AccessoriesTableReferences
-                          ._medicationAccessoriesRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$AccessoriesTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).medicationAccessoriesRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where(
-                            (e) => e.accessoryId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                medicationAccessoriesRefs = false,
+                pendingOrderItemsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (medicationAccessoriesRefs) db.medicationAccessories,
+                    if (pendingOrderItemsRefs) db.pendingOrderItems,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (medicationAccessoriesRefs)
+                        await $_getPrefetchedData<
+                          Accessory,
+                          $AccessoriesTable,
+                          MedicationAccessory
+                        >(
+                          currentTable: table,
+                          referencedTable: $$AccessoriesTableReferences
+                              ._medicationAccessoriesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$AccessoriesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).medicationAccessoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.accessoryId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (pendingOrderItemsRefs)
+                        await $_getPrefetchedData<
+                          Accessory,
+                          $AccessoriesTable,
+                          PendingOrderItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$AccessoriesTableReferences
+                              ._pendingOrderItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$AccessoriesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).pendingOrderItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.accessoryId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -3609,7 +4667,10 @@ typedef $$AccessoriesTableProcessedTableManager =
       $$AccessoriesTableUpdateCompanionBuilder,
       (Accessory, $$AccessoriesTableReferences),
       Accessory,
-      PrefetchHooks Function({bool medicationAccessoriesRefs})
+      PrefetchHooks Function({
+        bool medicationAccessoriesRefs,
+        bool pendingOrderItemsRefs,
+      })
     >;
 typedef $$InfusionLogTableCreateCompanionBuilder =
     InfusionLogCompanion Function({
@@ -5374,6 +6435,958 @@ typedef $$PlannedInfusionsTableProcessedTableManager =
       PlannedInfusion,
       PrefetchHooks Function({bool medicationId, bool scheduleId})
     >;
+typedef $$PendingOrdersTableCreateCompanionBuilder =
+    PendingOrdersCompanion Function({
+      Value<int> id,
+      required int medicationId,
+      required double medicationQty,
+      Value<DateTime?> deliveryDate,
+      Value<bool> isConfirmed,
+    });
+typedef $$PendingOrdersTableUpdateCompanionBuilder =
+    PendingOrdersCompanion Function({
+      Value<int> id,
+      Value<int> medicationId,
+      Value<double> medicationQty,
+      Value<DateTime?> deliveryDate,
+      Value<bool> isConfirmed,
+    });
+
+final class $$PendingOrdersTableReferences
+    extends BaseReferences<_$AppDatabase, $PendingOrdersTable, PendingOrder> {
+  $$PendingOrdersTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $MedicationsTable _medicationIdTable(_$AppDatabase db) =>
+      db.medications.createAlias(
+        $_aliasNameGenerator(db.pendingOrders.medicationId, db.medications.id),
+      );
+
+  $$MedicationsTableProcessedTableManager get medicationId {
+    final $_column = $_itemColumn<int>('medication_id')!;
+
+    final manager = $$MedicationsTableTableManager(
+      $_db,
+      $_db.medications,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_medicationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$PendingOrderItemsTable, List<PendingOrderItem>>
+  _pendingOrderItemsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.pendingOrderItems,
+        aliasName: $_aliasNameGenerator(
+          db.pendingOrders.id,
+          db.pendingOrderItems.orderId,
+        ),
+      );
+
+  $$PendingOrderItemsTableProcessedTableManager get pendingOrderItemsRefs {
+    final manager = $$PendingOrderItemsTableTableManager(
+      $_db,
+      $_db.pendingOrderItems,
+    ).filter((f) => f.orderId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _pendingOrderItemsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$PendingOrdersTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingOrdersTable> {
+  $$PendingOrdersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get medicationQty => $composableBuilder(
+    column: $table.medicationQty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deliveryDate => $composableBuilder(
+    column: $table.deliveryDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isConfirmed => $composableBuilder(
+    column: $table.isConfirmed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$MedicationsTableFilterComposer get medicationId {
+    final $$MedicationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.medicationId,
+      referencedTable: $db.medications,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicationsTableFilterComposer(
+            $db: $db,
+            $table: $db.medications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> pendingOrderItemsRefs(
+    Expression<bool> Function($$PendingOrderItemsTableFilterComposer f) f,
+  ) {
+    final $$PendingOrderItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pendingOrderItems,
+      getReferencedColumn: (t) => t.orderId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingOrderItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.pendingOrderItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$PendingOrdersTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingOrdersTable> {
+  $$PendingOrdersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get medicationQty => $composableBuilder(
+    column: $table.medicationQty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deliveryDate => $composableBuilder(
+    column: $table.deliveryDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isConfirmed => $composableBuilder(
+    column: $table.isConfirmed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$MedicationsTableOrderingComposer get medicationId {
+    final $$MedicationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.medicationId,
+      referencedTable: $db.medications,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.medications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PendingOrdersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingOrdersTable> {
+  $$PendingOrdersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get medicationQty => $composableBuilder(
+    column: $table.medicationQty,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get deliveryDate => $composableBuilder(
+    column: $table.deliveryDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isConfirmed => $composableBuilder(
+    column: $table.isConfirmed,
+    builder: (column) => column,
+  );
+
+  $$MedicationsTableAnnotationComposer get medicationId {
+    final $$MedicationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.medicationId,
+      referencedTable: $db.medications,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.medications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> pendingOrderItemsRefs<T extends Object>(
+    Expression<T> Function($$PendingOrderItemsTableAnnotationComposer a) f,
+  ) {
+    final $$PendingOrderItemsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.pendingOrderItems,
+          getReferencedColumn: (t) => t.orderId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PendingOrderItemsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.pendingOrderItems,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$PendingOrdersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PendingOrdersTable,
+          PendingOrder,
+          $$PendingOrdersTableFilterComposer,
+          $$PendingOrdersTableOrderingComposer,
+          $$PendingOrdersTableAnnotationComposer,
+          $$PendingOrdersTableCreateCompanionBuilder,
+          $$PendingOrdersTableUpdateCompanionBuilder,
+          (PendingOrder, $$PendingOrdersTableReferences),
+          PendingOrder,
+          PrefetchHooks Function({
+            bool medicationId,
+            bool pendingOrderItemsRefs,
+          })
+        > {
+  $$PendingOrdersTableTableManager(_$AppDatabase db, $PendingOrdersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingOrdersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingOrdersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PendingOrdersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> medicationId = const Value.absent(),
+                Value<double> medicationQty = const Value.absent(),
+                Value<DateTime?> deliveryDate = const Value.absent(),
+                Value<bool> isConfirmed = const Value.absent(),
+              }) => PendingOrdersCompanion(
+                id: id,
+                medicationId: medicationId,
+                medicationQty: medicationQty,
+                deliveryDate: deliveryDate,
+                isConfirmed: isConfirmed,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int medicationId,
+                required double medicationQty,
+                Value<DateTime?> deliveryDate = const Value.absent(),
+                Value<bool> isConfirmed = const Value.absent(),
+              }) => PendingOrdersCompanion.insert(
+                id: id,
+                medicationId: medicationId,
+                medicationQty: medicationQty,
+                deliveryDate: deliveryDate,
+                isConfirmed: isConfirmed,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PendingOrdersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({medicationId = false, pendingOrderItemsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (pendingOrderItemsRefs) db.pendingOrderItems,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (medicationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.medicationId,
+                                    referencedTable:
+                                        $$PendingOrdersTableReferences
+                                            ._medicationIdTable(db),
+                                    referencedColumn:
+                                        $$PendingOrdersTableReferences
+                                            ._medicationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (pendingOrderItemsRefs)
+                        await $_getPrefetchedData<
+                          PendingOrder,
+                          $PendingOrdersTable,
+                          PendingOrderItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PendingOrdersTableReferences
+                              ._pendingOrderItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PendingOrdersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).pendingOrderItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.orderId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$PendingOrdersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PendingOrdersTable,
+      PendingOrder,
+      $$PendingOrdersTableFilterComposer,
+      $$PendingOrdersTableOrderingComposer,
+      $$PendingOrdersTableAnnotationComposer,
+      $$PendingOrdersTableCreateCompanionBuilder,
+      $$PendingOrdersTableUpdateCompanionBuilder,
+      (PendingOrder, $$PendingOrdersTableReferences),
+      PendingOrder,
+      PrefetchHooks Function({bool medicationId, bool pendingOrderItemsRefs})
+    >;
+typedef $$PendingOrderItemsTableCreateCompanionBuilder =
+    PendingOrderItemsCompanion Function({
+      Value<int> id,
+      required int orderId,
+      Value<int?> medicationId,
+      Value<int?> accessoryId,
+      required double quantity,
+    });
+typedef $$PendingOrderItemsTableUpdateCompanionBuilder =
+    PendingOrderItemsCompanion Function({
+      Value<int> id,
+      Value<int> orderId,
+      Value<int?> medicationId,
+      Value<int?> accessoryId,
+      Value<double> quantity,
+    });
+
+final class $$PendingOrderItemsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $PendingOrderItemsTable,
+          PendingOrderItem
+        > {
+  $$PendingOrderItemsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PendingOrdersTable _orderIdTable(_$AppDatabase db) =>
+      db.pendingOrders.createAlias(
+        $_aliasNameGenerator(db.pendingOrderItems.orderId, db.pendingOrders.id),
+      );
+
+  $$PendingOrdersTableProcessedTableManager get orderId {
+    final $_column = $_itemColumn<int>('order_id')!;
+
+    final manager = $$PendingOrdersTableTableManager(
+      $_db,
+      $_db.pendingOrders,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_orderIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $MedicationsTable _medicationIdTable(_$AppDatabase db) =>
+      db.medications.createAlias(
+        $_aliasNameGenerator(
+          db.pendingOrderItems.medicationId,
+          db.medications.id,
+        ),
+      );
+
+  $$MedicationsTableProcessedTableManager? get medicationId {
+    final $_column = $_itemColumn<int>('medication_id');
+    if ($_column == null) return null;
+    final manager = $$MedicationsTableTableManager(
+      $_db,
+      $_db.medications,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_medicationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $AccessoriesTable _accessoryIdTable(_$AppDatabase db) =>
+      db.accessories.createAlias(
+        $_aliasNameGenerator(
+          db.pendingOrderItems.accessoryId,
+          db.accessories.id,
+        ),
+      );
+
+  $$AccessoriesTableProcessedTableManager? get accessoryId {
+    final $_column = $_itemColumn<int>('accessory_id');
+    if ($_column == null) return null;
+    final manager = $$AccessoriesTableTableManager(
+      $_db,
+      $_db.accessories,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_accessoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PendingOrderItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingOrderItemsTable> {
+  $$PendingOrderItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PendingOrdersTableFilterComposer get orderId {
+    final $$PendingOrdersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.orderId,
+      referencedTable: $db.pendingOrders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingOrdersTableFilterComposer(
+            $db: $db,
+            $table: $db.pendingOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$MedicationsTableFilterComposer get medicationId {
+    final $$MedicationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.medicationId,
+      referencedTable: $db.medications,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicationsTableFilterComposer(
+            $db: $db,
+            $table: $db.medications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AccessoriesTableFilterComposer get accessoryId {
+    final $$AccessoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accessoryId,
+      referencedTable: $db.accessories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccessoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.accessories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PendingOrderItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingOrderItemsTable> {
+  $$PendingOrderItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PendingOrdersTableOrderingComposer get orderId {
+    final $$PendingOrdersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.orderId,
+      referencedTable: $db.pendingOrders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingOrdersTableOrderingComposer(
+            $db: $db,
+            $table: $db.pendingOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$MedicationsTableOrderingComposer get medicationId {
+    final $$MedicationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.medicationId,
+      referencedTable: $db.medications,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.medications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AccessoriesTableOrderingComposer get accessoryId {
+    final $$AccessoriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accessoryId,
+      referencedTable: $db.accessories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccessoriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.accessories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PendingOrderItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingOrderItemsTable> {
+  $$PendingOrderItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  $$PendingOrdersTableAnnotationComposer get orderId {
+    final $$PendingOrdersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.orderId,
+      referencedTable: $db.pendingOrders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingOrdersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.pendingOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$MedicationsTableAnnotationComposer get medicationId {
+    final $$MedicationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.medicationId,
+      referencedTable: $db.medications,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.medications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AccessoriesTableAnnotationComposer get accessoryId {
+    final $$AccessoriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accessoryId,
+      referencedTable: $db.accessories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccessoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.accessories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PendingOrderItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PendingOrderItemsTable,
+          PendingOrderItem,
+          $$PendingOrderItemsTableFilterComposer,
+          $$PendingOrderItemsTableOrderingComposer,
+          $$PendingOrderItemsTableAnnotationComposer,
+          $$PendingOrderItemsTableCreateCompanionBuilder,
+          $$PendingOrderItemsTableUpdateCompanionBuilder,
+          (PendingOrderItem, $$PendingOrderItemsTableReferences),
+          PendingOrderItem,
+          PrefetchHooks Function({
+            bool orderId,
+            bool medicationId,
+            bool accessoryId,
+          })
+        > {
+  $$PendingOrderItemsTableTableManager(
+    _$AppDatabase db,
+    $PendingOrderItemsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingOrderItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingOrderItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PendingOrderItemsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> orderId = const Value.absent(),
+                Value<int?> medicationId = const Value.absent(),
+                Value<int?> accessoryId = const Value.absent(),
+                Value<double> quantity = const Value.absent(),
+              }) => PendingOrderItemsCompanion(
+                id: id,
+                orderId: orderId,
+                medicationId: medicationId,
+                accessoryId: accessoryId,
+                quantity: quantity,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int orderId,
+                Value<int?> medicationId = const Value.absent(),
+                Value<int?> accessoryId = const Value.absent(),
+                required double quantity,
+              }) => PendingOrderItemsCompanion.insert(
+                id: id,
+                orderId: orderId,
+                medicationId: medicationId,
+                accessoryId: accessoryId,
+                quantity: quantity,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PendingOrderItemsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({orderId = false, medicationId = false, accessoryId = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (orderId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.orderId,
+                                    referencedTable:
+                                        $$PendingOrderItemsTableReferences
+                                            ._orderIdTable(db),
+                                    referencedColumn:
+                                        $$PendingOrderItemsTableReferences
+                                            ._orderIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (medicationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.medicationId,
+                                    referencedTable:
+                                        $$PendingOrderItemsTableReferences
+                                            ._medicationIdTable(db),
+                                    referencedColumn:
+                                        $$PendingOrderItemsTableReferences
+                                            ._medicationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (accessoryId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.accessoryId,
+                                    referencedTable:
+                                        $$PendingOrderItemsTableReferences
+                                            ._accessoryIdTable(db),
+                                    referencedColumn:
+                                        $$PendingOrderItemsTableReferences
+                                            ._accessoryIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$PendingOrderItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PendingOrderItemsTable,
+      PendingOrderItem,
+      $$PendingOrderItemsTableFilterComposer,
+      $$PendingOrderItemsTableOrderingComposer,
+      $$PendingOrderItemsTableAnnotationComposer,
+      $$PendingOrderItemsTableCreateCompanionBuilder,
+      $$PendingOrderItemsTableUpdateCompanionBuilder,
+      (PendingOrderItem, $$PendingOrderItemsTableReferences),
+      PendingOrderItem,
+      PrefetchHooks Function({
+        bool orderId,
+        bool medicationId,
+        bool accessoryId,
+      })
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5390,4 +7403,8 @@ class $AppDatabaseManager {
       $$InfusionSchedulesTableTableManager(_db, _db.infusionSchedules);
   $$PlannedInfusionsTableTableManager get plannedInfusions =>
       $$PlannedInfusionsTableTableManager(_db, _db.plannedInfusions);
+  $$PendingOrdersTableTableManager get pendingOrders =>
+      $$PendingOrdersTableTableManager(_db, _db.pendingOrders);
+  $$PendingOrderItemsTableTableManager get pendingOrderItems =>
+      $$PendingOrderItemsTableTableManager(_db, _db.pendingOrderItems);
 }
