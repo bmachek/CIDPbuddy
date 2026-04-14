@@ -19,15 +19,25 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
     final db = Provider.of<AppDatabase>(context);
 
     return AlertDialog(
-      title: const Text('Einkaufs-Assistent'),
+      title: Row(
+        children: [
+          Icon(Icons.auto_awesome_rounded, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 12),
+          const Text('Einkaufs-Assistent'),
+        ],
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       content: SizedBox(
-        width: double.maxFinite,
+        width: MediaQuery.of(context).size.width * 0.9,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Wähle ein Medikament und die Bestellmenge, um den Zubehörbedarf zu berechnen.',
-                       style: TextStyle(fontSize: 12, color: Colors.grey)),
-            const SizedBox(height: 16),
+            const Text(
+              'Berechne den Zubehörbedarf basierend auf deiner geplanten Medikamenten-Bestellung.',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
             FutureBuilder<List<Medication>>(
               future: db.getAllMedications(),
               builder: (context, snapshot) {
@@ -39,38 +49,109 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     _selectedMed = val;
                     _results = null;
                   }),
-                  decoration: const InputDecoration(labelText: 'Medikament'),
+                  decoration: InputDecoration(
+                    labelText: 'Medikament',
+                    prefixIcon: const Icon(Icons.medication_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surface,
+                  ),
                 );
               },
             ),
+            const SizedBox(height: 16),
             TextField(
               controller: _qtyController,
-              decoration: const InputDecoration(labelText: 'Bestellmenge (Flaschen)'),
+              decoration: InputDecoration(
+                labelText: 'Bestellmenge (Flaschen)',
+                prefixIcon: const Icon(Icons.shopping_basket_rounded),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.surface,
+              ),
               keyboardType: TextInputType.number,
               onChanged: (_) => setState(() => _results = null),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             if (_results != null) ...[
               const Divider(),
-              const Text('Benötigtes Zubehör:', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
+              const Text('Ergebnis:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 12),
               if (_results!.isEmpty)
-                const Text('Ausreichend Zubehör im Bestand!')
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.check_circle_rounded, color: Colors.green),
+                      SizedBox(width: 12),
+                      Expanded(child: Text('Genug Zubehör im Bestand!', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
+                    ],
+                  ),
+                )
               else
-                ..._results!.map((item) => ListTile(
-                  dense: true,
-                  title: Text(item.name),
-                  trailing: Text('${item.neededCount.toStringAsFixed(0)} ${item.unit}'),
-                  subtitle: Text('Aktueller Bestand: ${item.currentStock.toStringAsFixed(0)}'),
-                )),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _results!.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final item = _results![index];
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: Colors.grey.withOpacity(0.1))),
+                              child: Icon(Icons.build_circle_rounded, size: 20, color: Theme.of(context).primaryColor),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  Text('Bestand: ${item.currentStock.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '+${item.neededCount.toStringAsFixed(0)} ${item.unit}',
+                              style: TextStyle(fontWeight: FontWeight.w900, color: Theme.of(context).primaryColor),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
             ],
           ],
         ),
       ),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Abbrechen'),
+        ),
         ElevatedButton(
           onPressed: _selectedMed == null ? null : () => _calculateBOM(db),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).primaryColor,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
           child: const Text('Berechnen'),
         ),
       ],

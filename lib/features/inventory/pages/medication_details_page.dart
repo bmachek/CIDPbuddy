@@ -80,7 +80,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showLinkAccessoryDialog(context, db),
+                        onPressed: () => _showLinkAccessoryDialog(context, db, medication),
                         icon: const Icon(Icons.link_rounded),
                         label: const Text('Verknüpfen'),
                         style: OutlinedButton.styleFrom(
@@ -92,7 +92,7 @@ class MedicationDetailsPage extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _showCreateAccessoryDialog(context, db),
+                        onPressed: () => _showCreateAccessoryDialog(context, db, medication),
                         icon: const Icon(Icons.add_rounded),
                         label: const Text('Neu & Verknüpfen'),
                         style: ElevatedButton.styleFrom(
@@ -179,7 +179,7 @@ class MedicationDetailsPage extends StatelessWidget {
     );
   }
 
-  void _showLinkAccessoryDialog(BuildContext context, AppDatabase db) async {
+  void _showLinkAccessoryDialog(BuildContext context, AppDatabase db, Medication medication) async {
     final allAcc = await db.getAllAccessories();
     if (!context.mounted) return;
 
@@ -234,7 +234,7 @@ class MedicationDetailsPage extends StatelessWidget {
     ).then((_) => (context as Element).markNeedsBuild());
   }
 
-  void _showCreateAccessoryDialog(BuildContext context, AppDatabase db) async {
+  void _showCreateAccessoryDialog(BuildContext context, AppDatabase db, Medication medication) async {
     if (!context.mounted) return;
 
     showDialog(

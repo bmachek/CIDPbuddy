@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../providers/diary_provider.dart';
 import '../../inventory/providers/inventory_provider.dart';
 import '../../../core/database/database.dart';
+import '../widgets/premedication_timer_modal.dart';
 
 class AddInfusionPage extends StatefulWidget {
   final int? initialMedicationId;
@@ -143,7 +144,30 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               ),
               maxLines: 4,
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
+            if (_selectedMed?.name.toLowerCase().contains('hyqvia') == true && _batchController.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(56),
+                    side: BorderSide(color: Theme.of(context).primaryColor),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  ),
+                  onPressed: _showTimer,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.timer_outlined, color: Theme.of(context).primaryColor),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Timer für Vormedikation',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(60),
@@ -209,6 +233,15 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         _batchController.text = result;
       });
     }
+  }
+
+  void _showTimer() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const PremedicationTimerModal(),
+    );
   }
 
   void _save(DiaryProvider provider) async {

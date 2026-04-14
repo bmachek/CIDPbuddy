@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/backup_service.dart';
 import '../../../core/theme/theme_provider.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -43,6 +49,21 @@ class SettingsPage extends StatelessWidget {
             title: const Text('Daten importieren'),
             subtitle: const Text('Stelle eine Sicherung wieder her (Überschreibt aktuelle Daten)'),
             onTap: () => _confirmImport(context, backupService),
+          ),
+          const Divider(),
+          _buildSectionHeader('Hyqvia Timer'),
+          FutureBuilder<int>(
+            future: SharedPreferences.getInstance().then((p) => p.getInt('hyqvia_timer_duration') ?? 15),
+            builder: (context, snapshot) {
+              final current = snapshot.data ?? 15;
+              return ListTile(
+                leading: const Icon(Icons.timer_outlined),
+                title: const Text('Vormedikation Dauer'),
+                subtitle: Text('Aktuell: $current Minuten'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showDurationPicker(context, current),
+              );
+            },
           ),
           const Divider(),
           _buildSectionHeader('Über IgKeeper'),
@@ -102,5 +123,39 @@ class SettingsPage extends StatelessWidget {
         }
       }
     }
+  }
+
+  void _showDurationPicker(BuildContext context, int current) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Standard-Dauer festlegen', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 12,
+              children: [5, 10, 15, 20, 30].map((m) => ChoiceChip(
+                label: Text('$m min'),
+                selected: current == m,
+                onSelected: (selected) async {
+                  if (selected) {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setInt('hyqvia_timer_duration', m);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      setState(() {});
+                    }
+                  }
+                },
+              )).toList(),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
   }
 }
