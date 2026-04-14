@@ -43,4 +43,23 @@ class MedicationService {
     
     return DateTime.now().add(Duration(days: days.floor()));
   }
+
+  Future<double?> calculateDaysRemaining(Medication med) async {
+    final dailyReq = await getDailyRequirement(med.id);
+    if (dailyReq <= 0) return null;
+    return med.stock / dailyReq;
+  }
+
+  Future<List<Medication>> getLowStockMedications() async {
+    final meds = await db.getAllMedications();
+    List<Medication> lowMeds = [];
+    for (var med in meds) {
+      if (med.minStock <= 0) continue;
+      final days = await calculateDaysRemaining(med);
+      if (days != null && days <= med.minStock) {
+        lowMeds.add(med);
+      }
+    }
+    return lowMeds;
+  }
 }

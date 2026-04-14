@@ -727,7 +727,7 @@ class MedicationDetailsPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Ab welcher Menge möchtest du gewarnt werden?',
+            'Ab wie vielen verbleibenden Tagen möchtest du gewarnt werden?',
             style: TextStyle(fontSize: 13, color: Colors.grey),
           ),
           const SizedBox(height: 16),
@@ -737,8 +737,8 @@ class MedicationDetailsPage extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   decoration: InputDecoration(
-                    labelText: 'Mindestbestand',
-                    suffixText: medication.unit,
+                    labelText: 'Mindestbestand (in Tagen)',
+                    suffixText: 'Tage',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   keyboardType: TextInputType.number,

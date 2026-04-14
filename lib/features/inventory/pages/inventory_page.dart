@@ -87,15 +87,16 @@ class InventoryPage extends StatelessWidget {
   }
 
   Widget _buildMedicationItem(BuildContext context, Medication med, InventoryProvider provider, AppDatabase db) {
-    final isLowStock = med.stock <= med.minStock && med.minStock > 0;
     final medService = Provider.of<MedicationService>(context, listen: false);
     
-    return FutureBuilder<DateTime?>(
-      future: medService.calculateReachDate(med),
-      builder: (context, reachSnapshot) {
-        final reachDate = reachSnapshot.data;
-        final reachText = reachDate != null 
-          ? 'Reicht bis: ${DateFormat('dd.MM.yyyy').format(reachDate)}' 
+    return FutureBuilder<double?>(
+      future: medService.calculateDaysRemaining(med),
+      builder: (context, daysSnapshot) {
+        final daysRemaining = daysSnapshot.data;
+        final isLowStock = daysRemaining != null && daysRemaining <= med.minStock && med.minStock > 0;
+        
+        final reachText = daysRemaining != null 
+          ? 'Reicht bis: ${DateFormat('dd.MM.yyyy').format(DateTime.now().add(Duration(days: daysRemaining.floor())))}' 
           : (isLowStock ? 'Niedriger Bestand!' : 'PZN: ${med.pzn ?? "-"}');
 
         return StreamBuilder<List<MedicationAccessory>>(
@@ -122,8 +123,8 @@ class InventoryPage extends StatelessWidget {
                       subtitle: Text(
                         reachText,
                         style: TextStyle(
-                          color: isLowStock ? Colors.orange : (reachDate != null ? Colors.teal : null),
-                          fontWeight: (isLowStock || reachDate != null) ? FontWeight.bold : FontWeight.normal,
+                          color: isLowStock ? Colors.orange : (daysRemaining != null ? Colors.teal : null),
+                          fontWeight: (isLowStock || daysRemaining != null) ? FontWeight.bold : FontWeight.normal,
                           fontSize: 12,
                         ),
                       ),
@@ -142,8 +143,8 @@ class InventoryPage extends StatelessWidget {
                       subtitle: Text(
                         reachText,
                         style: TextStyle(
-                          color: isLowStock ? Colors.orange : (reachDate != null ? Colors.teal : null),
-                          fontWeight: (isLowStock || reachDate != null) ? FontWeight.bold : FontWeight.normal,
+                          color: isLowStock ? Colors.orange : (daysRemaining != null ? Colors.teal : null),
+                          fontWeight: (isLowStock || daysRemaining != null) ? FontWeight.bold : FontWeight.normal,
                           fontSize: 12,
                         ),
                       ),
