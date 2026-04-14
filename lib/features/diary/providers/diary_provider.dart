@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:igkeeper/core/database/database.dart';
+import '../../../core/database/database.dart';
 import 'package:drift/drift.dart';
+import 'package:rxdart/rxdart.dart';
 
 class DiaryProvider extends ChangeNotifier {
   final AppDatabase _db;
@@ -8,6 +9,23 @@ class DiaryProvider extends ChangeNotifier {
   DiaryProvider(this._db);
 
   Stream<List<InfusionLogData>> get infusionLogsStream => _db.watchInfusionLogs();
+  Stream<List<DiaryEntry>> get diaryEntriesStream => _db.watchDiaryEntries();
+
+  Stream<List<dynamic>> get combinedEntriesStream {
+    return Rx.combineLatest2<List<InfusionLogData>, List<DiaryEntry>, List<dynamic>>(
+      _db.watchInfusionLogs(),
+      _db.watchDiaryEntries(),
+      (logs, entries) {
+        final combined = [...logs, ...entries];
+        combined.sort((a, b) {
+          final aDate = a is InfusionLogData ? a.date : (a as DiaryEntry).date;
+          final bDate = b is InfusionLogData ? b.date : (b as DiaryEntry).date;
+          return bDate.compareTo(aDate);
+        });
+        return combined;
+      },
+    );
+  }
 
   Future<void> logInfusion({
     required int medicationId,

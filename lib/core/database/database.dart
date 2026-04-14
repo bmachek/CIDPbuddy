@@ -83,12 +83,33 @@ class PendingOrderItems extends Table {
   RealColumn get quantity => real()();
 }
 
-@DriftDatabase(tables: [Medications, Accessories, InfusionLog, MedicationAccessories, PlannedInfusions, InfusionSchedules, PendingOrders, PendingOrderItems])
+class DiaryEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get date => dateTime()();
+  
+  // Vitals
+  RealColumn get systolicBP => real().nullable()();
+  RealColumn get diastolicBP => real().nullable()();
+  IntColumn get heartRate => integer().nullable()();
+  RealColumn get temperature => real().nullable()();
+  RealColumn get weight => real().nullable()();
+  
+  // CIDP Symptoms
+  IntColumn get strengthScore => integer().nullable()(); // Kraft
+  IntColumn get sensoryScore => integer().nullable()();  // Gefühl
+  IntColumn get fatigueScore => integer().nullable()();  // Erschöpfung
+  IntColumn get painScore => integer().nullable()();     // Schmerzen
+  IntColumn get balanceScore => integer().nullable()();  // Gleichgewicht
+  
+  TextColumn get notes => text().nullable()();
+}
+
+@DriftDatabase(tables: [Medications, Accessories, InfusionLog, MedicationAccessories, PlannedInfusions, InfusionSchedules, PendingOrders, PendingOrderItems, DiaryEntries])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7; // Incremented schema version to 7 for packageSize
+  int get schemaVersion => 8; // Incremented schema version to 8 for DiaryEntries
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -114,6 +135,9 @@ class AppDatabase extends _$AppDatabase {
       if (to >= 7 && from < 7) {
         await m.addColumn(medications, medications.packageSize);
         await m.addColumn(accessories, accessories.packageSize);
+      }
+      if (to >= 8 && from < 8) {
+        await m.createTable(diaryEntries);
       }
     },
   );
@@ -218,6 +242,12 @@ class AppDatabase extends _$AppDatabase {
       await (update(pendingOrders)..where((t) => t.id.equals(orderId))).write(PendingOrdersCompanion(isConfirmed: Value(true)));
     });
   }
+
+  // Diary Entries
+  Stream<List<DiaryEntry>> watchDiaryEntries() => (select(diaryEntries)..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)])).watch();
+  Future<int> insertDiaryEntry(DiaryEntriesCompanion entry) => into(diaryEntries).insert(entry);
+  Future updateDiaryEntry(DiaryEntry entry) => update(diaryEntries).replace(entry);
+  Future deleteDiaryEntry(int id) => (delete(diaryEntries)..where((t) => t.id.equals(id))).go();
 }
 
 LazyDatabase _openConnection() {

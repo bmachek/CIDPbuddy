@@ -234,11 +234,13 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       final neededForOrder = orderQty * link.defaultQuantity;
       final shortfall = neededForOrder - availableStock;
       
+      double plannedQty = 0;
       if (shortfall > 0) {
         // Round up shortfall to package size if available
-        final roundedShortfall = (shortfall / acc.packageSize).ceil() * acc.packageSize;
-        items.add(_ShoppingItem(acc.id, acc.name, roundedShortfall, acc.unit, acc.stock));
+        plannedQty = (shortfall / acc.packageSize).ceil() * acc.packageSize;
       }
+      
+      items.add(_ShoppingItem(acc.id, acc.name, plannedQty, acc.unit, acc.stock));
     }
 
     setState(() {

@@ -3498,6 +3498,790 @@ class PendingOrderItemsCompanion extends UpdateCompanion<PendingOrderItem> {
   }
 }
 
+class $DiaryEntriesTable extends DiaryEntries
+    with TableInfo<$DiaryEntriesTable, DiaryEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DiaryEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _systolicBPMeta = const VerificationMeta(
+    'systolicBP',
+  );
+  @override
+  late final GeneratedColumn<double> systolicBP = GeneratedColumn<double>(
+    'systolic_b_p',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _diastolicBPMeta = const VerificationMeta(
+    'diastolicBP',
+  );
+  @override
+  late final GeneratedColumn<double> diastolicBP = GeneratedColumn<double>(
+    'diastolic_b_p',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _heartRateMeta = const VerificationMeta(
+    'heartRate',
+  );
+  @override
+  late final GeneratedColumn<int> heartRate = GeneratedColumn<int>(
+    'heart_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _temperatureMeta = const VerificationMeta(
+    'temperature',
+  );
+  @override
+  late final GeneratedColumn<double> temperature = GeneratedColumn<double>(
+    'temperature',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _weightMeta = const VerificationMeta('weight');
+  @override
+  late final GeneratedColumn<double> weight = GeneratedColumn<double>(
+    'weight',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _strengthScoreMeta = const VerificationMeta(
+    'strengthScore',
+  );
+  @override
+  late final GeneratedColumn<int> strengthScore = GeneratedColumn<int>(
+    'strength_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sensoryScoreMeta = const VerificationMeta(
+    'sensoryScore',
+  );
+  @override
+  late final GeneratedColumn<int> sensoryScore = GeneratedColumn<int>(
+    'sensory_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fatigueScoreMeta = const VerificationMeta(
+    'fatigueScore',
+  );
+  @override
+  late final GeneratedColumn<int> fatigueScore = GeneratedColumn<int>(
+    'fatigue_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _painScoreMeta = const VerificationMeta(
+    'painScore',
+  );
+  @override
+  late final GeneratedColumn<int> painScore = GeneratedColumn<int>(
+    'pain_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _balanceScoreMeta = const VerificationMeta(
+    'balanceScore',
+  );
+  @override
+  late final GeneratedColumn<int> balanceScore = GeneratedColumn<int>(
+    'balance_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    date,
+    systolicBP,
+    diastolicBP,
+    heartRate,
+    temperature,
+    weight,
+    strengthScore,
+    sensoryScore,
+    fatigueScore,
+    painScore,
+    balanceScore,
+    notes,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'diary_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DiaryEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('systolic_b_p')) {
+      context.handle(
+        _systolicBPMeta,
+        systolicBP.isAcceptableOrUnknown(
+          data['systolic_b_p']!,
+          _systolicBPMeta,
+        ),
+      );
+    }
+    if (data.containsKey('diastolic_b_p')) {
+      context.handle(
+        _diastolicBPMeta,
+        diastolicBP.isAcceptableOrUnknown(
+          data['diastolic_b_p']!,
+          _diastolicBPMeta,
+        ),
+      );
+    }
+    if (data.containsKey('heart_rate')) {
+      context.handle(
+        _heartRateMeta,
+        heartRate.isAcceptableOrUnknown(data['heart_rate']!, _heartRateMeta),
+      );
+    }
+    if (data.containsKey('temperature')) {
+      context.handle(
+        _temperatureMeta,
+        temperature.isAcceptableOrUnknown(
+          data['temperature']!,
+          _temperatureMeta,
+        ),
+      );
+    }
+    if (data.containsKey('weight')) {
+      context.handle(
+        _weightMeta,
+        weight.isAcceptableOrUnknown(data['weight']!, _weightMeta),
+      );
+    }
+    if (data.containsKey('strength_score')) {
+      context.handle(
+        _strengthScoreMeta,
+        strengthScore.isAcceptableOrUnknown(
+          data['strength_score']!,
+          _strengthScoreMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sensory_score')) {
+      context.handle(
+        _sensoryScoreMeta,
+        sensoryScore.isAcceptableOrUnknown(
+          data['sensory_score']!,
+          _sensoryScoreMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fatigue_score')) {
+      context.handle(
+        _fatigueScoreMeta,
+        fatigueScore.isAcceptableOrUnknown(
+          data['fatigue_score']!,
+          _fatigueScoreMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pain_score')) {
+      context.handle(
+        _painScoreMeta,
+        painScore.isAcceptableOrUnknown(data['pain_score']!, _painScoreMeta),
+      );
+    }
+    if (data.containsKey('balance_score')) {
+      context.handle(
+        _balanceScoreMeta,
+        balanceScore.isAcceptableOrUnknown(
+          data['balance_score']!,
+          _balanceScoreMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DiaryEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DiaryEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date'],
+      )!,
+      systolicBP: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}systolic_b_p'],
+      ),
+      diastolicBP: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}diastolic_b_p'],
+      ),
+      heartRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}heart_rate'],
+      ),
+      temperature: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}temperature'],
+      ),
+      weight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}weight'],
+      ),
+      strengthScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}strength_score'],
+      ),
+      sensoryScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sensory_score'],
+      ),
+      fatigueScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}fatigue_score'],
+      ),
+      painScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pain_score'],
+      ),
+      balanceScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}balance_score'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+    );
+  }
+
+  @override
+  $DiaryEntriesTable createAlias(String alias) {
+    return $DiaryEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class DiaryEntry extends DataClass implements Insertable<DiaryEntry> {
+  final int id;
+  final DateTime date;
+  final double? systolicBP;
+  final double? diastolicBP;
+  final int? heartRate;
+  final double? temperature;
+  final double? weight;
+  final int? strengthScore;
+  final int? sensoryScore;
+  final int? fatigueScore;
+  final int? painScore;
+  final int? balanceScore;
+  final String? notes;
+  const DiaryEntry({
+    required this.id,
+    required this.date,
+    this.systolicBP,
+    this.diastolicBP,
+    this.heartRate,
+    this.temperature,
+    this.weight,
+    this.strengthScore,
+    this.sensoryScore,
+    this.fatigueScore,
+    this.painScore,
+    this.balanceScore,
+    this.notes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['date'] = Variable<DateTime>(date);
+    if (!nullToAbsent || systolicBP != null) {
+      map['systolic_b_p'] = Variable<double>(systolicBP);
+    }
+    if (!nullToAbsent || diastolicBP != null) {
+      map['diastolic_b_p'] = Variable<double>(diastolicBP);
+    }
+    if (!nullToAbsent || heartRate != null) {
+      map['heart_rate'] = Variable<int>(heartRate);
+    }
+    if (!nullToAbsent || temperature != null) {
+      map['temperature'] = Variable<double>(temperature);
+    }
+    if (!nullToAbsent || weight != null) {
+      map['weight'] = Variable<double>(weight);
+    }
+    if (!nullToAbsent || strengthScore != null) {
+      map['strength_score'] = Variable<int>(strengthScore);
+    }
+    if (!nullToAbsent || sensoryScore != null) {
+      map['sensory_score'] = Variable<int>(sensoryScore);
+    }
+    if (!nullToAbsent || fatigueScore != null) {
+      map['fatigue_score'] = Variable<int>(fatigueScore);
+    }
+    if (!nullToAbsent || painScore != null) {
+      map['pain_score'] = Variable<int>(painScore);
+    }
+    if (!nullToAbsent || balanceScore != null) {
+      map['balance_score'] = Variable<int>(balanceScore);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    return map;
+  }
+
+  DiaryEntriesCompanion toCompanion(bool nullToAbsent) {
+    return DiaryEntriesCompanion(
+      id: Value(id),
+      date: Value(date),
+      systolicBP: systolicBP == null && nullToAbsent
+          ? const Value.absent()
+          : Value(systolicBP),
+      diastolicBP: diastolicBP == null && nullToAbsent
+          ? const Value.absent()
+          : Value(diastolicBP),
+      heartRate: heartRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(heartRate),
+      temperature: temperature == null && nullToAbsent
+          ? const Value.absent()
+          : Value(temperature),
+      weight: weight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weight),
+      strengthScore: strengthScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(strengthScore),
+      sensoryScore: sensoryScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sensoryScore),
+      fatigueScore: fatigueScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fatigueScore),
+      painScore: painScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(painScore),
+      balanceScore: balanceScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(balanceScore),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+    );
+  }
+
+  factory DiaryEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DiaryEntry(
+      id: serializer.fromJson<int>(json['id']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      systolicBP: serializer.fromJson<double?>(json['systolicBP']),
+      diastolicBP: serializer.fromJson<double?>(json['diastolicBP']),
+      heartRate: serializer.fromJson<int?>(json['heartRate']),
+      temperature: serializer.fromJson<double?>(json['temperature']),
+      weight: serializer.fromJson<double?>(json['weight']),
+      strengthScore: serializer.fromJson<int?>(json['strengthScore']),
+      sensoryScore: serializer.fromJson<int?>(json['sensoryScore']),
+      fatigueScore: serializer.fromJson<int?>(json['fatigueScore']),
+      painScore: serializer.fromJson<int?>(json['painScore']),
+      balanceScore: serializer.fromJson<int?>(json['balanceScore']),
+      notes: serializer.fromJson<String?>(json['notes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'date': serializer.toJson<DateTime>(date),
+      'systolicBP': serializer.toJson<double?>(systolicBP),
+      'diastolicBP': serializer.toJson<double?>(diastolicBP),
+      'heartRate': serializer.toJson<int?>(heartRate),
+      'temperature': serializer.toJson<double?>(temperature),
+      'weight': serializer.toJson<double?>(weight),
+      'strengthScore': serializer.toJson<int?>(strengthScore),
+      'sensoryScore': serializer.toJson<int?>(sensoryScore),
+      'fatigueScore': serializer.toJson<int?>(fatigueScore),
+      'painScore': serializer.toJson<int?>(painScore),
+      'balanceScore': serializer.toJson<int?>(balanceScore),
+      'notes': serializer.toJson<String?>(notes),
+    };
+  }
+
+  DiaryEntry copyWith({
+    int? id,
+    DateTime? date,
+    Value<double?> systolicBP = const Value.absent(),
+    Value<double?> diastolicBP = const Value.absent(),
+    Value<int?> heartRate = const Value.absent(),
+    Value<double?> temperature = const Value.absent(),
+    Value<double?> weight = const Value.absent(),
+    Value<int?> strengthScore = const Value.absent(),
+    Value<int?> sensoryScore = const Value.absent(),
+    Value<int?> fatigueScore = const Value.absent(),
+    Value<int?> painScore = const Value.absent(),
+    Value<int?> balanceScore = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+  }) => DiaryEntry(
+    id: id ?? this.id,
+    date: date ?? this.date,
+    systolicBP: systolicBP.present ? systolicBP.value : this.systolicBP,
+    diastolicBP: diastolicBP.present ? diastolicBP.value : this.diastolicBP,
+    heartRate: heartRate.present ? heartRate.value : this.heartRate,
+    temperature: temperature.present ? temperature.value : this.temperature,
+    weight: weight.present ? weight.value : this.weight,
+    strengthScore: strengthScore.present
+        ? strengthScore.value
+        : this.strengthScore,
+    sensoryScore: sensoryScore.present ? sensoryScore.value : this.sensoryScore,
+    fatigueScore: fatigueScore.present ? fatigueScore.value : this.fatigueScore,
+    painScore: painScore.present ? painScore.value : this.painScore,
+    balanceScore: balanceScore.present ? balanceScore.value : this.balanceScore,
+    notes: notes.present ? notes.value : this.notes,
+  );
+  DiaryEntry copyWithCompanion(DiaryEntriesCompanion data) {
+    return DiaryEntry(
+      id: data.id.present ? data.id.value : this.id,
+      date: data.date.present ? data.date.value : this.date,
+      systolicBP: data.systolicBP.present
+          ? data.systolicBP.value
+          : this.systolicBP,
+      diastolicBP: data.diastolicBP.present
+          ? data.diastolicBP.value
+          : this.diastolicBP,
+      heartRate: data.heartRate.present ? data.heartRate.value : this.heartRate,
+      temperature: data.temperature.present
+          ? data.temperature.value
+          : this.temperature,
+      weight: data.weight.present ? data.weight.value : this.weight,
+      strengthScore: data.strengthScore.present
+          ? data.strengthScore.value
+          : this.strengthScore,
+      sensoryScore: data.sensoryScore.present
+          ? data.sensoryScore.value
+          : this.sensoryScore,
+      fatigueScore: data.fatigueScore.present
+          ? data.fatigueScore.value
+          : this.fatigueScore,
+      painScore: data.painScore.present ? data.painScore.value : this.painScore,
+      balanceScore: data.balanceScore.present
+          ? data.balanceScore.value
+          : this.balanceScore,
+      notes: data.notes.present ? data.notes.value : this.notes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryEntry(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('systolicBP: $systolicBP, ')
+          ..write('diastolicBP: $diastolicBP, ')
+          ..write('heartRate: $heartRate, ')
+          ..write('temperature: $temperature, ')
+          ..write('weight: $weight, ')
+          ..write('strengthScore: $strengthScore, ')
+          ..write('sensoryScore: $sensoryScore, ')
+          ..write('fatigueScore: $fatigueScore, ')
+          ..write('painScore: $painScore, ')
+          ..write('balanceScore: $balanceScore, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    date,
+    systolicBP,
+    diastolicBP,
+    heartRate,
+    temperature,
+    weight,
+    strengthScore,
+    sensoryScore,
+    fatigueScore,
+    painScore,
+    balanceScore,
+    notes,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DiaryEntry &&
+          other.id == this.id &&
+          other.date == this.date &&
+          other.systolicBP == this.systolicBP &&
+          other.diastolicBP == this.diastolicBP &&
+          other.heartRate == this.heartRate &&
+          other.temperature == this.temperature &&
+          other.weight == this.weight &&
+          other.strengthScore == this.strengthScore &&
+          other.sensoryScore == this.sensoryScore &&
+          other.fatigueScore == this.fatigueScore &&
+          other.painScore == this.painScore &&
+          other.balanceScore == this.balanceScore &&
+          other.notes == this.notes);
+}
+
+class DiaryEntriesCompanion extends UpdateCompanion<DiaryEntry> {
+  final Value<int> id;
+  final Value<DateTime> date;
+  final Value<double?> systolicBP;
+  final Value<double?> diastolicBP;
+  final Value<int?> heartRate;
+  final Value<double?> temperature;
+  final Value<double?> weight;
+  final Value<int?> strengthScore;
+  final Value<int?> sensoryScore;
+  final Value<int?> fatigueScore;
+  final Value<int?> painScore;
+  final Value<int?> balanceScore;
+  final Value<String?> notes;
+  const DiaryEntriesCompanion({
+    this.id = const Value.absent(),
+    this.date = const Value.absent(),
+    this.systolicBP = const Value.absent(),
+    this.diastolicBP = const Value.absent(),
+    this.heartRate = const Value.absent(),
+    this.temperature = const Value.absent(),
+    this.weight = const Value.absent(),
+    this.strengthScore = const Value.absent(),
+    this.sensoryScore = const Value.absent(),
+    this.fatigueScore = const Value.absent(),
+    this.painScore = const Value.absent(),
+    this.balanceScore = const Value.absent(),
+    this.notes = const Value.absent(),
+  });
+  DiaryEntriesCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime date,
+    this.systolicBP = const Value.absent(),
+    this.diastolicBP = const Value.absent(),
+    this.heartRate = const Value.absent(),
+    this.temperature = const Value.absent(),
+    this.weight = const Value.absent(),
+    this.strengthScore = const Value.absent(),
+    this.sensoryScore = const Value.absent(),
+    this.fatigueScore = const Value.absent(),
+    this.painScore = const Value.absent(),
+    this.balanceScore = const Value.absent(),
+    this.notes = const Value.absent(),
+  }) : date = Value(date);
+  static Insertable<DiaryEntry> custom({
+    Expression<int>? id,
+    Expression<DateTime>? date,
+    Expression<double>? systolicBP,
+    Expression<double>? diastolicBP,
+    Expression<int>? heartRate,
+    Expression<double>? temperature,
+    Expression<double>? weight,
+    Expression<int>? strengthScore,
+    Expression<int>? sensoryScore,
+    Expression<int>? fatigueScore,
+    Expression<int>? painScore,
+    Expression<int>? balanceScore,
+    Expression<String>? notes,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (date != null) 'date': date,
+      if (systolicBP != null) 'systolic_b_p': systolicBP,
+      if (diastolicBP != null) 'diastolic_b_p': diastolicBP,
+      if (heartRate != null) 'heart_rate': heartRate,
+      if (temperature != null) 'temperature': temperature,
+      if (weight != null) 'weight': weight,
+      if (strengthScore != null) 'strength_score': strengthScore,
+      if (sensoryScore != null) 'sensory_score': sensoryScore,
+      if (fatigueScore != null) 'fatigue_score': fatigueScore,
+      if (painScore != null) 'pain_score': painScore,
+      if (balanceScore != null) 'balance_score': balanceScore,
+      if (notes != null) 'notes': notes,
+    });
+  }
+
+  DiaryEntriesCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? date,
+    Value<double?>? systolicBP,
+    Value<double?>? diastolicBP,
+    Value<int?>? heartRate,
+    Value<double?>? temperature,
+    Value<double?>? weight,
+    Value<int?>? strengthScore,
+    Value<int?>? sensoryScore,
+    Value<int?>? fatigueScore,
+    Value<int?>? painScore,
+    Value<int?>? balanceScore,
+    Value<String?>? notes,
+  }) {
+    return DiaryEntriesCompanion(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      systolicBP: systolicBP ?? this.systolicBP,
+      diastolicBP: diastolicBP ?? this.diastolicBP,
+      heartRate: heartRate ?? this.heartRate,
+      temperature: temperature ?? this.temperature,
+      weight: weight ?? this.weight,
+      strengthScore: strengthScore ?? this.strengthScore,
+      sensoryScore: sensoryScore ?? this.sensoryScore,
+      fatigueScore: fatigueScore ?? this.fatigueScore,
+      painScore: painScore ?? this.painScore,
+      balanceScore: balanceScore ?? this.balanceScore,
+      notes: notes ?? this.notes,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (systolicBP.present) {
+      map['systolic_b_p'] = Variable<double>(systolicBP.value);
+    }
+    if (diastolicBP.present) {
+      map['diastolic_b_p'] = Variable<double>(diastolicBP.value);
+    }
+    if (heartRate.present) {
+      map['heart_rate'] = Variable<int>(heartRate.value);
+    }
+    if (temperature.present) {
+      map['temperature'] = Variable<double>(temperature.value);
+    }
+    if (weight.present) {
+      map['weight'] = Variable<double>(weight.value);
+    }
+    if (strengthScore.present) {
+      map['strength_score'] = Variable<int>(strengthScore.value);
+    }
+    if (sensoryScore.present) {
+      map['sensory_score'] = Variable<int>(sensoryScore.value);
+    }
+    if (fatigueScore.present) {
+      map['fatigue_score'] = Variable<int>(fatigueScore.value);
+    }
+    if (painScore.present) {
+      map['pain_score'] = Variable<int>(painScore.value);
+    }
+    if (balanceScore.present) {
+      map['balance_score'] = Variable<int>(balanceScore.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('systolicBP: $systolicBP, ')
+          ..write('diastolicBP: $diastolicBP, ')
+          ..write('heartRate: $heartRate, ')
+          ..write('temperature: $temperature, ')
+          ..write('weight: $weight, ')
+          ..write('strengthScore: $strengthScore, ')
+          ..write('sensoryScore: $sensoryScore, ')
+          ..write('fatigueScore: $fatigueScore, ')
+          ..write('painScore: $painScore, ')
+          ..write('balanceScore: $balanceScore, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3514,6 +4298,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PendingOrdersTable pendingOrders = $PendingOrdersTable(this);
   late final $PendingOrderItemsTable pendingOrderItems =
       $PendingOrderItemsTable(this);
+  late final $DiaryEntriesTable diaryEntries = $DiaryEntriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3527,6 +4312,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     plannedInfusions,
     pendingOrders,
     pendingOrderItems,
+    diaryEntries,
   ];
 }
 
@@ -7533,6 +8319,366 @@ typedef $$PendingOrderItemsTableProcessedTableManager =
         bool accessoryId,
       })
     >;
+typedef $$DiaryEntriesTableCreateCompanionBuilder =
+    DiaryEntriesCompanion Function({
+      Value<int> id,
+      required DateTime date,
+      Value<double?> systolicBP,
+      Value<double?> diastolicBP,
+      Value<int?> heartRate,
+      Value<double?> temperature,
+      Value<double?> weight,
+      Value<int?> strengthScore,
+      Value<int?> sensoryScore,
+      Value<int?> fatigueScore,
+      Value<int?> painScore,
+      Value<int?> balanceScore,
+      Value<String?> notes,
+    });
+typedef $$DiaryEntriesTableUpdateCompanionBuilder =
+    DiaryEntriesCompanion Function({
+      Value<int> id,
+      Value<DateTime> date,
+      Value<double?> systolicBP,
+      Value<double?> diastolicBP,
+      Value<int?> heartRate,
+      Value<double?> temperature,
+      Value<double?> weight,
+      Value<int?> strengthScore,
+      Value<int?> sensoryScore,
+      Value<int?> fatigueScore,
+      Value<int?> painScore,
+      Value<int?> balanceScore,
+      Value<String?> notes,
+    });
+
+class $$DiaryEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $DiaryEntriesTable> {
+  $$DiaryEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get systolicBP => $composableBuilder(
+    column: $table.systolicBP,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get diastolicBP => $composableBuilder(
+    column: $table.diastolicBP,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get heartRate => $composableBuilder(
+    column: $table.heartRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get temperature => $composableBuilder(
+    column: $table.temperature,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get weight => $composableBuilder(
+    column: $table.weight,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get strengthScore => $composableBuilder(
+    column: $table.strengthScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sensoryScore => $composableBuilder(
+    column: $table.sensoryScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get fatigueScore => $composableBuilder(
+    column: $table.fatigueScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get painScore => $composableBuilder(
+    column: $table.painScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get balanceScore => $composableBuilder(
+    column: $table.balanceScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DiaryEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $DiaryEntriesTable> {
+  $$DiaryEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get systolicBP => $composableBuilder(
+    column: $table.systolicBP,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get diastolicBP => $composableBuilder(
+    column: $table.diastolicBP,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get heartRate => $composableBuilder(
+    column: $table.heartRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get temperature => $composableBuilder(
+    column: $table.temperature,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get weight => $composableBuilder(
+    column: $table.weight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get strengthScore => $composableBuilder(
+    column: $table.strengthScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sensoryScore => $composableBuilder(
+    column: $table.sensoryScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get fatigueScore => $composableBuilder(
+    column: $table.fatigueScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get painScore => $composableBuilder(
+    column: $table.painScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get balanceScore => $composableBuilder(
+    column: $table.balanceScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DiaryEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DiaryEntriesTable> {
+  $$DiaryEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<double> get systolicBP => $composableBuilder(
+    column: $table.systolicBP,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get diastolicBP => $composableBuilder(
+    column: $table.diastolicBP,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get heartRate =>
+      $composableBuilder(column: $table.heartRate, builder: (column) => column);
+
+  GeneratedColumn<double> get temperature => $composableBuilder(
+    column: $table.temperature,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get weight =>
+      $composableBuilder(column: $table.weight, builder: (column) => column);
+
+  GeneratedColumn<int> get strengthScore => $composableBuilder(
+    column: $table.strengthScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sensoryScore => $composableBuilder(
+    column: $table.sensoryScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get fatigueScore => $composableBuilder(
+    column: $table.fatigueScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get painScore =>
+      $composableBuilder(column: $table.painScore, builder: (column) => column);
+
+  GeneratedColumn<int> get balanceScore => $composableBuilder(
+    column: $table.balanceScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+}
+
+class $$DiaryEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DiaryEntriesTable,
+          DiaryEntry,
+          $$DiaryEntriesTableFilterComposer,
+          $$DiaryEntriesTableOrderingComposer,
+          $$DiaryEntriesTableAnnotationComposer,
+          $$DiaryEntriesTableCreateCompanionBuilder,
+          $$DiaryEntriesTableUpdateCompanionBuilder,
+          (
+            DiaryEntry,
+            BaseReferences<_$AppDatabase, $DiaryEntriesTable, DiaryEntry>,
+          ),
+          DiaryEntry,
+          PrefetchHooks Function()
+        > {
+  $$DiaryEntriesTableTableManager(_$AppDatabase db, $DiaryEntriesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DiaryEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DiaryEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DiaryEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<double?> systolicBP = const Value.absent(),
+                Value<double?> diastolicBP = const Value.absent(),
+                Value<int?> heartRate = const Value.absent(),
+                Value<double?> temperature = const Value.absent(),
+                Value<double?> weight = const Value.absent(),
+                Value<int?> strengthScore = const Value.absent(),
+                Value<int?> sensoryScore = const Value.absent(),
+                Value<int?> fatigueScore = const Value.absent(),
+                Value<int?> painScore = const Value.absent(),
+                Value<int?> balanceScore = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+              }) => DiaryEntriesCompanion(
+                id: id,
+                date: date,
+                systolicBP: systolicBP,
+                diastolicBP: diastolicBP,
+                heartRate: heartRate,
+                temperature: temperature,
+                weight: weight,
+                strengthScore: strengthScore,
+                sensoryScore: sensoryScore,
+                fatigueScore: fatigueScore,
+                painScore: painScore,
+                balanceScore: balanceScore,
+                notes: notes,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required DateTime date,
+                Value<double?> systolicBP = const Value.absent(),
+                Value<double?> diastolicBP = const Value.absent(),
+                Value<int?> heartRate = const Value.absent(),
+                Value<double?> temperature = const Value.absent(),
+                Value<double?> weight = const Value.absent(),
+                Value<int?> strengthScore = const Value.absent(),
+                Value<int?> sensoryScore = const Value.absent(),
+                Value<int?> fatigueScore = const Value.absent(),
+                Value<int?> painScore = const Value.absent(),
+                Value<int?> balanceScore = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+              }) => DiaryEntriesCompanion.insert(
+                id: id,
+                date: date,
+                systolicBP: systolicBP,
+                diastolicBP: diastolicBP,
+                heartRate: heartRate,
+                temperature: temperature,
+                weight: weight,
+                strengthScore: strengthScore,
+                sensoryScore: sensoryScore,
+                fatigueScore: fatigueScore,
+                painScore: painScore,
+                balanceScore: balanceScore,
+                notes: notes,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DiaryEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DiaryEntriesTable,
+      DiaryEntry,
+      $$DiaryEntriesTableFilterComposer,
+      $$DiaryEntriesTableOrderingComposer,
+      $$DiaryEntriesTableAnnotationComposer,
+      $$DiaryEntriesTableCreateCompanionBuilder,
+      $$DiaryEntriesTableUpdateCompanionBuilder,
+      (
+        DiaryEntry,
+        BaseReferences<_$AppDatabase, $DiaryEntriesTable, DiaryEntry>,
+      ),
+      DiaryEntry,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7553,4 +8699,6 @@ class $AppDatabaseManager {
       $$PendingOrdersTableTableManager(_db, _db.pendingOrders);
   $$PendingOrderItemsTableTableManager get pendingOrderItems =>
       $$PendingOrderItemsTableTableManager(_db, _db.pendingOrderItems);
+  $$DiaryEntriesTableTableManager get diaryEntries =>
+      $$DiaryEntriesTableTableManager(_db, _db.diaryEntries);
 }

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../providers/diary_provider.dart';
 import '../../../core/database/database.dart';
 import 'add_infusion_page.dart';
+import 'add_diary_entry_page.dart';
 import 'statistics_page.dart';
 
 class DiaryPage extends StatelessWidget {
@@ -15,15 +16,15 @@ class DiaryPage extends StatelessWidget {
     final diaryProvider = Provider.of<DiaryProvider>(context);
 
     return Scaffold(
-      body: StreamBuilder<List<InfusionLogData>>(
-        stream: diaryProvider.infusionLogsStream,
+      body: StreamBuilder<List<dynamic>>(
+        stream: diaryProvider.combinedEntriesStream,
         builder: (context, snapshot) {
-          final logs = snapshot.data ?? [];
+          final entries = snapshot.data ?? [];
           
           return CustomScrollView(
             slivers: [
               SliverAppBar.large(
-                title: const Text('Infusionstagebuch'),
+                title: const Text('Mein Tagebuch'),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.bar_chart_rounded),
@@ -34,7 +35,7 @@ class DiaryPage extends StatelessWidget {
                   ),
                 ],
               ),
-              if (logs.isEmpty)
+              if (entries.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: _buildEmptyState(),
@@ -45,10 +46,15 @@ class DiaryPage extends StatelessWidget {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        final log = logs[index];
-                        return _buildLogCard(context, log);
+                        final entry = entries[index];
+                        if (entry is InfusionLogData) {
+                          return _buildLogCard(context, entry);
+                        } else if (entry is DiaryEntry) {
+                          return _buildDiaryEntryCard(context, entry);
+                        }
+                        return const SizedBox();
                       },
-                      childCount: logs.length,
+                      childCount: entries.length,
                     ),
                   ),
                 ),
@@ -56,16 +62,123 @@ class DiaryPage extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'diary_fab',
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const AddInfusionPage()),
-        ),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Infusion erfassen'),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'diary_fab_entry',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddDiaryEntryPage()),
+            ),
+            icon: const Icon(Icons.analytics_outlined),
+            label: const Text('Vitals & Symptome'),
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            foregroundColor: Colors.white,
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton.extended(
+            heroTag: 'diary_fab_infusion',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddInfusionPage()),
+            ),
+            icon: const Icon(Icons.medication_rounded),
+            label: const Text('Infusion erfassen'),
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildDiaryEntryCard(BuildContext context, DiaryEntry entry) {
+    final dateStr = DateFormat('dd. MMMM yyyy').format(entry.date);
+    final timeStr = DateFormat('HH:mm').format(entry.date);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.1)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: Colors.grey.withOpacity(0.1))),
+          child: Icon(Icons.analytics_rounded, color: Theme.of(context).colorScheme.secondary),
+        ),
+        title: Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(timeStr, style: TextStyle(color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                if (entry.systolicBP != null) _buildSmallChip(context, '${entry.systolicBP?.toInt()}/${entry.diastolicBP?.toInt()}', Icons.favorite),
+                if (entry.heartRate != null) _buildSmallChip(context, '${entry.heartRate} bpm', Icons.monitor_heart),
+                if (entry.weight != null) _buildSmallChip(context, '${entry.weight} kg', Icons.monitor_weight),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _buildSymptomMiniBar(context, entry),
+          ],
+        ),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddDiaryEntryPage(initialEntry: entry))),
+      ),
+    );
+  }
+
+  Widget _buildSmallChip(BuildContext context, String text, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.withOpacity(0.1))),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: Colors.grey),
+          const SizedBox(width: 4),
+          Text(text, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSymptomMiniBar(BuildContext context, DiaryEntry entry) {
+    // Average score or just simple indicators
+    final scores = [
+      entry.strengthScore, entry.sensoryScore, entry.fatigueScore, entry.painScore, entry.balanceScore
+    ].whereType<int>().toList();
+    if (scores.isEmpty) return const SizedBox();
+    
+    return Row(
+      children: [
+        const Text('Symptome:', style: TextStyle(fontSize: 10, color: Colors.grey)),
+        const SizedBox(width: 6),
+        ...List.generate(5, (i) {
+          final score = (i < scores.length) ? scores[i] : 0;
+          return Container(
+            width: 12,
+            height: 4,
+            margin: const EdgeInsets.only(right: 2),
+            decoration: BoxDecoration(
+              color: _getColorForScore(score).withOpacity(0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Color _getColorForScore(int score) {
+    if (score >= 8) return Colors.red;
+    if (score >= 5) return Colors.orange;
+    return Colors.green;
   }
 
   Widget _buildEmptyState() {
