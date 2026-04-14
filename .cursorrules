@@ -1,0 +1,7 @@
+# Flutter Development Rules
+
+- Always run `flutter analyze` after making changes.
+- Do not use `Theme.of(context)` inside `const` constructors.
+- Prefer `withValues(alpha: ...)` over `withOpacity(...)`.
+- Use German for UI text.
+- Ensure `BuildContext` is correctly passed to helper methods.
