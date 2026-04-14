@@ -196,70 +196,108 @@ class InventoryPage extends StatelessWidget {
         final daysRemaining = daysSnapshot.data;
         final isLowStock = daysRemaining != null && daysRemaining <= med.minStock && med.minStock > 0 && !hasPendingOrder;
         
-        final reachText = daysRemaining != null 
-          ? 'Reicht bis: ${DateFormat('dd.MM.yyyy').format(DateTime.now().add(Duration(days: daysRemaining.floor())))}' 
-          : (isLowStock ? 'Niedriger Bestand!' : (hasPendingOrder ? 'Bestellung unterwegs' : 'PZN: ${med.pzn ?? "-"}'));
+        return StreamBuilder<PlannedInfusion?>(
+          future: (db.select(db.plannedInfusions)
+            ..where((t) => t.medicationId.equals(med.id) & t.isCompleted.equals(false))
+            ..orderBy([(t) => OrderingTerm(expression: t.date)])
+            ..limit(1)
+          ).getSingleOrNull(),
+          builder: (context, nextInfSnapshot) {
+            final nextInf = nextInfSnapshot.data;
+            final nextInfText = nextInf != null 
+                ? '\nNächste: ${DateFormat('dd.MM. HH:mm').format(nextInf.date)} Uhr' 
+                : '';
 
-        return StreamBuilder<List<MedicationAccessory>>(
-          stream: db.watchAccessoriesForMedication(med.id),
-          builder: (context, snapshot) {
-            final links = snapshot.data ?? [];
-            final hasAccessories = links.isNotEmpty;
+            final reachText = daysRemaining != null 
+              ? 'Reicht bis: ${DateFormat('dd.MM.yyyy').format(DateTime.now().add(Duration(days: daysRemaining.floor())))}' 
+              : (isLowStock ? 'Niedriger Bestand!' : (hasPendingOrder ? 'Bestellung unterwegs' : 'PZN: ${med.pzn ?? "-"}'));
 
-            return Container(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              decoration: BoxDecoration(
-                color: isLowStock 
-                    ? Colors.orange.withOpacity(0.15) 
-                    : Theme.of(context).cardColor.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: isLowStock ? Colors.orange.withOpacity(0.3) : Colors.white.withOpacity(0.1),
-                ),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6)),
-                ],
-              ),
-              child: Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                child: hasAccessories 
-                  ? ExpansionTile(
-                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
-                      collapsedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
-                      leading: _buildMedicationLeading(isLowStock, Theme.of(context).primaryColor),
-                      title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(
-                        reachText,
-                        style: TextStyle(
-                          color: isLowStock ? Colors.orange : (daysRemaining != null ? Colors.teal : null),
-                          fontWeight: (isLowStock || daysRemaining != null) ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 12,
-                        ),
-                      ),
-                      trailing: _buildMedicationTrailing(context, med, provider),
-                      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      children: [
-                        const Divider(height: 1),
-                        const SizedBox(height: 12),
-                        ...links.map((link) => _buildEmbeddedAccessoryItem(context, db, link, provider)),
-                      ],
-                    )
-                  : ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      leading: _buildMedicationLeading(isLowStock, Theme.of(context).primaryColor),
-                      title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(
-                        reachText,
-                        style: TextStyle(
-                          color: isLowStock ? Colors.orange : (daysRemaining != null ? Colors.teal : null),
-                          fontWeight: (isLowStock || daysRemaining != null) ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 12,
-                        ),
-                      ),
-                      trailing: _buildMedicationTrailing(context, med, provider),
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
+            return StreamBuilder<List<MedicationAccessory>>(
+              stream: db.watchAccessoriesForMedication(med.id),
+              builder: (context, snapshot) {
+                final links = snapshot.data ?? [];
+                final hasAccessories = links.isNotEmpty;
+
+                return Container(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isLowStock 
+                        ? Colors.orange.withOpacity(0.15) 
+                        : Theme.of(context).cardColor.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: isLowStock ? Colors.orange.withOpacity(0.3) : Colors.white.withOpacity(0.1),
                     ),
-              ),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6)),
+                    ],
+                  ),
+                  child: Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: hasAccessories 
+                      ? ExpansionTile(
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
+                          collapsedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
+                          leading: _buildMedicationLeading(isLowStock, Theme.of(context).primaryColor),
+                          title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                color: isLowStock ? Colors.orange : (daysRemaining != null ? Colors.teal : Colors.grey),
+                                fontSize: 12,
+                                height: 1.4,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: reachText,
+                                  style: TextStyle(fontWeight: (isLowStock || daysRemaining != null) ? FontWeight.bold : FontWeight.normal),
+                                ),
+                                if (nextInf != null)
+                                  TextSpan(
+                                    text: nextInfText,
+                                    style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.w500),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          trailing: _buildMedicationTrailing(context, med, provider),
+                          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          children: [
+                            const Divider(height: 1),
+                            const SizedBox(height: 12),
+                            ...links.map((link) => _buildEmbeddedAccessoryItem(context, db, link, provider)),
+                          ],
+                        )
+                      : ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          leading: _buildMedicationLeading(isLowStock, Theme.of(context).primaryColor),
+                          title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                color: isLowStock ? Colors.orange : (daysRemaining != null ? Colors.teal : Colors.grey),
+                                fontSize: 12,
+                                height: 1.4,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: reachText,
+                                  style: TextStyle(fontWeight: (isLowStock || daysRemaining != null) ? FontWeight.bold : FontWeight.normal),
+                                ),
+                                if (nextInf != null)
+                                  TextSpan(
+                                    text: nextInfText,
+                                    style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.w500),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          trailing: _buildMedicationTrailing(context, med, provider),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
+                        ),
+                  ),
+                );
+              },
             );
           },
         );

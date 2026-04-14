@@ -206,6 +206,17 @@ class AppDatabase extends _$AppDatabase {
   
   Stream<List<PlannedInfusion>> watchTodayPlannedTreatments() => watchUpcomingPlannedTreatments(24);
   
+  Stream<List<PlannedInfusion>> watchPlannedTreatmentsRange({required int daysBack, required int daysForward}) {
+    final now = DateTime.now();
+    final startRange = DateTime(now.year, now.month, now.day).subtract(Duration(days: daysBack));
+    final endRange = DateTime(now.year, now.month, now.day).add(Duration(days: daysForward + 1));
+    
+    return (select(plannedInfusions)
+      ..where((t) => t.date.isBetweenValues(startRange, endRange))
+      ..orderBy([(t) => OrderingTerm(expression: t.date)]))
+      .watch();
+  }
+
   Stream<List<PlannedInfusion>> watchUpcomingPlannedTreatments(int hours) {
     final now = DateTime.now();
     final endRange = now.add(Duration(hours: hours));

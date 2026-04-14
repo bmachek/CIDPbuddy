@@ -10,8 +10,16 @@ import 'package:drift/drift.dart' show Value;
 import 'package:igkeeper/core/services/medication_service.dart';
 import 'package:igkeeper/core/theme/app_theme.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  bool _showPast = false;
+  bool _showFuture = false;
 
   @override
   Widget build(BuildContext context) {
@@ -66,38 +74,61 @@ class DashboardPage extends StatelessWidget {
             ),
           ),
           StreamBuilder<List<PlannedInfusion>>(
-            stream: db.watchUpcomingPlannedTreatments(48),
+            stream: db.watchPlannedTreatmentsRange(daysBack: 7, daysForward: 30),
             builder: (context, snapshot) {
-              final todayTreatments = snapshot.data ?? [];
-              
-              if (todayTreatments.isEmpty) {
-                return const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle_outline_rounded, size: 48, color: Colors.teal),
-                        SizedBox(height: 16),
-                        Text('Alles erledigt für heute!', style: TextStyle(color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                );
-              }
+              final allTreatments = snapshot.data ?? [];
+              final now = DateTime.now();
+              final todayStart = DateTime(now.year, now.month, now.day);
+              final todayEnd = todayStart.add(const Duration(days: 1));
+
+              final pastTreatments = allTreatments.where((t) => t.date.isBefore(todayStart)).toList();
+              final todayTreatments = allTreatments.where((t) => t.date.isAfter(todayStart) && t.date.isBefore(todayEnd)).toList();
+              final futureTreatments = allTreatments.where((t) => t.date.isAfter(todayEnd)).toList();
 
               return SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _buildTreatmentCard(context, db, todayTreatments[index]),
-                    childCount: todayTreatments.length,
-                  ),
+                  delegate: SliverChildListDelegate([
+                    if (pastTreatments.isNotEmpty)
+                      _buildExpansionSection(
+                        title: 'VERGANGENE TERMINE (${pastTreatments.length})',
+                        icon: Icons.history_rounded,
+                        isExpanded: _showPast,
+                        onToggle: (val) => setState(() => _showPast = val),
+                        children: pastTreatments.map((t) => _buildDatedTreatmentCard(context, db, t)).toList(),
+                      ),
+                    
+                    if (todayTreatments.isEmpty && !_showPast && !_showFuture)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              Icon(Icons.check_circle_outline_rounded, size: 48, color: Colors.teal),
+                              SizedBox(height: 16),
+                              Text('Alles erledigt für heute!', style: TextStyle(color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      ..._buildTodayList(context, db, todayTreatments),
+
+                    if (futureTreatments.isNotEmpty)
+                      _buildExpansionSection(
+                        title: 'ZUKÜNFTIGE TERMINE (${futureTreatments.length})',
+                        icon: Icons.event_repeat_rounded,
+                        isExpanded: _showFuture,
+                        onToggle: (val) => setState(() => _showFuture = val),
+                        children: _groupAndBuildFutureList(context, db, futureTreatments),
+                      ),
+                    
+                    const SizedBox(height: 100),
+                  ]),
                 ),
               );
             },
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -442,7 +473,38 @@ class DashboardPage extends StatelessWidget {
         final timeStr = DateFormat('HH:mm').format(medDate);
         final isPill = med.type == MedicationType.pill;
 
-        final onAction = () {
+        final onAction = () async {
+          if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
+            // Direct completion if no workflow requirements
+            final diaryProvider = Provider.of<DiaryProvider>(context, listen: false);
+            await diaryProvider.logInfusion(
+              medicationId: treatment.medicationId,
+              dosage: treatment.dosage,
+              date: treatment.date,
+            );
+            await db.completePlannedInfusion(treatment.id);
+            await NotificationService().cancelTreatmentReminders(treatment.id);
+            
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text('${med.name} erledigt!')),
+                    ],
+                  ),
+                  backgroundColor: Colors.green.shade800,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                ),
+              );
+            }
+            return;
+          }
+
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -573,6 +635,107 @@ class DashboardPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildExpansionSection({
+    required String title,
+    required IconData icon,
+    required bool isExpanded,
+    required ValueChanged<bool> onToggle,
+    required List<Widget> children,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: ExpansionTile(
+        initiallyExpanded: isExpanded,
+        onExpansionChanged: onToggle,
+        leading: Icon(icon, color: Colors.grey),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+            color: Colors.grey,
+          ),
+        ),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        children: children,
+      ),
+    );
+  }
+
+  List<Widget> _buildTodayList(BuildContext context, AppDatabase db, List<PlannedInfusion> treatments) {
+    if (treatments.isEmpty) return [];
+    
+    return treatments.asMap().entries.map((entry) {
+      final index = entry.key;
+      final treatment = entry.value;
+      final bool showTimeSeparator = index > 0 && 
+          (treatments[index - 1].date.hour != treatment.date.hour || treatments[index - 1].date.minute != treatment.date.minute);
+
+      return Column(
+        children: [
+          if (showTimeSeparator)
+             Padding(
+               padding: const EdgeInsets.symmetric(vertical: 8),
+               child: Row(
+                 children: [
+                   const Expanded(child: Divider(indent: 16, endIndent: 16)),
+                   Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle)),
+                   const Expanded(child: Divider(indent: 16, endIndent: 16)),
+                 ],
+               ),
+             ),
+          _buildTreatmentCard(context, db, treatment),
+        ],
+      );
+    }).toList();
+  }
+
+  List<Widget> _groupAndBuildFutureList(BuildContext context, AppDatabase db, List<PlannedInfusion> treatments) {
+    final List<Widget> list = [];
+    DateTime? lastDate;
+    
+    for (var i = 0; i < treatments.length; i++) {
+      final t = treatments[i];
+      final date = DateTime(t.date.year, t.date.month, t.date.day);
+      
+      if (lastDate == null || !DateUtils.isSameDay(lastDate, date)) {
+        list.add(Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(
+            DateFormat('EEEE, d. MMMM').format(date).toUpperCase(),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+          ),
+        ));
+        lastDate = date;
+      }
+      
+      list.add(_buildTreatmentCard(context, db, t));
+    }
+    return list;
+  }
+
+  Widget _buildDatedTreatmentCard(BuildContext context, AppDatabase db, PlannedInfusion treatment) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16, top: 4),
+          child: Text(
+            DateFormat('dd.MM. HH:mm').format(treatment.date),
+            style: const TextStyle(fontSize: 10, color: Colors.grey),
+          ),
+        ),
+        _buildTreatmentCard(context, db, treatment),
+      ],
     );
   }
 }
