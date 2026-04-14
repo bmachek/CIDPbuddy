@@ -39,7 +39,7 @@ class DiaryPage extends StatelessWidget {
               if (entries.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: _buildEmptyState(),
+                  child: _buildEmptyState(context),
                 )
               else
                 SliverPadding(
@@ -189,7 +189,7 @@ class DiaryPage extends StatelessWidget {
     return Colors.green;
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
