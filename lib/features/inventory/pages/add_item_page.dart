@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/inventory_provider.dart';
 import '../../../core/database/database.dart';
+import '../../diary/pages/add_schedule_page.dart';
 
 class AddItemPage extends StatefulWidget {
   const AddItemPage({super.key});
@@ -114,22 +115,31 @@ class _AddItemPageState extends State<AddItemPage> {
       final stock = double.tryParse(_stockController.text) ?? 0;
       
       if (_type == 'Medikament') {
-        await provider.addMedication(
+        final id = await provider.addMedication(
           name: _nameController.text,
           pzn: _pznController.text,
           stock: stock,
           unit: _unitController.text,
           type: _medType,
         );
+        
+        if (mounted) {
+          // Instead of just closing, we now immediately ask for the schedule
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AddSchedulePage(preselectedMedicationId: id),
+            ),
+          );
+        }
       } else {
         await provider.addAccessory(
           name: _nameController.text,
           stock: stock,
           unit: _unitController.text,
         );
+        if (mounted) Navigator.pop(context);
       }
-      
-      if (mounted) Navigator.pop(context);
     }
   }
 }

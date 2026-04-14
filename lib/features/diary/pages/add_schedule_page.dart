@@ -7,7 +7,8 @@ import '../../../core/services/scheduler_service.dart';
 
 class AddSchedulePage extends StatefulWidget {
   final InfusionSchedule? initialSchedule;
-  const AddSchedulePage({super.key, this.initialSchedule});
+  final int? preselectedMedicationId;
+  const AddSchedulePage({super.key, this.initialSchedule, this.preselectedMedicationId});
 
   @override
   State<AddSchedulePage> createState() => _AddSchedulePageState();
@@ -85,10 +86,16 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
           final medications = snapshot.data!;
 
           // Initialize selected medication on first load
-          if (_isFirstLoad && widget.initialSchedule != null) {
-            try {
-              _selectedMedication = medications.firstWhere((m) => m.id == widget.initialSchedule!.medicationId);
-            } catch (_) {}
+          if (_isFirstLoad) {
+            if (widget.initialSchedule != null) {
+              try {
+                _selectedMedication = medications.firstWhere((m) => m.id == widget.initialSchedule!.medicationId);
+              } catch (_) {}
+            } else if (widget.preselectedMedicationId != null) {
+              try {
+                _selectedMedication = medications.firstWhere((m) => m.id == widget.preselectedMedicationId);
+              } catch (_) {}
+            }
             _isFirstLoad = false;
           }
 

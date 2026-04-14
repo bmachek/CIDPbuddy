@@ -127,22 +127,24 @@ class DiaryPage extends StatelessWidget {
                   Text(timeStr, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.w600)),
                 ],
               ),
-              if (log.batchNumber != null && log.batchNumber!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13)),
-              ],
+              if (log.batchNumber != null && log.batchNumber!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13)),
+                ),
               if (log.notes != null && log.notes!.isNotEmpty)
                 Text(log.notes!, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-              if (log.bodyWeight != null) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).primaryColor.withOpacity(0.5)),
-                    const SizedBox(width: 4),
-                    Text('${log.bodyWeight} kg', style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                  ],
+              if (log.bodyWeight != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).primaryColor.withOpacity(0.5)),
+                      const SizedBox(width: 4),
+                      Text('${log.bodyWeight} kg', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                    ],
+                  ),
                 ),
-              ],
             ],
           ),
         ),

@@ -18,8 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const DashboardPage(),
     const DiaryPage(),
-    const InventoryPage(),
-    const PlanningPage(),
+    const InventoryPage(), // This will be renamed soon
     const SettingsPage(),
   ];
 
@@ -62,14 +61,9 @@ class _MainScreenState extends State<MainScreen> {
               label: 'Tagebuch',
             ),
             NavigationDestination(
-              icon: Icon(Icons.inventory_2_outlined),
-              selectedIcon: Icon(Icons.inventory_2),
-              label: 'Bestand',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.event_note_outlined),
-              selectedIcon: Icon(Icons.event_note),
-              label: 'Planung',
+              icon: Icon(Icons.medication_outlined),
+              selectedIcon: Icon(Icons.medication),
+              label: 'Medikation',
             ),
             NavigationDestination(
               icon: Icon(Icons.settings_outlined),

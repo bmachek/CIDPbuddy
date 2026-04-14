@@ -10,14 +10,14 @@ class InventoryProvider extends ChangeNotifier {
   Stream<List<Medication>> get medicationsStream => _db.watchAllMedications();
   Stream<List<Accessory>> get accessoriesStream => _db.watchAllAccessories();
 
-  Future<void> addMedication({
+  Future<int> addMedication({
     required String name,
     required String pzn,
     required double stock,
     required String unit,
     required MedicationType type,
   }) async {
-    await _db.insertMedication(MedicationsCompanion.insert(
+    final id = await _db.insertMedication(MedicationsCompanion.insert(
       name: name,
       pzn: Value(pzn),
       stock: Value(stock),
@@ -25,6 +25,7 @@ class InventoryProvider extends ChangeNotifier {
       type: Value(type),
     ));
     notifyListeners();
+    return id;
   }
 
   Future<void> addAccessory({

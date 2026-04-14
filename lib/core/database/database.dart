@@ -83,7 +83,7 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(medications, medications.type);
         await m.addColumn(infusionSchedules, infusionSchedules.intakeTimes);
       }
-      if (from < 4) {
+      if (to >= 4 && from < 4) {
         await m.addColumn(infusionLog, infusionLog.bodyWeight);
         await m.addColumn(plannedInfusions, plannedInfusions.bodyWeight);
       }
