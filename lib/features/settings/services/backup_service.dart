@@ -12,7 +12,15 @@ class BackupService {
     if (await dbFile.exists()) {
       // Create a temporary copy to share
       final tempDir = await getTemporaryDirectory();
-      final tempFile = await dbFile.copy(p.join(tempDir.path, 'igkeeper_backup.sqlite'));
+      final backupPath = p.join(tempDir.path, 'igkeeper_backup.sqlite');
+      
+      // Ensure the directory exists
+      final backupFile = File(backupPath);
+      if (!await backupFile.parent.exists()) {
+        await backupFile.parent.create(recursive: true);
+      }
+      
+      final tempFile = await dbFile.copy(backupPath);
 
       await Share.shareXFiles(
         [XFile(tempFile.path)],

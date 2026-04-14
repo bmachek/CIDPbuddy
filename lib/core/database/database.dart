@@ -20,6 +20,8 @@ class Medications extends Table {
   BoolColumn get trackBatchNumber => boolean().withDefault(const Constant(true))();
   BoolColumn get trackWeight => boolean().withDefault(const Constant(true))();
   BoolColumn get useTimer => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get discontinuedAt => dateTime().nullable()();
 }
 
 class Accessories extends Table {
@@ -113,7 +115,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 10; // Incremented schema version to 10 for MedicationAccessories mandatory flag
+  int get schemaVersion => 11; // Incremented schema version to 11 for Medications createdAt and discontinuedAt
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -147,6 +149,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (to >= 10 && from < 10) {
         await m.addColumn(medicationAccessories, medicationAccessories.isMandatory);
+      }
+      if (to >= 11 && from < 11) {
+        await m.addColumn(medications, medications.createdAt);
+        await m.addColumn(medications, medications.discontinuedAt);
       }
     },
   );

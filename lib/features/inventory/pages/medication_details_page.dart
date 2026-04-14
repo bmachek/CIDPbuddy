@@ -226,7 +226,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   icon: const Icon(Icons.link_off_rounded, color: Colors.grey),
                   onPressed: () async {
                     await (db.delete(db.medicationAccessories)..where((t) => t.id.equals(link.id))).go();
-                    (context as Element).markNeedsBuild();
+                    if (context.mounted) (context as Element).markNeedsBuild();
                   },
                 ),
               ],
@@ -282,7 +282,9 @@ class MedicationDetailsPage extends StatelessWidget {
           ),
         ],
       ),
-    ).then((_) => (context as Element).markNeedsBuild());
+    ).then((_) {
+      if (context.mounted) (context as Element).markNeedsBuild();
+    });
   }
 
   void _showLinkAccessoryDialog(BuildContext context, AppDatabase db, Medication medication) async {
@@ -350,7 +352,9 @@ class MedicationDetailsPage extends StatelessWidget {
           ],
         );
       },
-    ).then((_) => (context as Element).markNeedsBuild());
+    ).then((_) {
+      if (context.mounted) (context as Element).markNeedsBuild();
+    });
   }
 
   void _showCreateAccessoryDialog(BuildContext context, AppDatabase db, Medication medication) async {
@@ -443,7 +447,9 @@ class MedicationDetailsPage extends StatelessWidget {
           ],
         );
       },
-    ).then((_) => (context as Element).markNeedsBuild());
+    ).then((_) {
+      if (context.mounted) (context as Element).markNeedsBuild();
+    });
   }
 
   void _showEditMedicationDialog(BuildContext context, AppDatabase db, Medication med) {
@@ -767,7 +773,9 @@ class MedicationDetailsPage extends StatelessWidget {
           ],
         ),
       ),
-    ).then((_) => (context as Element).markNeedsBuild());
+    ).then((_) {
+      if (context.mounted) (context as Element).markNeedsBuild();
+    });
   }
 }
 
