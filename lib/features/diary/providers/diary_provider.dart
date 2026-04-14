@@ -14,6 +14,7 @@ class DiaryProvider extends ChangeNotifier {
     required double dosage,
     String? batchNumber,
     String? notes,
+    double? bodyWeight,
     DateTime? date,
   }) async {
     // 1. Transaction to ensure database integrity
@@ -36,6 +37,7 @@ class DiaryProvider extends ChangeNotifier {
         dosage: dosage,
         batchNumber: Value(batchNumber),
         notes: Value(notes),
+        bodyWeight: Value(bodyWeight),
       ));
     });
 

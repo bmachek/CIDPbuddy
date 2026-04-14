@@ -32,6 +32,7 @@ class InfusionLog extends Table {
   RealColumn get dosage => real()();
   TextColumn get batchNumber => text().nullable()();
   TextColumn get notes => text().nullable()();
+  RealColumn get bodyWeight => real().nullable()();
 }
 
 class MedicationAccessories extends Table {
@@ -49,6 +50,7 @@ class PlannedInfusions extends Table {
   TextColumn get notes => text().nullable()();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   IntColumn get scheduleId => integer().nullable().references(InfusionSchedules, #id)();
+  RealColumn get bodyWeight => real().nullable()();
 }
 
 class InfusionSchedules extends Table {
@@ -68,7 +70,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3; // Incremented schema version
+  int get schemaVersion => 4; // Incremented schema version to 4 for bodyWeight
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -80,6 +82,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 3) {
         await m.addColumn(medications, medications.type);
         await m.addColumn(infusionSchedules, infusionSchedules.intakeTimes);
+      }
+      if (from < 4) {
+        await m.addColumn(infusionLog, infusionLog.bodyWeight);
+        await m.addColumn(plannedInfusions, plannedInfusions.bodyWeight);
       }
     },
   );

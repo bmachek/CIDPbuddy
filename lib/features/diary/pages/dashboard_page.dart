@@ -176,7 +176,7 @@ class DashboardPage extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isPill ? Icons.pill_rounded : Icons.vaccines_rounded,
+                isPill ? Icons.medication_rounded : Icons.vaccines_rounded,
                 color: isPill ? Colors.orange : Colors.blue,
               ),
             ),

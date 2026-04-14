@@ -131,9 +131,17 @@ class DiaryPage extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13)),
               ],
-              if (log.notes != null && log.notes!.isNotEmpty) ...[
-                const SizedBox(height: 4),
                 Text(log.notes!, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+              ],
+              if (log.bodyWeight != null) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).primaryColor.withOpacity(0.5)),
+                    const SizedBox(width: 4),
+                    Text('${log.bodyWeight} kg', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                  ],
+                ),
               ],
             ],
           ),
@@ -177,6 +185,7 @@ class DiaryPage extends StatelessWidget {
 
   void _showEditLogDialog(BuildContext context, AppDatabase db, InfusionLogData log) {
     final batchController = TextEditingController(text: log.batchNumber ?? '');
+    final weightController = TextEditingController(text: log.bodyWeight?.toString() ?? '');
     final notesController = TextEditingController(text: log.notes ?? '');
     DateTime selectedDate = log.date;
 
@@ -220,6 +229,12 @@ class DiaryPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               TextField(
+                controller: weightController,
+                decoration: const InputDecoration(labelText: 'Körpergewicht (kg)', border: OutlineInputBorder()),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              ),
+              const SizedBox(height: 12),
+              TextField(
                 controller: notesController,
                 decoration: const InputDecoration(labelText: 'Notizen', border: OutlineInputBorder()),
                 maxLines: 3,
@@ -233,6 +248,7 @@ class DiaryPage extends StatelessWidget {
                 await db.updateInfusionLog(log.copyWith(
                   date: selectedDate,
                   batchNumber: drift.Value(batchController.text),
+                  bodyWeight: drift.Value(double.tryParse(weightController.text.replaceAll(',', '.'))),
                   notes: drift.Value(notesController.text),
                 ));
                 if (context.mounted) Navigator.pop(context);

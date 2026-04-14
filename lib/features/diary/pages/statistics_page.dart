@@ -165,6 +165,12 @@ class StatisticsPage extends StatelessWidget {
     final total = logs.fold<double>(0, (sum, item) => sum + item.dosage);
     final count = logs.length;
     final avg = count > 0 ? total / count : 0.0;
+    
+    // Find last recorded weight
+    double? lastWeight;
+    try {
+      lastWeight = logs.firstWhere((l) => l.bodyWeight != null).bodyWeight;
+    } catch (_) {}
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -181,6 +187,8 @@ class StatisticsPage extends StatelessWidget {
           _buildSummaryRow(context, 'Gesamt-Infusionen', count.toString(), Icons.history_rounded),
           _buildSummaryRow(context, 'Gesamt-Dosis', '${total.toStringAsFixed(1)} Einheiten', Icons.summarize_rounded),
           _buildSummaryRow(context, 'Ø Dosis / Gabe', '${avg.toStringAsFixed(1)} Einheiten', Icons.analytics_rounded),
+          if (lastWeight != null)
+            _buildSummaryRow(context, 'Letztes Gewicht', '${lastWeight.toStringAsFixed(1)} kg', Icons.monitor_weight_rounded),
         ],
       ),
     );

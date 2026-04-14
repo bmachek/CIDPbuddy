@@ -29,6 +29,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
   final _batchController = TextEditingController();
   late final TextEditingController _dosageController;
   final _notesController = TextEditingController();
+  final _weightController = TextEditingController();
   late DateTime _selectedDate;
 
   @override
@@ -171,6 +172,19 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
             ),
             const SizedBox(height: 20),
             TextFormField(
+              controller: _weightController,
+              decoration: InputDecoration(
+                labelText: 'Körpergewicht (kg)',
+                prefixIcon: const Icon(Icons.monitor_weight_rounded),
+                suffixText: 'kg',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                filled: true,
+                fillColor: Theme.of(context).cardColor,
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
               controller: _notesController,
               decoration: InputDecoration(
                 labelText: 'Notizen (Befinden, Verlauf)',
@@ -279,6 +293,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
         batchNumber: _batchController.text,
         notes: _notesController.text,
+        bodyWeight: double.tryParse(_weightController.text.replaceAll(',', '.')),
         date: _selectedDate,
       );
       

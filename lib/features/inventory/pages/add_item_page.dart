@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/inventory_provider.dart';
+import '../../../core/database/database.dart';
 
 class AddItemPage extends StatefulWidget {
   const AddItemPage({super.key});
