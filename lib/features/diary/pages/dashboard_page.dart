@@ -66,13 +66,13 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 24),
                   _buildPendingOrdersSection(db),
                   const SizedBox(height: 32),
-                  const Text(
+                  Text(
                     'ANSTEHEND (NÄCHSTE 48H)',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.5,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -106,14 +106,14 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     
                     if (todayTreatments.isEmpty && !_showPast && !_showFuture)
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),
                         child: Center(
                           child: Column(
                             children: [
-                              Icon(Icons.check_circle_outline_rounded, size: 48, color: Colors.teal),
-                              SizedBox(height: 16),
-                              Text('Alles erledigt für heute!', style: TextStyle(color: Colors.grey)),
+                              const Icon(Icons.check_circle_outline_rounded, size: 48, color: Colors.teal),
+                              const SizedBox(height: 16),
+                              Text('Alles erledigt für heute!', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                             ],
                           ),
                         ),
@@ -283,7 +283,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                             ),
                                             Text(
                                               'Niedriger Bestand: ${[...lowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
-                                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ],
@@ -340,13 +340,13 @@ class _DashboardPageState extends State<DashboardPage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'AUSSTEHENDE LIEFERUNGEN',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.5,
-                color: Colors.grey,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 12),
@@ -391,7 +391,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       Text(
                         'Lieferdatum: ${DateFormat('dd.MM.yyyy').format(order.deliveryDate!)}',
                         style: TextStyle(
-                          color: isOverdue ? Colors.red : Colors.grey,
+                          color: isOverdue ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
                         ),
                       )
@@ -675,14 +675,14 @@ class _DashboardPageState extends State<DashboardPage> {
       child: ExpansionTile(
         initiallyExpanded: isExpanded,
         onExpansionChanged: onToggle,
-        leading: Icon(icon, color: Colors.grey),
+        leading: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.2,
-            color: Colors.grey,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
@@ -733,7 +733,7 @@ class _DashboardPageState extends State<DashboardPage> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
             DateFormat('EEEE, d. MMMM').format(date).toUpperCase(),
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ));
         lastDate = date;
@@ -752,7 +752,7 @@ class _DashboardPageState extends State<DashboardPage> {
           padding: const EdgeInsets.only(left: 16, top: 4),
           child: Text(
             DateFormat('dd.MM. HH:mm').format(treatment.date),
-            style: const TextStyle(fontSize: 10, color: Colors.grey),
+            style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ),
         _buildTreatmentCard(context, db, treatment),

@@ -26,7 +26,7 @@ class AppTheme {
       onTertiary: Colors.white,
       surface: surfaceLight,
       onSurface: const Color(0xFF1A1A1A),
-      onSurfaceVariant: const Color(0xFF4A4A4A),
+      onSurfaceVariant: const Color(0xFF333333),
     ),
     textTheme: GoogleFonts.outfitTextTheme(),
     appBarTheme: AppBarTheme(
@@ -69,7 +69,7 @@ class AppTheme {
         if (states.contains(WidgetState.selected)) {
           return const IconThemeData(color: primaryBase, size: 28);
         }
-        return IconThemeData(color: const Color(0xFF5A5A5A), size: 24);
+        return IconThemeData(color: const Color(0xFF333333), size: 24);
       }),
     ),
     dividerTheme: DividerThemeData(
@@ -91,7 +91,7 @@ class AppTheme {
       onTertiary: Colors.black,
       surface: surfaceDark,
       onSurface: Colors.white,
-      onSurfaceVariant: const Color(0xFFB0B0B0),
+      onSurfaceVariant: const Color(0xFFE0E0E0),
     ),
     textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
     appBarTheme: AppBarTheme(
@@ -134,7 +134,7 @@ class AppTheme {
         if (states.contains(WidgetState.selected)) {
           return const IconThemeData(color: primaryLight, size: 28);
         }
-        return const IconThemeData(color: Color(0xFFB0B0B0), size: 24);
+        return const IconThemeData(color: Color(0xFFE0E0E0), size: 24);
       }),
     ),
     dividerTheme: DividerThemeData(

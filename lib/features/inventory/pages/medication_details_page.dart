@@ -284,11 +284,11 @@ class MedicationDetailsPage extends StatelessWidget {
                     ),
                   ),
                 IconButton(
-                  icon: const Icon(Icons.settings_outlined, color: Colors.grey),
+                  icon: Icon(Icons.settings_outlined, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   onPressed: () => _showEditLinkDialog(context, db, link, acc),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.link_off_rounded, color: Colors.grey),
+                  icon: Icon(Icons.link_off_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   onPressed: () async {
                     await (db.delete(db.medicationAccessories)..where((t) => t.id.equals(link.id))).go();
                     if (context.mounted) (context as Element).markNeedsBuild();
@@ -774,7 +774,7 @@ class MedicationDetailsPage extends StatelessWidget {
             subtitle: const Text('Barcode scannen oder manuell eingeben'),
             value: medication.trackBatchNumber,
             onChanged: (val) => provider.updateMedication(medication.copyWith(trackBatchNumber: val)),
-            secondary: const Icon(Icons.qr_code_rounded, color: Colors.blueGrey),
+            secondary: Icon(Icons.qr_code_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const Divider(height: 1),
           SwitchListTile(
@@ -782,7 +782,7 @@ class MedicationDetailsPage extends StatelessWidget {
             subtitle: const Text('Gewicht bei der Infusion protokollieren'),
             value: medication.trackWeight,
             onChanged: (val) => provider.updateMedication(medication.copyWith(trackWeight: val)),
-            secondary: const Icon(Icons.monitor_weight_rounded, color: Colors.blueGrey),
+            secondary: Icon(Icons.monitor_weight_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const Divider(height: 1),
           SwitchListTile(
@@ -790,7 +790,7 @@ class MedicationDetailsPage extends StatelessWidget {
             subtitle: const Text('Premedikation-Timer vor der Infusion'),
             value: medication.useTimer,
             onChanged: (val) => provider.updateMedication(medication.copyWith(useTimer: val)),
-            secondary: const Icon(Icons.av_timer_rounded, color: Colors.blueGrey),
+            secondary: Icon(Icons.av_timer_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ],
       ),

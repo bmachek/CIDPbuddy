@@ -122,7 +122,7 @@ class DiaryPage extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(timeStr, style: TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(timeStr, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -148,7 +148,7 @@ class DiaryPage extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 10, color: Colors.grey),
+          Icon(icon, size: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
           const SizedBox(width: 4),
           Text(text, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
         ],
@@ -165,7 +165,7 @@ class DiaryPage extends StatelessWidget {
     
     return Row(
       children: [
-        const Text('Symptome:', style: TextStyle(fontSize: 10, color: Colors.grey)),
+        Text('Symptome:', style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant)),
         const SizedBox(width: 6),
         ...List.generate(5, (i) {
           final score = (i < scores.length) ? scores[i] : 0;
@@ -208,10 +208,10 @@ class DiaryPage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Erfasse deine erste Infusion, um den Überblick über deine Behandlung zu behalten.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -257,7 +257,7 @@ class DiaryPage extends StatelessWidget {
                   child: Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13)),
                 ),
               if (log.notes != null && log.notes!.isNotEmpty)
-                Text(log.notes!, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                Text(log.notes!, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
               if (log.bodyWeight != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 4.0),
@@ -265,7 +265,7 @@ class DiaryPage extends StatelessWidget {
                     children: [
                       Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).primaryColor.withOpacity(0.5)),
                       const SizedBox(width: 4),
-                      Text('${log.bodyWeight} kg', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                      Text('${log.bodyWeight} kg', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                     ],
                   ),
                 ),
@@ -462,7 +462,7 @@ class DiaryPage extends StatelessWidget {
                         builder: (context, nameSnapshot) {
                           final name = nameSnapshot.data?.name ?? '...';
                           final unit = nameSnapshot.data?.unit ?? '';
-                          return Text('• ${item.quantity.toStringAsFixed(0)} $unit $name', style: const TextStyle(fontSize: 12, color: Colors.grey));
+                          return Text('• ${item.quantity.toStringAsFixed(0)} $unit $name', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant));
                         },
                       );
                     }).toList(),

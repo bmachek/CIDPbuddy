@@ -161,7 +161,7 @@ class InventoryPage extends StatelessWidget {
                           title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text('Bestand: ${acc.stock.toStringAsFixed(0)} ${acc.unit}'),
                           trailing: IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.grey),
+                            icon: Icon(Icons.edit_outlined, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
                             onPressed: () => _showEditAccessoryDialog(context, db, acc),
                           ),
                         ),
@@ -324,7 +324,7 @@ class InventoryPage extends StatelessWidget {
               const Icon(Icons.build_circle_rounded, color: Colors.teal, size: 16),
               const SizedBox(width: 12),
               Expanded(child: Text(acc.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
-              Text('${acc.stock.toStringAsFixed(0)} ${acc.unit}', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+              Text('${acc.stock.toStringAsFixed(0)} ${acc.unit}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
               const SizedBox(width: 8),
               IconButton(
                 icon: Icon(Icons.edit_outlined, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),

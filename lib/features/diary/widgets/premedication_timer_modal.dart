@@ -138,7 +138,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
           const SizedBox(height: 8),
           const Text(
             'Ping jede Minute • 15 Min empfohlen',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: Color(0xFF333333)), // Ensuring dark in light mode
           ),
           const SizedBox(height: 40),
           
@@ -168,7 +168,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                       fontFamily: 'monospace',
                     ),
                   ),
-                  const Text('verbleibend', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text('verbleibend', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -210,7 +210,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                   children: [
                     const Text('Spritzen-Fortschritt', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                     Text('${(remainingMl).toStringAsFixed(0)} / ${_totalSeconds ~/ 60} ml', 
-                         style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                         style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -255,7 +255,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                 icon: Icons.refresh_rounded,
                 onPressed: _resetTimer,
                 color: Colors.grey.shade200,
-                iconColor: Colors.black54,
+                iconColor: Theme.of(context).colorScheme.onSurface,
               ),
               const SizedBox(width: 24),
               _buildControlButton(
@@ -270,7 +270,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                 icon: Icons.timer_outlined,
                 onPressed: _isRunning ? null : _showDurationPicker,
                 color: Colors.grey.shade200,
-                iconColor: Colors.black54,
+                iconColor: Theme.of(context).colorScheme.onSurface,
               ),
             ],
           ),

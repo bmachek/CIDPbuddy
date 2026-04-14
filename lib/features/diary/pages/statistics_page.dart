@@ -44,7 +44,7 @@ class StatisticsPage extends StatelessWidget {
                     const SizedBox(height: 8),
                     const Text(
                       'Übersicht der verabreichten Einheiten der letzten 6 Monate',
-                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                      style: TextStyle(color: Color(0xFF333333), fontSize: 13), // Ensuring dark in light mode
                     ),
                     const SizedBox(height: 32),
                     SizedBox(
@@ -87,7 +87,7 @@ class StatisticsPage extends StatelessWidget {
                                 reservedSize: 40,
                                 getTitlesWidget: (value, meta) => Text(
                                   value.toInt().toString(),
-                                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                  style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                 ),
                               ),
                             ),
@@ -204,7 +204,7 @@ class StatisticsPage extends StatelessWidget {
             children: [
               Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary.withOpacity(0.7)),
               const SizedBox(width: 8),
-              Text(label, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
+              Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500)),
             ],
           ),
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
