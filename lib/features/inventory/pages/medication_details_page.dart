@@ -59,17 +59,35 @@ class MedicationDetailsPage extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () => _showAddAccessoryDialog(context, db),
-                  icon: const Icon(Icons.add_link_rounded),
-                  label: const Text('Zubehör verknüpfen'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                    foregroundColor: Theme.of(context).primaryColor,
-                    elevation: 0,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showLinkAccessoryDialog(context, db),
+                        icon: const Icon(Icons.link_rounded),
+                        label: const Text('Verknüpfen'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showCreateAccessoryDialog(context, db),
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('Neu & Verknüpfen'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 48),
                 _buildSectionHeader('Benachrichtigungen'),
@@ -142,101 +160,127 @@ class MedicationDetailsPage extends StatelessWidget {
     );
   }
 
-  void _showAddAccessoryDialog(BuildContext context, AppDatabase db) async {
+  void _showLinkAccessoryDialog(BuildContext context, AppDatabase db) async {
     final allAcc = await db.getAllAccessories();
     if (!context.mounted) return;
+
+    if (allAcc.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Zuerst Zubehör anlegen!')));
+      return;
+    }
 
     showDialog(
       context: context,
       builder: (context) {
         Accessory? selected;
-        bool createNew = false;
-        final nameController = TextEditingController();
-        final unitController = TextEditingController(text: 'Stk');
         final qtyController = TextEditingController(text: '1');
 
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Zubehör verknüpfen'),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          createNew ? 'Neues Zubehör anlegen' : 'Existierendes wählen',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                      ),
-                      Switch(
-                        value: createNew,
-                        onChanged: (val) => setState(() => createNew = val),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  if (!createNew) ...[
-                    if (allAcc.isEmpty)
-                      const Text('Kein Zubehör vorhanden. Bitte neu anlegen.', style: TextStyle(color: Colors.red, fontSize: 12))
-                    else
-                      DropdownButtonFormField<Accessory>(
-                        items: allAcc.map((a) => DropdownMenuItem(value: a, child: Text(a.name))).toList(),
-                        onChanged: (val) => selected = val,
-                        decoration: const InputDecoration(labelText: 'Zubehör wählen', border: OutlineInputBorder()),
-                      ),
-                  ] else ...[
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(labelText: 'Name des Zubehörs', border: OutlineInputBorder()),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: unitController,
-                      decoration: const InputDecoration(labelText: 'Einheit (z.B. Stk, Set)', border: OutlineInputBorder()),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: qtyController,
-                    decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
+        return AlertDialog(
+          title: const Text('Zubehör verknüpfen'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<Accessory>(
+                items: allAcc.map((a) => DropdownMenuItem(value: a, child: Text(a.name))).toList(),
+                onChanged: (val) => selected = val,
+                decoration: const InputDecoration(labelText: 'Zubehör wählen', border: OutlineInputBorder()),
               ),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
-                ElevatedButton(
-                  onPressed: () async {
-                    int? accId;
-                    if (createNew) {
-                      if (nameController.text.isNotEmpty) {
-                        accId = await db.insertAccessory(AccessoriesCompanion.insert(
-                          name: nameController.text,
-                          stock: const drift.Value(0.0),
-                          unit: unitController.text,
-                        ));
-                      }
-                    } else {
-                      accId = selected?.id;
-                    }
+              const SizedBox(height: 16),
+              TextField(
+                controller: qtyController,
+                decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            ElevatedButton(
+              onPressed: () async {
+                if (selected != null) {
+                  await db.insertMedicationAccessory(MedicationAccessoriesCompanion.insert(
+                    medicationId: medication.id,
+                    accessoryId: selected!.id,
+                    defaultQuantity: drift.Value(double.tryParse(qtyController.text) ?? 1.0),
+                  ));
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              child: const Text('Verknüpfen'),
+            ),
+          ],
+        );
+      },
+    ).then((_) => (context as Element).markNeedsBuild());
+  }
 
-                    if (accId != null) {
-                      await db.insertMedicationAccessory(MedicationAccessoriesCompanion.insert(
-                        medicationId: medication.id,
-                        accessoryId: accId,
-                        defaultQuantity: drift.Value(double.tryParse(qtyController.text) ?? 1.0),
-                      ));
-                      if (context.mounted) Navigator.pop(context);
-                    }
-                  },
-                  child: const Text('Verknüpfen'),
+  void _showCreateAccessoryDialog(BuildContext context, AppDatabase db) async {
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        final nameController = TextEditingController();
+        final unitController = TextEditingController(text: 'Stk');
+        final stockController = TextEditingController(text: '0');
+        final qtyController = TextEditingController(text: '1');
+
+        return AlertDialog(
+          title: const Text('Neues Zubehör anlegen'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Name des Zubehörs', border: OutlineInputBorder()),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: unitController,
+                  decoration: const InputDecoration(labelText: 'Einheit (z.B. Stk, Set)', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: stockController,
+                  decoration: const InputDecoration(labelText: 'Aktueller Lagerstand', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: qtyController,
+                  decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.number,
                 ),
               ],
-            );
-          }
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.isNotEmpty) {
+                  final accId = await db.insertAccessory(AccessoriesCompanion.insert(
+                    name: nameController.text,
+                    stock: drift.Value(double.tryParse(stockController.text) ?? 0.0),
+                    unit: unitController.text,
+                  ));
+
+                  await db.insertMedicationAccessory(MedicationAccessoriesCompanion.insert(
+                    medicationId: medication.id,
+                    accessoryId: accId,
+                    defaultQuantity: drift.Value(double.tryParse(qtyController.text) ?? 1.0),
+                  ));
+                  
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              child: const Text('Anlegen'),
+            ),
+          ],
         );
       },
     ).then((_) => (context as Element).markNeedsBuild());
