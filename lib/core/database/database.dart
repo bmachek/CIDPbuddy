@@ -45,14 +45,36 @@ class PlannedInfusions extends Table {
   RealColumn get dosage => real()();
   TextColumn get notes => text().nullable()();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  IntColumn get scheduleId => integer().nullable().references(InfusionSchedules, #id)();
 }
 
-@DriftDatabase(tables: [Medications, Accessories, InfusionLog, MedicationAccessories, PlannedInfusions])
+class InfusionSchedules extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get medicationId => integer().references(Medications, #id)();
+  RealColumn get dosage => real()();
+  TextColumn get frequencyType => text()(); // 'daily', 'interval', 'weekly', 'weekdays'
+  IntColumn get intervalValue => integer().nullable()(); // for 'interval' and 'weekly' (e.g., every 2 weeks)
+  TextColumn get selectedWeekdays => text().nullable()(); // comma separated: '1,3,5'
+  DateTimeColumn get startDate => dateTime()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+}
+
+@DriftDatabase(tables: [Medications, Accessories, InfusionLog, MedicationAccessories, PlannedInfusions, InfusionSchedules])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2; // Incremented schema version
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(infusionSchedules);
+        await m.addColumn(plannedInfusions, plannedInfusions.scheduleId);
+      }
+    },
+  );
 
   // Medications
   Future<List<Medication>> getAllMedications() => select(medications).get();
@@ -89,6 +111,15 @@ class AppDatabase extends _$AppDatabase {
       into(plannedInfusions).insert(entry);
   Future completePlannedInfusion(int id) =>
       (update(plannedInfusions)..where((t) => t.id.equals(id))).write(const PlannedInfusionsCompanion(isCompleted: Value(true)));
+  Future deletePlannedInfusionsForSchedule(int scheduleId) =>
+      (delete(plannedInfusions)..where((t) => t.scheduleId.equals(scheduleId) & t.isCompleted.equals(false))).go();
+
+  // Schedules
+  Stream<List<InfusionSchedule>> watchSchedules() => select(infusionSchedules).watch();
+  Future<List<InfusionSchedule>> getAllActiveSchedules() => (select(infusionSchedules)..where((t) => t.isActive.equals(true))).get();
+  Future<int> insertSchedule(InfusionSchedulesCompanion entry) => into(infusionSchedules).insert(entry);
+  Future deleteSchedule(int id) => (delete(infusionSchedules)..where((t) => t.id.equals(id))).go();
+  Future updateSchedule(InfusionSchedule schedule) => update(infusionSchedules).replace(schedule);
 }
 
 LazyDatabase _openConnection() {

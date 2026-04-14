@@ -6,12 +6,16 @@ import 'package:igkeeper/features/diary/providers/diary_provider.dart';
 import 'package:igkeeper/core/theme/app_theme.dart';
 import 'package:igkeeper/core/theme/theme_provider.dart';
 import 'package:igkeeper/features/reminders/services/notification_service.dart';
+import 'package:igkeeper/core/services/scheduler_service.dart';
 import 'package:igkeeper/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final db = AppDatabase();
   await NotificationService().init();
+  
+  // Initialize and sync infusion schedules
+  await SchedulerService(db).syncPlannedInfusions();
   
   runApp(
     MultiProvider(

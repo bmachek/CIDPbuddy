@@ -1422,6 +1422,537 @@ class MedicationAccessoriesCompanion
   }
 }
 
+class $InfusionSchedulesTable extends InfusionSchedules
+    with TableInfo<$InfusionSchedulesTable, InfusionSchedule> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InfusionSchedulesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _medicationIdMeta = const VerificationMeta(
+    'medicationId',
+  );
+  @override
+  late final GeneratedColumn<int> medicationId = GeneratedColumn<int>(
+    'medication_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES medications (id)',
+    ),
+  );
+  static const VerificationMeta _dosageMeta = const VerificationMeta('dosage');
+  @override
+  late final GeneratedColumn<double> dosage = GeneratedColumn<double>(
+    'dosage',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _frequencyTypeMeta = const VerificationMeta(
+    'frequencyType',
+  );
+  @override
+  late final GeneratedColumn<String> frequencyType = GeneratedColumn<String>(
+    'frequency_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _intervalValueMeta = const VerificationMeta(
+    'intervalValue',
+  );
+  @override
+  late final GeneratedColumn<int> intervalValue = GeneratedColumn<int>(
+    'interval_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _selectedWeekdaysMeta = const VerificationMeta(
+    'selectedWeekdays',
+  );
+  @override
+  late final GeneratedColumn<String> selectedWeekdays = GeneratedColumn<String>(
+    'selected_weekdays',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    medicationId,
+    dosage,
+    frequencyType,
+    intervalValue,
+    selectedWeekdays,
+    startDate,
+    isActive,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'infusion_schedules';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<InfusionSchedule> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('medication_id')) {
+      context.handle(
+        _medicationIdMeta,
+        medicationId.isAcceptableOrUnknown(
+          data['medication_id']!,
+          _medicationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_medicationIdMeta);
+    }
+    if (data.containsKey('dosage')) {
+      context.handle(
+        _dosageMeta,
+        dosage.isAcceptableOrUnknown(data['dosage']!, _dosageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dosageMeta);
+    }
+    if (data.containsKey('frequency_type')) {
+      context.handle(
+        _frequencyTypeMeta,
+        frequencyType.isAcceptableOrUnknown(
+          data['frequency_type']!,
+          _frequencyTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_frequencyTypeMeta);
+    }
+    if (data.containsKey('interval_value')) {
+      context.handle(
+        _intervalValueMeta,
+        intervalValue.isAcceptableOrUnknown(
+          data['interval_value']!,
+          _intervalValueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('selected_weekdays')) {
+      context.handle(
+        _selectedWeekdaysMeta,
+        selectedWeekdays.isAcceptableOrUnknown(
+          data['selected_weekdays']!,
+          _selectedWeekdaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InfusionSchedule map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InfusionSchedule(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      medicationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}medication_id'],
+      )!,
+      dosage: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}dosage'],
+      )!,
+      frequencyType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}frequency_type'],
+      )!,
+      intervalValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}interval_value'],
+      ),
+      selectedWeekdays: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}selected_weekdays'],
+      ),
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_date'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+    );
+  }
+
+  @override
+  $InfusionSchedulesTable createAlias(String alias) {
+    return $InfusionSchedulesTable(attachedDatabase, alias);
+  }
+}
+
+class InfusionSchedule extends DataClass
+    implements Insertable<InfusionSchedule> {
+  final int id;
+  final int medicationId;
+  final double dosage;
+  final String frequencyType;
+  final int? intervalValue;
+  final String? selectedWeekdays;
+  final DateTime startDate;
+  final bool isActive;
+  const InfusionSchedule({
+    required this.id,
+    required this.medicationId,
+    required this.dosage,
+    required this.frequencyType,
+    this.intervalValue,
+    this.selectedWeekdays,
+    required this.startDate,
+    required this.isActive,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['medication_id'] = Variable<int>(medicationId);
+    map['dosage'] = Variable<double>(dosage);
+    map['frequency_type'] = Variable<String>(frequencyType);
+    if (!nullToAbsent || intervalValue != null) {
+      map['interval_value'] = Variable<int>(intervalValue);
+    }
+    if (!nullToAbsent || selectedWeekdays != null) {
+      map['selected_weekdays'] = Variable<String>(selectedWeekdays);
+    }
+    map['start_date'] = Variable<DateTime>(startDate);
+    map['is_active'] = Variable<bool>(isActive);
+    return map;
+  }
+
+  InfusionSchedulesCompanion toCompanion(bool nullToAbsent) {
+    return InfusionSchedulesCompanion(
+      id: Value(id),
+      medicationId: Value(medicationId),
+      dosage: Value(dosage),
+      frequencyType: Value(frequencyType),
+      intervalValue: intervalValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(intervalValue),
+      selectedWeekdays: selectedWeekdays == null && nullToAbsent
+          ? const Value.absent()
+          : Value(selectedWeekdays),
+      startDate: Value(startDate),
+      isActive: Value(isActive),
+    );
+  }
+
+  factory InfusionSchedule.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InfusionSchedule(
+      id: serializer.fromJson<int>(json['id']),
+      medicationId: serializer.fromJson<int>(json['medicationId']),
+      dosage: serializer.fromJson<double>(json['dosage']),
+      frequencyType: serializer.fromJson<String>(json['frequencyType']),
+      intervalValue: serializer.fromJson<int?>(json['intervalValue']),
+      selectedWeekdays: serializer.fromJson<String?>(json['selectedWeekdays']),
+      startDate: serializer.fromJson<DateTime>(json['startDate']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'medicationId': serializer.toJson<int>(medicationId),
+      'dosage': serializer.toJson<double>(dosage),
+      'frequencyType': serializer.toJson<String>(frequencyType),
+      'intervalValue': serializer.toJson<int?>(intervalValue),
+      'selectedWeekdays': serializer.toJson<String?>(selectedWeekdays),
+      'startDate': serializer.toJson<DateTime>(startDate),
+      'isActive': serializer.toJson<bool>(isActive),
+    };
+  }
+
+  InfusionSchedule copyWith({
+    int? id,
+    int? medicationId,
+    double? dosage,
+    String? frequencyType,
+    Value<int?> intervalValue = const Value.absent(),
+    Value<String?> selectedWeekdays = const Value.absent(),
+    DateTime? startDate,
+    bool? isActive,
+  }) => InfusionSchedule(
+    id: id ?? this.id,
+    medicationId: medicationId ?? this.medicationId,
+    dosage: dosage ?? this.dosage,
+    frequencyType: frequencyType ?? this.frequencyType,
+    intervalValue: intervalValue.present
+        ? intervalValue.value
+        : this.intervalValue,
+    selectedWeekdays: selectedWeekdays.present
+        ? selectedWeekdays.value
+        : this.selectedWeekdays,
+    startDate: startDate ?? this.startDate,
+    isActive: isActive ?? this.isActive,
+  );
+  InfusionSchedule copyWithCompanion(InfusionSchedulesCompanion data) {
+    return InfusionSchedule(
+      id: data.id.present ? data.id.value : this.id,
+      medicationId: data.medicationId.present
+          ? data.medicationId.value
+          : this.medicationId,
+      dosage: data.dosage.present ? data.dosage.value : this.dosage,
+      frequencyType: data.frequencyType.present
+          ? data.frequencyType.value
+          : this.frequencyType,
+      intervalValue: data.intervalValue.present
+          ? data.intervalValue.value
+          : this.intervalValue,
+      selectedWeekdays: data.selectedWeekdays.present
+          ? data.selectedWeekdays.value
+          : this.selectedWeekdays,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InfusionSchedule(')
+          ..write('id: $id, ')
+          ..write('medicationId: $medicationId, ')
+          ..write('dosage: $dosage, ')
+          ..write('frequencyType: $frequencyType, ')
+          ..write('intervalValue: $intervalValue, ')
+          ..write('selectedWeekdays: $selectedWeekdays, ')
+          ..write('startDate: $startDate, ')
+          ..write('isActive: $isActive')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    medicationId,
+    dosage,
+    frequencyType,
+    intervalValue,
+    selectedWeekdays,
+    startDate,
+    isActive,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InfusionSchedule &&
+          other.id == this.id &&
+          other.medicationId == this.medicationId &&
+          other.dosage == this.dosage &&
+          other.frequencyType == this.frequencyType &&
+          other.intervalValue == this.intervalValue &&
+          other.selectedWeekdays == this.selectedWeekdays &&
+          other.startDate == this.startDate &&
+          other.isActive == this.isActive);
+}
+
+class InfusionSchedulesCompanion extends UpdateCompanion<InfusionSchedule> {
+  final Value<int> id;
+  final Value<int> medicationId;
+  final Value<double> dosage;
+  final Value<String> frequencyType;
+  final Value<int?> intervalValue;
+  final Value<String?> selectedWeekdays;
+  final Value<DateTime> startDate;
+  final Value<bool> isActive;
+  const InfusionSchedulesCompanion({
+    this.id = const Value.absent(),
+    this.medicationId = const Value.absent(),
+    this.dosage = const Value.absent(),
+    this.frequencyType = const Value.absent(),
+    this.intervalValue = const Value.absent(),
+    this.selectedWeekdays = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.isActive = const Value.absent(),
+  });
+  InfusionSchedulesCompanion.insert({
+    this.id = const Value.absent(),
+    required int medicationId,
+    required double dosage,
+    required String frequencyType,
+    this.intervalValue = const Value.absent(),
+    this.selectedWeekdays = const Value.absent(),
+    required DateTime startDate,
+    this.isActive = const Value.absent(),
+  }) : medicationId = Value(medicationId),
+       dosage = Value(dosage),
+       frequencyType = Value(frequencyType),
+       startDate = Value(startDate);
+  static Insertable<InfusionSchedule> custom({
+    Expression<int>? id,
+    Expression<int>? medicationId,
+    Expression<double>? dosage,
+    Expression<String>? frequencyType,
+    Expression<int>? intervalValue,
+    Expression<String>? selectedWeekdays,
+    Expression<DateTime>? startDate,
+    Expression<bool>? isActive,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (medicationId != null) 'medication_id': medicationId,
+      if (dosage != null) 'dosage': dosage,
+      if (frequencyType != null) 'frequency_type': frequencyType,
+      if (intervalValue != null) 'interval_value': intervalValue,
+      if (selectedWeekdays != null) 'selected_weekdays': selectedWeekdays,
+      if (startDate != null) 'start_date': startDate,
+      if (isActive != null) 'is_active': isActive,
+    });
+  }
+
+  InfusionSchedulesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? medicationId,
+    Value<double>? dosage,
+    Value<String>? frequencyType,
+    Value<int?>? intervalValue,
+    Value<String?>? selectedWeekdays,
+    Value<DateTime>? startDate,
+    Value<bool>? isActive,
+  }) {
+    return InfusionSchedulesCompanion(
+      id: id ?? this.id,
+      medicationId: medicationId ?? this.medicationId,
+      dosage: dosage ?? this.dosage,
+      frequencyType: frequencyType ?? this.frequencyType,
+      intervalValue: intervalValue ?? this.intervalValue,
+      selectedWeekdays: selectedWeekdays ?? this.selectedWeekdays,
+      startDate: startDate ?? this.startDate,
+      isActive: isActive ?? this.isActive,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (medicationId.present) {
+      map['medication_id'] = Variable<int>(medicationId.value);
+    }
+    if (dosage.present) {
+      map['dosage'] = Variable<double>(dosage.value);
+    }
+    if (frequencyType.present) {
+      map['frequency_type'] = Variable<String>(frequencyType.value);
+    }
+    if (intervalValue.present) {
+      map['interval_value'] = Variable<int>(intervalValue.value);
+    }
+    if (selectedWeekdays.present) {
+      map['selected_weekdays'] = Variable<String>(selectedWeekdays.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<DateTime>(startDate.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InfusionSchedulesCompanion(')
+          ..write('id: $id, ')
+          ..write('medicationId: $medicationId, ')
+          ..write('dosage: $dosage, ')
+          ..write('frequencyType: $frequencyType, ')
+          ..write('intervalValue: $intervalValue, ')
+          ..write('selectedWeekdays: $selectedWeekdays, ')
+          ..write('startDate: $startDate, ')
+          ..write('isActive: $isActive')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $PlannedInfusionsTable extends PlannedInfusions
     with TableInfo<$PlannedInfusionsTable, PlannedInfusion> {
   @override
@@ -1497,6 +2028,20 @@ class $PlannedInfusionsTable extends PlannedInfusions
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _scheduleIdMeta = const VerificationMeta(
+    'scheduleId',
+  );
+  @override
+  late final GeneratedColumn<int> scheduleId = GeneratedColumn<int>(
+    'schedule_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES infusion_schedules (id)',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1505,6 +2050,7 @@ class $PlannedInfusionsTable extends PlannedInfusions
     dosage,
     notes,
     isCompleted,
+    scheduleId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1563,6 +2109,12 @@ class $PlannedInfusionsTable extends PlannedInfusions
         ),
       );
     }
+    if (data.containsKey('schedule_id')) {
+      context.handle(
+        _scheduleIdMeta,
+        scheduleId.isAcceptableOrUnknown(data['schedule_id']!, _scheduleIdMeta),
+      );
+    }
     return context;
   }
 
@@ -1596,6 +2148,10 @@ class $PlannedInfusionsTable extends PlannedInfusions
         DriftSqlType.bool,
         data['${effectivePrefix}is_completed'],
       )!,
+      scheduleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}schedule_id'],
+      ),
     );
   }
 
@@ -1612,6 +2168,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
   final double dosage;
   final String? notes;
   final bool isCompleted;
+  final int? scheduleId;
   const PlannedInfusion({
     required this.id,
     required this.date,
@@ -1619,6 +2176,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
     required this.dosage,
     this.notes,
     required this.isCompleted,
+    this.scheduleId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1631,6 +2189,9 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
       map['notes'] = Variable<String>(notes);
     }
     map['is_completed'] = Variable<bool>(isCompleted);
+    if (!nullToAbsent || scheduleId != null) {
+      map['schedule_id'] = Variable<int>(scheduleId);
+    }
     return map;
   }
 
@@ -1644,6 +2205,9 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
           ? const Value.absent()
           : Value(notes),
       isCompleted: Value(isCompleted),
+      scheduleId: scheduleId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scheduleId),
     );
   }
 
@@ -1659,6 +2223,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
       dosage: serializer.fromJson<double>(json['dosage']),
       notes: serializer.fromJson<String?>(json['notes']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      scheduleId: serializer.fromJson<int?>(json['scheduleId']),
     );
   }
   @override
@@ -1671,6 +2236,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
       'dosage': serializer.toJson<double>(dosage),
       'notes': serializer.toJson<String?>(notes),
       'isCompleted': serializer.toJson<bool>(isCompleted),
+      'scheduleId': serializer.toJson<int?>(scheduleId),
     };
   }
 
@@ -1681,6 +2247,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
     double? dosage,
     Value<String?> notes = const Value.absent(),
     bool? isCompleted,
+    Value<int?> scheduleId = const Value.absent(),
   }) => PlannedInfusion(
     id: id ?? this.id,
     date: date ?? this.date,
@@ -1688,6 +2255,7 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
     dosage: dosage ?? this.dosage,
     notes: notes.present ? notes.value : this.notes,
     isCompleted: isCompleted ?? this.isCompleted,
+    scheduleId: scheduleId.present ? scheduleId.value : this.scheduleId,
   );
   PlannedInfusion copyWithCompanion(PlannedInfusionsCompanion data) {
     return PlannedInfusion(
@@ -1701,6 +2269,9 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
       isCompleted: data.isCompleted.present
           ? data.isCompleted.value
           : this.isCompleted,
+      scheduleId: data.scheduleId.present
+          ? data.scheduleId.value
+          : this.scheduleId,
     );
   }
 
@@ -1712,14 +2283,22 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
           ..write('medicationId: $medicationId, ')
           ..write('dosage: $dosage, ')
           ..write('notes: $notes, ')
-          ..write('isCompleted: $isCompleted')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('scheduleId: $scheduleId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, date, medicationId, dosage, notes, isCompleted);
+  int get hashCode => Object.hash(
+    id,
+    date,
+    medicationId,
+    dosage,
+    notes,
+    isCompleted,
+    scheduleId,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1729,7 +2308,8 @@ class PlannedInfusion extends DataClass implements Insertable<PlannedInfusion> {
           other.medicationId == this.medicationId &&
           other.dosage == this.dosage &&
           other.notes == this.notes &&
-          other.isCompleted == this.isCompleted);
+          other.isCompleted == this.isCompleted &&
+          other.scheduleId == this.scheduleId);
 }
 
 class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
@@ -1739,6 +2319,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
   final Value<double> dosage;
   final Value<String?> notes;
   final Value<bool> isCompleted;
+  final Value<int?> scheduleId;
   const PlannedInfusionsCompanion({
     this.id = const Value.absent(),
     this.date = const Value.absent(),
@@ -1746,6 +2327,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
     this.dosage = const Value.absent(),
     this.notes = const Value.absent(),
     this.isCompleted = const Value.absent(),
+    this.scheduleId = const Value.absent(),
   });
   PlannedInfusionsCompanion.insert({
     this.id = const Value.absent(),
@@ -1754,6 +2336,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
     required double dosage,
     this.notes = const Value.absent(),
     this.isCompleted = const Value.absent(),
+    this.scheduleId = const Value.absent(),
   }) : date = Value(date),
        medicationId = Value(medicationId),
        dosage = Value(dosage);
@@ -1764,6 +2347,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
     Expression<double>? dosage,
     Expression<String>? notes,
     Expression<bool>? isCompleted,
+    Expression<int>? scheduleId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1772,6 +2356,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
       if (dosage != null) 'dosage': dosage,
       if (notes != null) 'notes': notes,
       if (isCompleted != null) 'is_completed': isCompleted,
+      if (scheduleId != null) 'schedule_id': scheduleId,
     });
   }
 
@@ -1782,6 +2367,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
     Value<double>? dosage,
     Value<String?>? notes,
     Value<bool>? isCompleted,
+    Value<int?>? scheduleId,
   }) {
     return PlannedInfusionsCompanion(
       id: id ?? this.id,
@@ -1790,6 +2376,7 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
       dosage: dosage ?? this.dosage,
       notes: notes ?? this.notes,
       isCompleted: isCompleted ?? this.isCompleted,
+      scheduleId: scheduleId ?? this.scheduleId,
     );
   }
 
@@ -1814,6 +2401,9 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
     if (isCompleted.present) {
       map['is_completed'] = Variable<bool>(isCompleted.value);
     }
+    if (scheduleId.present) {
+      map['schedule_id'] = Variable<int>(scheduleId.value);
+    }
     return map;
   }
 
@@ -1825,7 +2415,8 @@ class PlannedInfusionsCompanion extends UpdateCompanion<PlannedInfusion> {
           ..write('medicationId: $medicationId, ')
           ..write('dosage: $dosage, ')
           ..write('notes: $notes, ')
-          ..write('isCompleted: $isCompleted')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('scheduleId: $scheduleId')
           ..write(')'))
         .toString();
   }
@@ -1839,6 +2430,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $InfusionLogTable infusionLog = $InfusionLogTable(this);
   late final $MedicationAccessoriesTable medicationAccessories =
       $MedicationAccessoriesTable(this);
+  late final $InfusionSchedulesTable infusionSchedules =
+      $InfusionSchedulesTable(this);
   late final $PlannedInfusionsTable plannedInfusions = $PlannedInfusionsTable(
     this,
   );
@@ -1851,6 +2444,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     accessories,
     infusionLog,
     medicationAccessories,
+    infusionSchedules,
     plannedInfusions,
   ];
 }
@@ -1921,6 +2515,30 @@ final class $$MedicationsTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _medicationAccessoriesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$InfusionSchedulesTable, List<InfusionSchedule>>
+  _infusionSchedulesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.infusionSchedules,
+        aliasName: $_aliasNameGenerator(
+          db.medications.id,
+          db.infusionSchedules.medicationId,
+        ),
+      );
+
+  $$InfusionSchedulesTableProcessedTableManager get infusionSchedulesRefs {
+    final manager = $$InfusionSchedulesTableTableManager(
+      $_db,
+      $_db.infusionSchedules,
+    ).filter((f) => f.medicationId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _infusionSchedulesRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -2038,6 +2656,31 @@ class $$MedicationsTableFilterComposer
                     $removeJoinBuilderFromRootComposer,
               ),
         );
+    return f(composer);
+  }
+
+  Expression<bool> infusionSchedulesRefs(
+    Expression<bool> Function($$InfusionSchedulesTableFilterComposer f) f,
+  ) {
+    final $$InfusionSchedulesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.infusionSchedules,
+      getReferencedColumn: (t) => t.medicationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InfusionSchedulesTableFilterComposer(
+            $db: $db,
+            $table: $db.infusionSchedules,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
@@ -2185,6 +2828,32 @@ class $$MedicationsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> infusionSchedulesRefs<T extends Object>(
+    Expression<T> Function($$InfusionSchedulesTableAnnotationComposer a) f,
+  ) {
+    final $$InfusionSchedulesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.infusionSchedules,
+          getReferencedColumn: (t) => t.medicationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$InfusionSchedulesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.infusionSchedules,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> plannedInfusionsRefs<T extends Object>(
     Expression<T> Function($$PlannedInfusionsTableAnnotationComposer a) f,
   ) {
@@ -2227,6 +2896,7 @@ class $$MedicationsTableTableManager
           PrefetchHooks Function({
             bool infusionLogRefs,
             bool medicationAccessoriesRefs,
+            bool infusionSchedulesRefs,
             bool plannedInfusionsRefs,
           })
         > {
@@ -2285,6 +2955,7 @@ class $$MedicationsTableTableManager
               ({
                 infusionLogRefs = false,
                 medicationAccessoriesRefs = false,
+                infusionSchedulesRefs = false,
                 plannedInfusionsRefs = false,
               }) {
                 return PrefetchHooks(
@@ -2292,6 +2963,7 @@ class $$MedicationsTableTableManager
                   explicitlyWatchedTables: [
                     if (infusionLogRefs) db.infusionLog,
                     if (medicationAccessoriesRefs) db.medicationAccessories,
+                    if (infusionSchedulesRefs) db.infusionSchedules,
                     if (plannedInfusionsRefs) db.plannedInfusions,
                   ],
                   addJoins: null,
@@ -2333,6 +3005,27 @@ class $$MedicationsTableTableManager
                                 table,
                                 p0,
                               ).medicationAccessoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.medicationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (infusionSchedulesRefs)
+                        await $_getPrefetchedData<
+                          Medication,
+                          $MedicationsTable,
+                          InfusionSchedule
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MedicationsTableReferences
+                              ._infusionSchedulesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MedicationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).infusionSchedulesRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.medicationId == item.id,
@@ -2383,6 +3076,7 @@ typedef $$MedicationsTableProcessedTableManager =
       PrefetchHooks Function({
         bool infusionLogRefs,
         bool medicationAccessoriesRefs,
+        bool infusionSchedulesRefs,
         bool plannedInfusionsRefs,
       })
     >;
@@ -3426,6 +4120,499 @@ typedef $$MedicationAccessoriesTableProcessedTableManager =
       MedicationAccessory,
       PrefetchHooks Function({bool medicationId, bool accessoryId})
     >;
+typedef $$InfusionSchedulesTableCreateCompanionBuilder =
+    InfusionSchedulesCompanion Function({
+      Value<int> id,
+      required int medicationId,
+      required double dosage,
+      required String frequencyType,
+      Value<int?> intervalValue,
+      Value<String?> selectedWeekdays,
+      required DateTime startDate,
+      Value<bool> isActive,
+    });
+typedef $$InfusionSchedulesTableUpdateCompanionBuilder =
+    InfusionSchedulesCompanion Function({
+      Value<int> id,
+      Value<int> medicationId,
+      Value<double> dosage,
+      Value<String> frequencyType,
+      Value<int?> intervalValue,
+      Value<String?> selectedWeekdays,
+      Value<DateTime> startDate,
+      Value<bool> isActive,
+    });
+
+final class $$InfusionSchedulesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $InfusionSchedulesTable,
+          InfusionSchedule
+        > {
+  $$InfusionSchedulesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $MedicationsTable _medicationIdTable(_$AppDatabase db) =>
+      db.medications.createAlias(
+        $_aliasNameGenerator(
+          db.infusionSchedules.medicationId,
+          db.medications.id,
+        ),
+      );
+
+  $$MedicationsTableProcessedTableManager get medicationId {
+    final $_column = $_itemColumn<int>('medication_id')!;
+
+    final manager = $$MedicationsTableTableManager(
+      $_db,
+      $_db.medications,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_medicationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$PlannedInfusionsTable, List<PlannedInfusion>>
+  _plannedInfusionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.plannedInfusions,
+    aliasName: $_aliasNameGenerator(
+      db.infusionSchedules.id,
+      db.plannedInfusions.scheduleId,
+    ),
+  );
+
+  $$PlannedInfusionsTableProcessedTableManager get plannedInfusionsRefs {
+    final manager = $$PlannedInfusionsTableTableManager(
+      $_db,
+      $_db.plannedInfusions,
+    ).filter((f) => f.scheduleId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _plannedInfusionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$InfusionSchedulesTableFilterComposer
+    extends Composer<_$AppDatabase, $InfusionSchedulesTable> {
+  $$InfusionSchedulesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get dosage => $composableBuilder(
+    column: $table.dosage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get frequencyType => $composableBuilder(
+    column: $table.frequencyType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get intervalValue => $composableBuilder(
+    column: $table.intervalValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get selectedWeekdays => $composableBuilder(
+    column: $table.selectedWeekdays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$MedicationsTableFilterComposer get medicationId {
+    final $$MedicationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.medicationId,
+      referencedTable: $db.medications,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicationsTableFilterComposer(
+            $db: $db,
+            $table: $db.medications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> plannedInfusionsRefs(
+    Expression<bool> Function($$PlannedInfusionsTableFilterComposer f) f,
+  ) {
+    final $$PlannedInfusionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.plannedInfusions,
+      getReferencedColumn: (t) => t.scheduleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlannedInfusionsTableFilterComposer(
+            $db: $db,
+            $table: $db.plannedInfusions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$InfusionSchedulesTableOrderingComposer
+    extends Composer<_$AppDatabase, $InfusionSchedulesTable> {
+  $$InfusionSchedulesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get dosage => $composableBuilder(
+    column: $table.dosage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get frequencyType => $composableBuilder(
+    column: $table.frequencyType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get intervalValue => $composableBuilder(
+    column: $table.intervalValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get selectedWeekdays => $composableBuilder(
+    column: $table.selectedWeekdays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$MedicationsTableOrderingComposer get medicationId {
+    final $$MedicationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.medicationId,
+      referencedTable: $db.medications,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.medications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$InfusionSchedulesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $InfusionSchedulesTable> {
+  $$InfusionSchedulesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get dosage =>
+      $composableBuilder(column: $table.dosage, builder: (column) => column);
+
+  GeneratedColumn<String> get frequencyType => $composableBuilder(
+    column: $table.frequencyType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get intervalValue => $composableBuilder(
+    column: $table.intervalValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get selectedWeekdays => $composableBuilder(
+    column: $table.selectedWeekdays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  $$MedicationsTableAnnotationComposer get medicationId {
+    final $$MedicationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.medicationId,
+      referencedTable: $db.medications,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.medications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> plannedInfusionsRefs<T extends Object>(
+    Expression<T> Function($$PlannedInfusionsTableAnnotationComposer a) f,
+  ) {
+    final $$PlannedInfusionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.plannedInfusions,
+      getReferencedColumn: (t) => t.scheduleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlannedInfusionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.plannedInfusions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$InfusionSchedulesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $InfusionSchedulesTable,
+          InfusionSchedule,
+          $$InfusionSchedulesTableFilterComposer,
+          $$InfusionSchedulesTableOrderingComposer,
+          $$InfusionSchedulesTableAnnotationComposer,
+          $$InfusionSchedulesTableCreateCompanionBuilder,
+          $$InfusionSchedulesTableUpdateCompanionBuilder,
+          (InfusionSchedule, $$InfusionSchedulesTableReferences),
+          InfusionSchedule,
+          PrefetchHooks Function({bool medicationId, bool plannedInfusionsRefs})
+        > {
+  $$InfusionSchedulesTableTableManager(
+    _$AppDatabase db,
+    $InfusionSchedulesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InfusionSchedulesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$InfusionSchedulesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$InfusionSchedulesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> medicationId = const Value.absent(),
+                Value<double> dosage = const Value.absent(),
+                Value<String> frequencyType = const Value.absent(),
+                Value<int?> intervalValue = const Value.absent(),
+                Value<String?> selectedWeekdays = const Value.absent(),
+                Value<DateTime> startDate = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+              }) => InfusionSchedulesCompanion(
+                id: id,
+                medicationId: medicationId,
+                dosage: dosage,
+                frequencyType: frequencyType,
+                intervalValue: intervalValue,
+                selectedWeekdays: selectedWeekdays,
+                startDate: startDate,
+                isActive: isActive,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int medicationId,
+                required double dosage,
+                required String frequencyType,
+                Value<int?> intervalValue = const Value.absent(),
+                Value<String?> selectedWeekdays = const Value.absent(),
+                required DateTime startDate,
+                Value<bool> isActive = const Value.absent(),
+              }) => InfusionSchedulesCompanion.insert(
+                id: id,
+                medicationId: medicationId,
+                dosage: dosage,
+                frequencyType: frequencyType,
+                intervalValue: intervalValue,
+                selectedWeekdays: selectedWeekdays,
+                startDate: startDate,
+                isActive: isActive,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$InfusionSchedulesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({medicationId = false, plannedInfusionsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (plannedInfusionsRefs) db.plannedInfusions,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (medicationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.medicationId,
+                                    referencedTable:
+                                        $$InfusionSchedulesTableReferences
+                                            ._medicationIdTable(db),
+                                    referencedColumn:
+                                        $$InfusionSchedulesTableReferences
+                                            ._medicationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (plannedInfusionsRefs)
+                        await $_getPrefetchedData<
+                          InfusionSchedule,
+                          $InfusionSchedulesTable,
+                          PlannedInfusion
+                        >(
+                          currentTable: table,
+                          referencedTable: $$InfusionSchedulesTableReferences
+                              ._plannedInfusionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$InfusionSchedulesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).plannedInfusionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.scheduleId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$InfusionSchedulesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $InfusionSchedulesTable,
+      InfusionSchedule,
+      $$InfusionSchedulesTableFilterComposer,
+      $$InfusionSchedulesTableOrderingComposer,
+      $$InfusionSchedulesTableAnnotationComposer,
+      $$InfusionSchedulesTableCreateCompanionBuilder,
+      $$InfusionSchedulesTableUpdateCompanionBuilder,
+      (InfusionSchedule, $$InfusionSchedulesTableReferences),
+      InfusionSchedule,
+      PrefetchHooks Function({bool medicationId, bool plannedInfusionsRefs})
+    >;
 typedef $$PlannedInfusionsTableCreateCompanionBuilder =
     PlannedInfusionsCompanion Function({
       Value<int> id,
@@ -3434,6 +4621,7 @@ typedef $$PlannedInfusionsTableCreateCompanionBuilder =
       required double dosage,
       Value<String?> notes,
       Value<bool> isCompleted,
+      Value<int?> scheduleId,
     });
 typedef $$PlannedInfusionsTableUpdateCompanionBuilder =
     PlannedInfusionsCompanion Function({
@@ -3443,6 +4631,7 @@ typedef $$PlannedInfusionsTableUpdateCompanionBuilder =
       Value<double> dosage,
       Value<String?> notes,
       Value<bool> isCompleted,
+      Value<int?> scheduleId,
     });
 
 final class $$PlannedInfusionsTableReferences
@@ -3470,6 +4659,28 @@ final class $$PlannedInfusionsTableReferences
       $_db.medications,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_medicationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $InfusionSchedulesTable _scheduleIdTable(_$AppDatabase db) =>
+      db.infusionSchedules.createAlias(
+        $_aliasNameGenerator(
+          db.plannedInfusions.scheduleId,
+          db.infusionSchedules.id,
+        ),
+      );
+
+  $$InfusionSchedulesTableProcessedTableManager? get scheduleId {
+    final $_column = $_itemColumn<int>('schedule_id');
+    if ($_column == null) return null;
+    final manager = $$InfusionSchedulesTableTableManager(
+      $_db,
+      $_db.infusionSchedules,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_scheduleIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -3525,6 +4736,29 @@ class $$PlannedInfusionsTableFilterComposer
           }) => $$MedicationsTableFilterComposer(
             $db: $db,
             $table: $db.medications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$InfusionSchedulesTableFilterComposer get scheduleId {
+    final $$InfusionSchedulesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.scheduleId,
+      referencedTable: $db.infusionSchedules,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InfusionSchedulesTableFilterComposer(
+            $db: $db,
+            $table: $db.infusionSchedules,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3591,6 +4825,29 @@ class $$PlannedInfusionsTableOrderingComposer
     );
     return composer;
   }
+
+  $$InfusionSchedulesTableOrderingComposer get scheduleId {
+    final $$InfusionSchedulesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.scheduleId,
+      referencedTable: $db.infusionSchedules,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InfusionSchedulesTableOrderingComposer(
+            $db: $db,
+            $table: $db.infusionSchedules,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$PlannedInfusionsTableAnnotationComposer
@@ -3641,6 +4898,30 @@ class $$PlannedInfusionsTableAnnotationComposer
     );
     return composer;
   }
+
+  $$InfusionSchedulesTableAnnotationComposer get scheduleId {
+    final $$InfusionSchedulesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.scheduleId,
+          referencedTable: $db.infusionSchedules,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$InfusionSchedulesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.infusionSchedules,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
 }
 
 class $$PlannedInfusionsTableTableManager
@@ -3656,7 +4937,7 @@ class $$PlannedInfusionsTableTableManager
           $$PlannedInfusionsTableUpdateCompanionBuilder,
           (PlannedInfusion, $$PlannedInfusionsTableReferences),
           PlannedInfusion,
-          PrefetchHooks Function({bool medicationId})
+          PrefetchHooks Function({bool medicationId, bool scheduleId})
         > {
   $$PlannedInfusionsTableTableManager(
     _$AppDatabase db,
@@ -3679,6 +4960,7 @@ class $$PlannedInfusionsTableTableManager
                 Value<double> dosage = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
+                Value<int?> scheduleId = const Value.absent(),
               }) => PlannedInfusionsCompanion(
                 id: id,
                 date: date,
@@ -3686,6 +4968,7 @@ class $$PlannedInfusionsTableTableManager
                 dosage: dosage,
                 notes: notes,
                 isCompleted: isCompleted,
+                scheduleId: scheduleId,
               ),
           createCompanionCallback:
               ({
@@ -3695,6 +4978,7 @@ class $$PlannedInfusionsTableTableManager
                 required double dosage,
                 Value<String?> notes = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
+                Value<int?> scheduleId = const Value.absent(),
               }) => PlannedInfusionsCompanion.insert(
                 id: id,
                 date: date,
@@ -3702,6 +4986,7 @@ class $$PlannedInfusionsTableTableManager
                 dosage: dosage,
                 notes: notes,
                 isCompleted: isCompleted,
+                scheduleId: scheduleId,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -3711,7 +4996,7 @@ class $$PlannedInfusionsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({medicationId = false}) {
+          prefetchHooksCallback: ({medicationId = false, scheduleId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -3746,6 +5031,21 @@ class $$PlannedInfusionsTableTableManager
                               )
                               as T;
                     }
+                    if (scheduleId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.scheduleId,
+                                referencedTable:
+                                    $$PlannedInfusionsTableReferences
+                                        ._scheduleIdTable(db),
+                                referencedColumn:
+                                    $$PlannedInfusionsTableReferences
+                                        ._scheduleIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
 
                     return state;
                   },
@@ -3770,7 +5070,7 @@ typedef $$PlannedInfusionsTableProcessedTableManager =
       $$PlannedInfusionsTableUpdateCompanionBuilder,
       (PlannedInfusion, $$PlannedInfusionsTableReferences),
       PlannedInfusion,
-      PrefetchHooks Function({bool medicationId})
+      PrefetchHooks Function({bool medicationId, bool scheduleId})
     >;
 
 class $AppDatabaseManager {
@@ -3784,6 +5084,8 @@ class $AppDatabaseManager {
       $$InfusionLogTableTableManager(_db, _db.infusionLog);
   $$MedicationAccessoriesTableTableManager get medicationAccessories =>
       $$MedicationAccessoriesTableTableManager(_db, _db.medicationAccessories);
+  $$InfusionSchedulesTableTableManager get infusionSchedules =>
+      $$InfusionSchedulesTableTableManager(_db, _db.infusionSchedules);
   $$PlannedInfusionsTableTableManager get plannedInfusions =>
       $$PlannedInfusionsTableTableManager(_db, _db.plannedInfusions);
 }
