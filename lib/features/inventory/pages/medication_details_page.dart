@@ -4,6 +4,8 @@ import 'package:igkeeper/features/reminders/services/notification_service.dart';
 import '../providers/inventory_provider.dart';
 import '../../../core/database/database.dart';
 import 'package:drift/drift.dart' as drift;
+import '../../diary/pages/add_schedule_page.dart';
+import 'package:intl/intl.dart';
 
 class MedicationDetailsPage extends StatelessWidget {
   final int medicationId;
@@ -107,29 +109,60 @@ class MedicationDetailsPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 48),
-                _buildSectionHeader('Benachrichtigungen'),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    await NotificationService().scheduleNotification(
-                      id: medication.id,
-                      title: 'Erinnerung: ${medication.name}',
-                      body: 'Es ist Zeit für deine Infusion / Einnahme.',
-                      scheduledTime: DateTime.now().add(const Duration(minutes: 1)),
-                    );
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Test-Erinnerung für in 1 Minute geplant!'))
+                const SizedBox(height: 48),
+                _buildSectionHeader('Zeitpläne'),
+                const Text(
+                  'Lege hier fest, in welchem Rhythmus du dieses Medikament einnimmst.',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                StreamBuilder<List<InfusionSchedule>>(
+                  stream: (db.select(db.infusionSchedules)..where((t) => t.medicationId.equals(medication.id))).watch(),
+                  builder: (context, snapshot) {
+                    final schedules = snapshot.data ?? [];
+                    if (schedules.isEmpty) {
+                      return Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: const Center(
+                          child: Text('Keine Zeitpläne aktiv', style: TextStyle(color: Colors.grey)),
+                        ),
                       );
                     }
+                    return Column(
+                      children: schedules.map((s) => _buildScheduleCard(context, db, s, medication)).toList(),
+                    );
                   },
-                  icon: const Icon(Icons.notification_add_rounded),
-                  label: const Text('Test-Erinnerung (+1 Min)'),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AddSchedulePage(preselectedMedicationId: medication.id)),
+                  ),
+                  icon: const Icon(Icons.calendar_month_rounded),
+                  label: const Text('Zeitplan erstellen'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _showAddAppointmentDialog(context, db, medication),
+                  icon: const Icon(Icons.event_rounded),
+                  label: const Text('Einmaligen Termin planen'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
+                const SizedBox(height: 48),
+                _buildSectionHeader('System-Aktionen'),
+                const SizedBox(height: 12),
                 const SizedBox(height: 100),
               ]),
             ),
@@ -367,6 +400,147 @@ class MedicationDetailsPage extends StatelessWidget {
                 Navigator.pop(context); // Close dialog
                 Navigator.pop(context); // Go back to inventory
               }
+            },
+            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddAppointmentDialog(BuildContext context, AppDatabase db, Medication med) async {
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+    final dosageController = TextEditingController(text: '1.0');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('Termin planen'),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                ListTile(
+                  title: const Text('Datum'),
+                  subtitle: Text(DateFormat('dd.MM.yyyy').format(selectedDate)),
+                  trailing: const Icon(Icons.calendar_today_rounded),
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (date != null) setState(() => selectedDate = date);
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: dosageController,
+                  decoration: InputDecoration(labelText: 'Geplante Dosis (${med.unit})', border: const OutlineInputBorder()),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+              ElevatedButton(
+                onPressed: () async {
+                  await db.insertPlannedInfusion(PlannedInfusionsCompanion.insert(
+                    date: selectedDate,
+                    medicationId: med.id,
+                    dosage: double.tryParse(dosageController.text) ?? 1.0,
+                    isCompleted: const drift.Value(false),
+                  ));
+                  if (context.mounted) Navigator.pop(context);
+                },
+                child: const Text('Speichern'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildScheduleCard(BuildContext context, AppDatabase db, InfusionSchedule schedule, Medication med) {
+    String freqLabel = '';
+    switch (schedule.frequencyType) {
+      case 'daily': freqLabel = 'Täglich'; break;
+      case 'weekly': freqLabel = schedule.intervalValue == 2 ? 'Alle 2 Wochen' : 'Wöchentlich'; break;
+      case 'interval': freqLabel = 'Alle ${schedule.intervalValue} Tage'; break;
+      case 'weekdays': freqLabel = 'Wochentage'; break;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.blue.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.repeat_rounded, color: Colors.blue),
+        ),
+        title: Text(freqLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Text('Dosis: ${schedule.dosage} ${med.unit}'),
+            if (schedule.intakeTimes != null && schedule.intakeTimes!.isNotEmpty)
+              Text('Zeiten: ${schedule.intakeTimes}'),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => AddSchedulePage(initialSchedule: schedule)),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+              onPressed: () => _confirmDeleteSchedule(context, db, schedule),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteSchedule(BuildContext context, AppDatabase db, InfusionSchedule schedule) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zeitplan löschen?'),
+        content: const Text('Alle zukünftigen (nicht erledigten) Termine dieses Plans werden ebenfalls gelöscht.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(
+            onPressed: () async {
+              final futureAppts = await (db.select(db.plannedInfusions)..where((t) => t.scheduleId.equals(schedule.id) & t.isCompleted.equals(false))).get();
+              for (final appt in futureAppts) {
+                await NotificationService().cancelTreatmentReminders(appt.id);
+              }
+              await db.deletePlannedInfusionsForSchedule(schedule.id);
+              await db.deleteSchedule(schedule.id);
+              if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Löschen', style: TextStyle(color: Colors.red)),
           ),

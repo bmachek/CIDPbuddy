@@ -5,6 +5,7 @@ import '../../../core/database/database.dart';
 import '../providers/diary_provider.dart';
 import 'add_infusion_page.dart';
 import '../../reminders/services/notification_service.dart';
+import 'package:drift/drift.dart' show Value;
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -43,7 +44,7 @@ class DashboardPage extends StatelessWidget {
                   _buildSummarySection(db),
                   const SizedBox(height: 32),
                   const Text(
-                    'HEUTE GEPLANT',
+                    'ANSTEHEND (NÄCHSTE 48H)',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -57,7 +58,7 @@ class DashboardPage extends StatelessWidget {
             ),
           ),
           StreamBuilder<List<PlannedInfusion>>(
-            stream: db.watchTodayPlannedTreatments(),
+            stream: db.watchUpcomingPlannedTreatments(48),
             builder: (context, snapshot) {
               final todayTreatments = snapshot.data ?? [];
               
@@ -91,6 +92,11 @@ class DashboardPage extends StatelessWidget {
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddAppointmentDialog(context, db),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Termin planen'),
+      ),
     );
   }
 
@@ -103,7 +109,7 @@ class DashboardPage extends StatelessWidget {
 
   Widget _buildSummarySection(AppDatabase db) {
     return StreamBuilder<List<PlannedInfusion>>(
-      stream: db.watchTodayPlannedTreatments(),
+      stream: db.watchUpcomingPlannedTreatments(48),
       builder: (context, snapshot) {
         final remainingCount = snapshot.data?.length ?? 0;
         
@@ -132,7 +138,7 @@ class DashboardPage extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 remainingCount > 0 
-                  ? 'Noch $remainingCount Einnahmen heute' 
+                  ? 'Noch $remainingCount Termine bald' 
                   : 'Keine anstehenden Termine',
                 style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
@@ -156,7 +162,11 @@ class DashboardPage extends StatelessWidget {
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox();
         final med = snapshot.data!;
-        final timeStr = DateFormat('HH:mm').format(treatment.date);
+        final medDate = treatment.date;
+        final now = DateTime.now();
+        final isToday = medDate.year == now.year && medDate.month == now.month && medDate.day == now.day;
+        final dateStr = isToday ? 'Heute' : DateFormat('dd.MM.').format(medDate);
+        final timeStr = DateFormat('HH:mm').format(medDate);
         final isPill = med.type == MedicationType.pill;
 
         return Container(
@@ -181,7 +191,7 @@ class DashboardPage extends StatelessWidget {
               ),
             ),
             title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('Geplant um $timeStr Uhr • ${treatment.dosage} ${med.unit}'),
+            subtitle: Text('$dateStr um $timeStr Uhr • ${treatment.dosage} ${med.unit}'),
             trailing: ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -208,6 +218,82 @@ class DashboardPage extends StatelessWidget {
               ),
               child: const Text('Erledigt'),
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddAppointmentDialog(BuildContext context, AppDatabase db) async {
+    final meds = await db.getAllMedications();
+    if (meds.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Zuerst Medikamente anlegen!')));
+      }
+      return;
+    }
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        Medication? selectedMed;
+        DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+        final dosageController = TextEditingController(text: '1.0');
+
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('Termin planen'),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<Medication>(
+                  items: meds.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
+                  onChanged: (val) => setState(() => selectedMed = val),
+                  decoration: const InputDecoration(labelText: 'Medikament', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  title: const Text('Datum'),
+                  subtitle: Text(DateFormat('dd.MM.yyyy').format(selectedDate)),
+                  trailing: const Icon(Icons.calendar_today_rounded),
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (date != null) setState(() => selectedDate = date);
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: dosageController,
+                  decoration: const InputDecoration(labelText: 'Geplante Dosis', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+              ElevatedButton(
+                onPressed: () async {
+                  if (selectedMed != null) {
+                    await db.insertPlannedInfusion(PlannedInfusionsCompanion.insert(
+                      date: selectedDate,
+                      medicationId: selectedMed!.id,
+                      dosage: double.tryParse(dosageController.text) ?? 1.0,
+                      isCompleted: const Value(false),
+                    ));
+                    if (context.mounted) Navigator.pop(context);
+                  }
+                },
+                child: const Text('Speichern'),
+              ),
+            ],
           ),
         );
       },

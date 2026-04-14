@@ -128,13 +128,14 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<PlannedInfusion>> watchPlannedInfusions() =>
       (select(plannedInfusions)..where((t) => t.isCompleted.equals(false))..orderBy([(t) => OrderingTerm(expression: t.date)])).watch();
   
-  Stream<List<PlannedInfusion>> watchTodayPlannedTreatments() {
+  Stream<List<PlannedInfusion>> watchTodayPlannedTreatments() => watchUpcomingPlannedTreatments(24);
+  
+  Stream<List<PlannedInfusion>> watchUpcomingPlannedTreatments(int hours) {
     final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final endRange = now.add(Duration(hours: hours));
     
     return (select(plannedInfusions)
-      ..where((t) => t.date.isBetweenValues(startOfDay, endOfDay) & t.isCompleted.equals(false))
+      ..where((t) => t.date.isBetweenValues(now.subtract(const Duration(hours: 12)), endRange) & t.isCompleted.equals(false))
       ..orderBy([(t) => OrderingTerm(expression: t.date)]))
       .watch();
   }
