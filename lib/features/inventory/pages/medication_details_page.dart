@@ -47,7 +47,7 @@ class MedicationDetailsPage extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 _buildSectionHeader('Lagerstand & Warnungen'),
                 const SizedBox(height: 12),
-                _buildStockAlertConfig(context, db, invProvider, medication),
+                _StockManagementCard(medication: medication),
                 const SizedBox(height: 32),
                 _buildSectionHeader('Verknüpftes Zubehör'),
                 const Text(
@@ -702,69 +702,6 @@ class MedicationDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStockAlertConfig(BuildContext context, AppDatabase db, InventoryProvider provider, Medication medication) {
-    final controller = TextEditingController(text: medication.minStock.toStringAsFixed(0));
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
-      ),
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.2), shape: BoxShape.circle),
-                child: const Icon(Icons.notifications_active_rounded, color: Colors.orange, size: 20),
-              ),
-              const SizedBox(width: 12),
-              const Text('Niedriger Bestand', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Ab wie vielen verbleibenden Tagen möchtest du gewarnt werden?',
-            style: TextStyle(fontSize: 13, color: Colors.grey),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    labelText: 'Mindestbestand (in Tagen)',
-                    suffixText: 'Tage',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: () async {
-                  final newMin = double.tryParse(controller.text) ?? 0.0;
-                  await db.updateMedication(medication.copyWith(minStock: newMin));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mindestbestand aktualisiert')));
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(100, 56),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showEditLinkDialog(BuildContext context, AppDatabase db, MedicationAccessory link, Accessory acc) {
     final qtyController = TextEditingController(text: link.defaultQuantity.toStringAsFixed(1));
@@ -831,5 +768,153 @@ class MedicationDetailsPage extends StatelessWidget {
         ),
       ),
     ).then((_) => (context as Element).markNeedsBuild());
+  }
+}
+
+class _StockManagementCard extends StatefulWidget {
+  final Medication medication;
+
+  const _StockManagementCard({required this.medication});
+
+  @override
+  State<_StockManagementCard> createState() => _StockManagementCardState();
+}
+
+class _StockManagementCardState extends State<_StockManagementCard> {
+  late TextEditingController _stockController;
+  late TextEditingController _minStockController;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _stockController = TextEditingController(text: widget.medication.stock.toStringAsFixed(0));
+    _minStockController = TextEditingController(text: widget.medication.minStock.toStringAsFixed(0));
+  }
+
+  @override
+  void didUpdateWidget(_StockManagementCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.medication.stock != widget.medication.stock && !_isSaving) {
+      _stockController.text = widget.medication.stock.toStringAsFixed(0);
+    }
+    if (oldWidget.medication.minStock != widget.medication.minStock && !_isSaving) {
+      _minStockController.text = widget.medication.minStock.toStringAsFixed(0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _stockController.dispose();
+    _minStockController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveChanges() async {
+    setState(() => _isSaving = true);
+    final db = Provider.of<AppDatabase>(context, listen: false);
+    
+    final newStock = double.tryParse(_stockController.text) ?? widget.medication.stock;
+    final newMinStock = double.tryParse(_minStockController.text) ?? widget.medication.minStock;
+
+    await db.updateMedication(widget.medication.copyWith(
+      stock: newStock,
+      minStock: newMinStock,
+    ));
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lagerstand aktualisiert'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: primaryColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: primaryColor.withOpacity(0.1)),
+      ),
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.2), shape: BoxShape.circle),
+                child: const Icon(Icons.inventory_2_rounded, color: Colors.orange, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text('Bestandsverwaltung', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _stockController,
+                  decoration: InputDecoration(
+                    labelText: 'Aktueller Bestand',
+                    suffixText: widget.medication.unit,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.5),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _minStockController,
+                  decoration: InputDecoration(
+                    labelText: 'Warnung bei weniger als (Tage)',
+                    suffixText: 'Tage',
+                    helperText: 'Niedriger Bestand Warnung',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.5),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : _saveChanges,
+              icon: _isSaving 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : const Icon(Icons.save_rounded),
+              label: Text(_isSaving ? 'Speichert...' : 'Bestand Speichern'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
