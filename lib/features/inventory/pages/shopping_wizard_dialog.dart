@@ -5,7 +5,8 @@ import 'package:drift/drift.dart' show Value;
 import '../../../core/database/database.dart';
 
 class ShoppingWizardDialog extends StatefulWidget {
-  const ShoppingWizardDialog({super.key});
+  final Medication? initialMedication;
+  const ShoppingWizardDialog({super.key, this.initialMedication});
 
   @override
   State<ShoppingWizardDialog> createState() => _ShoppingWizardDialogState();
@@ -16,10 +17,24 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   final _qtyController = TextEditingController(text: '1');
   List<_ShoppingItem>? _results;
   DateTime? _deliveryDate;
+  bool _isFirstBuild = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMed = widget.initialMedication;
+  }
 
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<AppDatabase>(context);
+
+    if (_isFirstBuild && _selectedMed != null) {
+      _isFirstBuild = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _calculateBOM(db);
+      });
+    }
 
     return AlertDialog(
       title: Row(

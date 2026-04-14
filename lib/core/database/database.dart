@@ -209,7 +209,7 @@ class AppDatabase extends _$AppDatabase {
           await update(accessories).replace(acc.copyWith(stock: acc.stock + item.quantity));
         }
       }
-      await (update(pendingOrders)..where((t) => t.id.equals(orderId))).write(const PendingOrdersCompanion(isConfirmed: Value(true)));
+      await (update(pendingOrders)..where((t) => t.id.equals(orderId))).write(PendingOrdersCompanion(isConfirmed: Value(true)));
     });
   }
 }

@@ -5,6 +5,7 @@ import '../../../core/database/database.dart';
 import '../providers/diary_provider.dart';
 import 'add_infusion_page.dart';
 import '../../reminders/services/notification_service.dart';
+import '../../inventory/pages/shopping_wizard_dialog.dart';
 import 'package:drift/drift.dart' show Value;
 
 class DashboardPage extends StatelessWidget {
@@ -42,6 +43,8 @@ class DashboardPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSummarySection(db),
+                  const SizedBox(height: 24),
+                  _buildStockSection(db),
                   const SizedBox(height: 24),
                   _buildPendingOrdersSection(db),
                   const SizedBox(height: 32),
@@ -153,6 +156,84 @@ class DashboardPage extends StatelessWidget {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+
+  Widget _buildStockSection(AppDatabase db) {
+    return StreamBuilder<List<Medication>>(
+      stream: db.watchAllMedications(),
+      builder: (context, medSnapshot) {
+        return StreamBuilder<List<Accessory>>(
+          stream: db.watchAllAccessories(),
+          builder: (context, accSnapshot) {
+            final lowMeds = (medSnapshot.data ?? []).where((m) => m.stock < m.minStock).toList();
+            final lowAccs = (accSnapshot.data ?? []).where((a) => a.stock < 5).toList(); // Hardcoded 5 for accessories without minStock
+            
+            final isEverythingOK = lowMeds.isEmpty && lowAccs.isEmpty;
+
+            return InkWell(
+              onTap: isEverythingOK ? null : () {
+                showDialog(
+                  context: context,
+                  builder: (context) => ShoppingWizardDialog(
+                    initialMedication: lowMeds.isNotEmpty ? lowMeds.first : null,
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isEverythingOK ? Colors.green.withOpacity(0.05) : Colors.red.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isEverythingOK ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isEverythingOK ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isEverythingOK ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
+                        color: isEverythingOK ? Colors.green : Colors.red,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isEverythingOK ? 'Alles vorrätig' : 'Niedriger Bestand!',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isEverythingOK ? Colors.green.shade700 : Colors.red.shade700,
+                            ),
+                          ),
+                          if (!isEverythingOK)
+                            Text(
+                              '${lowMeds.length + lowAccs.length} Artikel müssen nachbestellt werden.',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (!isEverythingOK)
+                      Icon(Icons.chevron_right_rounded, color: Colors.red.shade300),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
