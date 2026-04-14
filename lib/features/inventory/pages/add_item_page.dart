@@ -95,6 +95,16 @@ class _AddItemPageState extends State<AddItemPage> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _packageSizeController,
+              decoration: const InputDecoration(
+                labelText: 'Standard-Nachbestellmenge / Packungsgröße',
+                hintText: 'Wie viele Einheiten bestellst du normalerweise?',
+                prefixIcon: Icon(Icons.inventory_2_rounded),
+              ),
+              keyboardType: TextInputType.number,
+            ),
             const SizedBox(height: 32),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -113,6 +123,7 @@ class _AddItemPageState extends State<AddItemPage> {
     if (_formKey.currentState!.validate()) {
       final provider = Provider.of<InventoryProvider>(context, listen: false);
       final stock = double.tryParse(_stockController.text) ?? 0;
+      final packageSize = double.tryParse(_packageSizeController.text) ?? 1.0;
       
       if (_type == 'Medikament') {
         final id = await provider.addMedication(
@@ -121,6 +132,7 @@ class _AddItemPageState extends State<AddItemPage> {
           stock: stock,
           unit: _unitController.text,
           type: _medType,
+          packageSize: packageSize,
         );
         
         if (mounted) {

@@ -199,17 +199,74 @@ class MedicationDetailsPage extends StatelessWidget {
             leading: const Icon(Icons.build_circle_rounded, color: Colors.teal),
             title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('Bedarf: ${link.defaultQuantity.toStringAsFixed(0)} ${acc.unit}'),
-            trailing: IconButton(
-              icon: const Icon(Icons.link_off_rounded, color: Colors.grey),
-              onPressed: () async {
-                await (db.delete(db.medicationAccessories)..where((t) => t.id.equals(link.id))).go();
-                (context as Element).markNeedsBuild();
-              },
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, color: Colors.grey),
+                  onPressed: () => _showEditAccessoryDialog(context, db, acc),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.link_off_rounded, color: Colors.grey),
+                  onPressed: () async {
+                    await (db.delete(db.medicationAccessories)..where((t) => t.id.equals(link.id))).go();
+                    (context as Element).markNeedsBuild();
+                  },
+                ),
+              ],
             ),
           ),
         );
       },
     );
+  }
+
+  void _showEditAccessoryDialog(BuildContext context, AppDatabase db, Accessory acc) {
+    final nameController = TextEditingController(text: acc.name);
+    final unitController = TextEditingController(text: acc.unit);
+    final pkgSizeController = TextEditingController(text: acc.packageSize.toStringAsFixed(1));
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zubehör bearbeiten'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: unitController,
+              decoration: const InputDecoration(labelText: 'Einheit', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: pkgSizeController,
+              decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          ElevatedButton(
+            onPressed: () async {
+              await db.updateAccessory(acc.copyWith(
+                name: nameController.text,
+                unit: unitController.text,
+                packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
+              ));
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    ).then((_) => (context as Element).markNeedsBuild());
   }
 
   void _showLinkAccessoryDialog(BuildContext context, AppDatabase db, Medication medication) async {
@@ -277,6 +334,7 @@ class MedicationDetailsPage extends StatelessWidget {
         final unitController = TextEditingController(text: 'Stk');
         final stockController = TextEditingController(text: '0');
         final qtyController = TextEditingController(text: '1');
+        final pkgSizeController = TextEditingController(text: '1.0');
 
         return AlertDialog(
           title: const Text('Neues Zubehör anlegen'),
@@ -307,6 +365,12 @@ class MedicationDetailsPage extends StatelessWidget {
                   decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
                   keyboardType: TextInputType.number,
                 ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: pkgSizeController,
+                  decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.number,
+                ),
               ],
             ),
           ),
@@ -315,10 +379,12 @@ class MedicationDetailsPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isNotEmpty) {
+                  final pkgSize = double.tryParse(pkgSizeController.text) ?? 1.0;
                   final accId = await db.insertAccessory(AccessoriesCompanion.insert(
                     name: nameController.text,
                     stock: drift.Value(double.tryParse(stockController.text) ?? 0.0),
                     unit: unitController.text,
+                    packageSize: drift.Value(pkgSize),
                   ));
 
                   await db.insertMedicationAccessory(MedicationAccessoriesCompanion.insert(
@@ -342,6 +408,7 @@ class MedicationDetailsPage extends StatelessWidget {
     final nameController = TextEditingController(text: med.name);
     final pznController = TextEditingController(text: med.pzn ?? '');
     final unitController = TextEditingController(text: med.unit);
+    final pkgSizeController = TextEditingController(text: med.packageSize.toStringAsFixed(1));
 
     showDialog(
       context: context,
@@ -365,6 +432,12 @@ class MedicationDetailsPage extends StatelessWidget {
               controller: unitController,
               decoration: const InputDecoration(labelText: 'Einheit (z.B. Flasche)', border: OutlineInputBorder()),
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: pkgSizeController,
+              decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+              keyboardType: TextInputType.number,
+            ),
           ],
         ),
         actions: [
@@ -375,6 +448,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 name: nameController.text,
                 pzn: drift.Value(pznController.text),
                 unit: unitController.text,
+                packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
               ));
               if (context.mounted) Navigator.pop(context);
             },

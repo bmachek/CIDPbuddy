@@ -16,6 +16,7 @@ class Medications extends Table {
   RealColumn get minStock => real().withDefault(const Constant(0.0))();
   TextColumn get unit => text().withLength(min: 1, max: 20)(); // e.g., "Flasche", "ml", "Stk"
   IntColumn get type => intEnum<MedicationType>().withDefault(const Constant(0))(); // default infusion
+  RealColumn get packageSize => real().withDefault(const Constant(1.0))();
 }
 
 class Accessories extends Table {
@@ -23,6 +24,7 @@ class Accessories extends Table {
   TextColumn get name => text().withLength(min: 1, max: 100)();
   RealColumn get stock => real().withDefault(const Constant(0.0))();
   TextColumn get unit => text().withLength(min: 1, max: 20)(); // e.g., "Stk", "Pack"
+  RealColumn get packageSize => real().withDefault(const Constant(1.0))();
 }
 
 class InfusionLog extends Table {
@@ -86,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6; // Incremented schema version to 6 for PendingOrderItems
+  int get schemaVersion => 7; // Incremented schema version to 7 for packageSize
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -108,6 +110,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (to >= 6 && from < 6) {
         await m.createTable(pendingOrderItems);
+      }
+      if (to >= 7 && from < 7) {
+        await m.addColumn(medications, medications.packageSize);
+        await m.addColumn(accessories, accessories.packageSize);
       }
     },
   );

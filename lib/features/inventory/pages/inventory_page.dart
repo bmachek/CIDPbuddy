@@ -180,10 +180,62 @@ class InventoryPage extends StatelessWidget {
                 onAdd: () => provider.updateAccessoryStock(acc, 1),
                 onRemove: () => provider.updateAccessoryStock(acc, -1),
               ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 16, color: Colors.grey),
+                onPressed: () => _showEditAccessoryDialog(context, db, acc),
+              ),
             ],
           ),
         );
       },
+    );
+  }
+
+  void _showEditAccessoryDialog(BuildContext context, AppDatabase db, Accessory acc) {
+    final nameController = TextEditingController(text: acc.name);
+    final unitController = TextEditingController(text: acc.unit);
+    final pkgSizeController = TextEditingController(text: acc.packageSize.toStringAsFixed(1));
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zubehör bearbeiten'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: unitController,
+              decoration: const InputDecoration(labelText: 'Einheit', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: pkgSizeController,
+              decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          ElevatedButton(
+            onPressed: () async {
+              await db.updateAccessory(acc.copyWith(
+                name: nameController.text,
+                unit: unitController.text,
+                packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
+              ));
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
     );
   }
 }

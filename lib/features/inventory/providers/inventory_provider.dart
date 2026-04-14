@@ -16,6 +16,7 @@ class InventoryProvider extends ChangeNotifier {
     required double stock,
     required String unit,
     required MedicationType type,
+    double packageSize = 1.0,
   }) async {
     final id = await _db.insertMedication(MedicationsCompanion.insert(
       name: name,
@@ -23,6 +24,7 @@ class InventoryProvider extends ChangeNotifier {
       stock: Value(stock),
       unit: unit,
       type: Value(type),
+      packageSize: Value(packageSize),
     ));
     notifyListeners();
     return id;
@@ -32,11 +34,13 @@ class InventoryProvider extends ChangeNotifier {
     required String name,
     required double stock,
     required String unit,
+    double packageSize = 1.0,
   }) async {
     await _db.insertAccessory(AccessoriesCompanion.insert(
       name: name,
       stock: Value(stock),
       unit: unit,
+      packageSize: Value(packageSize),
     ));
     notifyListeners();
   }

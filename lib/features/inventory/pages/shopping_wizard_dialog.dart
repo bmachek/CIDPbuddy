@@ -23,6 +23,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   void initState() {
     super.initState();
     _selectedMed = widget.initialMedication;
+    if (_selectedMed != null) {
+      _qtyController.text = _selectedMed!.packageSize.toStringAsFixed(0);
+    }
   }
 
   @override
@@ -65,6 +68,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   items: meds.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
                   onChanged: (val) => setState(() {
                     _selectedMed = val;
+                    if (_selectedMed != null) {
+                      _qtyController.text = _selectedMed!.packageSize.toStringAsFixed(0);
+                    }
                     _results = null;
                   }),
                   decoration: InputDecoration(
@@ -160,9 +166,21 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                                 ],
                               ),
                             ),
-                            Text(
-                              '+${item.neededCount.toStringAsFixed(0)} ${item.unit}',
-                              style: TextStyle(fontWeight: FontWeight.w900, color: Theme.of(context).primaryColor),
+                            SizedBox(
+                              width: 70,
+                              child: TextField(
+                                controller: item.controller,
+                                textAlign: TextAlign.right,
+                                style: TextStyle(fontWeight: FontWeight.w900, color: Theme.of(context).primaryColor),
+                                decoration: InputDecoration(
+                                  suffixText: ' ${item.unit}',
+                                  suffixStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 10),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                                  border: InputBorder.none,
+                                ),
+                                keyboardType: TextInputType.number,
+                              ),
                             ),
                           ],
                         ),
@@ -217,7 +235,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       final shortfall = neededForOrder - availableStock;
       
       if (shortfall > 0) {
-        items.add(_ShoppingItem(acc.id, acc.name, shortfall, acc.unit, acc.stock));
+        // Round up shortfall to package size if available
+        final roundedShortfall = (shortfall / acc.packageSize).ceil() * acc.packageSize;
+        items.add(_ShoppingItem(acc.id, acc.name, roundedShortfall, acc.unit, acc.stock));
       }
     }
 
@@ -246,11 +266,14 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       // Add accessories as order items
       if (_results != null) {
         for (var item in _results!) {
-          await db.insertPendingOrderItem(PendingOrderItemsCompanion.insert(
-            orderId: orderId,
-            accessoryId: Value(item.id),
-            quantity: item.neededCount,
-          ));
+          final qty = double.tryParse(item.controller.text) ?? item.neededCount;
+          if (qty > 0) {
+            await db.insertPendingOrderItem(PendingOrderItemsCompanion.insert(
+              orderId: orderId,
+              accessoryId: Value(item.id),
+              quantity: qty,
+            ));
+          }
         }
       }
     });
@@ -266,6 +289,8 @@ class _ShoppingItem {
   final double neededCount;
   final String unit;
   final double currentStock;
+  final TextEditingController controller;
 
-  _ShoppingItem(this.id, this.name, this.neededCount, this.unit, this.currentStock);
+  _ShoppingItem(this.id, this.name, this.neededCount, this.unit, this.currentStock) 
+    : controller = TextEditingController(text: neededCount.toStringAsFixed(0));
 }

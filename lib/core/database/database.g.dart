@@ -89,6 +89,18 @@ class $MedicationsTable extends Medications
         requiredDuringInsert: false,
         defaultValue: const Constant(0),
       ).withConverter<MedicationType>($MedicationsTable.$convertertype);
+  static const VerificationMeta _packageSizeMeta = const VerificationMeta(
+    'packageSize',
+  );
+  @override
+  late final GeneratedColumn<double> packageSize = GeneratedColumn<double>(
+    'package_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -98,6 +110,7 @@ class $MedicationsTable extends Medications
     minStock,
     unit,
     type,
+    packageSize,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -148,6 +161,15 @@ class $MedicationsTable extends Medications
     } else if (isInserting) {
       context.missing(_unitMeta);
     }
+    if (data.containsKey('package_size')) {
+      context.handle(
+        _packageSizeMeta,
+        packageSize.isAcceptableOrUnknown(
+          data['package_size']!,
+          _packageSizeMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -187,6 +209,10 @@ class $MedicationsTable extends Medications
           data['${effectivePrefix}type'],
         )!,
       ),
+      packageSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}package_size'],
+      )!,
     );
   }
 
@@ -207,6 +233,7 @@ class Medication extends DataClass implements Insertable<Medication> {
   final double minStock;
   final String unit;
   final MedicationType type;
+  final double packageSize;
   const Medication({
     required this.id,
     required this.name,
@@ -215,6 +242,7 @@ class Medication extends DataClass implements Insertable<Medication> {
     required this.minStock,
     required this.unit,
     required this.type,
+    required this.packageSize,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -230,6 +258,7 @@ class Medication extends DataClass implements Insertable<Medication> {
     {
       map['type'] = Variable<int>($MedicationsTable.$convertertype.toSql(type));
     }
+    map['package_size'] = Variable<double>(packageSize);
     return map;
   }
 
@@ -242,6 +271,7 @@ class Medication extends DataClass implements Insertable<Medication> {
       minStock: Value(minStock),
       unit: Value(unit),
       type: Value(type),
+      packageSize: Value(packageSize),
     );
   }
 
@@ -260,6 +290,7 @@ class Medication extends DataClass implements Insertable<Medication> {
       type: $MedicationsTable.$convertertype.fromJson(
         serializer.fromJson<int>(json['type']),
       ),
+      packageSize: serializer.fromJson<double>(json['packageSize']),
     );
   }
   @override
@@ -275,6 +306,7 @@ class Medication extends DataClass implements Insertable<Medication> {
       'type': serializer.toJson<int>(
         $MedicationsTable.$convertertype.toJson(type),
       ),
+      'packageSize': serializer.toJson<double>(packageSize),
     };
   }
 
@@ -286,6 +318,7 @@ class Medication extends DataClass implements Insertable<Medication> {
     double? minStock,
     String? unit,
     MedicationType? type,
+    double? packageSize,
   }) => Medication(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -294,6 +327,7 @@ class Medication extends DataClass implements Insertable<Medication> {
     minStock: minStock ?? this.minStock,
     unit: unit ?? this.unit,
     type: type ?? this.type,
+    packageSize: packageSize ?? this.packageSize,
   );
   Medication copyWithCompanion(MedicationsCompanion data) {
     return Medication(
@@ -304,6 +338,9 @@ class Medication extends DataClass implements Insertable<Medication> {
       minStock: data.minStock.present ? data.minStock.value : this.minStock,
       unit: data.unit.present ? data.unit.value : this.unit,
       type: data.type.present ? data.type.value : this.type,
+      packageSize: data.packageSize.present
+          ? data.packageSize.value
+          : this.packageSize,
     );
   }
 
@@ -316,13 +353,15 @@ class Medication extends DataClass implements Insertable<Medication> {
           ..write('stock: $stock, ')
           ..write('minStock: $minStock, ')
           ..write('unit: $unit, ')
-          ..write('type: $type')
+          ..write('type: $type, ')
+          ..write('packageSize: $packageSize')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, pzn, stock, minStock, unit, type);
+  int get hashCode =>
+      Object.hash(id, name, pzn, stock, minStock, unit, type, packageSize);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -333,7 +372,8 @@ class Medication extends DataClass implements Insertable<Medication> {
           other.stock == this.stock &&
           other.minStock == this.minStock &&
           other.unit == this.unit &&
-          other.type == this.type);
+          other.type == this.type &&
+          other.packageSize == this.packageSize);
 }
 
 class MedicationsCompanion extends UpdateCompanion<Medication> {
@@ -344,6 +384,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
   final Value<double> minStock;
   final Value<String> unit;
   final Value<MedicationType> type;
+  final Value<double> packageSize;
   const MedicationsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -352,6 +393,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     this.minStock = const Value.absent(),
     this.unit = const Value.absent(),
     this.type = const Value.absent(),
+    this.packageSize = const Value.absent(),
   });
   MedicationsCompanion.insert({
     this.id = const Value.absent(),
@@ -361,6 +403,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     this.minStock = const Value.absent(),
     required String unit,
     this.type = const Value.absent(),
+    this.packageSize = const Value.absent(),
   }) : name = Value(name),
        unit = Value(unit);
   static Insertable<Medication> custom({
@@ -371,6 +414,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     Expression<double>? minStock,
     Expression<String>? unit,
     Expression<int>? type,
+    Expression<double>? packageSize,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -380,6 +424,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       if (minStock != null) 'min_stock': minStock,
       if (unit != null) 'unit': unit,
       if (type != null) 'type': type,
+      if (packageSize != null) 'package_size': packageSize,
     });
   }
 
@@ -391,6 +436,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     Value<double>? minStock,
     Value<String>? unit,
     Value<MedicationType>? type,
+    Value<double>? packageSize,
   }) {
     return MedicationsCompanion(
       id: id ?? this.id,
@@ -400,6 +446,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       minStock: minStock ?? this.minStock,
       unit: unit ?? this.unit,
       type: type ?? this.type,
+      packageSize: packageSize ?? this.packageSize,
     );
   }
 
@@ -429,6 +476,9 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
         $MedicationsTable.$convertertype.toSql(type.value),
       );
     }
+    if (packageSize.present) {
+      map['package_size'] = Variable<double>(packageSize.value);
+    }
     return map;
   }
 
@@ -441,7 +491,8 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
           ..write('stock: $stock, ')
           ..write('minStock: $minStock, ')
           ..write('unit: $unit, ')
-          ..write('type: $type')
+          ..write('type: $type, ')
+          ..write('packageSize: $packageSize')
           ..write(')'))
         .toString();
   }
@@ -502,8 +553,20 @@ class $AccessoriesTable extends Accessories
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _packageSizeMeta = const VerificationMeta(
+    'packageSize',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, name, stock, unit];
+  late final GeneratedColumn<double> packageSize = GeneratedColumn<double>(
+    'package_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, stock, unit, packageSize];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -541,6 +604,15 @@ class $AccessoriesTable extends Accessories
     } else if (isInserting) {
       context.missing(_unitMeta);
     }
+    if (data.containsKey('package_size')) {
+      context.handle(
+        _packageSizeMeta,
+        packageSize.isAcceptableOrUnknown(
+          data['package_size']!,
+          _packageSizeMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -566,6 +638,10 @@ class $AccessoriesTable extends Accessories
         DriftSqlType.string,
         data['${effectivePrefix}unit'],
       )!,
+      packageSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}package_size'],
+      )!,
     );
   }
 
@@ -580,11 +656,13 @@ class Accessory extends DataClass implements Insertable<Accessory> {
   final String name;
   final double stock;
   final String unit;
+  final double packageSize;
   const Accessory({
     required this.id,
     required this.name,
     required this.stock,
     required this.unit,
+    required this.packageSize,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -593,6 +671,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
     map['name'] = Variable<String>(name);
     map['stock'] = Variable<double>(stock);
     map['unit'] = Variable<String>(unit);
+    map['package_size'] = Variable<double>(packageSize);
     return map;
   }
 
@@ -602,6 +681,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
       name: Value(name),
       stock: Value(stock),
       unit: Value(unit),
+      packageSize: Value(packageSize),
     );
   }
 
@@ -615,6 +695,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
       name: serializer.fromJson<String>(json['name']),
       stock: serializer.fromJson<double>(json['stock']),
       unit: serializer.fromJson<String>(json['unit']),
+      packageSize: serializer.fromJson<double>(json['packageSize']),
     );
   }
   @override
@@ -625,22 +706,32 @@ class Accessory extends DataClass implements Insertable<Accessory> {
       'name': serializer.toJson<String>(name),
       'stock': serializer.toJson<double>(stock),
       'unit': serializer.toJson<String>(unit),
+      'packageSize': serializer.toJson<double>(packageSize),
     };
   }
 
-  Accessory copyWith({int? id, String? name, double? stock, String? unit}) =>
-      Accessory(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        stock: stock ?? this.stock,
-        unit: unit ?? this.unit,
-      );
+  Accessory copyWith({
+    int? id,
+    String? name,
+    double? stock,
+    String? unit,
+    double? packageSize,
+  }) => Accessory(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    stock: stock ?? this.stock,
+    unit: unit ?? this.unit,
+    packageSize: packageSize ?? this.packageSize,
+  );
   Accessory copyWithCompanion(AccessoriesCompanion data) {
     return Accessory(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       stock: data.stock.present ? data.stock.value : this.stock,
       unit: data.unit.present ? data.unit.value : this.unit,
+      packageSize: data.packageSize.present
+          ? data.packageSize.value
+          : this.packageSize,
     );
   }
 
@@ -650,13 +741,14 @@ class Accessory extends DataClass implements Insertable<Accessory> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('stock: $stock, ')
-          ..write('unit: $unit')
+          ..write('unit: $unit, ')
+          ..write('packageSize: $packageSize')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, stock, unit);
+  int get hashCode => Object.hash(id, name, stock, unit, packageSize);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -664,7 +756,8 @@ class Accessory extends DataClass implements Insertable<Accessory> {
           other.id == this.id &&
           other.name == this.name &&
           other.stock == this.stock &&
-          other.unit == this.unit);
+          other.unit == this.unit &&
+          other.packageSize == this.packageSize);
 }
 
 class AccessoriesCompanion extends UpdateCompanion<Accessory> {
@@ -672,17 +765,20 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
   final Value<String> name;
   final Value<double> stock;
   final Value<String> unit;
+  final Value<double> packageSize;
   const AccessoriesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.stock = const Value.absent(),
     this.unit = const Value.absent(),
+    this.packageSize = const Value.absent(),
   });
   AccessoriesCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     this.stock = const Value.absent(),
     required String unit,
+    this.packageSize = const Value.absent(),
   }) : name = Value(name),
        unit = Value(unit);
   static Insertable<Accessory> custom({
@@ -690,12 +786,14 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
     Expression<String>? name,
     Expression<double>? stock,
     Expression<String>? unit,
+    Expression<double>? packageSize,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (stock != null) 'stock': stock,
       if (unit != null) 'unit': unit,
+      if (packageSize != null) 'package_size': packageSize,
     });
   }
 
@@ -704,12 +802,14 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
     Value<String>? name,
     Value<double>? stock,
     Value<String>? unit,
+    Value<double>? packageSize,
   }) {
     return AccessoriesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       stock: stock ?? this.stock,
       unit: unit ?? this.unit,
+      packageSize: packageSize ?? this.packageSize,
     );
   }
 
@@ -728,6 +828,9 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
     }
+    if (packageSize.present) {
+      map['package_size'] = Variable<double>(packageSize.value);
+    }
     return map;
   }
 
@@ -737,7 +840,8 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('stock: $stock, ')
-          ..write('unit: $unit')
+          ..write('unit: $unit, ')
+          ..write('packageSize: $packageSize')
           ..write(')'))
         .toString();
   }
@@ -3435,6 +3539,7 @@ typedef $$MedicationsTableCreateCompanionBuilder =
       Value<double> minStock,
       required String unit,
       Value<MedicationType> type,
+      Value<double> packageSize,
     });
 typedef $$MedicationsTableUpdateCompanionBuilder =
     MedicationsCompanion Function({
@@ -3445,6 +3550,7 @@ typedef $$MedicationsTableUpdateCompanionBuilder =
       Value<double> minStock,
       Value<String> unit,
       Value<MedicationType> type,
+      Value<double> packageSize,
     });
 
 final class $$MedicationsTableReferences
@@ -3636,6 +3742,11 @@ class $$MedicationsTableFilterComposer
   get type => $composableBuilder(
     column: $table.type,
     builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<double> get packageSize => $composableBuilder(
+    column: $table.packageSize,
+    builder: (column) => ColumnFilters(column),
   );
 
   Expression<bool> infusionLogRefs(
@@ -3833,6 +3944,11 @@ class $$MedicationsTableOrderingComposer
     column: $table.type,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<double> get packageSize => $composableBuilder(
+    column: $table.packageSize,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MedicationsTableAnnotationComposer
@@ -3864,6 +3980,11 @@ class $$MedicationsTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<MedicationType, int> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<double> get packageSize => $composableBuilder(
+    column: $table.packageSize,
+    builder: (column) => column,
+  );
 
   Expression<T> infusionLogRefs<T extends Object>(
     Expression<T> Function($$InfusionLogTableAnnotationComposer a) f,
@@ -4061,6 +4182,7 @@ class $$MedicationsTableTableManager
                 Value<double> minStock = const Value.absent(),
                 Value<String> unit = const Value.absent(),
                 Value<MedicationType> type = const Value.absent(),
+                Value<double> packageSize = const Value.absent(),
               }) => MedicationsCompanion(
                 id: id,
                 name: name,
@@ -4069,6 +4191,7 @@ class $$MedicationsTableTableManager
                 minStock: minStock,
                 unit: unit,
                 type: type,
+                packageSize: packageSize,
               ),
           createCompanionCallback:
               ({
@@ -4079,6 +4202,7 @@ class $$MedicationsTableTableManager
                 Value<double> minStock = const Value.absent(),
                 required String unit,
                 Value<MedicationType> type = const Value.absent(),
+                Value<double> packageSize = const Value.absent(),
               }) => MedicationsCompanion.insert(
                 id: id,
                 name: name,
@@ -4087,6 +4211,7 @@ class $$MedicationsTableTableManager
                 minStock: minStock,
                 unit: unit,
                 type: type,
+                packageSize: packageSize,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -4279,6 +4404,7 @@ typedef $$AccessoriesTableCreateCompanionBuilder =
       required String name,
       Value<double> stock,
       required String unit,
+      Value<double> packageSize,
     });
 typedef $$AccessoriesTableUpdateCompanionBuilder =
     AccessoriesCompanion Function({
@@ -4286,6 +4412,7 @@ typedef $$AccessoriesTableUpdateCompanionBuilder =
       Value<String> name,
       Value<double> stock,
       Value<String> unit,
+      Value<double> packageSize,
     });
 
 final class $$AccessoriesTableReferences
@@ -4374,6 +4501,11 @@ class $$AccessoriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<double> get packageSize => $composableBuilder(
+    column: $table.packageSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> medicationAccessoriesRefs(
     Expression<bool> Function($$MedicationAccessoriesTableFilterComposer f) f,
   ) {
@@ -4454,6 +4586,11 @@ class $$AccessoriesTableOrderingComposer
     column: $table.unit,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<double> get packageSize => $composableBuilder(
+    column: $table.packageSize,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AccessoriesTableAnnotationComposer
@@ -4476,6 +4613,11 @@ class $$AccessoriesTableAnnotationComposer
 
   GeneratedColumn<String> get unit =>
       $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<double> get packageSize => $composableBuilder(
+    column: $table.packageSize,
+    builder: (column) => column,
+  );
 
   Expression<T> medicationAccessoriesRefs<T extends Object>(
     Expression<T> Function($$MedicationAccessoriesTableAnnotationComposer a) f,
@@ -4565,11 +4707,13 @@ class $$AccessoriesTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<double> stock = const Value.absent(),
                 Value<String> unit = const Value.absent(),
+                Value<double> packageSize = const Value.absent(),
               }) => AccessoriesCompanion(
                 id: id,
                 name: name,
                 stock: stock,
                 unit: unit,
+                packageSize: packageSize,
               ),
           createCompanionCallback:
               ({
@@ -4577,11 +4721,13 @@ class $$AccessoriesTableTableManager
                 required String name,
                 Value<double> stock = const Value.absent(),
                 required String unit,
+                Value<double> packageSize = const Value.absent(),
               }) => AccessoriesCompanion.insert(
                 id: id,
                 name: name,
                 stock: stock,
                 unit: unit,
+                packageSize: packageSize,
               ),
           withReferenceMapper: (p0) => p0
               .map(
