@@ -88,6 +88,7 @@ class InventoryPage extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'inventory_fab',
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const AddItemPage()),

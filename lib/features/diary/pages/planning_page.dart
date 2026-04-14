@@ -32,6 +32,7 @@ class PlanningPage extends StatelessWidget {
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'planning_fab',
           onPressed: () => _showAddOptions(context, db),
           icon: const Icon(Icons.add),
           label: const Text('Hinzufügen'),
