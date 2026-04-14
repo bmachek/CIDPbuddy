@@ -7,6 +7,7 @@ import 'add_infusion_page.dart';
 import '../../reminders/services/notification_service.dart';
 import '../../inventory/pages/shopping_wizard_dialog.dart';
 import 'package:drift/drift.dart' show Value;
+import '../../../core/services/medication_service.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
