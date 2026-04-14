@@ -114,16 +114,43 @@ class PlanningPage extends StatelessWidget {
             ),
             title: Text('$dateStr - ${med.name}'),
             subtitle: Text('Dosis: ${appt.dosage} ${med.unit}'),
-            trailing: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddInfusionPage()),
-                ).then((_) async {
-                  await db.completePlannedInfusion(appt.id);
-                });
-              },
-              child: const Text('Abhaken'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.grey),
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Termin löschen?'),
+                        content: const Text('Möchtest du diesen spezifischen Termin löschen?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      await db.deletePlannedInfusion(appt.id);
+                    }
+                  },
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AddInfusionPage()),
+                    ).then((_) async {
+                      await db.completePlannedInfusion(appt.id);
+                    });
+                  },
+                  child: const Text('Abhaken'),
+                ),
+              ],
             ),
           ),
         );

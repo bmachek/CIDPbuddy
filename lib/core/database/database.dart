@@ -113,6 +113,8 @@ class AppDatabase extends _$AppDatabase {
       (update(plannedInfusions)..where((t) => t.id.equals(id))).write(const PlannedInfusionsCompanion(isCompleted: Value(true)));
   Future deletePlannedInfusionsForSchedule(int scheduleId) =>
       (delete(plannedInfusions)..where((t) => t.scheduleId.equals(scheduleId) & t.isCompleted.equals(false))).go();
+  Future deletePlannedInfusion(int id) =>
+      (delete(plannedInfusions)..where((t) => t.id.equals(id))).go();
 
   // Schedules
   Stream<List<InfusionSchedule>> watchSchedules() => select(infusionSchedules).watch();
