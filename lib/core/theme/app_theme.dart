@@ -23,7 +23,7 @@ class AppTheme {
       foregroundColor: Colors.white,
       elevation: 0,
     ),
-    cardTheme: CardTheme(
+    cardTheme: const CardThemeData(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
@@ -43,7 +43,7 @@ class AppTheme {
       foregroundColor: Colors.white,
       elevation: 0,
     ),
-    cardTheme: CardTheme(
+    cardTheme: const CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: const Color(0xFF2E3131),

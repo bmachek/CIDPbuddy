@@ -48,7 +48,7 @@ class StatisticsPage extends StatelessWidget {
                               final index = value.toInt();
                               if (index >= 0 && index < monthlyData.length) {
                                 return SideTitleWidget(
-                                  axisSide: meta.axisSide,
+                                  meta: meta,
                                   child: Text(monthlyData[index].month, style: const TextStyle(fontSize: 10)),
                                 );
                               }

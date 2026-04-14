@@ -15,7 +15,7 @@ class PlanningPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Termine')),
-      body: StreamBuilder<List<PlannedInfusionsData>>(
+      body: StreamBuilder<List<PlannedInfusion>>(
         stream: db.watchPlannedInfusions(),
         builder: (context, snapshot) {
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -35,7 +35,7 @@ class PlanningPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddAppointmentDialog(context, db),
-        icon: const Icon(Icons.calendar_add_on),
+        icon: const Icon(Icons.event_available),
         label: const Text('Termin planen'),
       ),
     );
@@ -54,7 +54,7 @@ class PlanningPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAppointmentCard(BuildContext context, AppDatabase db, PlannedInfusionsData appt) {
+  Widget _buildAppointmentCard(BuildContext context, AppDatabase db, PlannedInfusion appt) {
     final dateStr = DateFormat('dd.MM.yyyy').format(appt.date);
     
     return FutureBuilder<Medication>(

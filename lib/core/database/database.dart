@@ -83,7 +83,7 @@ class AppDatabase extends _$AppDatabase {
       into(medicationAccessories).insert(entry);
 
   // Planned Infusions
-  Stream<List<PlannedInfusionsData>> watchPlannedInfusions() =>
+  Stream<List<PlannedInfusion>> watchPlannedInfusions() =>
       (select(plannedInfusions)..where((t) => t.isCompleted.equals(false))..orderBy([(t) => OrderingTerm(expression: t.date)])).watch();
   Future<int> insertPlannedInfusion(PlannedInfusionsCompanion entry) =>
       into(plannedInfusions).insert(entry);
