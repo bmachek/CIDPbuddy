@@ -34,13 +34,43 @@ class MedicationDetailsPage extends StatelessWidget {
                     icon: const Icon(Icons.edit_outlined),
                     onPressed: () => _showEditMedicationDialog(context, db, medication),
                   ),
+                  if (medication.discontinuedAt == null)
+                    IconButton(
+                      icon: const Icon(Icons.heart_broken_outlined, color: Colors.orange),
+                      onPressed: () => _confirmDiscontinueMedication(context, invProvider, medication),
+                      tooltip: 'Absetzen',
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.add_moderator_outlined, color: Colors.green),
+                      onPressed: () => invProvider.reenrollMedication(medication.id),
+                      tooltip: 'Wieder verordnen',
+                    ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
                     onPressed: () => _confirmDeleteMedication(context, db, medication),
+                    tooltip: 'Vollständig löschen',
                   ),
                   const SizedBox(width: 8),
                 ],
               ),
+              if (medication.discontinuedAt != null)
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: Colors.orange.withOpacity(0.1),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Dieses Medikament ist abgesetzt seit ${DateFormat('dd.MM.yyyy').format(medication.discontinuedAt!)}',
+                          style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
           SliverPadding(
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
@@ -171,6 +201,40 @@ class MedicationDetailsPage extends StatelessWidget {
                 const SizedBox(height: 48),
                 _buildSectionHeader('System-Aktionen'),
                 const SizedBox(height: 12),
+                if (medication.discontinuedAt == null)
+                  ElevatedButton.icon(
+                    onPressed: () => _confirmDiscontinueMedication(context, invProvider, medication),
+                    icon: const Icon(Icons.heart_broken_outlined),
+                    label: const Text('Medikament absetzen'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange.withOpacity(0.1),
+                      foregroundColor: Colors.orange,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  )
+                else
+                  ElevatedButton.icon(
+                    onPressed: () => invProvider.reenrollMedication(medication.id),
+                    icon: const Icon(Icons.add_moderator_outlined),
+                    label: const Text('Wieder verordnen'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.withOpacity(0.1),
+                      foregroundColor: Colors.green,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _confirmDeleteMedication(context, db, medication),
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  label: const Text('Vollständig aus Datenbank löschen'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
                 const SizedBox(height: 100),
               ]),
             ),
@@ -512,7 +576,7 @@ class MedicationDetailsPage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Medikament löschen?'),
-        content: Text('Möchtest du "${med.name}" wirklich löschen? Alle Verknüpfungen gehen verloren.'),
+        content: Text('Möchtest du "${med.name}" wirklich vollständig aus der App löschen? Dies kann nicht rückgängig gemacht werden und sollte nur bei Fehlern erfolgen. Für Ende einer Therapie bitte "Absetzen" nutzen.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
           TextButton(
@@ -524,6 +588,30 @@ class MedicationDetailsPage extends StatelessWidget {
               }
             },
             child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDiscontinueMedication(BuildContext context, InventoryProvider provider, Medication med) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Medikament absetzen?'),
+        content: Text('Möchtest du "${med.name}" absetzen? Es wird aus der aktiven Liste entfernt, bleibt aber in der Historie erhalten. Zukünftige Termine werden gelöscht.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          ElevatedButton(
+            onPressed: () async {
+              await provider.discontinueMedication(med.id);
+              if (context.mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back to inventory
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            child: const Text('Absetzen'),
           ),
         ],
       ),

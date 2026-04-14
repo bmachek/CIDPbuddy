@@ -51,6 +51,10 @@ class DiaryPage extends StatelessWidget {
                           return _buildLogCard(context, entry);
                         } else if (entry is DiaryEntry) {
                           return _buildDiaryEntryCard(context, entry);
+                        } else if (entry is PendingOrder) {
+                          return _buildOrderHistoryCard(context, entry);
+                        } else if (entry is MedicationEvent) {
+                          return _buildMedicationEventCard(context, entry);
                         }
                         return const SizedBox();
                       },
@@ -407,6 +411,88 @@ class DiaryPage extends StatelessWidget {
             child: const Text('Löschen', style: TextStyle(color: Colors.red)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildOrderHistoryCard(BuildContext context, PendingOrder order) {
+    final db = Provider.of<AppDatabase>(context, listen: false);
+    final dateStr = DateFormat('dd. MMMM yyyy').format(order.deliveryDate ?? DateTime.now());
+
+    return FutureBuilder<List<PendingOrderItem>>(
+      future: db.getPendingOrderItems(order.id),
+      builder: (context, itemsSnapshot) {
+        final items = itemsSnapshot.data ?? [];
+        
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.orange.withOpacity(0.1)),
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsets.all(16),
+                leading: const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.local_shipping_outlined, color: Colors.orange),
+                ),
+                title: const Text('Bestellung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(dateStr),
+              ),
+              if (items.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(72, 0, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: items.map((item) {
+                      return FutureBuilder<dynamic>(
+                        future: item.medicationId != null 
+                          ? (db.select(db.medications)..where((t) => t.id.equals(item.medicationId!))).getSingle()
+                          : (db.select(db.accessories)..where((t) => t.id.equals(item.accessoryId!))).getSingle(),
+                        builder: (context, nameSnapshot) {
+                          final name = nameSnapshot.data?.name ?? '...';
+                          final unit = nameSnapshot.data?.unit ?? '';
+                          return Text('• ${item.quantity.toStringAsFixed(0)} $unit $name', style: const TextStyle(fontSize: 12, color: Colors.grey));
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMedicationEventCard(BuildContext context, MedicationEvent event) {
+    final dateStr = DateFormat('dd. MMMM yyyy').format(event.date);
+    final isDiscontinued = event.type == MedicationEventType.discontinued;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: (isDiscontinued ? Colors.grey : Colors.green).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: (isDiscontinued ? Colors.grey : Colors.green).withOpacity(0.1)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: CircleAvatar(
+          backgroundColor: Colors.white,
+          child: Icon(
+            isDiscontinued ? Icons.heart_broken_outlined : Icons.add_moderator_outlined,
+            color: isDiscontinued ? Colors.grey : Colors.green,
+          ),
+        ),
+        title: Text(
+          isDiscontinued ? 'Abgesetzt: ${event.medication.name}' : 'Neu verordnet: ${event.medication.name}',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(dateStr),
       ),
     );
   }

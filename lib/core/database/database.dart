@@ -158,6 +158,9 @@ class AppDatabase extends _$AppDatabase {
   );
 
   // Medications
+  Future<List<Medication>> getAllActiveMedications() => (select(medications)..where((t) => t.discontinuedAt.isNull())).get();
+  Stream<List<Medication>> watchActiveMedications() => (select(medications)..where((t) => t.discontinuedAt.isNull())).watch();
+  Stream<List<Medication>> watchDiscontinuedMedications() => (select(medications)..where((t) => t.discontinuedAt.isNotNull())).watch();
   Future<List<Medication>> getAllMedications() => select(medications).get();
   Stream<List<Medication>> watchAllMedications() => select(medications).watch();
   Future<int> insertMedication(MedicationsCompanion med) =>
@@ -252,6 +255,8 @@ class AppDatabase extends _$AppDatabase {
   // Pending Orders
   Stream<List<PendingOrder>> watchPendingOrders() =>
       (select(pendingOrders)..where((t) => t.isConfirmed.equals(false))..orderBy([(t) => OrderingTerm(expression: t.deliveryDate)])).watch();
+  Stream<List<PendingOrder>> watchConfirmedOrders() =>
+      (select(pendingOrders)..where((t) => t.isConfirmed.equals(true))..orderBy([(t) => OrderingTerm(expression: t.deliveryDate, mode: OrderingMode.desc)])).watch();
   Future<int> insertPendingOrder(PendingOrdersCompanion entry) => into(pendingOrders).insert(entry);
   Future deletePendingOrder(int id) => (delete(pendingOrders)..where((t) => t.id.equals(id))).go();
   Future updatePendingOrder(PendingOrder entry) => update(pendingOrders).replace(entry);
@@ -282,6 +287,28 @@ class AppDatabase extends _$AppDatabase {
   Future<int> insertDiaryEntry(DiaryEntriesCompanion entry) => into(diaryEntries).insert(entry);
   Future updateDiaryEntry(DiaryEntry entry) => update(diaryEntries).replace(entry);
   Future deleteDiaryEntry(int id) => (delete(diaryEntries)..where((t) => t.id.equals(id))).go();
+
+  Future discontinueMedication(int id) async {
+    await transaction(() async {
+      await (update(medications)..where((t) => t.id.equals(id)))
+          .write(MedicationsCompanion(discontinuedAt: Value(DateTime.now())));
+      // Also deactivate all schedules for this medication
+      await (update(infusionSchedules)..where((t) => t.medicationId.equals(id)))
+          .write(const InfusionSchedulesCompanion(isActive: Value(false)));
+      // Delete upcoming planned infusions
+      await (delete(plannedInfusions)..where((t) => t.medicationId.equals(id) & t.isCompleted.equals(false))).go();
+    });
+  }
+
+  Future reenrollMedication(int id) async {
+    await (update(medications)..where((t) => t.id.equals(id)))
+        .write(const MedicationsCompanion(discontinuedAt: Value.absent()));
+  }
+
+  Future<List<InfusionLogData>> getConfirmedBestellungenHistory() async {
+    // This is a helper for the history view
+    return []; // Placeholder if needed, but I'll use raw streams in UI
+  }
 }
 
 LazyDatabase _openConnection() {

@@ -146,6 +146,30 @@ class $MedicationsTable extends Medications
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _discontinuedAtMeta = const VerificationMeta(
+    'discontinuedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> discontinuedAt =
+      GeneratedColumn<DateTime>(
+        'discontinued_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -159,6 +183,8 @@ class $MedicationsTable extends Medications
     trackBatchNumber,
     trackWeight,
     useTimer,
+    createdAt,
+    discontinuedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -242,6 +268,21 @@ class $MedicationsTable extends Medications
         useTimer.isAcceptableOrUnknown(data['use_timer']!, _useTimerMeta),
       );
     }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('discontinued_at')) {
+      context.handle(
+        _discontinuedAtMeta,
+        discontinuedAt.isAcceptableOrUnknown(
+          data['discontinued_at']!,
+          _discontinuedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -297,6 +338,14 @@ class $MedicationsTable extends Medications
         DriftSqlType.bool,
         data['${effectivePrefix}use_timer'],
       )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      discontinuedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}discontinued_at'],
+      ),
     );
   }
 
@@ -321,6 +370,8 @@ class Medication extends DataClass implements Insertable<Medication> {
   final bool trackBatchNumber;
   final bool trackWeight;
   final bool useTimer;
+  final DateTime createdAt;
+  final DateTime? discontinuedAt;
   const Medication({
     required this.id,
     required this.name,
@@ -333,6 +384,8 @@ class Medication extends DataClass implements Insertable<Medication> {
     required this.trackBatchNumber,
     required this.trackWeight,
     required this.useTimer,
+    required this.createdAt,
+    this.discontinuedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -352,6 +405,10 @@ class Medication extends DataClass implements Insertable<Medication> {
     map['track_batch_number'] = Variable<bool>(trackBatchNumber);
     map['track_weight'] = Variable<bool>(trackWeight);
     map['use_timer'] = Variable<bool>(useTimer);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || discontinuedAt != null) {
+      map['discontinued_at'] = Variable<DateTime>(discontinuedAt);
+    }
     return map;
   }
 
@@ -368,6 +425,10 @@ class Medication extends DataClass implements Insertable<Medication> {
       trackBatchNumber: Value(trackBatchNumber),
       trackWeight: Value(trackWeight),
       useTimer: Value(useTimer),
+      createdAt: Value(createdAt),
+      discontinuedAt: discontinuedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(discontinuedAt),
     );
   }
 
@@ -390,6 +451,8 @@ class Medication extends DataClass implements Insertable<Medication> {
       trackBatchNumber: serializer.fromJson<bool>(json['trackBatchNumber']),
       trackWeight: serializer.fromJson<bool>(json['trackWeight']),
       useTimer: serializer.fromJson<bool>(json['useTimer']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      discontinuedAt: serializer.fromJson<DateTime?>(json['discontinuedAt']),
     );
   }
   @override
@@ -409,6 +472,8 @@ class Medication extends DataClass implements Insertable<Medication> {
       'trackBatchNumber': serializer.toJson<bool>(trackBatchNumber),
       'trackWeight': serializer.toJson<bool>(trackWeight),
       'useTimer': serializer.toJson<bool>(useTimer),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'discontinuedAt': serializer.toJson<DateTime?>(discontinuedAt),
     };
   }
 
@@ -424,6 +489,8 @@ class Medication extends DataClass implements Insertable<Medication> {
     bool? trackBatchNumber,
     bool? trackWeight,
     bool? useTimer,
+    DateTime? createdAt,
+    Value<DateTime?> discontinuedAt = const Value.absent(),
   }) => Medication(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -436,6 +503,10 @@ class Medication extends DataClass implements Insertable<Medication> {
     trackBatchNumber: trackBatchNumber ?? this.trackBatchNumber,
     trackWeight: trackWeight ?? this.trackWeight,
     useTimer: useTimer ?? this.useTimer,
+    createdAt: createdAt ?? this.createdAt,
+    discontinuedAt: discontinuedAt.present
+        ? discontinuedAt.value
+        : this.discontinuedAt,
   );
   Medication copyWithCompanion(MedicationsCompanion data) {
     return Medication(
@@ -456,6 +527,10 @@ class Medication extends DataClass implements Insertable<Medication> {
           ? data.trackWeight.value
           : this.trackWeight,
       useTimer: data.useTimer.present ? data.useTimer.value : this.useTimer,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      discontinuedAt: data.discontinuedAt.present
+          ? data.discontinuedAt.value
+          : this.discontinuedAt,
     );
   }
 
@@ -472,7 +547,9 @@ class Medication extends DataClass implements Insertable<Medication> {
           ..write('packageSize: $packageSize, ')
           ..write('trackBatchNumber: $trackBatchNumber, ')
           ..write('trackWeight: $trackWeight, ')
-          ..write('useTimer: $useTimer')
+          ..write('useTimer: $useTimer, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('discontinuedAt: $discontinuedAt')
           ..write(')'))
         .toString();
   }
@@ -490,6 +567,8 @@ class Medication extends DataClass implements Insertable<Medication> {
     trackBatchNumber,
     trackWeight,
     useTimer,
+    createdAt,
+    discontinuedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -505,7 +584,9 @@ class Medication extends DataClass implements Insertable<Medication> {
           other.packageSize == this.packageSize &&
           other.trackBatchNumber == this.trackBatchNumber &&
           other.trackWeight == this.trackWeight &&
-          other.useTimer == this.useTimer);
+          other.useTimer == this.useTimer &&
+          other.createdAt == this.createdAt &&
+          other.discontinuedAt == this.discontinuedAt);
 }
 
 class MedicationsCompanion extends UpdateCompanion<Medication> {
@@ -520,6 +601,8 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
   final Value<bool> trackBatchNumber;
   final Value<bool> trackWeight;
   final Value<bool> useTimer;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> discontinuedAt;
   const MedicationsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -532,6 +615,8 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     this.trackBatchNumber = const Value.absent(),
     this.trackWeight = const Value.absent(),
     this.useTimer = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.discontinuedAt = const Value.absent(),
   });
   MedicationsCompanion.insert({
     this.id = const Value.absent(),
@@ -545,6 +630,8 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     this.trackBatchNumber = const Value.absent(),
     this.trackWeight = const Value.absent(),
     this.useTimer = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.discontinuedAt = const Value.absent(),
   }) : name = Value(name),
        unit = Value(unit);
   static Insertable<Medication> custom({
@@ -559,6 +646,8 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     Expression<bool>? trackBatchNumber,
     Expression<bool>? trackWeight,
     Expression<bool>? useTimer,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? discontinuedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -572,6 +661,8 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       if (trackBatchNumber != null) 'track_batch_number': trackBatchNumber,
       if (trackWeight != null) 'track_weight': trackWeight,
       if (useTimer != null) 'use_timer': useTimer,
+      if (createdAt != null) 'created_at': createdAt,
+      if (discontinuedAt != null) 'discontinued_at': discontinuedAt,
     });
   }
 
@@ -587,6 +678,8 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     Value<bool>? trackBatchNumber,
     Value<bool>? trackWeight,
     Value<bool>? useTimer,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? discontinuedAt,
   }) {
     return MedicationsCompanion(
       id: id ?? this.id,
@@ -600,6 +693,8 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       trackBatchNumber: trackBatchNumber ?? this.trackBatchNumber,
       trackWeight: trackWeight ?? this.trackWeight,
       useTimer: useTimer ?? this.useTimer,
+      createdAt: createdAt ?? this.createdAt,
+      discontinuedAt: discontinuedAt ?? this.discontinuedAt,
     );
   }
 
@@ -641,6 +736,12 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     if (useTimer.present) {
       map['use_timer'] = Variable<bool>(useTimer.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (discontinuedAt.present) {
+      map['discontinued_at'] = Variable<DateTime>(discontinuedAt.value);
+    }
     return map;
   }
 
@@ -657,7 +758,9 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
           ..write('packageSize: $packageSize, ')
           ..write('trackBatchNumber: $trackBatchNumber, ')
           ..write('trackWeight: $trackWeight, ')
-          ..write('useTimer: $useTimer')
+          ..write('useTimer: $useTimer, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('discontinuedAt: $discontinuedAt')
           ..write(')'))
         .toString();
   }
@@ -4547,6 +4650,8 @@ typedef $$MedicationsTableCreateCompanionBuilder =
       Value<bool> trackBatchNumber,
       Value<bool> trackWeight,
       Value<bool> useTimer,
+      Value<DateTime> createdAt,
+      Value<DateTime?> discontinuedAt,
     });
 typedef $$MedicationsTableUpdateCompanionBuilder =
     MedicationsCompanion Function({
@@ -4561,6 +4666,8 @@ typedef $$MedicationsTableUpdateCompanionBuilder =
       Value<bool> trackBatchNumber,
       Value<bool> trackWeight,
       Value<bool> useTimer,
+      Value<DateTime> createdAt,
+      Value<DateTime?> discontinuedAt,
     });
 
 final class $$MedicationsTableReferences
@@ -4771,6 +4878,16 @@ class $$MedicationsTableFilterComposer
 
   ColumnFilters<bool> get useTimer => $composableBuilder(
     column: $table.useTimer,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get discontinuedAt => $composableBuilder(
+    column: $table.discontinuedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4989,6 +5106,16 @@ class $$MedicationsTableOrderingComposer
     column: $table.useTimer,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get discontinuedAt => $composableBuilder(
+    column: $table.discontinuedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MedicationsTableAnnotationComposer
@@ -5038,6 +5165,14 @@ class $$MedicationsTableAnnotationComposer
 
   GeneratedColumn<bool> get useTimer =>
       $composableBuilder(column: $table.useTimer, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get discontinuedAt => $composableBuilder(
+    column: $table.discontinuedAt,
+    builder: (column) => column,
+  );
 
   Expression<T> infusionLogRefs<T extends Object>(
     Expression<T> Function($$InfusionLogTableAnnotationComposer a) f,
@@ -5239,6 +5374,8 @@ class $$MedicationsTableTableManager
                 Value<bool> trackBatchNumber = const Value.absent(),
                 Value<bool> trackWeight = const Value.absent(),
                 Value<bool> useTimer = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> discontinuedAt = const Value.absent(),
               }) => MedicationsCompanion(
                 id: id,
                 name: name,
@@ -5251,6 +5388,8 @@ class $$MedicationsTableTableManager
                 trackBatchNumber: trackBatchNumber,
                 trackWeight: trackWeight,
                 useTimer: useTimer,
+                createdAt: createdAt,
+                discontinuedAt: discontinuedAt,
               ),
           createCompanionCallback:
               ({
@@ -5265,6 +5404,8 @@ class $$MedicationsTableTableManager
                 Value<bool> trackBatchNumber = const Value.absent(),
                 Value<bool> trackWeight = const Value.absent(),
                 Value<bool> useTimer = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> discontinuedAt = const Value.absent(),
               }) => MedicationsCompanion.insert(
                 id: id,
                 name: name,
@@ -5277,6 +5418,8 @@ class $$MedicationsTableTableManager
                 trackBatchNumber: trackBatchNumber,
                 trackWeight: trackWeight,
                 useTimer: useTimer,
+                createdAt: createdAt,
+                discontinuedAt: discontinuedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(

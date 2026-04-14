@@ -12,19 +12,38 @@ class DiaryProvider extends ChangeNotifier {
   Stream<List<DiaryEntry>> get diaryEntriesStream => _db.watchDiaryEntries();
 
   Stream<List<dynamic>> get combinedEntriesStream {
-    return Rx.combineLatest2<List<InfusionLogData>, List<DiaryEntry>, List<dynamic>>(
+    return Rx.combineLatest4<List<InfusionLogData>, List<DiaryEntry>, List<PendingOrder>, List<Medication>, List<dynamic>>(
       _db.watchInfusionLogs(),
       _db.watchDiaryEntries(),
-      (logs, entries) {
-        final combined = [...logs, ...entries];
+      _db.watchConfirmedOrders(),
+      _db.watchAllMedications(),
+      (logs, entries, orders, meds) {
+        final List<dynamic> combined = [...logs, ...entries, ...orders];
+        
+        // Add mediation status events
+        for (var med in meds) {
+          combined.add(MedicationEvent(med, med.createdAt, MedicationEventType.created));
+          if (med.discontinuedAt != null) {
+            combined.add(MedicationEvent(med, med.discontinuedAt!, MedicationEventType.discontinued));
+          }
+        }
+
         combined.sort((a, b) {
-          final aDate = a is InfusionLogData ? a.date : (a as DiaryEntry).date;
-          final bDate = b is InfusionLogData ? b.date : (b as DiaryEntry).date;
+          final aDate = _getDate(a);
+          final bDate = _getDate(b);
           return bDate.compareTo(aDate);
         });
         return combined;
       },
     );
+  }
+
+  DateTime _getDate(dynamic entry) {
+    if (entry is InfusionLogData) return entry.date;
+    if (entry is DiaryEntry) return entry.date;
+    if (entry is PendingOrder) return entry.deliveryDate ?? DateTime.now();
+    if (entry is MedicationEvent) return entry.date;
+    return DateTime.now();
   }
 
   Future<void> logInfusion({
@@ -61,4 +80,14 @@ class DiaryProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+}
+
+enum MedicationEventType { created, discontinued }
+
+class MedicationEvent {
+  final Medication medication;
+  final DateTime date;
+  final MedicationEventType type;
+
+  MedicationEvent(this.medication, this.date, this.type);
 }

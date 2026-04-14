@@ -7,6 +7,7 @@ import 'package:igkeeper/core/services/medication_service.dart';
 import 'add_item_page.dart';
 import 'medication_details_page.dart';
 import 'shopping_wizard_dialog.dart';
+import 'discontinued_medications_page.dart';
 
 class InventoryPage extends StatelessWidget {
   const InventoryPage({super.key});
@@ -84,10 +85,26 @@ class InventoryPage extends StatelessWidget {
                return const _EmptySection(message: 'Keine Medikamente angelegt');
             }
             return Column(
-              children: meds.map((med) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildMedicationItem(context, med, provider, db, pendingMedIds.contains(med.id)),
-              )).toList(),
+              children: [
+                ...meds.map((med) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildMedicationItem(context, med, provider, db, pendingMedIds.contains(med.id)),
+                )),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const DiscontinuedMedicationsPage()),
+                      ),
+                      icon: const Icon(Icons.history_rounded, size: 16),
+                      label: const Text('Abgesetzte Medikamente', style: TextStyle(fontSize: 13)),
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),

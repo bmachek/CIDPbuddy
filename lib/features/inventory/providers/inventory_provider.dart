@@ -7,8 +7,19 @@ class InventoryProvider extends ChangeNotifier {
 
   InventoryProvider(this._db);
 
-  Stream<List<Medication>> get medicationsStream => _db.watchAllMedications();
+  Stream<List<Medication>> get medicationsStream => _db.watchActiveMedications();
+  Stream<List<Medication>> get discontinuedMedicationsStream => _db.watchDiscontinuedMedications();
   Stream<List<Accessory>> get accessoriesStream => _db.watchAllAccessories();
+
+  Future<void> discontinueMedication(int id) async {
+    await _db.discontinueMedication(id);
+    notifyListeners();
+  }
+
+  Future<void> reenrollMedication(int id) async {
+    await _db.reenrollMedication(id);
+    notifyListeners();
+  }
 
   Future<int> addMedication({
     required String name,

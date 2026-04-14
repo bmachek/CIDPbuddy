@@ -74,7 +74,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               ),
               const SizedBox(height: 24),
               FutureBuilder<List<Medication>>(
-                future: db.getAllMedications(),
+                future: db.getAllActiveMedications(),
                 builder: (context, snapshot) {
                   final meds = snapshot.data ?? [];
                   final items = [
