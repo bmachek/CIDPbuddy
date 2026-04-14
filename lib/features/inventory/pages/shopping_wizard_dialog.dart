@@ -44,7 +44,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(Icons.auto_awesome_rounded, color: Theme.of(context).primaryColor),
+          Icon(Icons.auto_awesome_rounded, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 12),
           const Text('Einkaufs-Assistent'),
         ],
@@ -210,7 +210,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: item.isSystemRecommended ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.white, 
+                  color: item.isSystemRecommended ? Theme.of(context).colorScheme.primary.withOpacity(0.1) : Theme.of(context).colorScheme.surface, 
                   shape: BoxShape.circle, 
                   border: Border.all(color: Colors.grey.withOpacity(0.1))
                 ),
@@ -229,7 +229,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       item.name, 
                       style: TextStyle(
                         fontWeight: item.isSystemRecommended ? FontWeight.bold : FontWeight.w500,
-                        color: item.isSystemRecommended ? Theme.of(context).primaryColor : null,
+                        color: item.isSystemRecommended ? Theme.of(context).colorScheme.primary : null,
                       )
                     ),
                     if (item.isSystemRecommended)
@@ -256,7 +256,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontWeight: FontWeight.w900, 
-                          color: item.isActuallySelected ? Theme.of(context).primaryColor : Colors.grey
+                          color: item.isActuallySelected ? Theme.of(context).colorScheme.primary : Colors.grey
                         ),
                         decoration: const InputDecoration(
                           isDense: true,
