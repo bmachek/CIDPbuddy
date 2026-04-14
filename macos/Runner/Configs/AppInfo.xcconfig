@@ -5,10 +5,8 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = igkeeper
+PRODUCT_NAME = CIDP Buddy
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.bm.igkeeper.igkeeper
-
-// The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.bm.igkeeper. All rights reserved.
+PRODUCT_BUNDLE_IDENTIFIER = com.bm.cidpbuddy
+PRODUCT_COPYRIGHT = Copyright © 2026 com.bm.cidpbuddy. All rights reserved.
