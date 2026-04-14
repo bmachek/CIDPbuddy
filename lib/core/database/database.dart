@@ -191,7 +191,25 @@ class AppDatabase extends _$AppDatabase {
     return (select(plannedInfusions)
       ..where((t) => t.date.isBetweenValues(now.subtract(const Duration(hours: 12)), endRange) & t.isCompleted.equals(false))
       ..orderBy([(t) => OrderingTerm(expression: t.date)]))
-      .watch();
+      .watch()
+      .map((list) {
+        // Filter: for each scheduleId, only keep the first occurrence (next one)
+        // items without scheduleId (manual appointments) are always included
+        final Map<int, PlannedInfusion> nextPerSchedule = {};
+        final List<PlannedInfusion> results = [];
+        
+        for (var item in list) {
+          if (item.scheduleId == null) {
+            results.add(item);
+          } else {
+            if (!nextPerSchedule.containsKey(item.scheduleId)) {
+              nextPerSchedule[item.scheduleId!] = item;
+              results.add(item);
+            }
+          }
+        }
+        return results;
+      });
   }
 
   Future<int> insertPlannedInfusion(PlannedInfusionsCompanion entry) =>
