@@ -15,7 +15,7 @@ class _AddItemPageState extends State<AddItemPage> {
   final _nameController = TextEditingController();
   final _pznController = TextEditingController();
   final _stockController = TextEditingController(text: '0');
-  final _unitController = TextEditingController(text: 'Vials');
+  final _unitController = TextEditingController(text: 'Flasche');
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class _AddItemPageState extends State<AddItemPage> {
               onChanged: (val) {
                 setState(() {
                   _type = val!;
-                  _unitController.text = _type == 'Medikament' ? 'Vials' : 'Stk';
+                  _unitController.text = _type == 'Medikament' ? 'Flasche' : 'Stk';
                 });
               },
             ),

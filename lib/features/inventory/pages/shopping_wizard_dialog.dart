@@ -45,7 +45,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             ),
             TextField(
               controller: _qtyController,
-              decoration: const InputDecoration(labelText: 'Bestellmenge (Flaschen/Vials)'),
+              decoration: const InputDecoration(labelText: 'Bestellmenge (Flaschen)'),
               keyboardType: TextInputType.number,
               onChanged: (_) => setState(() => _results = null),
             ),

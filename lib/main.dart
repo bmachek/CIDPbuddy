@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:igkeeper/core/database/database.dart';
 import 'package:igkeeper/features/inventory/providers/inventory_provider.dart';
 import 'package:igkeeper/features/diary/providers/diary_provider.dart';
@@ -49,6 +50,15 @@ class IgKeeperApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeProvider.themeMode,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('de', 'DE'),
+      ],
+      locale: const Locale('de', 'DE'),
       home: const MainScreen(),
     );
   }

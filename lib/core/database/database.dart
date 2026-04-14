@@ -12,7 +12,7 @@ class Medications extends Table {
   TextColumn get pzn => text().nullable()();
   RealColumn get stock => real().withDefault(const Constant(0.0))();
   RealColumn get minStock => real().withDefault(const Constant(0.0))();
-  TextColumn get unit => text().withLength(min: 1, max: 20)(); // e.g., "Vials", "ml"
+  TextColumn get unit => text().withLength(min: 1, max: 20)(); // e.g., "Flasche", "ml"
 }
 
 class Accessories extends Table {
