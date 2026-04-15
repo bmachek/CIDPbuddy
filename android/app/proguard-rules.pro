@@ -10,3 +10,10 @@
 -keep class com.google.gson.** { *; }
 -keep class com.dexterous.flutterlocalnotifications.** { *; }
 -keep class com.bm.igkeeper.igkeeper.** { *; }
+
+# Google ML Kit ProGuard Rules
+-keep class com.google.mlkit.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_text.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_common.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_text_common.** { *; }
+-keep class com.google.android.gms.vision.** { *; }

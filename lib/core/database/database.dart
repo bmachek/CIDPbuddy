@@ -1,8 +1,5 @@
-import 'dart:io';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
+import 'connection/connection.dart' as c;
 
 part 'database.g.dart';
 
@@ -156,7 +153,7 @@ class AppDatabase extends _$AppDatabase {
         // SQLite doesn't allow adding a NOT NULL column with a non-constant default (like CURRENT_TIMESTAMP)
         // via ALTER TABLE. We'll add it with a constant timestamp (current time) instead.
         final nowTs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-        await m.issueCustomQuery('ALTER TABLE medications ADD COLUMN created_at INTEGER NOT NULL DEFAULT $nowTs');
+        await customStatement('ALTER TABLE medications ADD COLUMN created_at INTEGER NOT NULL DEFAULT $nowTs');
         await m.addColumn(medications, medications.discontinuedAt);
       }
       if (to >= 12 && from < 12) {
@@ -338,10 +335,4 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
-    return NativeDatabase(file);
-  });
-}
+QueryExecutor _openConnection() => c.openConnection();
