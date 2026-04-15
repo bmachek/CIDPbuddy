@@ -20,6 +20,7 @@ class _AddItemPageState extends State<AddItemPage> {
   final _stockController = TextEditingController(text: '0');
   final _unitController = TextEditingController(text: 'Flasche');
   final _packageSizeController = TextEditingController(text: '1');
+  final _minStockController = TextEditingController(text: '5');
   MedicationType _medType = MedicationType.infusion;
 
   @override
@@ -33,7 +34,12 @@ class _AddItemPageState extends State<AddItemPage> {
           children: [
             DropdownButtonFormField<String>(
               initialValue: _type,
-              decoration: const InputDecoration(labelText: 'Kategorie'),
+              decoration: InputDecoration(
+                labelText: 'Kategorie',
+                filled: true,
+                fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1))),
+              ),
               items: ['Medikament', 'Verbrauchsmaterial']
                   .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                   .toList(),
@@ -48,7 +54,12 @@ class _AddItemPageState extends State<AddItemPage> {
             if (_type == 'Medikament') ...[
               DropdownButtonFormField<MedicationType>(
                 initialValue: _medType,
-                decoration: const InputDecoration(labelText: 'Darreichungsform'),
+                decoration: InputDecoration(
+                  labelText: 'Darreichungsform',
+                  filled: true,
+                  fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1))),
+                ),
                 items: [
                   const DropdownMenuItem(value: MedicationType.infusion, child: Text('Infusion')),
                   const DropdownMenuItem(value: MedicationType.pill, child: Text('Tablette / Pille')),
@@ -68,21 +79,39 @@ class _AddItemPageState extends State<AddItemPage> {
             ],
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Medikamentenname', hintText: 'z.B. Hizentra'),
+              decoration: InputDecoration(
+                labelText: 'Medikamentenname', 
+                hintText: 'z.B. Hizentra',
+                filled: true,
+                fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1))),
+              ),
               validator: (val) => val == null || val.isEmpty ? 'Pflichtfeld' : null,
             ),
             if (_type == 'Medikament') ...[
               const SizedBox(height: 16),
               TextFormField(
                 controller: _dosageController,
-                decoration: const InputDecoration(labelText: 'Dosis / Stärke', hintText: 'z.B. 20% oder 10ml'),
+                decoration: InputDecoration(
+                  labelText: 'Dosis / Stärke', 
+                  hintText: 'z.B. 20% oder 10ml',
+                  filled: true,
+                  fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1))),
+                ),
               ),
             ],
             if (_type == 'Medikament') ...[
               const SizedBox(height: 16),
               TextFormField(
                 controller: _pznController,
-                decoration: const InputDecoration(labelText: 'PZN (Optional)', hintText: 'Scan folgt später'),
+                decoration: InputDecoration(
+                  labelText: 'PZN (Optional)', 
+                  hintText: 'Pharmazentralnummer',
+                  filled: true,
+                  fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1))),
+                ),
               ),
             ],
             const SizedBox(height: 16),
@@ -91,7 +120,12 @@ class _AddItemPageState extends State<AddItemPage> {
                 Expanded(
                   child: TextFormField(
                     controller: _stockController,
-                    decoration: const InputDecoration(labelText: 'Anfangsbestand'),
+                    decoration: InputDecoration(
+                      labelText: 'Anfangsbestand',
+                      filled: true,
+                      fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1))),
+                    ),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -99,7 +133,12 @@ class _AddItemPageState extends State<AddItemPage> {
                 Expanded(
                   child: TextFormField(
                     controller: _unitController,
-                    decoration: const InputDecoration(labelText: 'Einheit'),
+                    decoration: InputDecoration(
+                      labelText: 'Einheit',
+                      filled: true,
+                      fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1))),
+                    ),
                   ),
                 ),
               ],
@@ -107,10 +146,26 @@ class _AddItemPageState extends State<AddItemPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _packageSizeController,
-              decoration: const InputDecoration(
-                labelText: 'Standard-Nachbestellmenge / Packungsgröße',
-                hintText: 'Wie viele Einheiten bestellst du normalerweise?',
-                prefixIcon: Icon(Icons.inventory_2_rounded),
+              decoration: InputDecoration(
+                labelText: 'Standard-Nachbestellmenge',
+                hintText: 'z.B. 10 Flaschen',
+                prefixIcon: const Icon(Icons.inventory_2_rounded),
+                filled: true,
+                fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1))),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _minStockController,
+              decoration: InputDecoration(
+                labelText: 'Warnschwelle (Mindestbestand)',
+                hintText: 'Warnung wenn Bestand unter diese Menge fällt',
+                prefixIcon: const Icon(Icons.notification_important_rounded),
+                filled: true,
+                fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1))),
               ),
               keyboardType: TextInputType.number,
             ),
@@ -143,6 +198,7 @@ class _AddItemPageState extends State<AddItemPage> {
           unit: _unitController.text,
           type: _medType,
           packageSize: packageSize,
+          minStock: double.tryParse(_minStockController.text) ?? 5.0,
         );
         
         if (mounted) {

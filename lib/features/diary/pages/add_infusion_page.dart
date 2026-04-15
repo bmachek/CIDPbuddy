@@ -95,9 +95,12 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   decoration: InputDecoration(
                     labelText: 'Medikament wählen',
                     prefixIcon: const Icon(Icons.medication_rounded),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                    ),
                     filled: true,
-                    fillColor: Theme.of(context).cardColor,
+                    fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
                   ),
                   items: items,
                   onChanged: (val) => setState(() => _selectedMed = val),
@@ -112,9 +115,9 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
+                  border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.08)),
                 ),
                 child: Row(
                   children: [
@@ -148,9 +151,12 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                         labelText: 'Chargennummer / Barcode',
                         hintText: 'Scannen oder tippen',
                         prefixIcon: const Icon(Icons.qr_code_rounded),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                        ),
                         filled: true,
-                        fillColor: Theme.of(context).cardColor,
+                        fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
                       ),
                     ),
                   ),
@@ -195,9 +201,12 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               decoration: InputDecoration(
                 labelText: 'Dosierung / Einheiten',
                 prefixIcon: const Icon(Icons.scale_rounded),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                ),
                 filled: true,
-                fillColor: Theme.of(context).cardColor,
+                fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
@@ -209,9 +218,12 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   labelText: 'Körpergewicht (kg)',
                   prefixIcon: const Icon(Icons.monitor_weight_rounded),
                   suffixText: 'kg',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                  ),
                   filled: true,
-                  fillColor: Theme.of(context).cardColor,
+                  fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
@@ -222,9 +234,12 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               decoration: InputDecoration(
                 labelText: 'Notizen (Befinden, Verlauf)',
                 prefixIcon: const Icon(Icons.note_alt_rounded),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                ),
                 filled: true,
-                fillColor: Theme.of(context).cardColor,
+                fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
               ),
               maxLines: 4,
             ),
@@ -394,10 +409,10 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         // Simple logic for batch number: first sequence of uppercase letters/numbers
         String? foundBatch;
         final patterns = [
-          RegExp(r'LOT\s*[:\s]\s*([A-Z0-9]+)', caseSensitive: false),
-          RegExp(r'CH\.-B\s*[:\s]\s*([A-Z0-9]+)', caseSensitive: false),
-          RegExp(r'Batch\s*[:\s]\s*([A-Z0-9]+)', caseSensitive: false),
-          RegExp(r'[A-Z0-9]{6,12}'), // Generic fallback for alphanumeric strings
+          RegExp(r'LOT\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
+          RegExp(r'CH.-B\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
+          RegExp(r'Batch\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
+          RegExp(r'([A-Z0-9]{6,12})'), // Alphanumeric candidates (common for Takeda/CSL)
         ];
 
         for (final block in recognizedText.blocks) {

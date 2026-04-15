@@ -8,7 +8,6 @@ import '../../reminders/services/notification_service.dart';
 import '../../inventory/pages/shopping_wizard_dialog.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:igkeeper/core/services/medication_service.dart';
-import 'package:igkeeper/core/theme/app_theme.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -69,8 +68,7 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildNotificationCenter(db),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -123,20 +121,9 @@ class _DashboardPageState extends State<DashboardPage> {
                       delegate: SliverChildListDelegate([
                         const SizedBox(height: 16),
 
-                        // Focus Section Title
-                        if (focusTreatments.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16, left: 4),
-                            child: Text(
-                              'ANSTEHENDE EINNAHMEN',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
-                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-                              ),
-                            ),
-                          ),
+                        // Notification Center - Now secondary to upcoming intakes
+                        _buildNotificationCenter(db),
+                        const SizedBox(height: 24),
 
                         if (focusTreatments.isEmpty && futureTreatments.isEmpty && pastTreatments.isEmpty)
                           _buildEmptyState(context)
@@ -239,71 +226,11 @@ class _DashboardPageState extends State<DashboardPage> {
                             }
                         }).toList();
 
-                    final isStockProblem = lowMeds.isNotEmpty || lowAccs.isNotEmpty;
+                        final isStockProblem = lowMeds.isNotEmpty || lowAccs.isNotEmpty;
 
-                    return Column(
-                      children: [
-                        // Main Summary Card
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: isStockProblem 
-                                ? [Colors.orange.shade700, Colors.orange.shade500]
-                                : [AppTheme.primaryBase, AppTheme.primaryLight],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(32),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (isStockProblem ? Colors.orange : AppTheme.primaryBase).withValues(alpha: 0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Icon(
-                                    isStockProblem ? Icons.shopping_cart_checkout_rounded : Icons.auto_awesome_rounded, 
-                                    color: Colors.white, 
-                                    size: 24
-                                  ),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.asset('assets/images/app_icon.png', height: 48, width: 48),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                isStockProblem 
-                                  ? 'Bestand prüfen!'
-                                  : 'Willkommen zurück',
-                                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                isStockProblem 
-                                  ? 'Einige Artikel gehen zur Neige.'
-                                  : 'Du bist voll im Plan.',
-                                style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 16),
-                        
-                        // Contextual Detail Bar
-                        if (isStockProblem)
-                          InkWell(
+                        // Stock Detail Bar (Compact and Light)
+                        if (isStockProblem) {
+                          return InkWell(
                             onTap: () {
                               showDialog(
                                 context: context,
@@ -316,9 +243,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.1),
+                                color: Colors.orange.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
+                                border: Border.all(color: Colors.orange.withValues(alpha: 0.1)),
                               ),
                               child: Row(
                                 children: [
@@ -330,55 +257,55 @@ class _DashboardPageState extends State<DashboardPage> {
                                       children: [
                                         const Text(
                                           'Bestellung empfohlen',
-                                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 13),
                                         ),
                                         Text(
                                           'Niedriger Bestand: ${[...lowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
-                                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                          style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
                                   ),
-                                  const Icon(Icons.chevron_right_rounded, color: Colors.orange),
+                                  const Icon(Icons.chevron_right_rounded, color: Colors.orange, size: 18),
                                 ],
                               ),
                             ),
-                          )
-                        else if (pendingItems.isNotEmpty)
-                          Container(
+                          );
+                        } else if (pendingItems.isNotEmpty) {
+                          return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: Colors.teal.withValues(alpha: 0.05),
+                              color: Colors.teal.withValues(alpha: 0.04),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.teal.withValues(alpha: 0.1)),
+                              border: Border.all(color: Colors.teal.withValues(alpha: 0.08)),
                             ),
                             child: const Row(
                               children: [
-                                Icon(Icons.local_shipping_rounded, color: Colors.teal, size: 20),
+                                Icon(Icons.local_shipping_rounded, color: Colors.teal, size: 18),
                                 SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     'Bestellungen sind unterwegs.',
-                                    style: TextStyle(fontSize: 14, color: Colors.teal, fontWeight: FontWeight.w500),
+                                    style: TextStyle(fontSize: 13, color: Colors.teal, fontWeight: FontWeight.w500),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              );
-            },
-          );
-        },
-      );
-    },
-  );
-}
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 
 Widget _buildPendingOrdersSection(AppDatabase db) {
     return StreamBuilder<List<PendingOrder>>(
@@ -420,11 +347,11 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.orange.withValues(alpha: 0.08),
+            color: Colors.orange.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: isOverdue ? Colors.orange.withValues(alpha: 0.5) : Colors.orange.withValues(alpha: 0.1)),
+            border: Border.all(color: isOverdue ? Colors.orange.withValues(alpha: 0.3) : Colors.orange.withValues(alpha: 0.08)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.01), blurRadius: 10, offset: const Offset(0, 4)),
             ],
           ),
           child: Column(
@@ -524,11 +451,12 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                       icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
                       label: const Text('Lieferung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange.withValues(alpha: 0.1),
+                        backgroundColor: Colors.orange.withValues(alpha: 0.04),
                         foregroundColor: Colors.orange,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        side: BorderSide(color: Colors.orange.withValues(alpha: 0.1)),
                       ),
                    ),
                 ),
@@ -608,9 +536,9 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.08),
+        color: accentColor.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: accentColor.withValues(alpha: 0.1)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.08)),
       ),
       child: ListTile(
         onTap: onAction,
@@ -638,9 +566,10 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 0,
-            backgroundColor: accentColor.withValues(alpha: 0.12),
+            backgroundColor: accentColor.withValues(alpha: 0.05),
             foregroundColor: accentColor,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            side: BorderSide(color: accentColor.withValues(alpha: 0.1)),
           ),
           child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
         ),

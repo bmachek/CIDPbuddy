@@ -131,7 +131,12 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
               controller: _notesController,
               decoration: InputDecoration(
                 hintText: 'Wie fühlst du dich heute?',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                filled: true,
+                fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.08)),
+                ),
               ),
               maxLines: 4,
             ),
@@ -142,7 +147,7 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
                 minimumSize: const Size.fromHeight(60),
                 backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                 elevation: 0,
               ),
               child: const Text('Eintrag speichern', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -166,8 +171,17 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, size: 20),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        prefixIcon: Icon(icon, size: 20, color: Theme.of(context).primaryColor),
+        filled: true,
+        fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.05)),
+        ),
         isDense: true,
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),

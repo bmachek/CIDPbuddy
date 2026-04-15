@@ -1,7 +1,9 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import '../../../core/database/database.dart';
 
 class NotificationService {
@@ -24,12 +26,24 @@ class NotificationService {
     await _notificationsPlugin.initialize(initSettings);
     tz.initializeTimeZones();
     
+    try {
+      final timeZoneNameValue = await FlutterTimezone.getLocalTimezone();
+      final String timeZoneName = timeZoneNameValue.toString();
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+      debugPrint('NotificationService: Timezone set to $timeZoneName');
+    } catch (e) {
+      debugPrint('NotificationService: Could not get local timezone, falling back to UTC: $e');
+    }
+    
     // Request permission for Android 13+ notifications
     final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
-      await androidPlugin.requestNotificationsPermission();
+      final status = await androidPlugin.requestNotificationsPermission();
+      debugPrint('NotificationService: Android notifications permission status: $status');
+      
       // For Android 14+, exact alarms need explicit permission or it will fallback to inexact
-      await androidPlugin.requestExactAlarmsPermission();
+      final exactStatus = await androidPlugin.requestExactAlarmsPermission();
+      debugPrint('NotificationService: Android exact alarms permission status: $exactStatus');
     }
   }
 
