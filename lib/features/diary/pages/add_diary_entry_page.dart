@@ -71,13 +71,12 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
                   firstDate: DateTime.now().subtract(const Duration(days: 365)),
                   lastDate: DateTime.now(),
                 );
-                if (date == null || !mounted) return;
-                if (!mounted) return; // Guard against async gap
+                if (date == null || !context.mounted) return;
                 final time = await showTimePicker(
                   context: context,
                   initialTime: TimeOfDay.fromDateTime(_selectedDate),
                 );
-                if (time == null || !mounted) return;
+                if (time == null || !context.mounted) return;
                 setState(() {
                   _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
                 });
