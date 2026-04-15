@@ -129,15 +129,15 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
                   ),
                   child: Column(
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.info_outline, color: Theme.of(context).primaryColor),
+                          Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +151,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          Icon(Icons.history, color: Theme.of(context).primaryColor),
+                          Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,7 +184,7 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.all(16.0),
       child: Text(
         title.toUpperCase(),
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.teal),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, letterSpacing: 1.1),
       ),
     );
   }

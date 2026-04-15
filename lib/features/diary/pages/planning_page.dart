@@ -222,12 +222,12 @@ class PlanningPage extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: (isOverdue ? Colors.red : (appt.scheduleId != null ? Colors.blue : Theme.of(context).primaryColor)).withValues(alpha: 0.1),
+                    color: (isOverdue ? Colors.red : (appt.scheduleId != null ? Colors.blue : Theme.of(context).colorScheme.primary)).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     isOverdue ? Icons.priority_high_rounded : (appt.scheduleId != null ? Icons.repeat_rounded : Icons.event_rounded),
-                    color: isOverdue ? Colors.red : (appt.scheduleId != null ? Colors.blue : Theme.of(context).primaryColor),
+                    color: isOverdue ? Colors.red : (appt.scheduleId != null ? Colors.blue : Theme.of(context).colorScheme.primary),
                     size: 20,
                   ),
                 ),
@@ -257,7 +257,7 @@ class PlanningPage extends StatelessWidget {
                   children: [
                     Text(
                       'Dosis: ${appt.dosage} ${med.unit}',
-                      style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
                     ),
                     ElevatedButton.icon(
                       onPressed: () {
@@ -282,8 +282,8 @@ class PlanningPage extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         elevation: 0,
-                        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                        foregroundColor: Theme.of(context).primaryColor,
+                        backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                        foregroundColor: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ],
@@ -494,8 +494,8 @@ class PlanningPage extends StatelessWidget {
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Theme.of(context).primaryColor.withValues(alpha: 0.1), shape: BoxShape.circle),
-                  child: Icon(Icons.event_rounded, color: Theme.of(context).primaryColor),
+                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: Icon(Icons.event_rounded, color: Theme.of(context).colorScheme.primary),
                 ),
                 title: const Text('Einmaliger Termin', style: TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: const Text('Einen einzelnen Termin hinzufügen'),

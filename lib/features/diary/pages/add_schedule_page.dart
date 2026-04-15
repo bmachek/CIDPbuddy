@@ -174,10 +174,10 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                             }
                           });
                         },
-                        selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
-                        checkmarkColor: Theme.of(context).primaryColor,
+                        selectedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                        checkmarkColor: Theme.of(context).colorScheme.primary,
                         labelStyle: TextStyle(
-                          color: isSelected ? Theme.of(context).primaryColor : null,
+                          color: isSelected ? Theme.of(context).colorScheme.primary : null,
                           fontWeight: isSelected ? FontWeight.bold : null,
                         ),
                       );
@@ -198,7 +198,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                         return Theme(
                           data: Theme.of(context).copyWith(
                             colorScheme: Theme.of(context).colorScheme.copyWith(
-                              primary: Theme.of(context).primaryColor,
+                              primary: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           child: child!,
@@ -235,7 +235,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                             ),
                           ],
                         ),
-                        Icon(Icons.edit_rounded, size: 18, color: Theme.of(context).primaryColor),
+                        Icon(Icons.edit_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
                       ],
                     ),
                   ),
@@ -290,8 +290,8 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                   onPressed: _selectedMedication == null ? null : () => _saveSchedule(db),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(60),
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                     elevation: 0,
                   ),

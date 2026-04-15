@@ -133,10 +133,10 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
               decoration: InputDecoration(
                 hintText: 'Wie fühlst du dich heute?',
                 filled: true,
-                fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.08)),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)),
                 ),
               ),
               maxLines: 4,
@@ -146,8 +146,8 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
               onPressed: () => _saveEntry(db),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(60),
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                 elevation: 0,
               ),
@@ -172,16 +172,16 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, size: 20, color: Theme.of(context).primaryColor),
+        prefixIcon: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
         filled: true,
-        fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+        fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.05)),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05)),
         ),
         isDense: true,
       ),

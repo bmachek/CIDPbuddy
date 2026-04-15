@@ -271,10 +271,10 @@ class DiaryPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.vaccines_rounded, color: Theme.of(context).primaryColor, size: 24),
+                child: Icon(Icons.vaccines_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -285,9 +285,9 @@ class DiaryPage extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.access_time_rounded, size: 14, color: Theme.of(context).primaryColor),
+                        Icon(Icons.access_time_rounded, size: 14, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 4),
-                        Text(timeStr, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.w700, fontSize: 13)),
+                        Text(timeStr, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w700, fontSize: 13)),
                       ],
                     ),
                     if (log.batchNumber != null && log.batchNumber!.isNotEmpty)
@@ -351,15 +351,15 @@ class DiaryPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                      border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
                     ),
                     child: Text(
                       log.dosage.toStringAsFixed(1),
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
-                        color: Theme.of(context).primaryColor,
+                        color: Theme.of(context).colorScheme.primary,
                         fontSize: 14,
                       ),
                     ),

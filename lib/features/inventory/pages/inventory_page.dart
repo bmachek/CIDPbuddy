@@ -84,8 +84,8 @@ class InventoryPage extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Theme.of(context).primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                child: Icon(Icons.medication_rounded, color: Theme.of(context).primaryColor, size: 20),
+                decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                child: Icon(Icons.medication_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -238,7 +238,7 @@ class InventoryPage extends StatelessWidget {
                       child: hasAccessories 
                         ? ExpansionTile(
                             tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                            leading: _buildMedicationLeading(context, isLowStock, Theme.of(context).primaryColor),
+                            leading: _buildMedicationLeading(context, isLowStock, Theme.of(context).colorScheme.primary),
                             title: Row(
                               children: [
                                 Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -247,10 +247,10 @@ class InventoryPage extends StatelessWidget {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+                                    child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
                                   ),
                                 ],
                               ],
@@ -283,7 +283,7 @@ class InventoryPage extends StatelessWidget {
                           )
                         : ListTile(
                             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                            leading: _buildMedicationLeading(context, isLowStock, Theme.of(context).primaryColor),
+                            leading: _buildMedicationLeading(context, isLowStock, Theme.of(context).colorScheme.primary),
                             title: Row(
                               children: [
                                 Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -292,10 +292,10 @@ class InventoryPage extends StatelessWidget {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+                                    child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
                                   ),
                                 ],
                               ],

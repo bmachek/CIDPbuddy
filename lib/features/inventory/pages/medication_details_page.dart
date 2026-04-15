@@ -35,12 +35,12 @@ class MedicationDetailsPage extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           medication.dosage, 
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)
                         ),
                       ),
                     ],
@@ -144,8 +144,8 @@ class MedicationDetailsPage extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          backgroundColor: Theme.of(context).primaryColor,
-                          foregroundColor: Colors.white,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
                           elevation: 0,
                         ),
                       ),
@@ -967,7 +967,7 @@ class _StockManagementCardState extends State<_StockManagementCard> {
                   suffixText: widget.medication.unit,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   filled: true,
-                  fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
@@ -985,7 +985,7 @@ class _StockManagementCardState extends State<_StockManagementCard> {
                   suffixText: widget.medication.unit,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   filled: true,
-                  fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),

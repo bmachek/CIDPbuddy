@@ -97,10 +97,10 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                     prefixIcon: const Icon(Icons.medication_rounded),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                      borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
                     ),
                     filled: true,
-                    fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                    fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
                   ),
                   items: items,
                   onChanged: (val) => setState(() => _selectedMed = val),
@@ -115,13 +115,13 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.08)),
+                  border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today_rounded, size: 20, color: Theme.of(context).primaryColor),
+                    Icon(Icons.calendar_today_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -153,10 +153,10 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                         prefixIcon: const Icon(Icons.qr_code_rounded),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                        fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
                       ),
                     ),
                   ),
@@ -203,10 +203,10 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 prefixIcon: const Icon(Icons.scale_rounded),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
                 ),
                 filled: true,
-                fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
@@ -220,10 +220,10 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   suffixText: 'kg',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                    borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
                   ),
                   filled: true,
-                  fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
@@ -236,10 +236,10 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 prefixIcon: const Icon(Icons.note_alt_rounded),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
                 ),
                 filled: true,
-                fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
               ),
               maxLines: 4,
             ),
@@ -248,8 +248,8 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(60),
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 elevation: 0,
               ),
@@ -280,13 +280,13 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         height: 56,
         width: 56,
         decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
+          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
         ),
         child: isLoading 
           ? const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(strokeWidth: 2))
-          : Icon(icon, color: Theme.of(context).primaryColor),
+          : Icon(icon, color: Theme.of(context).colorScheme.primary),
       ),
     );
   }
