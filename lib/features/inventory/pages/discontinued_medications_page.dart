@@ -37,12 +37,12 @@ class DiscontinuedMedicationsPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.05)),
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
                   leading: CircleAvatar(
-                    backgroundColor: Colors.grey.withOpacity(0.1),
+                    backgroundColor: Colors.grey.withValues(alpha: 0.1),
                     child: const Icon(Icons.heart_broken_outlined, color: Colors.grey),
                   ),
                   title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),

@@ -42,12 +42,12 @@ class AppTheme {
     ),
     cardTheme: CardThemeData(
       elevation: 0,
-      shadowColor: primaryBase.withOpacity(0.1),
+      shadowColor: primaryBase.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(28),
-        side: BorderSide(color: Colors.grey.withOpacity(0.05)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.05)),
       ),
-      color: cardLight.withOpacity(0.9),
+      color: cardLight.withValues(alpha: 0.9),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryBase,
@@ -57,7 +57,7 @@ class AppTheme {
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.transparent,
-      indicatorColor: primaryBase.withOpacity(0.1),
+      indicatorColor: primaryBase.withValues(alpha: 0.1),
       indicatorShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
@@ -73,7 +73,7 @@ class AppTheme {
       }),
     ),
     dividerTheme: DividerThemeData(
-      color: Colors.grey.withOpacity(0.2),
+      color: Colors.grey.withValues(alpha: 0.2),
       thickness: 1,
     ),
   );
@@ -107,12 +107,12 @@ class AppTheme {
     ),
     cardTheme: CardThemeData(
       elevation: 0,
-      shadowColor: Colors.black.withOpacity(0.3),
+      shadowColor: Colors.black.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(28),
-        side: BorderSide(color: Colors.white.withOpacity(0.05)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
       ),
-      color: cardDark.withOpacity(0.8),
+      color: cardDark.withValues(alpha: 0.8),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryLight,
@@ -122,7 +122,7 @@ class AppTheme {
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.transparent,
-      indicatorColor: primaryLight.withOpacity(0.2),
+      indicatorColor: primaryLight.withValues(alpha: 0.2),
       indicatorShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
@@ -138,7 +138,7 @@ class AppTheme {
       }),
     ),
     dividerTheme: DividerThemeData(
-      color: Colors.white.withOpacity(0.1),
+      color: Colors.white.withValues(alpha: 0.1),
       thickness: 1,
     ),
   );

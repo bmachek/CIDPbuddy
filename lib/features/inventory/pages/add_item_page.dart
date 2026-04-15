@@ -32,7 +32,7 @@ class _AddItemPageState extends State<AddItemPage> {
           padding: const EdgeInsets.all(16),
           children: [
             DropdownButtonFormField<String>(
-              value: _type,
+              initialValue: _type,
               decoration: const InputDecoration(labelText: 'Kategorie'),
               items: ['Medikament', 'Verbrauchsmaterial']
                   .map((t) => DropdownMenuItem(value: t, child: Text(t)))
@@ -47,7 +47,7 @@ class _AddItemPageState extends State<AddItemPage> {
             const SizedBox(height: 16),
             if (_type == 'Medikament') ...[
               DropdownButtonFormField<MedicationType>(
-                value: _medType,
+                initialValue: _medType,
                 decoration: const InputDecoration(labelText: 'Darreichungsform'),
                 items: [
                   const DropdownMenuItem(value: MedicationType.infusion, child: Text('Infusion')),

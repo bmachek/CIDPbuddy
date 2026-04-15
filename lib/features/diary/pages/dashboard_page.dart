@@ -24,7 +24,6 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<AppDatabase>(context);
-    final greeting = _getGreeting();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -38,7 +37,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: ClipRRect(
@@ -55,7 +54,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.notifications_none_rounded),
@@ -134,7 +133,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 fontSize: 11,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.2,
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                               ),
                             ),
                           ),
@@ -142,7 +141,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         if (focusTreatments.isEmpty && futureTreatments.isEmpty && pastTreatments.isEmpty)
                           _buildEmptyState(context)
                         else ...[
-                          ...focusTreatments.map((t) => _buildFocusTreatmentCard(context, db, t, medicationMap[t.medicationId])).toList(),
+                          ...focusTreatments.map((t) => _buildFocusTreatmentCard(context, db, t, medicationMap[t.medicationId])),
                           
                           const SizedBox(height: 24),
 
@@ -191,13 +190,6 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
       ),
     );
-  }
-
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 11) return 'Guten Morgen';
-    if (hour < 18) return 'Guten Tag';
-    return 'Guten Abend';
   }
 
   Widget _buildNotificationCenter(AppDatabase db) {
@@ -266,7 +258,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             borderRadius: BorderRadius.circular(32),
                             boxShadow: [
                               BoxShadow(
-                                color: (isStockProblem ? Colors.orange : AppTheme.primaryBase).withOpacity(0.3),
+                                color: (isStockProblem ? Colors.orange : AppTheme.primaryBase).withValues(alpha: 0.3),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
@@ -301,7 +293,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 isStockProblem 
                                   ? 'Einige Artikel gehen zur Neige.'
                                   : 'Du bist voll im Plan.',
-                                style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+                                style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
                               ),
                             ],
                           ),
@@ -324,9 +316,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.1),
+                                color: Colors.orange.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                                border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
                               ),
                               child: Row(
                                 children: [
@@ -357,9 +349,9 @@ class _DashboardPageState extends State<DashboardPage> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: Colors.teal.withOpacity(0.05),
+                              color: Colors.teal.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.teal.withOpacity(0.1)),
+                              border: Border.all(color: Colors.teal.withValues(alpha: 0.1)),
                             ),
                             child: const Row(
                               children: [
@@ -428,9 +420,9 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.08),
+            color: Colors.orange.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: isOverdue ? Colors.orange.withOpacity(0.5) : Colors.orange.withOpacity(0.1)),
+            border: Border.all(color: isOverdue ? Colors.orange.withValues(alpha: 0.5) : Colors.orange.withValues(alpha: 0.1)),
             boxShadow: [
               BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
             ],
@@ -442,7 +434,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.local_shipping_rounded, color: Colors.orange),
@@ -462,7 +454,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                         ),
                       )
                     else
-                      Text('Noch kein Datum festgelegt', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7))),
+                      Text('Noch kein Datum festgelegt', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
                   ],
                 ),
                 trailing: Row(
@@ -532,7 +524,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                       icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
                       label: const Text('Lieferung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange.withOpacity(0.1),
+                        backgroundColor: Colors.orange.withValues(alpha: 0.1),
                         foregroundColor: Colors.orange,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -616,9 +608,9 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: accentColor.withOpacity(0.08),
+        color: accentColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: accentColor.withOpacity(0.1)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.1)),
       ),
       child: ListTile(
         onTap: onAction,
@@ -627,7 +619,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -639,14 +631,14 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(statusText, style: TextStyle(color: accentColor.withOpacity(0.8), fontWeight: FontWeight.w600, fontSize: 13)),
+          child: Text(statusText, style: TextStyle(color: accentColor.withValues(alpha: 0.8), fontWeight: FontWeight.w600, fontSize: 13)),
         ),
         trailing: ElevatedButton(
           onPressed: onAction,
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 0,
-            backgroundColor: accentColor.withOpacity(0.12),
+            backgroundColor: accentColor.withValues(alpha: 0.12),
             foregroundColor: accentColor,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           ),
@@ -665,7 +657,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.auto_awesome_rounded, size: 48, color: Colors.green),
@@ -682,7 +674,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
             Text('Keine anstehenden Aufgaben.', 
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)
               )
             ),
           ],
@@ -756,11 +748,11 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withOpacity(0.7),
+            color: Theme.of(context).cardColor.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
             ],
           ),
           child: ListTile(
@@ -770,9 +762,9 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: (isPill ? Colors.orange : Colors.blue).withOpacity(0.1),
+                color: (isPill ? Colors.orange : Colors.blue).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: (isPill ? Colors.orange : Colors.blue).withOpacity(0.2)),
+                border: Border.all(color: (isPill ? Colors.orange : Colors.blue).withValues(alpha: 0.2)),
               ),
               child: Icon(
                 isPill ? Icons.medication_rounded : Icons.vaccines_rounded,
@@ -786,7 +778,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
-                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 foregroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
@@ -885,7 +877,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
+        color: Colors.grey.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
       ),
       child: ExpansionTile(

@@ -126,7 +126,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.3),
+              color: Colors.grey.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -152,7 +152,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                 child: CircularProgressIndicator(
                   value: progress,
                   strokeWidth: 8,
-                  backgroundColor: Colors.teal.withOpacity(0.1),
+                  backgroundColor: Colors.teal.withValues(alpha: 0.1),
                   color: Colors.teal,
                   strokeCap: StrokeCap.round,
                 ),
@@ -173,7 +173,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.teal.withOpacity(0.1),
+                      color: Colors.teal.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -294,12 +294,12 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: onPressed == null ? color.withOpacity(0.5) : color,
+          color: onPressed == null ? color.withValues(alpha: 0.5) : color,
           shape: BoxShape.circle,
           boxShadow: [
             if (onPressed != null)
               BoxShadow(
-                color: color.withOpacity(0.3),
+                color: color.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),

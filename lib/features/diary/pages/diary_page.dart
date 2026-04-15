@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:provider/provider.dart';
@@ -107,11 +108,11 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondary.withOpacity(0.08),
+        color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Theme.of(context).colorScheme.secondary.withOpacity(0.1)),
+        border: Border.all(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: ListTile(
@@ -119,9 +120,9 @@ class DiaryPage extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
-            border: Border.all(color: Theme.of(context).colorScheme.secondary.withOpacity(0.2)),
+            border: Border.all(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2)),
           ),
           child: Icon(Icons.analytics_rounded, color: Theme.of(context).colorScheme.secondary),
         ),
@@ -152,9 +153,9 @@ class DiaryPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -182,7 +183,7 @@ class DiaryPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('SYMPTOME (STÄRKE):', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7))),
+        Text('SYMPTOME (STÄRKE):', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
         const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,7 +202,7 @@ class DiaryPage extends StatelessWidget {
                         color: _getColorForScore(score),
                         borderRadius: BorderRadius.circular(2),
                         boxShadow: [
-                          BoxShadow(color: _getColorForScore(score).withOpacity(0.3), blurRadius: 4, spreadRadius: 1),
+                          BoxShadow(color: _getColorForScore(score).withValues(alpha: 0.3), blurRadius: 4, spreadRadius: 1),
                         ],
                       ),
                     ),
@@ -258,11 +259,11 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.08),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
+        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: ListTile(
@@ -270,7 +271,7 @@ class DiaryPage extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(Icons.vaccines_rounded, color: Theme.of(context).primaryColor, size: 24),
@@ -304,7 +305,7 @@ class DiaryPage extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4.0),
                   child: Row(
                     children: [
-                      Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                      Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                       const SizedBox(width: 4),
                       Text('${log.bodyWeight} kg', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                     ],
@@ -350,11 +351,11 @@ class DiaryPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '${log.dosage.toStringAsFixed(1)}',
+                log.dosage.toStringAsFixed(1),
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   color: Theme.of(context).primaryColor,
@@ -394,12 +395,12 @@ class DiaryPage extends StatelessWidget {
                     firstDate: DateTime.now().subtract(const Duration(days: 365)),
                     lastDate: DateTime.now(),
                   );
-                  if (date != null) {
+                  if (date != null && context.mounted) {
                     final time = await showTimePicker(
                       context: context,
                       initialTime: TimeOfDay.fromDateTime(selectedDate),
                     );
-                    if (time != null) {
+                    if (time != null && context.mounted) {
                       setState(() {
                         selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
                       });
@@ -493,9 +494,9 @@ class DiaryPage extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.08),
+            color: Colors.orange.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.orange.withOpacity(0.1)),
+            border: Border.all(color: Colors.orange.withValues(alpha: 0.1)),
           ),
           child: Column(
             children: [
@@ -504,7 +505,7 @@ class DiaryPage extends StatelessWidget {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.local_shipping_rounded, color: Colors.orange, size: 24),
@@ -529,7 +530,7 @@ class DiaryPage extends StatelessWidget {
                             padding: const EdgeInsets.only(bottom: 4),
                             child: Row(
                               children: [
-                                Icon(Icons.check_circle_rounded, size: 12, color: Colors.orange.withOpacity(0.5)),
+                                Icon(Icons.check_circle_rounded, size: 12, color: Colors.orange.withValues(alpha: 0.5)),
                                 const SizedBox(width: 8),
                                 Expanded(child: Text('${item.quantity.toStringAsFixed(0)} $unit $name', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500))),
                               ],
@@ -554,9 +555,9 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: (isDiscontinued ? Colors.grey : Colors.green).withOpacity(0.05),
+        color: (isDiscontinued ? Colors.grey : Colors.green).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: (isDiscontinued ? Colors.grey : Colors.green).withOpacity(0.1)),
+        border: Border.all(color: (isDiscontinued ? Colors.grey : Colors.green).withValues(alpha: 0.1)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),

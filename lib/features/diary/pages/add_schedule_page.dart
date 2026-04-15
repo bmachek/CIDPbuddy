@@ -107,7 +107,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                 _buildSectionHeader('Medikation & Dosis'),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<Medication>(
-                  value: _selectedMedication,
+                  initialValue: _selectedMedication,
                   items: medications.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
                   onChanged: (val) => setState(() => _selectedMedication = val),
                   decoration: InputDecoration(
@@ -130,7 +130,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                 _buildSectionHeader('Häufigkeit'),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _frequencyType,
+                  initialValue: _frequencyType,
                   items: _frequencies.map((f) => DropdownMenuItem(value: f['value'], child: Text(f['label']!))).toList(),
                   onChanged: (val) => setState(() => _frequencyType = val!),
                   decoration: InputDecoration(
@@ -174,7 +174,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                             }
                           });
                         },
-                        selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                        selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                         checkmarkColor: Theme.of(context).primaryColor,
                         labelStyle: TextStyle(
                           color: isSelected ? Theme.of(context).primaryColor : null,

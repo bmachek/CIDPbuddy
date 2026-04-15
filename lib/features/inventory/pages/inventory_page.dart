@@ -242,11 +242,11 @@ class InventoryPage extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
                     color: isLowStock 
-                        ? Colors.orange.withOpacity(0.1) 
-                        : (DateTime.now().hour > 0 ? Theme.of(context).primaryColor.withOpacity(0.08) : Theme.of(context).cardColor.withValues(alpha: 0.7)),
+                        ? Colors.orange.withValues(alpha: 0.1) 
+                        : (DateTime.now().hour > 0 ? Theme.of(context).primaryColor.withValues(alpha: 0.08) : Theme.of(context).cardColor.withValues(alpha: 0.7)),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
-                      color: isLowStock ? Colors.orange.withValues(alpha: 0.3) : Theme.of(context).primaryColor.withOpacity(0.1),
+                      color: isLowStock ? Colors.orange.withValues(alpha: 0.3) : Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     ),
                     boxShadow: [
                       BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
@@ -267,7 +267,7 @@ class InventoryPage extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
@@ -314,7 +314,7 @@ class InventoryPage extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
@@ -337,7 +337,7 @@ class InventoryPage extends StatelessWidget {
                                 if (nextInf != null)
                                   TextSpan(
                                     text: nextInfText,
-                                    style: TextStyle(color: Theme.of(context).colorScheme.primary.withOpacity(0.8), fontWeight: FontWeight.w500),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
                                   ),
                               ],
                             ),

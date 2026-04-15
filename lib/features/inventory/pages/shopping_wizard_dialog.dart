@@ -94,7 +94,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   }
 
                   return DropdownButtonFormField<int?>(
-                    value: _selectedMed?.id,
+                    initialValue: _selectedMed?.id,
                     items: items,
                     onChanged: (val) {
                       setState(() {
@@ -141,7 +141,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               const SizedBox(height: 16),
               ListTile(
                 tileColor: Theme.of(context).colorScheme.surface,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.withOpacity(0.1))),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.withValues(alpha: 0.1))),
                 leading: const Icon(Icons.event_rounded),
                 title: const Text('Lieferdatum (Optional)', style: TextStyle(fontSize: 14)),
                 subtitle: Text(_deliveryDate == null ? 'Gleich nach Bestätigung' : DateFormat('dd.MM.yyyy').format(_deliveryDate!)),
@@ -185,7 +185,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     padding: const EdgeInsets.all(16),
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -298,13 +298,13 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: item.isSystemRecommended || item.isUserAddition
-          ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
           : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: item.isSystemRecommended || item.isUserAddition
-            ? Theme.of(context).colorScheme.primary.withOpacity(0.3) 
-            : Colors.grey.withOpacity(0.1),
+            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3) 
+            : Colors.grey.withValues(alpha: 0.1),
           width: item.isSystemRecommended || item.isUserAddition ? 2 : 1,
         ),
       ),
@@ -315,9 +315,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: item.isSystemRecommended ? Theme.of(context).colorScheme.primary.withOpacity(0.1) : Theme.of(context).colorScheme.surface, 
+                  color: item.isSystemRecommended ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1) : Theme.of(context).colorScheme.surface, 
                   shape: BoxShape.circle, 
-                  border: Border.all(color: Colors.grey.withOpacity(0.1))
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.1))
                 ),
                 child: Icon(
                   item.isSystemRecommended ? Icons.star_rounded : Icons.add_circle_outline_rounded, 
@@ -350,7 +350,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

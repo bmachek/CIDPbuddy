@@ -182,10 +182,10 @@ class PlanningPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.05),
+                color: Colors.grey.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 64, color: Colors.grey.withOpacity(0.5)),
+              child: Icon(icon, size: 64, color: Colors.grey.withValues(alpha: 0.5)),
             ),
             const SizedBox(height: 24),
             Text(
@@ -212,7 +212,7 @@ class PlanningPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+            border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.05)),
           ),
           child: Column(
             children: [
@@ -222,7 +222,7 @@ class PlanningPage extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: (isOverdue ? Colors.red : (appt.scheduleId != null ? Colors.blue : Theme.of(context).primaryColor)).withOpacity(0.1),
+                    color: (isOverdue ? Colors.red : (appt.scheduleId != null ? Colors.blue : Theme.of(context).primaryColor)).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -282,7 +282,7 @@ class PlanningPage extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         elevation: 0,
-                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                         foregroundColor: Theme.of(context).primaryColor,
                       ),
                     ),
@@ -405,7 +405,7 @@ class PlanningPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+            border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.05)),
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.all(16),
@@ -413,7 +413,7 @@ class PlanningPage extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.repeat_rounded, color: Colors.blue),
@@ -494,7 +494,7 @@ class PlanningPage extends StatelessWidget {
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: Theme.of(context).primaryColor.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: Icon(Icons.event_rounded, color: Theme.of(context).primaryColor),
                 ),
                 title: const Text('Einmaliger Termin', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -508,7 +508,7 @@ class PlanningPage extends StatelessWidget {
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: const Icon(Icons.repeat_rounded, color: Colors.blue),
                 ),
                 title: const Text('Wiederkehrender Plan', style: TextStyle(fontWeight: FontWeight.bold)),

@@ -27,7 +27,25 @@ class MedicationDetailsPage extends StatelessWidget {
           body: CustomScrollView(
             slivers: [
               SliverAppBar.large(
-                title: Text(medication.name),
+                title: Row(
+                  children: [
+                    Text(medication.name),
+                    if (medication.dosage.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          medication.dosage, 
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 pinned: true,
                 actions: [
                   IconButton(
@@ -57,7 +75,7 @@ class MedicationDetailsPage extends StatelessWidget {
               if (medication.discontinuedAt != null)
                 SliverToBoxAdapter(
                   child: Container(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange.withValues(alpha: 0.1),
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     child: Row(
                       children: [
@@ -93,7 +111,7 @@ class MedicationDetailsPage extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.05),
+                          color: Colors.grey.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Center(
@@ -164,7 +182,7 @@ class MedicationDetailsPage extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.05),
+                          color: Colors.grey.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Center(
@@ -209,7 +227,7 @@ class MedicationDetailsPage extends StatelessWidget {
                     icon: const Icon(Icons.heart_broken_outlined),
                     label: const Text('Medikament absetzen'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange.withOpacity(0.1),
+                      backgroundColor: Colors.orange.withValues(alpha: 0.1),
                       foregroundColor: Colors.orange,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -221,7 +239,7 @@ class MedicationDetailsPage extends StatelessWidget {
                     icon: const Icon(Icons.add_moderator_outlined),
                     label: const Text('Wieder verordnen'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.withOpacity(0.1),
+                      backgroundColor: Colors.green.withValues(alpha: 0.1),
                       foregroundColor: Colors.green,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -267,7 +285,7 @@ class MedicationDetailsPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+            border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.05)),
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -529,6 +547,7 @@ class MedicationDetailsPage extends StatelessWidget {
 
   void _showEditMedicationDialog(BuildContext context, AppDatabase db, Medication med) {
     final nameController = TextEditingController(text: med.name);
+    final dosageController = TextEditingController(text: med.dosage);
     final pznController = TextEditingController(text: med.pzn ?? '');
     final unitController = TextEditingController(text: med.unit);
     final pkgSizeController = TextEditingController(text: med.packageSize.toStringAsFixed(1));
@@ -544,6 +563,11 @@ class MedicationDetailsPage extends StatelessWidget {
             TextField(
               controller: nameController,
               decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: dosageController,
+              decoration: const InputDecoration(labelText: 'Dosis / Stärke (z.B. 10g)', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -569,6 +593,7 @@ class MedicationDetailsPage extends StatelessWidget {
             onPressed: () async {
               await db.updateMedication(med.copyWith(
                 name: nameController.text,
+                dosage: dosageController.text,
                 pzn: drift.Value(pznController.text),
                 unit: unitController.text,
                 packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
@@ -702,7 +727,7 @@ class MedicationDetailsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.05)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
@@ -710,7 +735,7 @@ class MedicationDetailsPage extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.repeat_rounded, color: Colors.blue),
@@ -775,7 +800,7 @@ class MedicationDetailsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
@@ -946,9 +971,9 @@ class _StockManagementCardState extends State<_StockManagementCard> {
 
     return Container(
       decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.05),
+        color: primaryColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: primaryColor.withOpacity(0.1)),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
       ),
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -958,7 +983,7 @@ class _StockManagementCardState extends State<_StockManagementCard> {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.2), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.2), shape: BoxShape.circle),
                 child: const Icon(Icons.inventory_2_rounded, color: Colors.orange, size: 20),
               ),
               const SizedBox(width: 12),
@@ -976,7 +1001,7 @@ class _StockManagementCardState extends State<_StockManagementCard> {
                     suffixText: widget.medication.unit,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                     filled: true,
-                    fillColor: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.5),
+                    fillColor: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.5),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),
@@ -995,7 +1020,7 @@ class _StockManagementCardState extends State<_StockManagementCard> {
                     helperText: 'Niedriger Bestand Warnung',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                     filled: true,
-                    fillColor: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.5),
+                    fillColor: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.5),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),

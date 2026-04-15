@@ -91,7 +91,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 }
 
                 return DropdownButtonFormField<Medication>(
-                  value: _selectedMed,
+                  initialValue: _selectedMed,
                   decoration: InputDecoration(
                     labelText: 'Medikament wählen',
                     prefixIcon: const Icon(Icons.medication_rounded),
@@ -114,7 +114,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
                 ),
                 child: Row(
                   children: [
@@ -181,7 +181,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                         child: IconButton.filled(
                           onPressed: () => setState(() => _capturedPhotoPath = null),
                           icon: const Icon(Icons.close_rounded, size: 20),
-                          style: IconButton.styleFrom(backgroundColor: Colors.black.withOpacity(0.5)),
+                          style: IconButton.styleFrom(backgroundColor: Colors.black.withValues(alpha: 0.5)),
                         ),
                       ),
                     ],
@@ -265,9 +265,9 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         height: 56,
         width: 56,
         decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor.withOpacity(0.1),
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.2)),
+          border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
         ),
         child: isLoading 
           ? const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(strokeWidth: 2))
@@ -326,14 +326,16 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (date != null) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_selectedDate),
-      );
-      if (time != null) {
-        setState(() {
-          _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-        });
+      if (context.mounted) {
+        final time = await showTimePicker(
+          context: context,
+          initialTime: TimeOfDay.fromDateTime(_selectedDate),
+        );
+        if (time != null) {
+          setState(() {
+            _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+          });
+        }
       }
     }
   }

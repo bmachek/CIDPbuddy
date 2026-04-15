@@ -5,7 +5,6 @@ import '../services/backup_service.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/constants/build_config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:intl/intl.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -130,9 +129,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.05),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
+                    border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
                   ),
                   child: Column(
                     children: [

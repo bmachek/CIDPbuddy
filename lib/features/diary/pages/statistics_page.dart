@@ -98,7 +98,7 @@ class StatisticsPage extends StatelessWidget {
                             show: true,
                             drawVerticalLine: false,
                             getDrawingHorizontalLine: (value) => FlLine(
-                              color: Theme.of(context).dividerColor.withOpacity(0.1),
+                              color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
                               strokeWidth: 1,
                             ),
                           ),
@@ -153,7 +153,7 @@ class StatisticsPage extends StatelessWidget {
             backDrawRodData: BackgroundBarChartRodData(
               show: true,
               toY: _getMaxY(data),
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
             ),
           ),
         ],
@@ -175,9 +175,9 @@ class StatisticsPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.1)),
+        border: Border.all(color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,7 +202,7 @@ class StatisticsPage extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary.withOpacity(0.7)),
+              Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7)),
               const SizedBox(width: 8),
               Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500)),
             ],
