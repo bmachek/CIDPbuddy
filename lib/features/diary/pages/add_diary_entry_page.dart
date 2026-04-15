@@ -84,7 +84,7 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
+                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -119,11 +119,11 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
             const SizedBox(height: 32),
             _buildSectionHeader('CIDP-Symptome (1-10)'),
             const SizedBox(height: 8),
-            _buildSymptomSlider('Kraft / Stärke', _strength, (val) => setState(() => _strength = val), Colors.blue),
-            _buildSymptomSlider('Gefühl / Sensorik', _sensory, (val) => setState(() => _sensory = val), Colors.teal),
-            _buildSymptomSlider('Erschöpfung / Fatigue', _fatigue, (val) => setState(() => _fatigue = val), Colors.orange),
-            _buildSymptomSlider('Schmerzen', _pain, (val) => setState(() => _pain = val), Colors.red),
-            _buildSymptomSlider('Gleichgewicht', _balance, (val) => setState(() => _balance = val), Colors.purple),
+            _buildSymptomSlider('Kraft / Stärke', _strength, (val) => setState(() => _strength = val), Theme.of(context).colorScheme.primary),
+            _buildSymptomSlider('Gefühl / Sensorik', _sensory, (val) => setState(() => _sensory = val), Theme.of(context).colorScheme.tertiary),
+            _buildSymptomSlider('Erschöpfung / Fatigue', _fatigue, (val) => setState(() => _fatigue = val), const Color(0xFFFFB300)),
+            _buildSymptomSlider('Schmerzen', _pain, (val) => setState(() => _pain = val), Theme.of(context).colorScheme.error),
+            _buildSymptomSlider('Gleichgewicht', _balance, (val) => setState(() => _balance = val), Theme.of(context).colorScheme.secondary),
             const SizedBox(height: 32),
             _buildSectionHeader('Zusätzliche Notizen'),
             const SizedBox(height: 12),
@@ -162,7 +162,7 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title.toUpperCase(),
-      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Colors.grey),
+      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6)),
     );
   }
 

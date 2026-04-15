@@ -82,8 +82,8 @@ class DiaryPage extends StatelessWidget {
               ),
               icon: const Icon(Icons.analytics_outlined),
               label: const Text('Vitalwerte & Symptome'),
-              backgroundColor: Colors.white.withValues(alpha: 0.8),
-              foregroundColor: Theme.of(context).colorScheme.secondary,
+              backgroundColor: Theme.of(context).cardColor.withValues(alpha: 0.9),
+              foregroundColor: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 12),
             FloatingActionButton.extended(
@@ -108,9 +108,9 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
+        color: Theme.of(context).cardColor.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.15)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
@@ -126,10 +126,10 @@ class DiaryPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.analytics_rounded, color: Theme.of(context).colorScheme.secondary, size: 24),
+                child: Icon(Icons.analytics_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -206,15 +206,15 @@ class DiaryPage extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 4.0),
                 child: Column(
                   children: [
-                    Icon(e.key, size: 14, color: _getColorForScore(score)),
+                    Icon(e.key, size: 14, color: _getColorForScore(context, score)),
                     const SizedBox(height: 4),
                     Container(
                       height: 4,
                       decoration: BoxDecoration(
-                        color: _getColorForScore(score),
+                        color: _getColorForScore(context, score),
                         borderRadius: BorderRadius.circular(2),
                         boxShadow: [
-                          BoxShadow(color: _getColorForScore(score).withValues(alpha: 0.3), blurRadius: 4, spreadRadius: 1),
+                          BoxShadow(color: _getColorForScore(context, score).withValues(alpha: 0.3), blurRadius: 4, spreadRadius: 1),
                         ],
                       ),
                     ),
@@ -228,10 +228,10 @@ class DiaryPage extends StatelessWidget {
     );
   }
 
-  Color _getColorForScore(int score) {
-    if (score >= 8) return Colors.red;
-    if (score >= 5) return Colors.orange;
-    return Colors.green;
+  Color _getColorForScore(BuildContext context, int score) {
+    if (score >= 8) return Theme.of(context).colorScheme.error;
+    if (score >= 5) return const Color(0xFFFFB300); // Warning Gold
+    return Theme.of(context).colorScheme.tertiary; // Emerald
   }
 
   Widget _buildEmptyState(BuildContext context) {
@@ -271,9 +271,9 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
+        color: Theme.of(context).cardColor.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.15)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
@@ -356,7 +356,7 @@ class DiaryPage extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.orange, size: 18),
+                      icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error, size: 18),
                       onPressed: () => _confirmDeleteLog(context, Provider.of<AppDatabase>(context, listen: false), log),
                       visualDensity: VisualDensity.compact,
                     ),
@@ -512,9 +512,9 @@ class DiaryPage extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: Theme.of(context).cardColor.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.orange.withValues(alpha: 0.2), width: 1.5),
+            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15), width: 1.5),
             boxShadow: [
               BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
             ],
@@ -526,10 +526,10 @@ class DiaryPage extends StatelessWidget {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.local_shipping_rounded, color: Colors.orange, size: 24),
+                  child: Icon(Icons.local_shipping_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
                 ),
                 title: const Text('Bestellung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(dateStr, style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
@@ -551,7 +551,7 @@ class DiaryPage extends StatelessWidget {
                             padding: const EdgeInsets.only(bottom: 4),
                             child: Row(
                               children: [
-                                Icon(Icons.check_circle_rounded, size: 12, color: Colors.orange.withValues(alpha: 0.5)),
+                                Icon(Icons.check_circle_rounded, size: 12, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
                                 const SizedBox(width: 8),
                                 Expanded(child: Text('${item.quantity.toStringAsFixed(0)} $unit $name', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500))),
                               ],
@@ -576,9 +576,9 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
+        color: Theme.of(context).cardColor.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: (isDiscontinued ? Colors.grey : Colors.green).withValues(alpha: 0.2), width: 1.5),
+        border: Border.all(color: (isDiscontinued ? Colors.grey : Theme.of(context).colorScheme.tertiary).withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
@@ -586,10 +586,10 @@ class DiaryPage extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: CircleAvatar(
-          backgroundColor: Colors.white,
+          backgroundColor: (isDiscontinued ? Colors.grey : Theme.of(context).colorScheme.tertiary).withValues(alpha: 0.1),
           child: Icon(
             isDiscontinued ? Icons.heart_broken_outlined : Icons.add_moderator_outlined,
-            color: isDiscontinued ? Colors.grey : Colors.green,
+            color: isDiscontinued ? Colors.grey : Theme.of(context).colorScheme.tertiary,
           ),
         ),
         title: Text(

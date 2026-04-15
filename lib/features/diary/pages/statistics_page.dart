@@ -42,9 +42,9 @@ class StatisticsPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Übersicht der verabreichten Einheiten der letzten 6 Monate',
-                      style: TextStyle(color: Color(0xFF333333), fontSize: 13), // Ensuring dark in light mode
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                     ),
                     const SizedBox(height: 32),
                     SizedBox(

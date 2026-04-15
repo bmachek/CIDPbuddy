@@ -54,18 +54,18 @@ class MedicationDetailsPage extends StatelessWidget {
                   ),
                   if (medication.discontinuedAt == null)
                     IconButton(
-                      icon: const Icon(Icons.heart_broken_outlined, color: Colors.orange),
+                      icon: Icon(Icons.heart_broken_outlined, color: Theme.of(context).colorScheme.primary),
                       onPressed: () => _confirmDiscontinueMedication(context, invProvider, medication),
                       tooltip: 'Absetzen',
                     )
                   else
                     IconButton(
-                      icon: const Icon(Icons.add_moderator_outlined, color: Colors.green),
+                      icon: Icon(Icons.add_moderator_outlined, color: Theme.of(context).colorScheme.tertiary),
                       onPressed: () => invProvider.reenrollMedication(medication.id),
                       tooltip: 'Wieder verordnen',
                     ),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                    icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error),
                     onPressed: () => _confirmDeleteMedication(context, db, medication),
                     tooltip: 'Vollständig löschen',
                   ),
@@ -75,15 +75,15 @@ class MedicationDetailsPage extends StatelessWidget {
               if (medication.discontinuedAt != null)
                 SliverToBoxAdapter(
                   child: Container(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 16),
+                        Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 16),
                         const SizedBox(width: 8),
                         Text(
                           'Dieses Medikament ist abgesetzt seit ${DateFormat('dd.MM.yyyy').format(medication.discontinuedAt!)}',
-                          style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 13),
+                          style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                       ],
                     ),
@@ -227,10 +227,11 @@ class MedicationDetailsPage extends StatelessWidget {
                     icon: const Icon(Icons.heart_broken_outlined),
                     label: const Text('Medikament absetzen'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange.withValues(alpha: 0.1),
-                      foregroundColor: Colors.orange,
+                      backgroundColor: Theme.of(context).colorScheme.surface,
+                      foregroundColor: Theme.of(context).colorScheme.primary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
                     ),
                   )
                 else
@@ -239,10 +240,11 @@ class MedicationDetailsPage extends StatelessWidget {
                     icon: const Icon(Icons.add_moderator_outlined),
                     label: const Text('Wieder verordnen'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.withValues(alpha: 0.1),
-                      foregroundColor: Colors.green,
+                      backgroundColor: Theme.of(context).colorScheme.surface,
+                      foregroundColor: Theme.of(context).colorScheme.tertiary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      side: BorderSide(color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1)),
                     ),
                   ),
                 const SizedBox(height: 12),
@@ -251,8 +253,9 @@ class MedicationDetailsPage extends StatelessWidget {
                   icon: const Icon(Icons.delete_outline_rounded),
                   label: const Text('Vollständig aus Datenbank löschen'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
+                    foregroundColor: Theme.of(context).colorScheme.error,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    side: BorderSide(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2)),
                   ),
                 ),
                 const SizedBox(height: 100),
@@ -289,18 +292,18 @@ class MedicationDetailsPage extends StatelessWidget {
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            leading: const Icon(Icons.build_circle_rounded, color: Colors.teal),
+            leading: Icon(Icons.build_circle_rounded, color: Theme.of(context).colorScheme.tertiary),
             title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('Bedarf: ${link.defaultQuantity.toStringAsFixed(0)} ${acc.unit}'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (link.isMandatory)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 8.0),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
                     child: Tooltip(
                       message: 'Muss mitbestellt werden',
-                      child: Icon(Icons.star_rounded, color: Colors.orange, size: 20),
+                      child: Icon(Icons.star_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
                     ),
                   ),
                 IconButton(
@@ -623,7 +626,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 Navigator.pop(context); // Go back to inventory
               }
             },
-            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+            child: Text('Löschen', style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),
@@ -646,7 +649,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 Navigator.pop(context); // Go back to inventory
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Colors.white),
             child: const Text('Absetzen'),
           ),
         ],
@@ -738,7 +741,7 @@ class MedicationDetailsPage extends StatelessWidget {
             color: Colors.blue.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.repeat_rounded, color: Colors.blue),
+          child: Icon(Icons.repeat_rounded, color: Theme.of(context).colorScheme.primary),
         ),
         title: Text(freqLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
@@ -788,7 +791,7 @@ class MedicationDetailsPage extends StatelessWidget {
               await db.deleteSchedule(schedule.id);
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+            child: Text('Löschen', style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),

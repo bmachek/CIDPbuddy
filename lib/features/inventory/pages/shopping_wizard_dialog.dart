@@ -132,7 +132,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     filled: true,
                     fillColor: Theme.of(context).colorScheme.surface,
                     helperText: _getMedReachText(),
-                    helperStyle: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+                    helperStyle: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.bold),
                   ),
                   keyboardType: TextInputType.number,
                   onChanged: (_) => _calculateBOM(db),
@@ -220,7 +220,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
         ElevatedButton(
           onPressed: (_selectedMed == null && (_results == null || !_results!.any((it) => it.isActuallySelected))) ? null : () => _saveOrder(db),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
+            backgroundColor: Theme.of(context).colorScheme.tertiary,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -322,7 +322,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 child: Icon(
                   item.isSystemRecommended ? Icons.star_rounded : Icons.add_circle_outline_rounded, 
                   size: 20, 
-                  color: item.isSystemRecommended ? Colors.orange : Theme.of(context).colorScheme.onSurfaceVariant
+                  color: item.isSystemRecommended ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant
                 ),
               ),
               const SizedBox(width: 12),
@@ -338,9 +338,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       )
                     ),
                     if (item.isSystemRecommended)
-                      const Text('Empfohlene Menge', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
+                      Text('Empfohlene Menge', style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
                     if (item.isUserAddition)
-                      const Text('Zusätzlich ausgewählt', style: TextStyle(fontSize: 10, color: Colors.teal, fontWeight: FontWeight.bold)),
+                      Text('Zusätzlich ausgewählt', style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -388,11 +388,11 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.date_range_rounded, size: 14, color: Colors.teal),
+                const Icon(Icons.date_range_rounded, size: 14, color: Color(0xFF00BFA6)), // Emerald accent
                 const SizedBox(width: 6),
                 Text(
                   'Reicht bis: ${DateFormat('dd.MM.yyyy').format(item.reachDate!)}',
-                  style: const TextStyle(fontSize: 11, color: Colors.teal, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF00BFA6), fontWeight: FontWeight.bold),
                 ),
               ],
             ),

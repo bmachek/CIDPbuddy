@@ -28,19 +28,39 @@ class _MainScreenState extends State<MainScreen> {
       extendBody: true,
       body: Stack(
         children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/app_background.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          // Subtle Overlay
+          // Premium Blue & Slate Background Gradient
           Positioned.fill(
             child: Container(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black.withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: 0.1),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: Theme.of(context).brightness == Brightness.dark
+                      ? [
+                          const Color(0xFF0D1B2A), // Deep Midnight
+                          Theme.of(context).colorScheme.surface, // Slate/Black
+                        ]
+                      : [
+                          const Color(0xFFE3F2FD), // Very Light Azure
+                          Theme.of(context).colorScheme.surface, // Off-white
+                        ],
+                ),
+              ),
+            ),
+          ),
+          // Subtle texture overlay (optional, keeping it clean for now)
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.05,
+              child: Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/app_icon.png'), // Using logo as a subtle watermark pattern
+                    repeat: ImageRepeat.repeat,
+                    scale: 4,
+                  ),
+                ),
+              ),
             ),
           ),
           // Main Content

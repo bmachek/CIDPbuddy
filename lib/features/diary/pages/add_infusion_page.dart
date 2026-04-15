@@ -127,7 +127,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Zeitpunkt der Infusion', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text('Zeitpunkt der Infusion', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           Text(
                             DateFormat('dd.MM.yyyy, HH:mm').format(_selectedDate),
                             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -135,7 +135,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                         ],
                       ),
                     ),
-                    const Icon(Icons.edit_rounded, size: 18, color: Colors.grey),
+                    const Icon(Icons.edit_rounded, size: 18),
                   ],
                 ),
               ),

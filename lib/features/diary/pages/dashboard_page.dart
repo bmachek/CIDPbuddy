@@ -243,24 +243,24 @@ class _DashboardPageState extends State<DashboardPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.7),
+                                color: Theme.of(context).cardColor,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.orange.withValues(alpha: 0.2), width: 1.5),
+                                border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), width: 1.5),
                                 boxShadow: [
                                   BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
                                 ],
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                                  Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
+                                        Text(
                                           'Bestellung empfohlen',
-                                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 13),
+                                          style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, fontSize: 13),
                                         ),
                                         Text(
                                           'Niedriger Bestand: ${[...lowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
@@ -270,7 +270,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                       ],
                                     ),
                                   ),
-                                  const Icon(Icons.chevron_right_rounded, color: Colors.orange, size: 18),
+                                  Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.primary, size: 18),
                                 ],
                               ),
                             ),
@@ -278,22 +278,14 @@ class _DashboardPageState extends State<DashboardPage> {
                         } else if (pendingItems.isNotEmpty) {
                           return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.teal.withValues(alpha: 0.2), width: 1.5),
-                              boxShadow: [
-                                BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                              ],
-                            ),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(Icons.local_shipping_rounded, color: Colors.teal, size: 18),
-                                SizedBox(width: 12),
+                                Icon(Icons.local_shipping_rounded, color: Theme.of(context).colorScheme.tertiary, size: 18),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     'Bestellungen sind unterwegs.',
-                                    style: TextStyle(fontSize: 13, color: Colors.teal, fontWeight: FontWeight.w500),
+                                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.w500),
                                   ),
                                 ),
                               ],
@@ -353,9 +345,9 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: isOverdue ? Colors.red.withValues(alpha: 0.2) : Colors.orange.withValues(alpha: 0.2), width: 1.5),
+            border: Border.all(color: isOverdue ? Theme.of(context).colorScheme.error.withValues(alpha: 0.2) : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), width: 1.5),
             boxShadow: [
               BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
             ],
@@ -367,10 +359,10 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.local_shipping_rounded, color: Colors.orange),
+                  child: Icon(Icons.local_shipping_rounded, color: Theme.of(context).colorScheme.primary),
                 ),
                 title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Column(
@@ -382,7 +374,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                         'Lieferdatum: ${DateFormat('dd.MM.yyyy').format(order.deliveryDate!)}',
                         style: TextStyle(
                           fontSize: 13,
-                          color: isOverdue ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: isOverdue ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
                         ),
                       )
@@ -394,7 +386,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit_note_rounded, color: Colors.blue),
+                      icon: Icon(Icons.edit_note_rounded, color: Theme.of(context).colorScheme.primary),
                       onPressed: () {
                         showDialog(
                           context: context,
@@ -404,7 +396,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                       tooltip: 'Bestellung bearbeiten',
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                      icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error),
                       onPressed: () async {
                         final confirmed = await showDialog<bool>(
                           context: context,
@@ -415,7 +407,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                               TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
                               TextButton(
                                 onPressed: () => Navigator.pop(context, true), 
-                                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
                                 child: const Text('Löschen')
                               ),
                             ],
@@ -457,12 +449,12 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                       icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
                       label: const Text('Lieferung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: 0.5),
-                        foregroundColor: Colors.orange,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        foregroundColor: Theme.of(context).colorScheme.primary,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        side: BorderSide(color: Colors.orange.withValues(alpha: 0.2)),
+                        side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
                       ),
                    ),
                 ),
@@ -483,7 +475,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     final isMissed = medDate.isBefore(now);
     
     // Primary color for this card
-    final Color accentColor = isMissed ? Colors.orange : (isPill ? Colors.blue : Colors.indigo);
+    final Color accentColor = isMissed ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary;
     
     // Status text
     String statusText;
@@ -513,7 +505,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('${med.name} erledigt!'),
-              backgroundColor: Colors.green.shade800,
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
               behavior: SnackBarBehavior.floating,
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
             ),
@@ -542,9 +534,9 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: accentColor.withValues(alpha: 0.2), width: 1.5),
+        border: Border.all(color: accentColor.withValues(alpha: 0.1), width: 1.5),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
@@ -556,7 +548,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: accentColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -575,10 +567,10 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 0,
-            backgroundColor: Colors.white.withValues(alpha: 0.5),
+            backgroundColor: Theme.of(context).colorScheme.surface,
             foregroundColor: accentColor,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            side: BorderSide(color: accentColor.withValues(alpha: 0.2)),
+            side: BorderSide(color: accentColor.withValues(alpha: 0.1)),
           ),
           child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
@@ -595,10 +587,10 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.auto_awesome_rounded, size: 48, color: Colors.green),
+              child: Icon(Icons.auto_awesome_rounded, size: 48, color: Theme.of(context).colorScheme.tertiary),
             ),
             const SizedBox(height: 20),
             Text('Alles erledigt!', 
@@ -656,7 +648,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                       Expanded(child: Text('${med.name} erledigt!')),
                     ],
                   ),
-                  backgroundColor: Colors.green.shade800,
+                  backgroundColor: Theme.of(context).colorScheme.tertiary,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
@@ -686,9 +678,9 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: (isPill ? Colors.orange : Colors.blue).withValues(alpha: 0.2), width: 1.5),
+            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), width: 1.5),
             boxShadow: [
               BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
             ],
@@ -700,13 +692,13 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: (isPill ? Colors.orange : Colors.blue).withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: (isPill ? Colors.orange : Colors.blue).withValues(alpha: 0.2)),
+                border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
               ),
               child: Icon(
                 isPill ? Icons.medication_rounded : Icons.vaccines_rounded,
-                color: isPill ? Colors.orange : Colors.blue,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -716,10 +708,10 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
-                backgroundColor: Colors.white.withValues(alpha: 0.5),
-                foregroundColor: Theme.of(context).primaryColor,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.primary,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
+                side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
               ),
               child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
             ),

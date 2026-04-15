@@ -136,9 +136,9 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Ping jede Minute • 15 Min empfohlen',
-            style: TextStyle(color: Color(0xFF333333)), // Ensuring dark in light mode
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 40),
           
@@ -152,8 +152,8 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                 child: CircularProgressIndicator(
                   value: progress,
                   strokeWidth: 8,
-                  backgroundColor: Colors.teal.withValues(alpha: 0.1),
-                  color: Colors.teal,
+                  backgroundColor: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.tertiary,
                   strokeCap: StrokeCap.round,
                 ),
               ),
@@ -173,19 +173,19 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.teal.withValues(alpha: 0.1),
+                      color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.vaccines_rounded, size: 16, color: Colors.teal),
+                        Icon(Icons.vaccines_rounded, size: 16, color: Theme.of(context).colorScheme.tertiary),
                         const SizedBox(width: 6),
                         Text(
                           '${(remainingMl).toStringAsFixed(0)} ml',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.teal,
+                            color: Theme.of(context).colorScheme.tertiary,
                             fontSize: 16,
                           ),
                         ),
@@ -229,7 +229,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.teal.shade300, Colors.teal],
+                              colors: [Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.7), Theme.of(context).colorScheme.tertiary],
                             ),
                             borderRadius: BorderRadius.circular(11),
                           ),
@@ -261,7 +261,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
               _buildControlButton(
                 icon: _isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
                 onPressed: _isRunning ? _stopTimer : _startTimer,
-                color: Colors.teal,
+                color: Theme.of(context).colorScheme.tertiary,
                 iconColor: Colors.white,
                 size: 80,
               ),

@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Brand Colors: Vibrant Indigo, Soft Violet, and Emerald
-  static const Color primaryBase = Color(0xFF5D5FEF);
-  static const Color primaryLight = Color(0xFFC77DFF);
+  // Brand Colors: Professional Blue, Slate, and Emerald
+  static const Color primaryBase = Color(0xFF0066FF);
+  static const Color primaryLight = Color(0xFFE3F2FD);
   static const Color accentEmerald = Color(0xFF00BFA6);
+  static const Color warningGold = Color(0xFFFFB300);
   
-  static const Color surfaceLight = Color(0xFFF9FAFF);
-  static const Color surfaceDark = Color(0xFF0F1021);
+  static const Color surfaceLight = Color(0xFFF8F9FD);
+  static const Color surfaceDark = Color(0xFF0A0C16);
   
   static const Color cardLight = Colors.white;
-  static const Color cardDark = Color(0xFF1E203B);
+  static const Color cardDark = Color(0xFF16182D);
 
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
@@ -20,15 +21,22 @@ class AppTheme {
       brightness: Brightness.light,
       primary: primaryBase,
       onPrimary: Colors.white,
-      secondary: primaryLight,
-      onSecondary: Colors.black,
+      secondary: const Color(0xFF4F7396),
+      onSecondary: Colors.white,
       tertiary: accentEmerald,
       onTertiary: Colors.white,
+      error: const Color(0xFFE53935),
+      onError: Colors.white,
       surface: surfaceLight,
       onSurface: const Color(0xFF1A1A1A),
-      onSurfaceVariant: const Color(0xFF333333),
+      onSurfaceVariant: const Color(0xFF5A5A5A),
+      outline: const Color(0xFFE0E0E0),
     ),
-    textTheme: GoogleFonts.outfitTextTheme(),
+    textTheme: GoogleFonts.outfitTextTheme().copyWith(
+      bodyLarge: GoogleFonts.outfit(color: const Color(0xFF1A1A1A)),
+      bodyMedium: GoogleFonts.outfit(color: const Color(0xFF1A1A1A)),
+      titleLarge: GoogleFonts.outfit(color: const Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
+    ),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
       foregroundColor: const Color(0xFF1A1A1A),
@@ -42,12 +50,12 @@ class AppTheme {
     ),
     cardTheme: CardThemeData(
       elevation: 0,
-      shadowColor: primaryBase.withValues(alpha: 0.1),
+      shadowColor: primaryBase.withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(28),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.05)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
       ),
-      color: cardLight.withValues(alpha: 0.9),
+      color: cardLight,
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryBase,
@@ -63,17 +71,17 @@ class AppTheme {
         if (states.contains(WidgetState.selected)) {
           return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: primaryBase);
         }
-        return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500);
+        return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF5A5A5A));
       }),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
           return const IconThemeData(color: primaryBase, size: 28);
         }
-        return IconThemeData(color: const Color(0xFF333333), size: 24);
+        return const IconThemeData(color: Color(0xFF5A5A5A), size: 24);
       }),
     ),
     dividerTheme: DividerThemeData(
-      color: Colors.grey.withValues(alpha: 0.2),
+      color: Colors.grey.withValues(alpha: 0.1),
       thickness: 1,
     ),
   );
@@ -83,17 +91,24 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: primaryBase,
       brightness: Brightness.dark,
-      primary: primaryLight,
-      onPrimary: Colors.black,
-      secondary: primaryBase,
-      onSecondary: Colors.white,
+      primary: primaryBase,
+      onPrimary: Colors.white,
+      secondary: const Color(0xFF8DA9C4),
+      onSecondary: Colors.black,
       tertiary: accentEmerald,
       onTertiary: Colors.black,
+      error: const Color(0xFFFF5252),
+      onError: Colors.black,
       surface: surfaceDark,
       onSurface: Colors.white,
-      onSurfaceVariant: const Color(0xFFE0E0E0),
+      onSurfaceVariant: const Color(0xFFB0B0B0),
+      outline: const Color(0xFF2C2C2C),
     ),
-    textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
+    textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
+      bodyLarge: GoogleFonts.outfit(color: Colors.white),
+      bodyMedium: GoogleFonts.outfit(color: Colors.white),
+      titleLarge: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+    ),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
@@ -110,35 +125,35 @@ class AppTheme {
       shadowColor: Colors.black.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(28),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
       ),
-      color: cardDark.withValues(alpha: 0.8),
+      color: cardDark,
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: primaryLight,
-      foregroundColor: Colors.black,
+      backgroundColor: primaryBase,
+      foregroundColor: Colors.white,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.transparent,
-      indicatorColor: primaryLight.withValues(alpha: 0.2),
+      indicatorColor: primaryBase.withValues(alpha: 0.2),
       indicatorShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: primaryLight);
+          return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white);
         }
-        return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500);
+        return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFFB0B0B0));
       }),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return const IconThemeData(color: primaryLight, size: 28);
+          return const IconThemeData(color: Colors.white, size: 28);
         }
-        return const IconThemeData(color: Color(0xFFE0E0E0), size: 24);
+        return const IconThemeData(color: Color(0xFFB0B0B0), size: 24);
       }),
     ),
     dividerTheme: DividerThemeData(
-      color: Colors.white.withValues(alpha: 0.1),
+      color: Colors.white.withValues(alpha: 0.08),
       thickness: 1,
     ),
   );
