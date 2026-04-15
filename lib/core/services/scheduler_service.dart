@@ -60,7 +60,7 @@ class SchedulerService {
     // Phase 2: Ensure all upcoming UNCOMPLETED entries have notifications scheduled
     // This handles settings changes (quiet hours, snooze) and persistence issues.
     final upcomingTreatments = await (db.select(db.plannedInfusions)
-          ..where((t) => t.date.isAfter(now) & t.isCompleted.equals(false)))
+          ..where((t) => t.date.isBiggerThanValue(now) & t.isCompleted.equals(false)))
         .get();
         
     for (final treatment in upcomingTreatments) {

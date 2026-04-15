@@ -71,17 +71,15 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
                   firstDate: DateTime.now().subtract(const Duration(days: 365)),
                   lastDate: DateTime.now(),
                 );
-                if (date != null) {
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.fromDateTime(_selectedDate),
-                  );
-                  if (time != null) {
-                    setState(() {
-                      _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-                    });
-                  }
-                }
+                if (date == null || !mounted) return;
+                final time = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay.fromDateTime(_selectedDate),
+                );
+                if (time == null || !mounted) return;
+                setState(() {
+                  _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+                });
               },
               child: Container(
                 padding: const EdgeInsets.all(16),

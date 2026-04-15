@@ -325,19 +325,15 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (date != null) {
-      if (context.mounted) {
-        final time = await showTimePicker(
-          context: context,
-          initialTime: TimeOfDay.fromDateTime(_selectedDate),
-        );
-        if (time != null) {
-          setState(() {
-            _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-          });
-        }
-      }
-    }
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDate),
+    );
+    if (time == null || !mounted) return;
+    setState(() {
+      _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    });
   }
 
   void _save(DiaryProvider provider) async {
