@@ -51,3 +51,5 @@ app.*.map.json
 *.sqlite-wal
 *.db
 analyze_output*.txt
+entities.json
+mempalace.yaml
