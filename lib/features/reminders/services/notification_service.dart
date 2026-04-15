@@ -63,30 +63,35 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
   }) async {
-    final scheduleMode = await _getScheduleMode();
-    
-    await _notificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'med_reminders',
-          'Medikamenten Erinnerungen',
-          importance: Importance.max,
-          priority: Priority.high,
-          visibility: NotificationVisibility.public,
-          showWhen: true,
-          enableVibration: true,
-          fullScreenIntent: false, // Set to true if really critical, but false is safer for UX
+    try {
+      final scheduleMode = await _getScheduleMode();
+      
+      await _notificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledTime, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'med_reminders',
+            'Medikamenten Erinnerungen',
+            importance: Importance.max,
+            priority: Priority.high,
+            visibility: NotificationVisibility.public,
+            showWhen: true,
+            enableVibration: true,
+            fullScreenIntent: false,
+          ),
+          iOS: DarwinNotificationDetails(),
+          macOS: DarwinNotificationDetails(),
         ),
-        iOS: DarwinNotificationDetails(),
-        macOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: scheduleMode,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    );
+        androidScheduleMode: scheduleMode,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (e) {
+      debugPrint('NotificationService: Failed to schedule notification $id: $e');
+      // If we hit the alarm limit, we shouldn't crash the whole app
+    }
   }
 
   Future<void> scheduleTreatmentReminders(PlannedInfusion treatment) async {
@@ -160,6 +165,12 @@ class NotificationService {
     for (int i = 1; i <= 3; i++) {
       await _notificationsPlugin.cancel(baseId + 10 + i);
     }
+  }
+
+  /// Cancels all scheduled notifications. 
+  /// Note: This is a heavy operation but useful during full resync.
+  Future<void> cancelAllNotifications() async {
+    await _notificationsPlugin.cancelAll();
   }
 
   int _getBaseId(int treatmentId) {

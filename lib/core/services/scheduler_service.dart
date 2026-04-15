@@ -9,12 +9,15 @@ class SchedulerService {
 
   /// Synchronizes planned infusions from active schedules.
   /// Generates missing entries for the next 90 days.
+  /// Notifications are scheduled only for the next 7 days to avoid Android alarm limits.
   Future<void> syncPlannedInfusions() async {
     final activeSchedules = await db.getAllActiveSchedules();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final lookAhead = today.add(const Duration(days: 90));
+    final notificationLookAhead = today.add(const Duration(days: 7));
 
+    // Phase 1: Generate missing entries
     // Bulk fetch existing entries for efficiency
     final existingEntries = await (db.select(db.plannedInfusions)
           ..where((t) => t.date.isBetweenValues(today, lookAhead)))
@@ -38,9 +41,8 @@ class SchedulerService {
             scheduleId: Value(schedule.id),
           ));
           
-          // Schedule notifications for this specific treatment
-          if (date.isAfter(now)) {
-            // Re-fetch or create a lightweight treatment object for notification
+          // Schedule notifications for this specific treatment if it's within the notification window
+          if (date.isAfter(now) && date.isBefore(notificationLookAhead)) {
             final treatment = PlannedInfusion(
               id: id,
               date: date,
@@ -57,10 +59,15 @@ class SchedulerService {
       }
     }
 
-    // Phase 2: Ensure all upcoming UNCOMPLETED entries have notifications scheduled
-    // This handles settings changes (quiet hours, snooze) and persistence issues.
+    // Phase 2: Ensure all upcoming UNCOMPLETED entries within the notification window have reminders
+    // First, clear all existing notifications to avoid hitting the 500 limit with stale/duplicate alarms
+    await NotificationService().cancelAllNotifications();
+
     final upcomingTreatments = await (db.select(db.plannedInfusions)
-          ..where((t) => t.date.isBiggerThanValue(now) & t.isCompleted.equals(false)))
+          ..where((t) => 
+              t.date.isBiggerThanValue(now) & 
+              t.date.isSmallerThanValue(notificationLookAhead) &
+              t.isCompleted.equals(false)))
         .get();
         
     for (final treatment in upcomingTreatments) {
