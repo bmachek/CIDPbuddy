@@ -105,59 +105,52 @@ class DiaryPage extends StatelessWidget {
     final dateStr = DateFormat('dd. MMMM yyyy').format(entry.date);
     final timeStr = DateFormat('HH:mm').format(entry.date);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: InkWell(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddDiaryEntryPage(initialEntry: entry))),
-        borderRadius: BorderRadius.circular(28),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+    return Column(
+      children: [
+        InkWell(
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddDiaryEntryPage(initialEntry: entry))),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.analytics_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
                 ),
-                child: Icon(Icons.analytics_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 2),
-                    Text(timeStr, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        if (entry.systolicBP != null) _buildSmallChip(context, '${entry.systolicBP?.toInt()}/${entry.diastolicBP?.toInt()}', Icons.favorite),
-                        if (entry.heartRate != null) _buildSmallChip(context, '${entry.heartRate} bpm', Icons.monitor_heart),
-                        if (entry.weight != null) _buildSmallChip(context, '${entry.weight} kg', Icons.monitor_weight),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSymptomMiniBar(context, entry),
-                  ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(dateStr, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                      const SizedBox(height: 2),
+                      Text(timeStr, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (entry.systolicBP != null) _buildSmallChip(context, '${entry.systolicBP?.toInt()}/${entry.diastolicBP?.toInt()}', Icons.favorite),
+                          if (entry.heartRate != null) _buildSmallChip(context, '${entry.heartRate} bpm', Icons.monitor_heart),
+                          if (entry.weight != null) _buildSmallChip(context, '${entry.weight} kg', Icons.monitor_weight),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildSymptomMiniBar(context, entry),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
+        const Divider(),
+      ],
     );
   }
 
@@ -174,7 +167,7 @@ class DiaryPage extends StatelessWidget {
         children: [
           Icon(icon, size: 10, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 4),
-          Text(text, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          Text(text, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
         ],
       ),
     );
@@ -195,7 +188,7 @@ class DiaryPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('VITALWERTE & SYMPTOME:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
+        Text('VITALWERTE & SYMPTOME:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: Theme.of(context).colorScheme.primary)),
         const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -268,122 +261,116 @@ class DiaryPage extends StatelessWidget {
     final dateStr = DateFormat('dd. MMMM yyyy').format(log.date);
     final timeStr = DateFormat('HH:mm').format(log.date);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.vaccines_rounded, color: Theme.of(context).primaryColor, size: 24),
               ),
-              child: Icon(Icons.vaccines_rounded, color: Theme.of(context).primaryColor, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.access_time_rounded, size: 14, color: Theme.of(context).primaryColor),
-                      const SizedBox(width: 4),
-                      Text(timeStr, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.w700, fontSize: 13)),
-                    ],
-                  ),
-                  if (log.batchNumber != null && log.batchNumber!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(dateStr, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.access_time_rounded, size: 14, color: Theme.of(context).primaryColor),
+                        const SizedBox(width: 4),
+                        Text(timeStr, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.w700, fontSize: 13)),
+                      ],
                     ),
-                  if (log.notes != null && log.notes!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(log.notes!, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                    ),
-                  if (log.bodyWeight != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6.0),
-                      child: Row(
-                        children: [
-                          Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
-                          const SizedBox(width: 4),
-                          Text('${log.bodyWeight} kg', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                        ],
+                    if (log.batchNumber != null && log.batchNumber!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
                       ),
-                    ),
-                  if (log.photoPath != null && log.photoPath!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.file(
-                          File(log.photoPath!),
-                          height: 120,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    if (log.notes != null && log.notes!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(log.notes!, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                      ),
+                    if (log.bodyWeight != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6.0),
+                        child: Row(
+                          children: [
+                            Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+                            const SizedBox(width: 4),
+                            Text('${log.bodyWeight} kg', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          ],
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined, size: 18),
-                      onPressed: () => _showEditLogDialog(context, Provider.of<AppDatabase>(context, listen: false), log),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error, size: 18),
-                      onPressed: () => _confirmDeleteLog(context, Provider.of<AppDatabase>(context, listen: false), log),
-                      visualDensity: VisualDensity.compact,
-                    ),
+                    if (log.photoPath != null && log.photoPath!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.file(
+                            File(log.photoPath!),
+                            height: 120,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        onPressed: () => _showEditLogDialog(context, Provider.of<AppDatabase>(context, listen: false), log),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error, size: 18),
+                        onPressed: () => _confirmDeleteLog(context, Provider.of<AppDatabase>(context, listen: false), log),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    log.dosage.toStringAsFixed(1),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      color: Theme.of(context).primaryColor,
-                      fontSize: 14,
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                    ),
+                    child: Text(
+                      log.dosage.toStringAsFixed(1),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: Theme.of(context).primaryColor,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
+        const Divider(),
+      ],
     );
   }
 
@@ -509,62 +496,52 @@ class DiaryPage extends StatelessWidget {
       builder: (context, itemsSnapshot) {
         final items = itemsSnapshot.data ?? [];
         
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15), width: 1.5),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-            ],
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.local_shipping_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
           ),
-          child: Column(
-            children: [
-              ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.local_shipping_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
-                ),
-                title: const Text('Bestellung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(dateStr, style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              ),
-              if (items.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(72, 0, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: items.map((item) {
-                      return FutureBuilder<dynamic>(
-                        future: item.medicationId != null 
-                          ? (db.select(db.medications)..where((t) => t.id.equals(item.medicationId!))).getSingle()
-                          : (db.select(db.accessories)..where((t) => t.id.equals(item.accessoryId!))).getSingle(),
-                        builder: (context, nameSnapshot) {
-                          final name = nameSnapshot.data?.name ?? '...';
-                          final unit = nameSnapshot.data?.unit ?? '';
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Row(
-                              children: [
-                                Icon(Icons.check_circle_rounded, size: 12, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text('${item.quantity.toStringAsFixed(0)} $unit $name', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500))),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-            ],
+          title: const Text('Bestellung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(dateStr, style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        ),
+        if (items.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(58, 0, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: items.map((item) {
+                return FutureBuilder<dynamic>(
+                  future: item.medicationId != null 
+                    ? (db.select(db.medications)..where((t) => t.id.equals(item.medicationId!))).getSingle()
+                    : (db.select(db.accessories)..where((t) => t.id.equals(item.accessoryId!))).getSingle(),
+                  builder: (context, nameSnapshot) {
+                    final name = nameSnapshot.data?.name ?? '...';
+                    final unit = nameSnapshot.data?.unit ?? '';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle_rounded, size: 12, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text('${item.quantity.toStringAsFixed(0)} $unit $name', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500))),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }).toList(),
+            ),
           ),
-        );
+        const Divider(),
+      ],
+    );
       },
     );
   }
@@ -573,31 +550,25 @@ class DiaryPage extends StatelessWidget {
     final dateStr = DateFormat('dd. MMMM yyyy').format(event.date);
     final isDiscontinued = event.type == MedicationEventType.discontinued;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: (isDiscontinued ? Colors.grey : Theme.of(context).colorScheme.tertiary).withValues(alpha: 0.2), width: 1.5),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: CircleAvatar(
-          backgroundColor: (isDiscontinued ? Colors.grey : Theme.of(context).colorScheme.tertiary).withValues(alpha: 0.1),
-          child: Icon(
-            isDiscontinued ? Icons.heart_broken_outlined : Icons.add_moderator_outlined,
-            color: isDiscontinued ? Colors.grey : Theme.of(context).colorScheme.tertiary,
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          leading: CircleAvatar(
+            backgroundColor: (isDiscontinued ? Colors.grey : Theme.of(context).colorScheme.tertiary).withValues(alpha: 0.1),
+            child: Icon(
+              isDiscontinued ? Icons.heart_broken_outlined : Icons.add_moderator_outlined,
+              color: isDiscontinued ? Colors.grey : Theme.of(context).colorScheme.tertiary,
+            ),
           ),
+          title: Text(
+            isDiscontinued ? 'Abgesetzt: ${event.medication.name}' : 'Neu verordnet: ${event.medication.name}',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(dateStr),
         ),
-        title: Text(
-          isDiscontinued ? 'Abgesetzt: ${event.medication.name}' : 'Neu verordnet: ${event.medication.name}',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(dateStr),
-      ),
+        const Divider(),
+      ],
     );
   }
 }

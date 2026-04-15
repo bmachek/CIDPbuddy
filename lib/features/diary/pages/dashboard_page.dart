@@ -240,39 +240,33 @@ class _DashboardPageState extends State<DashboardPage> {
                               );
                             },
                             borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                                color: Theme.of(context).cardColor,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), width: 1.5),
-                                boxShadow: [
-                                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Bestellung empfohlen',
-                                          style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, fontSize: 13),
-                                        ),
-                                        Text(
-                                          'Niedriger Bestand: ${[...lowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
-                                          style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Bestellung empfohlen',
+                                            style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, fontSize: 13),
+                                          ),
+                                          Text(
+                                            'Niedriger Bestand: ${[...lowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
+                                            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.primary, size: 18),
-                                ],
-                              ),
+                                    Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.primary, size: 18),
+                                  ],
+                                ),
+                                const Divider(),
+                              ],
                             ),
                           );
                         } else if (pendingItems.isNotEmpty) {
@@ -315,16 +309,18 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'AUSSTEHENDE LIEFERUNGEN',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.5,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                'AUSSTEHENDE LIEFERUNGEN',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.5,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
             ...orders.map((order) => _buildOrderCard(context, db, order)),
           ],
         );
@@ -336,131 +332,110 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     final now = DateTime.now();
     final isOverdue = order.deliveryDate != null && order.deliveryDate!.isBefore(DateTime(now.year, now.month, now.day));
     
+    Future<void> updateStock(double change, int medId) async {
+      final currentMed = await (db.select(db.medications)..where((t) => t.id.equals(medId))).getSingle();
+      await db.updateMedication(currentMed.copyWith(stock: currentMed.stock + change));
+    }
+    
     return FutureBuilder<Medication>(
       future: (db.select(db.medications)..where((t) => t.id.equals(order.medicationId))).getSingle(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox();
         final med = snapshot.data!;
         
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: isOverdue ? Theme.of(context).colorScheme.error.withValues(alpha: 0.2) : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), width: 1.5),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-            ],
-          ),
-          child: Column(
-            children: [
-              ListTile(
-                contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.local_shipping_rounded, color: Theme.of(context).colorScheme.primary),
-                ),
-                title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Menge: ${order.medicationQty.toStringAsFixed(0)} ${med.unit}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                    if (order.deliveryDate != null)
-                      Text(
-                        'Lieferdatum: ${DateFormat('dd.MM.yyyy').format(order.deliveryDate!)}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isOverdue ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      )
-                    else
-                      Text('Noch kein Datum festgelegt', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
-                  ],
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit_note_rounded, color: Theme.of(context).colorScheme.primary),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => ShoppingWizardDialog(orderToEdit: order),
-                        );
-                      },
-                      tooltip: 'Bestellung bearbeiten',
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error),
-                      onPressed: () async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Bestellung löschen?'),
-                            content: const Text('Möchtest du diese ausstehende Bestellung wirklich entfernen?'),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true), 
-                                style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-                                child: const Text('Löschen')
-                              ),
-                            ],
-                          ),
-                        );
-                        if (confirmed == true) {
-                          await db.deletePendingOrder(order.id);
-                        }
-                      },
-                      tooltip: 'Bestellung löschen',
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: SizedBox(
-                   width: double.infinity,
-                   child: ElevatedButton.icon(
-                      onPressed: () async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Lieferung bestätigt?'),
-                            content: const Text('Möchtest du den Empfang dieser Lieferung bestätigen? Der Bestand wird automatisch aktualisiert.'),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Nein')),
-                              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Ja, erhalten')),
-                            ],
-                          ),
-                        );
-                        if (confirmed == true) {
-                          await db.confirmOrder(order.id);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bestand wurde aktualisiert!')));
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                      label: const Text('Lieferung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        foregroundColor: Theme.of(context).colorScheme.primary,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+        return Column(
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Menge: ${order.medicationQty.toStringAsFixed(0)} ${med.unit}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  if (order.deliveryDate != null)
+                    Text(
+                      'Lieferdatum: ${DateFormat('dd.MM.yyyy').format(order.deliveryDate!)}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isOverdue ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
                       ),
-                   ),
-                ),
+                    )
+                  else
+                    Text('Noch kein Datum festgelegt', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
+                ],
               ),
-            ],
-          ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit_note_rounded, color: Theme.of(context).colorScheme.primary),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => ShoppingWizardDialog(orderToEdit: order),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error),
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Bestellung löschen?'),
+                          content: const Text('Möchtest du diese ausstehende Bestellung wirklich entfernen?'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true), 
+                              style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+                              child: const Text('Löschen')
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        await db.deletePendingOrder(order.id);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+              child: Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Lieferung bestätigt?'),
+                          content: const Text('Möchtest du den Empfang dieser Lieferung bestätigen? Der Bestand wird automatisch aktualisiert.'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Nein')),
+                            ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Ja, erhalten')),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        await db.confirmOrder(order.id);
+                        await updateStock(order.medicationQty, order.medicationId);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bestand wurde aktualisiert!')));
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.check_circle_outline_rounded, size: 14),
+                    label: const Text('Erhalten', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+          ],
         );
       },
     );
@@ -490,7 +465,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
       statusText = isMissed ? 'Verpasste Infusion (geplant für heute)' : 'Heute geplant (${treatment.dosage} ${med.unit})';
     }
 
-    final onAction = () async {
+    Future<void> onAction() async {
       if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
         final diaryProvider = Provider.of<DiaryProvider>(context, listen: false);
         await diaryProvider.logInfusion(
@@ -529,21 +504,13 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
           await NotificationService().cancelTreatmentReminders(treatment.id);
         }
       });
-    };
+    }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: accentColor.withValues(alpha: 0.1), width: 1.5),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: ListTile(
-        onTap: onAction,
-        contentPadding: const EdgeInsets.all(16),
+    return Column(
+      children: [
+        ListTile(
+          onTap: onAction,
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
         leading: Container(
           width: 52,
           height: 52,
@@ -574,7 +541,9 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
           ),
           child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
-      ),
+        ),
+        const Divider(),
+      ],
     );
   }
 
@@ -626,9 +595,8 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         final timeStr = DateFormat('HH:mm').format(medDate);
         final isPill = med.type == MedicationType.pill;
 
-        final onAction = () async {
+        Future<void> onAction() async {
           if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
-            // Direct completion if no workflow requirements
             final diaryProvider = Provider.of<DiaryProvider>(context, listen: false);
             await diaryProvider.logInfusion(
               medicationId: treatment.medicationId,
@@ -673,49 +641,43 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               await NotificationService().cancelTreatmentReminders(treatment.id);
             }
           });
-        };
+        }
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), width: 1.5),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-            ],
-          ),
-          child: ListTile(
-            onTap: onAction,
-            contentPadding: const EdgeInsets.all(16),
-            leading: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-                border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+        return Column(
+          children: [
+            ListTile(
+              onTap: onAction,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isPill ? Icons.medication_rounded : Icons.vaccines_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 24,
+                ),
               ),
-              child: Icon(
-                isPill ? Icons.medication_rounded : Icons.vaccines_rounded,
-                color: Theme.of(context).colorScheme.primary,
+              title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              subtitle: Text('$dateStr um $timeStr Uhr • ${treatment.dosage} ${med.unit}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              trailing: ElevatedButton(
+                onPressed: onAction,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  foregroundColor: Theme.of(context).colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+                ),
+                child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
-            title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('$dateStr um $timeStr Uhr • ${treatment.dosage} ${med.unit}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-            trailing: ElevatedButton(
-              onPressed: onAction,
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-                backgroundColor: Theme.of(context).colorScheme.surface,
-                foregroundColor: Theme.of(context).colorScheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
-              ),
-              child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
+            const Divider(),
+          ],
         );
       },
     );

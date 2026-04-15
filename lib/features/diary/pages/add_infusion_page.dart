@@ -64,9 +64,9 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            const Text(
+            Text(
               'Details der Infusion',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(height: 16),
             StreamBuilder<List<Medication>>(
@@ -130,7 +130,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                           Text('Zeitpunkt der Infusion', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           Text(
                             DateFormat('dd.MM.yyyy, HH:mm').format(_selectedDate),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                           ),
                         ],
                       ),

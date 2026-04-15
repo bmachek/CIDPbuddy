@@ -108,12 +108,8 @@ class MedicationDetailsPage extends StatelessWidget {
                   builder: (context, snapshot) {
                     final links = snapshot.data ?? [];
                     if (links.isEmpty) {
-                      return Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Center(
                           child: Text('Noch kein Verbrauchsmaterial verknüpft', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                         ),
@@ -164,7 +160,6 @@ class MedicationDetailsPage extends StatelessWidget {
                     'Konfiguriere hier, welche Felder beim Erfassen einer Einnahme angezeigt werden.',
                     style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                   ),
-                  const SizedBox(height: 12),
                   _buildWorkflowConfig(context, db, invProvider, medication),
                   const SizedBox(height: 32),
                 ],
@@ -179,12 +174,8 @@ class MedicationDetailsPage extends StatelessWidget {
                   builder: (context, snapshot) {
                     final schedules = snapshot.data ?? [];
                     if (schedules.isEmpty) {
-                      return Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Center(
                           child: Text('Keine Zeitpläne aktiv', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                         ),
@@ -283,43 +274,39 @@ class MedicationDetailsPage extends StatelessWidget {
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox();
         final acc = snapshot.data!;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.05)),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            leading: Icon(Icons.build_circle_rounded, color: Theme.of(context).colorScheme.tertiary),
-            title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('Bedarf: ${link.defaultQuantity.toStringAsFixed(0)} ${acc.unit}'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (link.isMandatory)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Tooltip(
-                      message: 'Muss mitbestellt werden',
-                      child: Icon(Icons.star_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
+        return Column(
+          children: [
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(vertical: 4),
+              leading: Icon(Icons.build_circle_rounded, color: Theme.of(context).colorScheme.tertiary),
+              title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text('Bedarf: ${link.defaultQuantity.toStringAsFixed(0)} ${acc.unit}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (link.isMandatory)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Tooltip(
+                        message: 'Muss mitbestellt werden',
+                        child: Icon(Icons.star_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
+                      ),
                     ),
+                  IconButton(
+                    icon: Icon(Icons.settings_outlined, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    onPressed: () => _showEditLinkDialog(context, db, link, acc),
                   ),
-                IconButton(
-                  icon: Icon(Icons.settings_outlined, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                  onPressed: () => _showEditLinkDialog(context, db, link, acc),
-                ),
-                IconButton(
-                  icon: Icon(Icons.link_off_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                  onPressed: () async {
-                    await (db.delete(db.medicationAccessories)..where((t) => t.id.equals(link.id))).go();
-                    if (context.mounted) (context as Element).markNeedsBuild();
-                  },
-                ),
-              ],
+                  IconButton(
+                    icon: Icon(Icons.link_off_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    onPressed: () async {
+                      await (db.delete(db.medicationAccessories)..where((t) => t.id.equals(link.id))).go();
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
+            const Divider(),
+          ],
         );
       },
     );
@@ -725,51 +712,48 @@ class MedicationDetailsPage extends StatelessWidget {
       case 'weekdays': freqLabel = 'Wochentage'; break;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.05)),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.blue.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          leading: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.repeat_rounded, color: Theme.of(context).colorScheme.primary),
           ),
-          child: Icon(Icons.repeat_rounded, color: Theme.of(context).colorScheme.primary),
-        ),
-        title: Text(freqLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text('Dosis: ${schedule.dosage} ${med.unit}'),
-            if (schedule.intakeTimes != null && schedule.intakeTimes!.isNotEmpty)
-              Text('Zeiten: ${schedule.intakeTimes}'),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => AddSchedulePage(initialSchedule: schedule)),
+          title: Text(freqLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text('Dosis: ${schedule.dosage} ${med.unit}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              if (schedule.intakeTimes != null && schedule.intakeTimes!.isNotEmpty)
+                Text('Zeiten: ${schedule.intakeTimes}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AddSchedulePage(initialSchedule: schedule)),
+                ),
               ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-              onPressed: () => _confirmDeleteSchedule(context, db, schedule),
-            ),
-          ],
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                onPressed: () => _confirmDeleteSchedule(context, db, schedule),
+              ),
+            ],
+          ),
         ),
-      ),
+        const Divider(),
+      ],
     );
   }
 
@@ -970,86 +954,55 @@ class _StockManagementCardState extends State<_StockManagementCard> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
-      ),
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.2), shape: BoxShape.circle),
-                child: const Icon(Icons.inventory_2_rounded, color: Colors.orange, size: 20),
-              ),
-              const SizedBox(width: 12),
-              const Text('Bestandsverwaltung', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _stockController,
-                  decoration: InputDecoration(
-                    labelText: 'Aktueller Bestand',
-                    suffixText: widget.medication.unit,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                    filled: true,
-                    fillColor: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.5),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _stockController,
+                decoration: InputDecoration(
+                  labelText: 'Aktueller Bestand',
+                  suffixText: widget.medication.unit,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  filled: true,
+                  fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.05),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _minStockController,
-                  decoration: InputDecoration(
-                    labelText: 'Warnung bei weniger als (Tage)',
-                    suffixText: 'Tage',
-                    helperText: 'Niedriger Bestand Warnung',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                    filled: true,
-                    fillColor: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.5),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isSaving ? null : _saveChanges,
-              icon: _isSaving 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Icon(Icons.save_rounded),
-              label: Text(_isSaving ? 'Speichert...' : 'Bestand Speichern'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                elevation: 0,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _minStockController,
+                decoration: InputDecoration(
+                  labelText: 'Warnschwelle (Bestand)',
+                  suffixText: widget.medication.unit,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  filled: true,
+                  fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(
+          onPressed: _isSaving ? null : _saveChanges,
+          icon: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save_rounded),
+          label: const Text('Lagerstand speichern'),
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size.fromHeight(56),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

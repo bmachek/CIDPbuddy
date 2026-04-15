@@ -72,6 +72,7 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
                   lastDate: DateTime.now(),
                 );
                 if (date == null || !mounted) return;
+                if (!mounted) return; // Guard against async gap
                 final time = await showTimePicker(
                   context: context,
                   initialTime: TimeOfDay.fromDateTime(_selectedDate),
@@ -90,7 +91,7 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(DateFormat('dd.MM.yyyy HH:mm').format(_selectedDate), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(DateFormat('dd.MM.yyyy HH:mm').format(_selectedDate), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
                     const Icon(Icons.calendar_today_rounded, size: 20),
                   ],
                 ),
@@ -162,7 +163,7 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title.toUpperCase(),
-      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6)),
+      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Theme.of(context).colorScheme.primary),
     );
   }
 
@@ -197,7 +198,7 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
               Text(value.toStringAsFixed(0), style: TextStyle(color: color, fontWeight: FontWeight.bold)),
             ],
           ),

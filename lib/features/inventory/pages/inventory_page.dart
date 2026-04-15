@@ -162,24 +162,16 @@ class InventoryPage extends StatelessWidget {
                         ],
                       ),
                     ),
-                    ...standaloneAcc.map((acc) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1), width: 1.5),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                          ],
-                        ),
-                        child: ListTile(
+                    ...standaloneAcc.map((acc) => Column(
+                      children: [
+                        ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                           leading: CircleAvatar(
                             backgroundColor: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
                             child: Icon(Icons.build_circle_rounded, color: Theme.of(context).colorScheme.tertiary, size: 20),
                           ),
                           title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('Bestand: ${acc.stock.toStringAsFixed(0)} ${acc.unit}'),
+                          subtitle: Text('Bestand: ${acc.stock.toStringAsFixed(0)} ${acc.unit}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -194,7 +186,8 @@ class InventoryPage extends StatelessWidget {
                             ],
                           ),
                         ),
-                      ),
+                        const Divider(indent: 72),
+                      ],
                     )),
                   ],
                 );
@@ -238,113 +231,101 @@ class InventoryPage extends StatelessWidget {
                 final links = snapshot.data ?? [];
                 final hasAccessories = links.isNotEmpty;
 
-                return Container(
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(
-                      color: isLowStock ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3) : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                      width: 1.5,
+                return Column(
+                  children: [
+                    Theme(
+                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                      child: hasAccessories 
+                        ? ExpansionTile(
+                            tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            leading: _buildMedicationLeading(context, isLowStock, Theme.of(context).primaryColor),
+                            title: Row(
+                              children: [
+                                Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                if (med.dosage.isNotEmpty) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            subtitle: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  color: isLowStock ? Theme.of(context).colorScheme.primary : (daysRemaining != null ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.onSurfaceVariant),
+                                  fontSize: 12,
+                                  height: 1.4,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: reachText,
+                                    style: TextStyle(fontWeight: (isLowStock || daysRemaining != null) ? FontWeight.bold : FontWeight.normal),
+                                  ),
+                                  if (nextInf != null)
+                                    TextSpan(
+                                      text: nextInfText,
+                                      style: TextStyle(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            trailing: _buildMedicationTrailing(context, med, provider),
+                            childrenPadding: const EdgeInsets.fromLTRB(72, 0, 16, 16),
+                            children: [
+                              ...links.map((link) => _buildEmbeddedAccessoryItem(context, db, link, provider)),
+                            ],
+                          )
+                        : ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            leading: _buildMedicationLeading(context, isLowStock, Theme.of(context).primaryColor),
+                            title: Row(
+                              children: [
+                                Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                if (med.dosage.isNotEmpty) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            subtitle: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  color: isLowStock ? Theme.of(context).colorScheme.primary : (daysRemaining != null ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.onSurfaceVariant),
+                                  fontSize: 12,
+                                  height: 1.4,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: reachText,
+                                    style: TextStyle(fontWeight: (isLowStock || daysRemaining != null) ? FontWeight.bold : FontWeight.normal),
+                                  ),
+                                  if (nextInf != null)
+                                    TextSpan(
+                                      text: nextInfText,
+                                      style: TextStyle(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            trailing: _buildMedicationTrailing(context, med, provider),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
+                          ),
                     ),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                    ],
-                  ),
-                  child: Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                    child: hasAccessories 
-                      ? ExpansionTile(
-                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
-                          collapsedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
-                          leading: _buildMedicationLeading(context, isLowStock, Theme.of(context).primaryColor),
-                          title: Row(
-                            children: [
-                              Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              if (med.dosage.isNotEmpty) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
-                                ),
-                              ],
-                            ],
-                          ),
-                          subtitle: RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                color: isLowStock ? Theme.of(context).colorScheme.primary : (daysRemaining != null ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.onSurfaceVariant),
-                                fontSize: 12,
-                                height: 1.4,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: reachText,
-                                  style: TextStyle(fontWeight: (isLowStock || daysRemaining != null) ? FontWeight.bold : FontWeight.normal),
-                                ),
-                                if (nextInf != null)
-                                  TextSpan(
-                                    text: nextInfText,
-                                    style: TextStyle(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          trailing: _buildMedicationTrailing(context, med, provider),
-                          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          children: [
-                            const Divider(height: 1),
-                            const SizedBox(height: 12),
-                            ...links.map((link) => _buildEmbeddedAccessoryItem(context, db, link, provider)),
-                          ],
-                        )
-                      : ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          leading: _buildMedicationLeading(context, isLowStock, Theme.of(context).primaryColor),
-                          title: Row(
-                            children: [
-                              Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              if (med.dosage.isNotEmpty) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
-                                ),
-                              ],
-                            ],
-                          ),
-                          subtitle: RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                color: isLowStock ? Theme.of(context).colorScheme.primary : (daysRemaining != null ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.onSurfaceVariant),
-                                fontSize: 12,
-                                height: 1.4,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: reachText,
-                                  style: TextStyle(fontWeight: (isLowStock || daysRemaining != null) ? FontWeight.bold : FontWeight.normal),
-                                ),
-                                if (nextInf != null)
-                                  TextSpan(
-                                    text: nextInfText,
-                                    style: TextStyle(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          trailing: _buildMedicationTrailing(context, med, provider),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))),
-                        ),
-                  ),
+                    const Divider(indent: 72),
+                  ],
                 );
               },
             );

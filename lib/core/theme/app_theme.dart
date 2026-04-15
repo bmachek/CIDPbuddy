@@ -55,7 +55,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(28),
         side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
       ),
-      color: cardLight,
+      color: Colors.transparent,
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryBase,
@@ -81,7 +81,7 @@ class AppTheme {
       }),
     ),
     dividerTheme: DividerThemeData(
-      color: Colors.grey.withValues(alpha: 0.1),
+      color: primaryBase.withValues(alpha: 0.1),
       thickness: 1,
     ),
   );
@@ -127,7 +127,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(28),
         side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
       ),
-      color: cardDark,
+      color: Colors.transparent,
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryBase,
@@ -153,7 +153,7 @@ class AppTheme {
       }),
     ),
     dividerTheme: DividerThemeData(
-      color: Colors.white.withValues(alpha: 0.08),
+      color: Colors.white.withValues(alpha: 0.1),
       thickness: 1,
     ),
   );
