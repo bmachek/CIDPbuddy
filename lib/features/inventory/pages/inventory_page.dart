@@ -166,11 +166,11 @@ class InventoryPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor.withValues(alpha: 0.5),
+                          color: Colors.white.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(28),
-                          border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
+                          border: Border.all(color: Colors.teal.withValues(alpha: 0.2), width: 1.5),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.01), blurRadius: 10, offset: const Offset(0, 4)),
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
                           ],
                         ),
                         child: ListTile(
@@ -241,15 +241,14 @@ class InventoryPage extends StatelessWidget {
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
-                    color: isLowStock 
-                        ? Colors.orange.withValues(alpha: 0.05) 
-                        : Theme.of(context).primaryColor.withValues(alpha: 0.04),
+                    color: Colors.white.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
-                      color: isLowStock ? Colors.orange.withValues(alpha: 0.2) : Theme.of(context).primaryColor.withValues(alpha: 0.08),
+                      color: isLowStock ? Colors.orange.withValues(alpha: 0.3) : Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                      width: 1.5,
                     ),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.01), blurRadius: 10, offset: const Offset(0, 4)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: Theme(

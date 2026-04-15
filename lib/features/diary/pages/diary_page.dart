@@ -82,8 +82,8 @@ class DiaryPage extends StatelessWidget {
               ),
               icon: const Icon(Icons.analytics_outlined),
               label: const Text('Vitalwerte & Symptome'),
-              backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.9),
-              foregroundColor: Theme.of(context).colorScheme.onSecondary,
+              backgroundColor: Colors.white.withValues(alpha: 0.8),
+              foregroundColor: Theme.of(context).colorScheme.secondary,
             ),
             const SizedBox(height: 12),
             FloatingActionButton.extended(
@@ -108,43 +108,55 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.04),
+        color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.08)),
+        border: Border.all(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.15)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.01), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-            border: Border.all(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2)),
-          ),
-          child: Icon(Icons.analytics_rounded, color: Theme.of(context).colorScheme.secondary),
-        ),
-        title: Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(timeStr, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: [
-                if (entry.systolicBP != null) _buildSmallChip(context, '${entry.systolicBP?.toInt()}/${entry.diastolicBP?.toInt()}', Icons.favorite),
-                if (entry.heartRate != null) _buildSmallChip(context, '${entry.heartRate} bpm', Icons.monitor_heart),
-                if (entry.weight != null) _buildSmallChip(context, '${entry.weight} kg', Icons.monitor_weight),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildSymptomMiniBar(context, entry),
-          ],
-        ),
+      child: InkWell(
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddDiaryEntryPage(initialEntry: entry))),
+        borderRadius: BorderRadius.circular(28),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.analytics_rounded, color: Theme.of(context).colorScheme.secondary, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 2),
+                    Text(timeStr, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (entry.systolicBP != null) _buildSmallChip(context, '${entry.systolicBP?.toInt()}/${entry.diastolicBP?.toInt()}', Icons.favorite),
+                        if (entry.heartRate != null) _buildSmallChip(context, '${entry.heartRate} bpm', Icons.monitor_heart),
+                        if (entry.weight != null) _buildSmallChip(context, '${entry.weight} kg', Icons.monitor_weight),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSymptomMiniBar(context, entry),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -183,7 +195,7 @@ class DiaryPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('SYMPTOME (STÄRKE):', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
+        Text('VITALWERTE & SYMPTOME:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
         const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -259,109 +271,115 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withValues(alpha: 0.04),
+        color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.08)),
+        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.15)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.01), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.vaccines_rounded, color: Theme.of(context).primaryColor, size: 24),
-        ),
-        title: Text(
-          dateStr,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.access_time_rounded, size: 14, color: Theme.of(context).primaryColor),
-                  const SizedBox(width: 4),
-                  Text(timeStr, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.w700, fontSize: 13)),
-                ],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 4),
-              if (log.batchNumber != null && log.batchNumber!.isNotEmpty)
-                Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-              if (log.notes != null && log.notes!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2.0),
-                  child: Text(log.notes!, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                ),
-              if (log.bodyWeight != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4.0),
-                  child: Row(
+              child: Icon(Icons.vaccines_rounded, color: Theme.of(context).primaryColor, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Row(
                     children: [
-                      Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+                      Icon(Icons.access_time_rounded, size: 14, color: Theme.of(context).primaryColor),
                       const SizedBox(width: 4),
-                      Text('${log.bodyWeight} kg', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                      Text(timeStr, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.w700, fontSize: 13)),
                     ],
                   ),
+                  if (log.batchNumber != null && log.batchNumber!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                    ),
+                  if (log.notes != null && log.notes!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(log.notes!, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    ),
+                  if (log.bodyWeight != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+                          const SizedBox(width: 4),
+                          Text('${log.bodyWeight} kg', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                        ],
+                      ),
+                    ),
+                  if (log.photoPath != null && log.photoPath!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.file(
+                          File(log.photoPath!),
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      onPressed: () => _showEditLogDialog(context, Provider.of<AppDatabase>(context, listen: false), log),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.orange, size: 18),
+                      onPressed: () => _confirmDeleteLog(context, Provider.of<AppDatabase>(context, listen: false), log),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
                 ),
-              if (log.photoPath != null && log.photoPath!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: ClipRRect(
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.file(
-                      File(log.photoPath!),
-                      height: 100,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.1)),
+                  ),
+                  child: Text(
+                    log.dosage.toStringAsFixed(1),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: Theme.of(context).primaryColor,
+                      fontSize: 14,
                     ),
                   ),
                 ),
-            ],
-          ),
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  onPressed: () => _showEditLogDialog(context, Provider.of<AppDatabase>(context, listen: false), log),
-                  visualDensity: VisualDensity.compact,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded, color: Colors.orange, size: 18),
-                  onPressed: () => _confirmDeleteLog(context, Provider.of<AppDatabase>(context, listen: false), log),
-                  visualDensity: VisualDensity.compact,
-                ),
               ],
-            ),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                log.dosage.toStringAsFixed(1),
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  color: Theme.of(context).primaryColor,
-                  fontSize: 14,
-                ),
-              ),
             ),
           ],
         ),
@@ -494,9 +512,12 @@ class DiaryPage extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.orange.withValues(alpha: 0.04),
+            color: Colors.white.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.orange.withValues(alpha: 0.08)),
+            border: Border.all(color: Colors.orange.withValues(alpha: 0.2), width: 1.5),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+            ],
           ),
           child: Column(
             children: [
@@ -555,9 +576,12 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: (isDiscontinued ? Colors.grey : Colors.green).withValues(alpha: 0.05),
+        color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: (isDiscontinued ? Colors.grey : Colors.green).withValues(alpha: 0.1)),
+        border: Border.all(color: (isDiscontinued ? Colors.grey : Colors.green).withValues(alpha: 0.2), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),

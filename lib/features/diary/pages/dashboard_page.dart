@@ -121,15 +121,15 @@ class _DashboardPageState extends State<DashboardPage> {
                       delegate: SliverChildListDelegate([
                         const SizedBox(height: 16),
 
-                        // Notification Center - Now secondary to upcoming intakes
-                        _buildNotificationCenter(db),
-                        const SizedBox(height: 24),
-
                         if (focusTreatments.isEmpty && futureTreatments.isEmpty && pastTreatments.isEmpty)
                           _buildEmptyState(context)
                         else ...[
                           ...focusTreatments.map((t) => _buildFocusTreatmentCard(context, db, t, medicationMap[t.medicationId])),
                           
+                          const SizedBox(height: 24),
+                          
+                          // Notification Center - Now below upcoming focus items
+                          _buildNotificationCenter(db),
                           const SizedBox(height: 24),
 
                           if (futureTreatments.isNotEmpty)
@@ -242,10 +242,13 @@ class _DashboardPageState extends State<DashboardPage> {
                             borderRadius: BorderRadius.circular(20),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.05),
+                            decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.7),
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.orange.withValues(alpha: 0.1)),
+                                border: Border.all(color: Colors.orange.withValues(alpha: 0.2), width: 1.5),
+                                boxShadow: [
+                                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                                ],
                               ),
                               child: Row(
                                 children: [
@@ -276,9 +279,12 @@ class _DashboardPageState extends State<DashboardPage> {
                           return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: Colors.teal.withValues(alpha: 0.04),
+                              color: Colors.white.withValues(alpha: 0.7),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.teal.withValues(alpha: 0.08)),
+                              border: Border.all(color: Colors.teal.withValues(alpha: 0.2), width: 1.5),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                              ],
                             ),
                             child: const Row(
                               children: [
@@ -347,11 +353,11 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.orange.withValues(alpha: 0.04),
+            color: Colors.white.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: isOverdue ? Colors.orange.withValues(alpha: 0.3) : Colors.orange.withValues(alpha: 0.08)),
+            border: Border.all(color: isOverdue ? Colors.red.withValues(alpha: 0.2) : Colors.orange.withValues(alpha: 0.2), width: 1.5),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.01), blurRadius: 10, offset: const Offset(0, 4)),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
             ],
           ),
           child: Column(
@@ -451,12 +457,12 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                       icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
                       label: const Text('Lieferung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange.withValues(alpha: 0.04),
+                        backgroundColor: Colors.white.withValues(alpha: 0.5),
                         foregroundColor: Colors.orange,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        side: BorderSide(color: Colors.orange.withValues(alpha: 0.1)),
+                        side: BorderSide(color: Colors.orange.withValues(alpha: 0.2)),
                       ),
                    ),
                 ),
@@ -536,9 +542,12 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.04),
+        color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: accentColor.withValues(alpha: 0.08)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.2), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
       ),
       child: ListTile(
         onTap: onAction,
@@ -566,10 +575,10 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 0,
-            backgroundColor: accentColor.withValues(alpha: 0.05),
+            backgroundColor: Colors.white.withValues(alpha: 0.5),
             foregroundColor: accentColor,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            side: BorderSide(color: accentColor.withValues(alpha: 0.1)),
+            side: BorderSide(color: accentColor.withValues(alpha: 0.2)),
           ),
           child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
@@ -677,11 +686,11 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withValues(alpha: 0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            border: Border.all(color: (isPill ? Colors.orange : Colors.blue).withValues(alpha: 0.2), width: 1.5),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
             ],
           ),
           child: ListTile(
@@ -707,9 +716,10 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
-                backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                backgroundColor: Colors.white.withValues(alpha: 0.5),
                 foregroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
               ),
               child: const Text('Erledigt', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
