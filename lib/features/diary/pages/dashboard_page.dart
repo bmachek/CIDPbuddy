@@ -47,14 +47,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(greeting, style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7))),
-                    const Text('Deine Übersicht', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
+                const Text('Deine Übersicht', style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             actions: [
@@ -78,8 +71,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildNotificationCenter(db),
-                  const SizedBox(height: 24),
-                  _buildPendingOrdersSection(db),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -131,11 +122,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        // Notification Center / Orders
-                        _buildNotificationCenter(db),
-                        const SizedBox(height: 24),
-                        _buildPendingOrdersSection(db),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 16),
 
                         // Focus Section Title
                         if (focusTreatments.isNotEmpty)
@@ -178,6 +165,9 @@ class _DashboardPageState extends State<DashboardPage> {
                               onToggle: (val) => setState(() => _showPast = val),
                               children: pastTreatments.map((t) => _buildDatedTreatmentCard(context, db, t)).toList(),
                             ),
+                          
+                          const SizedBox(height: 32),
+                          _buildPendingOrdersSection(db),
                         ],
                         
                         const SizedBox(height: 120),
@@ -438,11 +428,11 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withOpacity(0.7),
+            color: Colors.orange.withOpacity(0.08),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: isOverdue ? Colors.orange.withOpacity(0.5) : Colors.white.withOpacity(0.1)),
+            border: Border.all(color: isOverdue ? Colors.orange.withOpacity(0.5) : Colors.orange.withOpacity(0.1)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
             ],
           ),
           child: Column(

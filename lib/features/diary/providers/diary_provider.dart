@@ -53,6 +53,7 @@ class DiaryProvider extends ChangeNotifier {
     String? notes,
     double? bodyWeight,
     DateTime? date,
+    String? photoPath,
   }) async {
     // 1. Transaction to ensure database integrity
     await _db.transaction(() async {
@@ -75,6 +76,7 @@ class DiaryProvider extends ChangeNotifier {
         batchNumber: Value(batchNumber),
         notes: Value(notes),
         bodyWeight: Value(bodyWeight),
+        photoPath: Value(photoPath),
       ));
     });
 

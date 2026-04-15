@@ -28,6 +28,8 @@ class NotificationService {
     final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       await androidPlugin.requestNotificationsPermission();
+      // For Android 14+, exact alarms need explicit permission or it will fallback to inexact
+      await androidPlugin.requestExactAlarmsPermission();
     }
   }
 
@@ -60,6 +62,10 @@ class NotificationService {
           'Medikamenten Erinnerungen',
           importance: Importance.max,
           priority: Priority.high,
+          visibility: NotificationVisibility.public,
+          showWhen: true,
+          enableVibration: true,
+          fullScreenIntent: false, // Set to true if really critical, but false is safer for UX
         ),
         iOS: DarwinNotificationDetails(),
         macOS: DarwinNotificationDetails(),

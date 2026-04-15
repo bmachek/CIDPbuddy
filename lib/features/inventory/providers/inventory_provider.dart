@@ -23,6 +23,7 @@ class InventoryProvider extends ChangeNotifier {
 
   Future<int> addMedication({
     required String name,
+    required String dosage,
     required String pzn,
     required double stock,
     required String unit,
@@ -34,6 +35,7 @@ class InventoryProvider extends ChangeNotifier {
   }) async {
     final id = await _db.insertMedication(MedicationsCompanion.insert(
       name: name,
+      dosage: Value(dosage),
       pzn: Value(pzn),
       stock: Value(stock),
       unit: unit,

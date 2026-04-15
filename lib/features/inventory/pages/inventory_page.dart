@@ -242,14 +242,14 @@ class InventoryPage extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
                     color: isLowStock 
-                        ? Colors.orange.withValues(alpha: 0.1) 
-                        : Theme.of(context).cardColor.withValues(alpha: 0.7),
+                        ? Colors.orange.withOpacity(0.1) 
+                        : (DateTime.now().hour > 0 ? Theme.of(context).primaryColor.withOpacity(0.08) : Theme.of(context).cardColor.withValues(alpha: 0.7)),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
-                      color: isLowStock ? Colors.orange.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.1),
+                      color: isLowStock ? Colors.orange.withValues(alpha: 0.3) : Theme.of(context).primaryColor.withOpacity(0.1),
                     ),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: Theme(
@@ -259,7 +259,22 @@ class InventoryPage extends StatelessWidget {
                           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
                           collapsedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
                           leading: _buildMedicationLeading(isLowStock, Theme.of(context).primaryColor),
-                          title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          title: Row(
+                            children: [
+                              Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              if (med.dosage.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+                                ),
+                              ],
+                            ],
+                          ),
                           subtitle: RichText(
                             text: TextSpan(
                               style: TextStyle(
@@ -291,7 +306,22 @@ class InventoryPage extends StatelessWidget {
                       : ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           leading: _buildMedicationLeading(isLowStock, Theme.of(context).primaryColor),
-                          title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          title: Row(
+                            children: [
+                              Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              if (med.dosage.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(med.dosage, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+                                ),
+                              ],
+                            ],
+                          ),
                           subtitle: RichText(
                             text: TextSpan(
                               style: TextStyle(

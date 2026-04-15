@@ -15,6 +15,7 @@ class _AddItemPageState extends State<AddItemPage> {
   final _formKey = GlobalKey<FormState>();
   String _type = 'Medikament';
   final _nameController = TextEditingController();
+  final _dosageController = TextEditingController();
   final _pznController = TextEditingController();
   final _stockController = TextEditingController(text: '0');
   final _unitController = TextEditingController(text: 'Flasche');
@@ -67,9 +68,16 @@ class _AddItemPageState extends State<AddItemPage> {
             ],
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Bezeichnung', hintText: 'z.B. Hizentra 20%'),
+              decoration: const InputDecoration(labelText: 'Medikamentenname', hintText: 'z.B. Hizentra'),
               validator: (val) => val == null || val.isEmpty ? 'Pflichtfeld' : null,
             ),
+            if (_type == 'Medikament') ...[
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _dosageController,
+                decoration: const InputDecoration(labelText: 'Dosis / Stärke', hintText: 'z.B. 20% oder 10ml'),
+              ),
+            ],
             if (_type == 'Medikament') ...[
               const SizedBox(height: 16),
               TextFormField(
@@ -129,6 +137,7 @@ class _AddItemPageState extends State<AddItemPage> {
       if (_type == 'Medikament') {
         final id = await provider.addMedication(
           name: _nameController.text,
+          dosage: _dosageController.text,
           pzn: _pznController.text,
           stock: stock,
           unit: _unitController.text,

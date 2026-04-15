@@ -53,7 +53,7 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialEntry == null ? 'Vitals & Symptome erfassen' : 'Eintrag bearbeiten'),
+        title: Text(widget.initialEntry == null ? 'Vitalwerte & Symptome' : 'Eintrag bearbeiten'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(

@@ -11,6 +11,7 @@ enum MedicationType { infusion, pill }
 class Medications extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get dosage => text().withDefault(const Constant(''))();
   TextColumn get pzn => text().nullable()();
   RealColumn get stock => real().withDefault(const Constant(0.0))();
   RealColumn get minStock => real().withDefault(const Constant(0.0))();
@@ -40,6 +41,7 @@ class InfusionLog extends Table {
   TextColumn get batchNumber => text().nullable()();
   TextColumn get notes => text().nullable()();
   RealColumn get bodyWeight => real().nullable()();
+  TextColumn get photoPath => text().nullable()();
 }
 
 class MedicationAccessories extends Table {
@@ -115,7 +117,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 11; // Incremented schema version to 11 for Medications createdAt and discontinuedAt
+  int get schemaVersion => 12; // Incremented schema version to 12 for Medications dosage and InfusionLog photoPath
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -156,6 +158,10 @@ class AppDatabase extends _$AppDatabase {
         final nowTs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
         await m.issueCustomQuery('ALTER TABLE medications ADD COLUMN created_at INTEGER NOT NULL DEFAULT $nowTs');
         await m.addColumn(medications, medications.discontinuedAt);
+      }
+      if (to >= 12 && from < 12) {
+        await m.addColumn(medications, medications.dosage);
+        await m.addColumn(infusionLog, infusionLog.photoPath);
       }
     },
   );

@@ -68,7 +68,7 @@ class DiaryPage extends StatelessWidget {
         },
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80), // Prevent being hidden behind bottom bar
+        padding: const EdgeInsets.only(bottom: 100), // Prevent being hidden behind bottom bar or system gestures
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -80,7 +80,7 @@ class DiaryPage extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const AddDiaryEntryPage()),
               ),
               icon: const Icon(Icons.analytics_outlined),
-              label: const Text('Vitals & Symptome'),
+              label: const Text('Vitalwerte & Symptome'),
               backgroundColor: Theme.of(context).colorScheme.secondary,
               foregroundColor: Theme.of(context).colorScheme.onSecondary,
             ),
@@ -107,11 +107,11 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withOpacity(0.7),
+        color: Theme.of(context).colorScheme.secondary.withOpacity(0.08),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Theme.of(context).colorScheme.secondary.withOpacity(0.1)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: ListTile(
@@ -258,11 +258,11 @@ class DiaryPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withOpacity(0.7),
+        color: Theme.of(context).primaryColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
         boxShadow: [
-          BoxShadow(color: Theme.of(context).primaryColor.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: ListTile(
@@ -308,6 +308,20 @@ class DiaryPage extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text('${log.bodyWeight} kg', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                     ],
+                  ),
+                ),
+              if (log.photoPath != null && log.photoPath!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(
+                      File(log.photoPath!),
+                      height: 100,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    ),
                   ),
                 ),
             ],

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'dart:io';
 import 'package:intl/intl.dart';
 import '../providers/diary_provider.dart';
 import '../../inventory/providers/inventory_provider.dart';
@@ -31,6 +36,8 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
   final _notesController = TextEditingController();
   final _weightController = TextEditingController();
   late DateTime _selectedDate;
+  String? _capturedPhotoPath;
+  bool _isProcessingOcr = false;
 
   @override
   void initState() {
@@ -65,15 +72,15 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
             StreamBuilder<List<Medication>>(
               stream: invProvider.medicationsStream,
               builder: (context, snapshot) {
-                final meds = snapshot.data ?? [];
+                final allMeds = snapshot.data ?? [];
+                // Filter to only show infusions
+                final meds = allMeds.where((m) => m.type == MedicationType.infusion).toList();
                 
                 // Set initial medication if provided and not yet set
-                if (_selectedMed == null && widget.initialMedicationId != null && meds.isNotEmpty) {
+                if (_selectedMed == null && widget.initialMedicationId != null && allMeds.isNotEmpty) {
                   try {
-                    _selectedMed = meds.firstWhere((m) => m.id == widget.initialMedicationId);
-                  } catch (_) {
-                    // Not found, ignore
-                  }
+                    _selectedMed = allMeds.firstWhere((m) => m.id == widget.initialMedicationId);
+                  } catch (_) {}
                 }
 
                 final items = meds.map((m) => DropdownMenuItem<Medication>(value: m, child: Text(m.name))).toList();
@@ -148,22 +155,39 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  InkWell(
+                  _buildActionButton(
                     onTap: _openScanner,
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      height: 56,
-                      width: 56,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.2)),
-                      ),
-                      child: Icon(Icons.qr_code_scanner_rounded, color: Theme.of(context).primaryColor),
-                    ),
+                    icon: Icons.qr_code_scanner_rounded,
+                    tooltip: 'Barcode scannen',
+                  ),
+                  const SizedBox(width: 8),
+                  _buildActionButton(
+                    onTap: _takePhoto,
+                    icon: Icons.camera_alt_rounded,
+                    tooltip: 'Foto von Charge/Aufkleber',
+                    isLoading: _isProcessingOcr,
                   ),
                 ],
               ),
+              if (_capturedPhotoPath != null) ...[
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    children: [
+                      Image.file(File(_capturedPhotoPath!), height: 120, width: double.infinity, fit: BoxFit.cover),
+                      Positioned(
+                        right: 8, top: 8,
+                        child: IconButton.filled(
+                          onPressed: () => setState(() => _capturedPhotoPath = null),
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                          style: IconButton.styleFrom(backgroundColor: Colors.black.withOpacity(0.5)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
             const SizedBox(height: 20),
             TextFormField(
@@ -229,6 +253,25 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({required VoidCallback onTap, required IconData icon, required String tooltip, bool isLoading = false}) {
+    return InkWell(
+      onTap: isLoading ? null : onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: 56,
+        width: 56,
+        decoration: BoxDecoration(
+          color: Theme.of(context).primaryColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.2)),
+        ),
+        child: isLoading 
+          ? const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(strokeWidth: 2))
+          : Icon(icon, color: Theme.of(context).primaryColor),
       ),
     );
   }
@@ -304,6 +347,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         notes: _notesController.text,
         bodyWeight: double.tryParse(_weightController.text.replaceAll(',', '.')),
         date: _selectedDate,
+        photoPath: _capturedPhotoPath,
       );
       
       if (mounted) {
@@ -326,5 +370,61 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
       backgroundColor: Colors.transparent,
       builder: (context) => const PremedicationTimerModal(),
     );
+  }
+
+  Future<void> _takePhoto() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+    
+    if (image != null) {
+      // Save permanently to app directory
+      final directory = await getApplicationDocumentsDirectory();
+      final path = p.join(directory.path, 'charge_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await File(image.path).copy(path);
+      
+      setState(() {
+        _capturedPhotoPath = path;
+        _isProcessingOcr = true;
+      });
+
+      // Perform OCR
+      try {
+        final inputImage = InputImage.fromFilePath(path);
+        final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+        final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+        
+        // Simple logic for batch number: first sequence of uppercase letters/numbers
+        String? foundBatch;
+        final patterns = [
+          RegExp(r'LOT\s*[:\s]\s*([A-Z0-9]+)', caseSensitive: false),
+          RegExp(r'CH\.-B\s*[:\s]\s*([A-Z0-9]+)', caseSensitive: false),
+          RegExp(r'Batch\s*[:\s]\s*([A-Z0-9]+)', caseSensitive: false),
+          RegExp(r'[A-Z0-9]{6,12}'), // Generic fallback for alphanumeric strings
+        ];
+
+        for (final block in recognizedText.blocks) {
+          for (final line in block.lines) {
+            for (final pattern in patterns) {
+              final match = pattern.firstMatch(line.text);
+              if (match != null) {
+                foundBatch = match.groupCount >= 1 ? match.group(1) : match.group(0);
+                break;
+              }
+            }
+            if (foundBatch != null) break;
+          }
+          if (foundBatch != null) break;
+        }
+
+        if (foundBatch != null) {
+          setState(() => _batchController.text = foundBatch!);
+        }
+        textRecognizer.close();
+      } catch (e) {
+        debugPrint('OCR Error: $e');
+      } finally {
+        setState(() => _isProcessingOcr = false);
+      }
+    }
   }
 }
