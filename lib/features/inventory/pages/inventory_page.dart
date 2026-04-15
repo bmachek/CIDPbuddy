@@ -37,7 +37,7 @@ class InventoryPage extends StatelessWidget {
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.shopping_cart_checkout_rounded),
@@ -84,7 +84,7 @@ class InventoryPage extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: Theme.of(context).primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                 child: Icon(Icons.medication_rounded, color: Theme.of(context).primaryColor, size: 20),
               ),
               const SizedBox(width: 12),
@@ -151,7 +151,7 @@ class InventoryPage extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(color: Colors.teal.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                            decoration: BoxDecoration(color: Colors.teal.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                             child: const Icon(Icons.inventory_2_rounded, color: Colors.teal, size: 20),
                           ),
                           const SizedBox(width: 12),
@@ -166,16 +166,16 @@ class InventoryPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor.withOpacity(0.7),
+                          color: Theme.of(context).cardColor.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(28),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
                           ],
                         ),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Colors.teal.withOpacity(0.1),
+                            backgroundColor: Colors.teal.withValues(alpha: 0.1),
                             child: const Icon(Icons.build_circle_rounded, color: Colors.teal, size: 20),
                           ),
                           title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -242,14 +242,14 @@ class InventoryPage extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
                     color: isLowStock 
-                        ? Colors.orange.withOpacity(0.1) 
-                        : Theme.of(context).cardColor.withOpacity(0.7),
+                        ? Colors.orange.withValues(alpha: 0.1) 
+                        : Theme.of(context).cardColor.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
-                      color: isLowStock ? Colors.orange.withOpacity(0.3) : Colors.white.withOpacity(0.1),
+                      color: isLowStock ? Colors.orange.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.1),
                     ),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: Theme(
@@ -275,7 +275,7 @@ class InventoryPage extends StatelessWidget {
                                 if (nextInf != null)
                                   TextSpan(
                                     text: nextInfText,
-                                    style: TextStyle(color: Theme.of(context).colorScheme.primary.withOpacity(0.8), fontWeight: FontWeight.w500),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
                                   ),
                               ],
                             ),
@@ -328,7 +328,7 @@ class InventoryPage extends StatelessWidget {
   Widget _buildMedicationLeading(bool isLowStock, Color primaryColor) {
     return Container(
       width: 40, height: 40,
-      decoration: BoxDecoration(color: (isLowStock ? Colors.orange : primaryColor).withOpacity(0.1), shape: BoxShape.circle),
+      decoration: BoxDecoration(color: (isLowStock ? Colors.orange : primaryColor).withValues(alpha: 0.1), shape: BoxShape.circle),
       child: Icon(isLowStock ? Icons.warning_amber_rounded : Icons.medication_rounded, color: isLowStock ? Colors.orange : primaryColor, size: 20),
     );
   }
