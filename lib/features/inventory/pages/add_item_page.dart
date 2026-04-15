@@ -147,8 +147,8 @@ class _AddItemPageState extends State<AddItemPage> {
             TextFormField(
               controller: _minStockController,
               decoration: InputDecoration(
-                labelText: 'Warnschwelle (Mindestbestand)',
-                hintText: 'Warnung wenn Bestand unter diese Menge fällt',
+                labelText: 'Warnschwelle (in Tagen)',
+                hintText: 'Warnung wenn Vorrat weniger als x Tage reicht',
                 prefixIcon: const Icon(Icons.notification_important_rounded),
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,

@@ -332,10 +332,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     final now = DateTime.now();
     final isOverdue = order.deliveryDate != null && order.deliveryDate!.isBefore(DateTime(now.year, now.month, now.day));
     
-    Future<void> updateStock(double change, int medId) async {
-      final currentMed = await (db.select(db.medications)..where((t) => t.id.equals(medId))).getSingle();
-      await db.updateMedication(currentMed.copyWith(stock: currentMed.stock + change));
-    }
+
     
     return FutureBuilder<Medication>(
       future: (db.select(db.medications)..where((t) => t.id.equals(order.medicationId))).getSingle(),
@@ -422,7 +419,6 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                       );
                       if (confirmed == true) {
                         await db.confirmOrder(order.id);
-                        await updateStock(order.medicationQty, order.medicationId);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bestand wurde aktualisiert!')));
                         }

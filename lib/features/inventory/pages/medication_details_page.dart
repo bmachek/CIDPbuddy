@@ -981,8 +981,8 @@ class _StockManagementCardState extends State<_StockManagementCard> {
               child: TextField(
                 controller: _minStockController,
                 decoration: InputDecoration(
-                  labelText: 'Warnschwelle (Bestand)',
-                  suffixText: widget.medication.unit,
+                  labelText: 'Warnschwelle (in Tagen)',
+                  hintText: 'Warnung wenn Vorrat weniger als x Tage reicht',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
