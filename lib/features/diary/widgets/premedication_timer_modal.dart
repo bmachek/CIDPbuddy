@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:audioplayers/audioplayers.dart';
-import '../../reminders/services/notification_service.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 
 class PremedicationTimerModal extends StatefulWidget {
   const PremedicationTimerModal({super.key});
@@ -14,10 +13,8 @@ class PremedicationTimerModal extends StatefulWidget {
 class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
   int _totalSeconds = 15 * 60;
   int _secondsRemaining = 15 * 60;
-  Timer? _timer;
   bool _isRunning = false;
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  final NotificationService _notifService = NotificationService();
+  StreamSubscription? _serviceSubscription;
 
   @override
   void initState() {
@@ -32,6 +29,22 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
       _totalSeconds = duration * 60;
       _secondsRemaining = _totalSeconds;
     });
+
+    // Listen to background service updates
+    _serviceSubscription = FlutterBackgroundService().on('timerUpdate').listen((event) {
+      if (mounted && event != null) {
+        setState(() {
+          _secondsRemaining = event['secondsRemaining'] as int? ?? _secondsRemaining;
+          _isRunning = event['isRunning'] as bool? ?? _isRunning;
+        });
+      }
+    });
+
+    // Check current status
+    final isRunning = await FlutterBackgroundService().isRunning();
+    setState(() {
+      _isRunning = isRunning;
+    });
   }
 
   Future<void> _saveSettings(int minutes) async {
@@ -42,31 +55,15 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
   void _startTimer() {
     if (_isRunning) return;
 
-    setState(() => _isRunning = true);
-    
-    // Schedule background pings
-    _notifService.schedulePremedicationTimer(_secondsRemaining ~/ 60);
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_secondsRemaining > 0) {
-        setState(() {
-          _secondsRemaining--;
-          
-          // "Bimmeln" every 60 seconds (at the start of each new minute)
-          if (_secondsRemaining > 0 && _secondsRemaining % 60 == 0) {
-            _playMinutePing();
-          }
-        });
-      } else {
-        _stopTimer();
-        _playFinalSound();
-      }
+    FlutterBackgroundService().invoke('startTimer', {
+      'seconds': _secondsRemaining,
     });
+    
+    setState(() => _isRunning = true);
   }
 
   void _stopTimer() {
-    _timer?.cancel();
-    _notifService.cancelPremedicationTimer();
+    FlutterBackgroundService().invoke('stopTimer');
     setState(() => _isRunning = false);
   }
 
@@ -75,34 +72,9 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
     setState(() => _secondsRemaining = _totalSeconds);
   }
 
-  Future<void> _playMinutePing() async {
-    // Repeat the ping 3 times with a 1.5s delay
-    for (int i = 0; i < 3; i++) {
-      try {
-        await _audioPlayer.play(AssetSource('audio/ping.mp3'));
-      } catch (_) {
-        // Fallback or ignore
-      }
-      if (i < 2) await Future.delayed(const Duration(milliseconds: 1500));
-    }
-  }
-
-  Future<void> _playFinalSound() async {
-    // Final bell repeats 4 times
-    for (int i = 0; i < 4; i++) {
-      try {
-        await _audioPlayer.play(AssetSource('audio/bell.mp3'));
-      } catch (_) {
-        // Fallback
-      }
-      if (i < 3) await Future.delayed(const Duration(milliseconds: 2000));
-    }
-  }
-
   @override
   void dispose() {
-    _timer?.cancel();
-    _audioPlayer.dispose();
+    _serviceSubscription?.cancel();
     super.dispose();
   }
 

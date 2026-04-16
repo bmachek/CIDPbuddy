@@ -9,6 +9,7 @@ import 'package:igkeeper/core/theme/theme_provider.dart';
 import 'package:igkeeper/features/reminders/services/notification_service.dart';
 import 'package:igkeeper/core/services/scheduler_service.dart';
 import 'package:igkeeper/core/services/medication_service.dart';
+import 'package:igkeeper/core/services/background_service.dart';
 import 'package:igkeeper/main_screen.dart';
 
 void main() async {
@@ -17,6 +18,7 @@ void main() async {
   try {
     final db = AppDatabase();
     await NotificationService().init();
+    await BackgroundService.initialize();
     
     // Initialize and sync infusion schedules
     await SchedulerService(db).syncPlannedInfusions();

@@ -26,6 +26,19 @@ class NotificationService {
     await _notificationsPlugin.initialize(initSettings);
     tz.initializeTimeZones();
     
+    // Create the background service channel
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'background_service',
+      'Hintergrunddienst',
+      description: 'Wird für den Timer und Hintergrund-Tasks verwendet',
+      importance: Importance.low,
+    );
+
+    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      await androidPlugin.createNotificationChannel(channel);
+    }
+
     try {
       final timeZoneNameValue = await FlutterTimezone.getLocalTimezone();
       final String timeZoneName = timeZoneNameValue.toString();
@@ -36,7 +49,6 @@ class NotificationService {
     }
     
     // Request permission for Android 13+ notifications
-    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       final status = await androidPlugin.requestNotificationsPermission();
       debugPrint('NotificationService: Android notifications permission status: $status');
