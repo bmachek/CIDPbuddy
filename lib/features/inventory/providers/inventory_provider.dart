@@ -61,12 +61,14 @@ class InventoryProvider extends ChangeNotifier {
     required double stock,
     required String unit,
     double packageSize = 1.0,
+    double minStock = 0.0,
   }) async {
     await _db.insertAccessory(AccessoriesCompanion.insert(
       name: name,
       stock: Value(stock),
       unit: unit,
       packageSize: Value(packageSize),
+      minStock: Value(minStock),
     ));
     notifyListeners();
   }

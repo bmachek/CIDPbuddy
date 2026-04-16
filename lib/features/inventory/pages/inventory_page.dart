@@ -381,6 +381,7 @@ class InventoryPage extends StatelessWidget {
     final unitController = TextEditingController(text: acc.unit);
     final stockController = TextEditingController(text: acc.stock.toStringAsFixed(1));
     final pkgSizeController = TextEditingController(text: acc.packageSize.toStringAsFixed(1));
+    final minStockController = TextEditingController(text: acc.minStock.toStringAsFixed(1));
 
     showDialog(
       context: context,
@@ -411,6 +412,12 @@ class InventoryPage extends StatelessWidget {
               decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
               keyboardType: TextInputType.number,
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: minStockController,
+              decoration: const InputDecoration(labelText: 'Warnschwelle (Bestand)', border: OutlineInputBorder()),
+              keyboardType: TextInputType.number,
+            ),
           ],
         ),
         actions: [
@@ -422,6 +429,7 @@ class InventoryPage extends StatelessWidget {
                 unit: unitController.text,
                 stock: double.tryParse(stockController.text) ?? acc.stock,
                 packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
+                minStock: double.tryParse(minStockController.text) ?? acc.minStock,
               ));
               if (context.mounted) Navigator.pop(context);
             },

@@ -147,8 +147,10 @@ class _AddItemPageState extends State<AddItemPage> {
             TextFormField(
               controller: _minStockController,
               decoration: InputDecoration(
-                labelText: 'Warnschwelle (in Tagen)',
-                hintText: 'Warnung wenn Vorrat weniger als x Tage reicht',
+                labelText: _type == 'Medikament' ? 'Warnschwelle (in Tagen)' : 'Warnschwelle (Bestand)',
+                hintText: _type == 'Medikament' 
+                  ? 'Warnung wenn Vorrat weniger als x Tage reicht'
+                  : 'Warnung wenn Bestand unter diesen Wert fällt',
                 prefixIcon: const Icon(Icons.notification_important_rounded),
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
@@ -206,6 +208,7 @@ class _AddItemPageState extends State<AddItemPage> {
           stock: stock,
           unit: _unitController.text,
           packageSize: packageSize,
+          minStock: double.tryParse(_minStockController.text) ?? 5.0,
         );
         if (mounted) Navigator.pop(context);
       }
