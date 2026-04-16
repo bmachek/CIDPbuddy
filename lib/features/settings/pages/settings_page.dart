@@ -5,6 +5,7 @@ import '../services/backup_service.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/constants/build_config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'reliability_check_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -84,6 +85,18 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               );
             },
+          ),
+          const Divider(),
+          _buildSectionHeader('System & Zuverlässigkeit'),
+          ListTile(
+            leading: const Icon(Icons.verified_user_outlined),
+            title: const Text('Zuverlässigkeits-Check'),
+            subtitle: const Text('Prüfe Berechtigungen & Akku-Einstellungen'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context, 
+              MaterialPageRoute(builder: (context) => const ReliabilityCheckPage())
+            ),
           ),
           const Divider(),
           _buildSectionHeader('Hyqvia Timer'),
