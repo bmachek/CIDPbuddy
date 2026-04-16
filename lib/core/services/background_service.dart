@@ -7,6 +7,7 @@ import '../database/database.dart';
 import 'scheduler_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+@pragma('vm:entry-point')
 class BackgroundService {
   static const String timerKey = 'timer_seconds_remaining';
   static const String timerRunningKey = 'timer_is_running';
