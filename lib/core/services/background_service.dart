@@ -20,10 +20,10 @@ class BackgroundService {
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
         autoStart: true,
-        isForegroundMode: false,
+        isForegroundMode: true, // We use true but the channel importance is MIN, so it's silent but protected
         notificationChannelId: 'background_service',
-        initialNotificationTitle: 'Vormedikation Timer',
-        initialNotificationContent: 'Timer wird vorbereitet...',
+        initialNotificationTitle: 'CIDP Buddy',
+        initialNotificationContent: 'Dienst läuft im Hintergrund',
         foregroundServiceNotificationId: 888,
       ),
       iosConfiguration: IosConfiguration(
@@ -121,6 +121,7 @@ class BackgroundService {
               title: 'Vormedikation Timer',
               content: 'Verbleibend: ${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
             );
+            await notifService.showTimerProgress(mins, secs);
           }
         } else {
           await stopTimer();

@@ -31,7 +31,7 @@ class NotificationService {
       'background_service',
       'Hintergrunddienst',
       description: 'Wird für den Timer und Hintergrund-Tasks verwendet',
-      importance: Importance.low,
+      importance: Importance.min,
     );
     
     const AndroidNotificationChannel stockChannel = AndroidNotificationChannel(
@@ -47,19 +47,26 @@ class NotificationService {
       await androidPlugin.createNotificationChannel(stockChannel);
     }
 
-    try {
-      final timeZoneNameValue = await FlutterTimezone.getLocalTimezone();
-      final String timeZoneName = timeZoneNameValue.toString();
+    if (!isBackground) {
       try {
-        tz.setLocalLocation(tz.getLocation(timeZoneName));
-        debugPrint('NotificationService: Timezone set to $timeZoneName');
+        final timeZoneNameValue = await FlutterTimezone.getLocalTimezone();
+        final String timeZoneName = timeZoneNameValue.toString();
+        try {
+          tz.setLocalLocation(tz.getLocation(timeZoneName));
+          debugPrint('NotificationService: Timezone set to $timeZoneName');
+        } catch (e) {
+          debugPrint('NotificationService: Invalid timezone name "$timeZoneName", falling back to UTC: $e');
+          tz.setLocalLocation(tz.getLocation('UTC'));
+        }
       } catch (e) {
-        debugPrint('NotificationService: Invalid timezone name "$timeZoneName", falling back to UTC: $e');
+        debugPrint('NotificationService: Could not get local timezone, falling back to UTC: $e');
         tz.setLocalLocation(tz.getLocation('UTC'));
       }
-    } catch (e) {
-      debugPrint('NotificationService: Could not get local timezone, falling back to UTC: $e');
-      tz.setLocalLocation(tz.getLocation('UTC'));
+    } else {
+      // In background, just ensure UTC is set as fallback if not already set
+      try {
+        tz.setLocalLocation(tz.getLocation('UTC'));
+      } catch (_) {}
     }
     
     // Request permission for Android 13+ notifications
@@ -251,6 +258,34 @@ class NotificationService {
         await _notificationsPlugin.cancel(999 + (i * 10) + repeat);
       }
     }
+    await cancelTimerProgress();
+  }
+
+  Future<void> showTimerProgress(int minutes, int seconds) async {
+    final title = 'Vormedikation Timer';
+    final content = 'Verbleibend: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    
+    await _notificationsPlugin.show(
+      9999, // Specific ID for timer progress
+      title,
+      content,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'premed_timer',
+          'Vormedikation Timer',
+          importance: Importance.high,
+          priority: Priority.high,
+          ongoing: true,
+          showWhen: false,
+          onlyAlertOnce: true,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+    );
+  }
+
+  Future<void> cancelTimerProgress() async {
+    await _notificationsPlugin.cancel(9999);
   }
 
   Future<void> showStockWarningNotification(List<String> lowItems) async {
