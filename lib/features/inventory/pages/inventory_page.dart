@@ -56,7 +56,7 @@ class InventoryPage extends StatelessWidget {
             ],
           ),
           floatingActionButton: Padding(
-            padding: const EdgeInsets.only(bottom: 80),
+            padding: const EdgeInsets.only(bottom: 120),
             child: FloatingActionButton.extended(
               heroTag: 'medication_fab',
               onPressed: () {
@@ -195,7 +195,7 @@ class InventoryPage extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: 100),
+        const SizedBox(height: 120),
       ],
     );
   }

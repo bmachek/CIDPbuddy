@@ -167,7 +167,7 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
+        padding: const EdgeInsets.only(bottom: 120),
         child: FloatingActionButton.extended(
           onPressed: () => _showAddAppointmentDialog(context, db),
           icon: const Icon(Icons.add_rounded),
