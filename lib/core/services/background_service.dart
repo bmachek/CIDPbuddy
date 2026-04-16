@@ -19,10 +19,10 @@ class BackgroundService {
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
         autoStart: true,
-        isForegroundMode: true,
+        isForegroundMode: false,
         notificationChannelId: 'background_service',
-        initialNotificationTitle: 'CIDP Buddy Hintergrunddienst',
-        initialNotificationContent: 'Dienst ist aktiv',
+        initialNotificationTitle: 'Vormedikation Timer',
+        initialNotificationContent: 'Timer wird vorbereitet...',
         foregroundServiceNotificationId: 888,
       ),
       iosConfiguration: IosConfiguration(
@@ -43,7 +43,7 @@ class BackgroundService {
     DartPluginRegistrant.ensureInitialized();
 
     final notifService = NotificationService();
-    await notifService.init();
+    await notifService.init(isBackground: true);
 
     if (service is AndroidServiceInstance) {
       service.on('setAsForeground').listen((event) {
@@ -75,14 +75,14 @@ class BackgroundService {
       });
       
       if (service is AndroidServiceInstance) {
-        service.setForegroundNotificationInfo(
-          title: 'CIDP Buddy',
-          content: 'Hintergrunddienst aktiv',
-        );
+        await service.setAsBackgroundService();
       }
     }
 
     service.on('startTimer').listen((event) async {
+      if (service is AndroidServiceInstance) {
+        await service.setAsForegroundService();
+      }
       final seconds = event?['seconds'] as int? ?? 15 * 60;
       secondsRemaining = seconds;
       isRunning = true;

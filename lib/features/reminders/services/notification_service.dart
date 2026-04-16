@@ -13,7 +13,7 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  Future<void> init() async {
+  Future<void> init({bool isBackground = false}) async {
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
     const DarwinInitializationSettings darwinSettings = DarwinInitializationSettings();
 
@@ -42,20 +42,31 @@ class NotificationService {
     try {
       final timeZoneNameValue = await FlutterTimezone.getLocalTimezone();
       final String timeZoneName = timeZoneNameValue.toString();
-      tz.setLocalLocation(tz.getLocation(timeZoneName));
-      debugPrint('NotificationService: Timezone set to $timeZoneName');
+      try {
+        tz.setLocalLocation(tz.getLocation(timeZoneName));
+        debugPrint('NotificationService: Timezone set to $timeZoneName');
+      } catch (e) {
+        debugPrint('NotificationService: Invalid timezone name "$timeZoneName", falling back to UTC: $e');
+        tz.setLocalLocation(tz.getLocation('UTC'));
+      }
     } catch (e) {
       debugPrint('NotificationService: Could not get local timezone, falling back to UTC: $e');
+      tz.setLocalLocation(tz.getLocation('UTC'));
     }
     
     // Request permission for Android 13+ notifications
-    if (androidPlugin != null) {
-      final status = await androidPlugin.requestNotificationsPermission();
-      debugPrint('NotificationService: Android notifications permission status: $status');
-      
-      // For Android 14+, exact alarms need explicit permission or it will fallback to inexact
-      final exactStatus = await androidPlugin.requestExactAlarmsPermission();
-      debugPrint('NotificationService: Android exact alarms permission status: $exactStatus');
+    // IMPORTANT: Only request permission in the main UI app, not in background isolate
+    if (androidPlugin != null && !isBackground) {
+      try {
+        final status = await androidPlugin.requestNotificationsPermission();
+        debugPrint('NotificationService: Android notifications permission status: $status');
+        
+        // For Android 14+, exact alarms need explicit permission or it will fallback to inexact
+        final exactStatus = await androidPlugin.requestExactAlarmsPermission();
+        debugPrint('NotificationService: Android exact alarms permission status: $exactStatus');
+      } catch (e) {
+        debugPrint('NotificationService: Failed to request permissions: $e');
+      }
     }
   }
 
