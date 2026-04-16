@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          # Tag format expected: v1.2.3 or v1.2.3+4
+          TAG=${{ github.ref_name }}
+          VERSION=${TAG#v}
+          
+          # If there's a + in the version, split it into name and number
+          if [[ $VERSION == *"+"* ]]; then
+            BUILD_NAME=${VERSION%+*}
+            BUILD_NUMBER=${VERSION#*+}
+          else
+            BUILD_NAME=$VERSION
+            BUILD_NUMBER=${{ github.run_number }}
+          fi
+          
+          echo "build_name=$BUILD_NAME" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "Using Build Name: $BUILD_NAME"
+          echo "Using Build Number: $BUILD_NUMBER"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run build_runner
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build APK
+        run: |
+          flutter build apk --release \
+            --build-name=${{ steps.get_version.outputs.build_name }} \
+            --build-number=${{ steps.get_version.outputs.build_number }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/app/outputs/flutter-apk/app-release.apk
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.get_version.outputs.build_name }} (Build ${{ steps.get_version.outputs.build_number }})
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
