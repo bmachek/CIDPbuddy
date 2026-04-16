@@ -49,21 +49,29 @@ class NotificationService {
 
     if (!isBackground) {
       try {
-        final timeZoneNameValue = await FlutterTimezone.getLocalTimezone();
-        final String timeZoneName = timeZoneNameValue.toString();
+        final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+        String timeZoneName = timeZoneInfo.identifier;
+        
+        // Handle weird results like "TimezoneInfo" or null
+        if (timeZoneName.isEmpty || timeZoneName == "TimezoneInfo") {
+          debugPrint('NotificationService: Received invalid timezone string "$timeZoneName". Using fallback.');
+          timeZoneName = "Europe/Berlin";
+        }
+
         try {
           tz.setLocalLocation(tz.getLocation(timeZoneName));
           debugPrint('NotificationService: Timezone set to $timeZoneName');
         } catch (e) {
-          debugPrint('NotificationService: Invalid timezone name "$timeZoneName", falling back to UTC: $e');
+          debugPrint('NotificationService: Location "$timeZoneName" not found, falling back to UTC: $e');
           tz.setLocalLocation(tz.getLocation('UTC'));
         }
       } catch (e) {
-        debugPrint('NotificationService: Could not get local timezone, falling back to UTC: $e');
+        debugPrint('NotificationService: Error getting local timezone: $e. Falling back to UTC.');
         tz.setLocalLocation(tz.getLocation('UTC'));
       }
     } else {
-      // In background, just ensure UTC is set as fallback if not already set
+      // In background isolate, just default to UTC or keep existing
+      // We don't need to query FlutterTimezone here as it might lead to plugin isolate errors
       try {
         tz.setLocalLocation(tz.getLocation('UTC'));
       } catch (_) {}
