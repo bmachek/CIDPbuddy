@@ -52,14 +52,61 @@ class MedicationService {
 
   Future<List<Medication>> getLowStockMedications() async {
     final meds = await db.getAllMedications();
+    // Filter out items that already have a pending order
+    final pendingItems = await db.watchAllPendingOrderItems().first;
+    final pendingMedIds = pendingItems.map((o) => o.medicationId).whereType<int>().toSet();
+
     List<Medication> lowMeds = [];
     for (var med in meds) {
-      if (med.minStock <= 0) continue;
+      if (med.minStock <= 0 || pendingMedIds.contains(med.id)) continue;
       final days = await calculateDaysRemaining(med);
       if (days != null && days <= med.minStock) {
         lowMeds.add(med);
       }
     }
     return lowMeds;
+  }
+
+  Future<List<Accessory>> getLowStockAccessories() async {
+    final allAccs = await db.getAllAccessories();
+    final allLinks = await db.getAllMedicationAccessories();
+    final pendingItems = await db.watchAllPendingOrderItems().first;
+    final pendingAccIds = pendingItems.map((o) => o.accessoryId).whereType<int>().toSet();
+    
+    List<Accessory> lowAccs = [];
+    for (var a in allAccs) {
+      if (pendingAccIds.contains(a.id)) continue;
+
+      // If user set a specific minStock > 0, use it
+      if (a.minStock > 0) {
+        if (a.stock <= a.minStock) {
+          lowAccs.add(a);
+        }
+        continue;
+      }
+      
+      // Fallback to Dashboard logic: 
+      // check if this accessory has any link with consumption > 0
+      final hasPositiveConsumption = allLinks
+          .where((l) => l.accessoryId == a.id)
+          .any((l) => l.defaultQuantity > 0);
+      
+      if (!hasPositiveConsumption) {
+        if (a.stock <= 0) lowAccs.add(a);
+      } else {
+        if (a.stock < 5) lowAccs.add(a);
+      }
+    }
+    return lowAccs;
+  }
+
+  Future<List<String>> getLowStockItemsSummary() async {
+    final lowMeds = await getLowStockMedications();
+    final lowAccs = await getLowStockAccessories();
+    
+    return [
+      ...lowMeds.map((m) => m.name),
+      ...lowAccs.map((a) => a.name),
+    ];
   }
 }

@@ -33,10 +33,18 @@ class NotificationService {
       description: 'Wird für den Timer und Hintergrund-Tasks verwendet',
       importance: Importance.low,
     );
+    
+    const AndroidNotificationChannel stockChannel = AndroidNotificationChannel(
+      'stock_warnings',
+      'Bestands-Warnungen',
+      description: 'Benachrichtigt dich, wenn Medikamente oder Zubehör zur Neige gehen',
+      importance: Importance.high,
+    );
 
     final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(channel);
+      await androidPlugin.createNotificationChannel(stockChannel);
     }
 
     try {
@@ -243,5 +251,30 @@ class NotificationService {
         await _notificationsPlugin.cancel(999 + (i * 10) + repeat);
       }
     }
+  }
+
+  Future<void> showStockWarningNotification(List<String> lowItems) async {
+    if (lowItems.isEmpty) return;
+    
+    final itemsText = lowItems.join(", ");
+    
+    await _notificationsPlugin.show(
+      8888, // Constant ID for stock warning to overwrite previous ones
+      'Bestellung empfohlen',
+      'Niedriger Bestand: $itemsText',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'stock_warnings',
+          'Bestands-Warnungen',
+          importance: Importance.high,
+          priority: Priority.high,
+          styleInformation: BigTextStyleInformation(''),
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentSound: true,
+        ),
+      ),
+    );
   }
 }

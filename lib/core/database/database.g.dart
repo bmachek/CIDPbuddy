@@ -852,6 +852,18 @@ class $AccessoriesTable extends Accessories
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
+  static const VerificationMeta _minStockMeta = const VerificationMeta(
+    'minStock',
+  );
+  @override
+  late final GeneratedColumn<double> minStock = GeneratedColumn<double>(
+    'min_stock',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
   static const VerificationMeta _unitMeta = const VerificationMeta('unit');
   @override
   late final GeneratedColumn<String> unit = GeneratedColumn<String>(
@@ -878,7 +890,14 @@ class $AccessoriesTable extends Accessories
     defaultValue: const Constant(1.0),
   );
   @override
-  List<GeneratedColumn> get $columns => [id, name, stock, unit, packageSize];
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    stock,
+    minStock,
+    unit,
+    packageSize,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -906,6 +925,12 @@ class $AccessoriesTable extends Accessories
       context.handle(
         _stockMeta,
         stock.isAcceptableOrUnknown(data['stock']!, _stockMeta),
+      );
+    }
+    if (data.containsKey('min_stock')) {
+      context.handle(
+        _minStockMeta,
+        minStock.isAcceptableOrUnknown(data['min_stock']!, _minStockMeta),
       );
     }
     if (data.containsKey('unit')) {
@@ -946,6 +971,10 @@ class $AccessoriesTable extends Accessories
         DriftSqlType.double,
         data['${effectivePrefix}stock'],
       )!,
+      minStock: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}min_stock'],
+      )!,
       unit: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}unit'],
@@ -967,12 +996,14 @@ class Accessory extends DataClass implements Insertable<Accessory> {
   final int id;
   final String name;
   final double stock;
+  final double minStock;
   final String unit;
   final double packageSize;
   const Accessory({
     required this.id,
     required this.name,
     required this.stock,
+    required this.minStock,
     required this.unit,
     required this.packageSize,
   });
@@ -982,6 +1013,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['stock'] = Variable<double>(stock);
+    map['min_stock'] = Variable<double>(minStock);
     map['unit'] = Variable<String>(unit);
     map['package_size'] = Variable<double>(packageSize);
     return map;
@@ -992,6 +1024,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
       id: Value(id),
       name: Value(name),
       stock: Value(stock),
+      minStock: Value(minStock),
       unit: Value(unit),
       packageSize: Value(packageSize),
     );
@@ -1006,6 +1039,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       stock: serializer.fromJson<double>(json['stock']),
+      minStock: serializer.fromJson<double>(json['minStock']),
       unit: serializer.fromJson<String>(json['unit']),
       packageSize: serializer.fromJson<double>(json['packageSize']),
     );
@@ -1017,6 +1051,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'stock': serializer.toJson<double>(stock),
+      'minStock': serializer.toJson<double>(minStock),
       'unit': serializer.toJson<String>(unit),
       'packageSize': serializer.toJson<double>(packageSize),
     };
@@ -1026,12 +1061,14 @@ class Accessory extends DataClass implements Insertable<Accessory> {
     int? id,
     String? name,
     double? stock,
+    double? minStock,
     String? unit,
     double? packageSize,
   }) => Accessory(
     id: id ?? this.id,
     name: name ?? this.name,
     stock: stock ?? this.stock,
+    minStock: minStock ?? this.minStock,
     unit: unit ?? this.unit,
     packageSize: packageSize ?? this.packageSize,
   );
@@ -1040,6 +1077,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       stock: data.stock.present ? data.stock.value : this.stock,
+      minStock: data.minStock.present ? data.minStock.value : this.minStock,
       unit: data.unit.present ? data.unit.value : this.unit,
       packageSize: data.packageSize.present
           ? data.packageSize.value
@@ -1053,6 +1091,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('stock: $stock, ')
+          ..write('minStock: $minStock, ')
           ..write('unit: $unit, ')
           ..write('packageSize: $packageSize')
           ..write(')'))
@@ -1060,7 +1099,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
   }
 
   @override
-  int get hashCode => Object.hash(id, name, stock, unit, packageSize);
+  int get hashCode => Object.hash(id, name, stock, minStock, unit, packageSize);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1068,6 +1107,7 @@ class Accessory extends DataClass implements Insertable<Accessory> {
           other.id == this.id &&
           other.name == this.name &&
           other.stock == this.stock &&
+          other.minStock == this.minStock &&
           other.unit == this.unit &&
           other.packageSize == this.packageSize);
 }
@@ -1076,12 +1116,14 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
   final Value<int> id;
   final Value<String> name;
   final Value<double> stock;
+  final Value<double> minStock;
   final Value<String> unit;
   final Value<double> packageSize;
   const AccessoriesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.stock = const Value.absent(),
+    this.minStock = const Value.absent(),
     this.unit = const Value.absent(),
     this.packageSize = const Value.absent(),
   });
@@ -1089,6 +1131,7 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
     this.id = const Value.absent(),
     required String name,
     this.stock = const Value.absent(),
+    this.minStock = const Value.absent(),
     required String unit,
     this.packageSize = const Value.absent(),
   }) : name = Value(name),
@@ -1097,6 +1140,7 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
     Expression<int>? id,
     Expression<String>? name,
     Expression<double>? stock,
+    Expression<double>? minStock,
     Expression<String>? unit,
     Expression<double>? packageSize,
   }) {
@@ -1104,6 +1148,7 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (stock != null) 'stock': stock,
+      if (minStock != null) 'min_stock': minStock,
       if (unit != null) 'unit': unit,
       if (packageSize != null) 'package_size': packageSize,
     });
@@ -1113,6 +1158,7 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
     Value<int>? id,
     Value<String>? name,
     Value<double>? stock,
+    Value<double>? minStock,
     Value<String>? unit,
     Value<double>? packageSize,
   }) {
@@ -1120,6 +1166,7 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
       id: id ?? this.id,
       name: name ?? this.name,
       stock: stock ?? this.stock,
+      minStock: minStock ?? this.minStock,
       unit: unit ?? this.unit,
       packageSize: packageSize ?? this.packageSize,
     );
@@ -1137,6 +1184,9 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
     if (stock.present) {
       map['stock'] = Variable<double>(stock.value);
     }
+    if (minStock.present) {
+      map['min_stock'] = Variable<double>(minStock.value);
+    }
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
     }
@@ -1152,6 +1202,7 @@ class AccessoriesCompanion extends UpdateCompanion<Accessory> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('stock: $stock, ')
+          ..write('minStock: $minStock, ')
           ..write('unit: $unit, ')
           ..write('packageSize: $packageSize')
           ..write(')'))
@@ -5723,6 +5774,7 @@ typedef $$AccessoriesTableCreateCompanionBuilder =
       Value<int> id,
       required String name,
       Value<double> stock,
+      Value<double> minStock,
       required String unit,
       Value<double> packageSize,
     });
@@ -5731,6 +5783,7 @@ typedef $$AccessoriesTableUpdateCompanionBuilder =
       Value<int> id,
       Value<String> name,
       Value<double> stock,
+      Value<double> minStock,
       Value<String> unit,
       Value<double> packageSize,
     });
@@ -5813,6 +5866,11 @@ class $$AccessoriesTableFilterComposer
 
   ColumnFilters<double> get stock => $composableBuilder(
     column: $table.stock,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get minStock => $composableBuilder(
+    column: $table.minStock,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5902,6 +5960,11 @@ class $$AccessoriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get minStock => $composableBuilder(
+    column: $table.minStock,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get unit => $composableBuilder(
     column: $table.unit,
     builder: (column) => ColumnOrderings(column),
@@ -5930,6 +5993,9 @@ class $$AccessoriesTableAnnotationComposer
 
   GeneratedColumn<double> get stock =>
       $composableBuilder(column: $table.stock, builder: (column) => column);
+
+  GeneratedColumn<double> get minStock =>
+      $composableBuilder(column: $table.minStock, builder: (column) => column);
 
   GeneratedColumn<String> get unit =>
       $composableBuilder(column: $table.unit, builder: (column) => column);
@@ -6026,12 +6092,14 @@ class $$AccessoriesTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<double> stock = const Value.absent(),
+                Value<double> minStock = const Value.absent(),
                 Value<String> unit = const Value.absent(),
                 Value<double> packageSize = const Value.absent(),
               }) => AccessoriesCompanion(
                 id: id,
                 name: name,
                 stock: stock,
+                minStock: minStock,
                 unit: unit,
                 packageSize: packageSize,
               ),
@@ -6040,12 +6108,14 @@ class $$AccessoriesTableTableManager
                 Value<int> id = const Value.absent(),
                 required String name,
                 Value<double> stock = const Value.absent(),
+                Value<double> minStock = const Value.absent(),
                 required String unit,
                 Value<double> packageSize = const Value.absent(),
               }) => AccessoriesCompanion.insert(
                 id: id,
                 name: name,
                 stock: stock,
+                minStock: minStock,
                 unit: unit,
                 packageSize: packageSize,
               ),

@@ -5,6 +5,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import '../../features/reminders/services/notification_service.dart';
 import '../database/database.dart';
 import 'scheduler_service.dart';
+import 'medication_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 @pragma('vm:entry-point')
@@ -154,9 +155,15 @@ class BackgroundService {
     try {
       final db = AppDatabase();
       await SchedulerService(db).syncPlannedInfusions();
-      // Drift database should be closed after use in background isolates if not kept alive
-      // but here we might want to keep it or let it be. AppDatabase() creates a new connection.
-      debugPrint('BackgroundService: Periodic sync completed.');
+      
+      // Perform stock check
+      final medService = MedicationService(db);
+      final lowItems = await medService.getLowStockItemsSummary();
+      if (lowItems.isNotEmpty) {
+        await NotificationService().showStockWarningNotification(lowItems);
+      }
+      
+      debugPrint('BackgroundService: Periodic sync and stock check completed.');
     } catch (e) {
       debugPrint('BackgroundService: Periodic sync failed: $e');
     }

@@ -26,6 +26,7 @@ class Accessories extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 1, max: 100)();
   RealColumn get stock => real().withDefault(const Constant(0.0))();
+  RealColumn get minStock => real().withDefault(const Constant(0.0))();
   TextColumn get unit => text().withLength(min: 1, max: 20)(); // e.g., "Stk", "Pack"
   RealColumn get packageSize => real().withDefault(const Constant(1.0))();
 }
@@ -114,7 +115,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 12; // Incremented schema version to 12 for Medications dosage and InfusionLog photoPath
+  int get schemaVersion => 13; // Incremented schema version to 13 for Accessories minStock
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -159,6 +160,9 @@ class AppDatabase extends _$AppDatabase {
       if (to >= 12 && from < 12) {
         await m.addColumn(medications, medications.dosage);
         await m.addColumn(infusionLog, infusionLog.photoPath);
+      }
+      if (to >= 13 && from < 13) {
+        await m.addColumn(accessories, accessories.minStock);
       }
     },
   );
