@@ -1,4 +1,6 @@
 import 'package:drift/drift.dart';
+import 'package:rxdart/rxdart.dart';
+import '../../features/settings/services/backup_service.dart';
 import 'connection/connection.dart' as c;
 
 part 'database.g.dart';
@@ -112,7 +114,18 @@ class DiaryEntries extends Table {
 
 @DriftDatabase(tables: [Medications, Accessories, InfusionLog, MedicationAccessories, PlannedInfusions, InfusionSchedules, PendingOrders, PendingOrderItems, DiaryEntries])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase() : super(_openConnection()) {
+    _setupAutoBackup();
+  }
+
+  void _setupAutoBackup() {
+    // Listen to all table updates and trigger backup with debounce
+    tableUpdates().debounceTime(const Duration(seconds: 30)).listen((updates) {
+      if (updates.isNotEmpty) {
+        BackupService().autoBackup();
+      }
+    });
+  }
 
   @override
   int get schemaVersion => 13; // Incremented schema version to 13 for Accessories minStock

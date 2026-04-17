@@ -6,6 +6,7 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/constants/build_config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'reliability_check_page.dart';
+import 'package:intl/intl.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -53,6 +54,56 @@ class _SettingsPageState extends State<SettingsPage> {
             title: const Text('Daten importieren'),
             subtitle: const Text('Stelle eine Sicherung wieder her (Überschreibt aktuelle Daten)'),
             onTap: () => _confirmImport(context, backupService),
+          ),
+          const Divider(),
+          _buildSectionHeader('Automatisches Backup'),
+          FutureBuilder<Map<String, dynamic>>(
+            future: _getAutoBackupSettings(),
+            builder: (context, snapshot) {
+              final settings = snapshot.data ?? {
+                'enabled': false,
+                'path': null,
+                'last_time': null
+              };
+              
+              final bool enabled = settings['enabled'];
+              final String? path = settings['path'];
+              final String? lastTime = settings['last_time'];
+
+              return Column(
+                children: [
+                  SwitchListTile(
+                    title: const Text('Automatisches Backup aktivieren'),
+                    subtitle: const Text('Sichert die Datenbank automatisch gezippt bei Änderungen'),
+                    value: enabled,
+                    onChanged: (val) async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool(BackupService.kAutoBackupEnabled, val);
+                      setState(() {});
+                    },
+                    secondary: const Icon(Icons.backup_outlined),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.folder_open_outlined),
+                    title: const Text('Backup-Verzeichnis'),
+                    subtitle: Text(path ?? 'Verzeichnis wählen...'),
+                    trailing: path != null ? const Icon(Icons.check_circle, color: Colors.green, size: 16) : null,
+                    onTap: () async {
+                      final selected = await backupService.selectBackupDirectory();
+                      if (selected != null) {
+                        setState(() {});
+                      }
+                    },
+                  ),
+                  if (lastTime != null)
+                    ListTile(
+                      leading: const Icon(Icons.history),
+                      title: const Text('Zuletzt gesichert'),
+                      subtitle: Text(DateFormat('dd.MM.yyyy HH:mm').format(DateTime.parse(lastTime))),
+                    ),
+                ],
+              );
+            },
           ),
           const Divider(),
           _buildSectionHeader('Erinnerungen'),
@@ -209,6 +260,15 @@ class _SettingsPageState extends State<SettingsPage> {
       'hourly': prefs.getBool('reminder_hourly') ?? true,
       'quiet_start': prefs.getInt('quiet_hours_start') ?? 22,
       'quiet_end': prefs.getInt('quiet_hours_end') ?? 7,
+    };
+  }
+
+  Future<Map<String, dynamic>> _getAutoBackupSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'enabled': prefs.getBool(BackupService.kAutoBackupEnabled) ?? false,
+      'path': prefs.getString(BackupService.kBackupDirectoryPath),
+      'last_time': prefs.getString(BackupService.kLastBackupTime),
     };
   }
 

@@ -3,8 +3,16 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:archive/archive_io.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+import 'dart:developer' as dev;
 
 class BackupService {
+  static const String kAutoBackupEnabled = 'auto_backup_enabled';
+  static const String kBackupDirectoryPath = 'backup_directory_path';
+  static const String kLastBackupTime = 'last_backup_time';
+
   Future<void> exportDatabase() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
@@ -46,5 +54,85 @@ class BackupService {
       return true;
     }
     return false;
+  }
+
+  // --- New Automated Zipped Backup Feature ---
+
+  Future<String?> selectBackupDirectory() async {
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+
+    if (selectedDirectory != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(kBackupDirectoryPath, selectedDirectory);
+      return selectedDirectory;
+    }
+    return null;
+  }
+
+  Future<void> autoBackup() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool isEnabled = prefs.getBool(kAutoBackupEnabled) ?? false;
+    final String? targetDir = prefs.getString(kBackupDirectoryPath);
+
+    if (isEnabled && targetDir != null) {
+      dev.log('Starte automatisches Backup nach: $targetDir');
+      final success = await performZippedBackup(targetDir);
+      if (success) {
+        await prefs.setString(kLastBackupTime, DateTime.now().toIso8601String());
+        await _cleanupOldBackups(targetDir);
+      }
+    }
+  }
+
+  Future<bool> performZippedBackup(String targetDir) async {
+    try {
+      final dbFolder = await getApplicationDocumentsDirectory();
+      final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
+
+      if (!await dbFile.exists()) return false;
+
+      // Create ZIP
+      final encoder = ZipFileEncoder();
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final zipFileName = 'igkeeper_backup_$timestamp.zip';
+      final zipPath = p.join(targetDir, zipFileName);
+
+      encoder.create(zipPath);
+      await encoder.addFile(dbFile);
+      encoder.close();
+
+      dev.log('Zipped Backup erstellt: $zipPath');
+      return true;
+    } catch (e) {
+      dev.log('Fehler beim Erstellen des zipped Backups: $e');
+      return false;
+    }
+  }
+
+  Future<void> _cleanupOldBackups(String targetDir) async {
+    try {
+      final directory = Directory(targetDir);
+      final List<FileSystemEntity> files = await directory.list().toList();
+
+      // Filter for our backup files
+      final backupFiles = files.whereType<File>().where((file) {
+        final name = p.basename(file.path);
+        return name.startsWith('igkeeper_backup_') && name.endsWith('.zip');
+      }).toList();
+
+      // Sort by modification date (oldest first)
+      backupFiles.sort((a, b) => a.statSync().modified.compareTo(b.statSync().modified));
+
+      // Keep only last 5
+      if (backupFiles.length > 5) {
+        final toDelete = backupFiles.take(backupFiles.length - 5);
+        for (final file in toDelete) {
+          await file.delete();
+          dev.log('Altes Backup gelöscht: ${file.path}');
+        }
+      }
+    } catch (e) {
+      dev.log('Fehler bei der Bereinigung alter Backups: $e');
+    }
   }
 }
