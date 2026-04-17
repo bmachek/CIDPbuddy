@@ -90,20 +90,17 @@ class BackgroundService {
       
       timer?.cancel();
       
-      // Schedule notifications once as a backup
-      await notifService.schedulePremedicationTimer(secondsRemaining ~/ 60);
+      // No longer scheduling individual minute notifications as requested
+      // await notifService.schedulePremedicationTimer(secondsRemaining ~/ 60);
 
       timer = Timer.periodic(const Duration(seconds: 1), (t) async {
         if (secondsRemaining > 0) {
           secondsRemaining--;
           
           if (secondsRemaining % 60 == 0 && secondsRemaining > 0) {
-            // Minute ping
+            // Minute ping (single sound)
             try {
-              for (int i = 0; i < 3; i++) {
-                await audioPlayer.play(AssetSource('audio/ping.mp3'));
-                if (i < 2) await Future.delayed(const Duration(milliseconds: 1500));
-              }
+              await audioPlayer.play(AssetSource('audio/ping.mp3'));
             } catch (e) {
               debugPrint('Background Ping Error: $e');
             }

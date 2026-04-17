@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class PremedicationTimerModal extends StatefulWidget {
   const PremedicationTimerModal({super.key});
@@ -24,9 +25,9 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    final duration = prefs.getInt('hyqvia_timer_duration') ?? 15;
+    final ml = prefs.getInt('hyqvia_timer_ml') ?? 15;
     setState(() {
-      _totalSeconds = duration * 60;
+      _totalSeconds = (ml - 1) * 60;
       _secondsRemaining = _totalSeconds;
     });
 
@@ -47,9 +48,9 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
     });
   }
 
-  Future<void> _saveSettings(int minutes) async {
+  Future<void> _saveSettings(int ml) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('hyqvia_timer_duration', minutes);
+    await prefs.setInt('hyqvia_timer_ml', ml);
   }
 
   void _startTimer() {
@@ -60,11 +61,13 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
     });
     
     setState(() => _isRunning = true);
+    WakelockPlus.enable();
   }
 
   void _stopTimer() {
     FlutterBackgroundService().invoke('stopTimer');
     setState(() => _isRunning = false);
+    WakelockPlus.disable();
   }
 
   void _resetTimer() {
@@ -75,6 +78,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
   @override
   void dispose() {
     _serviceSubscription?.cancel();
+    WakelockPlus.disable();
     super.dispose();
   }
 
@@ -82,8 +86,9 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
   Widget build(BuildContext context) {
     final minutes = _secondsRemaining ~/ 60;
     final seconds = _secondsRemaining % 60;
-    final progress = 1 - (_secondsRemaining / _totalSeconds);
-    final remainingMl = (_secondsRemaining / 60).ceil();
+    final progress = 1 - (_secondsRemaining / (_totalSeconds > 0 ? _totalSeconds : 1));
+    final totalMl = (_totalSeconds ~/ 60) + 1;
+    final remainingMl = (minutes + 1);
 
     return Container(
       padding: const EdgeInsets.all(32),
@@ -109,7 +114,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Ping jede Minute • 15 Min empfohlen',
+            'Pin jede Minute • $_totalSeconds Sek. Timer',
             style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 40),
@@ -181,7 +186,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('Spritzen-Fortschritt', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                    Text('${(remainingMl).toStringAsFixed(0)} / ${_totalSeconds ~/ 60} ml', 
+                    Text('$remainingMl / $totalMl ml', 
                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ],
                 ),
@@ -295,17 +300,17 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Dauer anpassen (Minuten)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Vormedikation Menge (ml)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             Wrap(
               spacing: 12,
               children: [5, 10, 15, 20, 30].map((m) => ChoiceChip(
-                label: Text('$m min'),
-                selected: _totalSeconds == m * 60,
+                label: Text('$m ml'),
+                selected: ((_totalSeconds ~/ 60) + 1) == m,
                 onSelected: (selected) {
                   if (selected) {
                     setState(() {
-                      _totalSeconds = m * 60;
+                      _totalSeconds = (m - 1) * 60;
                       _secondsRemaining = _totalSeconds;
                     });
                     _saveSettings(m);
