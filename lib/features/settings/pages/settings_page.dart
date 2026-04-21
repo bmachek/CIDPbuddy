@@ -139,6 +139,12 @@ class _SettingsPageState extends State<SettingsPage> {
                       title: const Text('Zuletzt gesichert'),
                       subtitle: Text(DateFormat('dd.MM.yyyy HH:mm').format(DateTime.parse(lastTime))),
                     ),
+                  ListTile(
+                    leading: const Icon(Icons.settings_backup_restore),
+                    title: const Text('Sicherung wiederherstellen'),
+                    subtitle: const Text('Wähle ein automatisches Backup zum Einspielen'),
+                    onTap: () => _showRestoreBackupDialog(context),
+                  ),
                 ],
               );
             },
@@ -430,5 +436,138 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
+  }
+
+  void _showRestoreBackupDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  const Text('Backup auswählen', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: FutureBuilder<List<BackupFile>>(
+                future: backupService.getAvailableBackups(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Fehler: ${snapshot.error}'));
+                  }
+                  final backups = snapshot.data ?? [];
+                  if (backups.isEmpty) {
+                    return const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.folder_open, size: 48, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text('Keine Backups gefunden.', style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                    );
+                  }
+                  return ListView.builder(
+                    controller: scrollController,
+                    itemCount: backups.length,
+                    itemBuilder: (context, index) {
+                      final b = backups[index];
+                      return ListTile(
+                        leading: const Icon(Icons.inventory_2_outlined),
+                        title: Text(b.name),
+                        subtitle: Text('${DateFormat('dd.MM.yyyy HH:mm').format(b.date)}  •  ${(b.size / 1024 / 1024).toStringAsFixed(2)} MB'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _confirmZippedRestore(context, b);
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmZippedRestore(BuildContext context, BackupFile backup) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sicherung einspielen?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Möchtest du das Backup vom ${DateFormat('dd.MM.yyyy HH:mm').format(backup.date)} wirklich wiederherstellen?'),
+            const SizedBox(height: 16),
+            const Text(
+              'ACHTUNG: Alle aktuellen Daten werden unwiderruflich überschrieben!',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true), 
+            child: const Text('Wiederherstellen'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      if (!context.mounted) return;
+      
+      // Show progress
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final success = await backupService.restoreFromZippedBackup(backup);
+      
+      if (context.mounted) {
+        Navigator.pop(context); // Close progress
+        
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Daten erfolgreich wiederhergestellt. Bitte starte die App neu.'),
+              duration: Duration(seconds: 10),
+              backgroundColor: Colors.green,
+            )
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Fehler bei der Wiederherstellung.'),
+              backgroundColor: Colors.red,
+            )
+          );
+        }
+      }
+    }
   }
 }

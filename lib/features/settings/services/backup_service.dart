@@ -10,11 +10,113 @@ import 'dart:developer' as dev;
 import 'package:saf_util/saf_util.dart';
 import 'package:saf_stream/saf_stream.dart';
 
+class BackupFile {
+  final String name;
+  final DateTime date;
+  final int size;
+  final String pathOrUri;
+  final bool isSaf;
+
+  BackupFile({
+    required this.name,
+    required this.date,
+    required this.size,
+    required this.pathOrUri,
+    required this.isSaf,
+  });
+}
+
 class BackupService {
   static const String kAutoBackupEnabled = 'auto_backup_enabled';
   static const String kBackupDirectoryPath = 'backup_directory_path';
   static const String kBackupIsSaf = 'backup_is_saf';
   static const String kLastBackupTime = 'last_backup_time';
+
+  Future<List<BackupFile>> getAvailableBackups() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? targetDir = prefs.getString(kBackupDirectoryPath);
+    final bool isSaf = prefs.getBool(kBackupIsSaf) ?? false;
+
+    if (targetDir == null) return [];
+
+    try {
+      if (isSaf && Platform.isAndroid) {
+        final safUtil = SafUtil();
+        final files = await safUtil.list(targetDir);
+        
+        return files
+            .where((f) => f.name != null && f.name!.startsWith('igkeeper_backup_') && f.name!.endsWith('.zip'))
+            .map((f) => BackupFile(
+                  name: f.name!, // Note: ! is still needed because name is a property, not a local variable (no promotion for properties)
+                  date: f.lastModified != null 
+                      ? DateTime.fromMillisecondsSinceEpoch(f.lastModified!)
+                      : DateTime.now(),
+                  size: f.length ?? 0,
+                  pathOrUri: f.uri,
+                  isSaf: true,
+                ))
+            .toList()
+          ..sort((a, b) => b.date.compareTo(a.date));
+      } else {
+        final directory = Directory(targetDir);
+        if (!await directory.exists()) return [];
+
+        final List<FileSystemEntity> files = await directory.list().toList();
+        return files
+            .whereType<File>()
+            .where((f) => p.basename(f.path).startsWith('igkeeper_backup_') && f.path.endsWith('.zip'))
+            .map((f) {
+              final stat = f.statSync();
+              return BackupFile(
+                name: p.basename(f.path),
+                date: stat.modified,
+                size: stat.size,
+                pathOrUri: f.path,
+                isSaf: false,
+              );
+            })
+            .toList()
+          ..sort((a, b) => b.date.compareTo(a.date));
+      }
+    } catch (e) {
+      dev.log('Fehler beim Abrufen der Backups: $e');
+      return [];
+    }
+  }
+
+  Future<bool> restoreFromZippedBackup(BackupFile backup) async {
+    try {
+      dev.log('Wiederherstellung von: ${backup.name} (${backup.isSaf ? 'SAF' : 'Local'})');
+      
+      final List<int> bytes;
+      if (backup.isSaf && Platform.isAndroid) {
+        final safStream = SafStream();
+        bytes = await safStream.readFileBytes(backup.pathOrUri);
+      } else {
+        bytes = await File(backup.pathOrUri).readAsBytes();
+      }
+
+      final archive = ZipDecoder().decodeBytes(bytes);
+      final dbFileInArchive = archive.findFile('igkeeper.sqlite');
+
+      if (dbFileInArchive != null) {
+        final dbFolder = await getApplicationDocumentsDirectory();
+        final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
+        
+        // Backup the current DB just in case? Or just overwrite as decided.
+        await dbFile.writeAsBytes(dbFileInArchive.content as List<int>);
+        
+        dev.log('Backup erfolgreich wiederhergestellt: ${backup.name}');
+        return true;
+      } else {
+        dev.log('Kritisch: igkeeper.sqlite im ZIP nicht gefunden!');
+        return false;
+      }
+    } catch (e) {
+      dev.log('Fehler bei der Wiederherstellung: $e');
+      return false;
+    }
+  }
 
   Future<void> exportDatabase() async {
     final dbFolder = await getApplicationDocumentsDirectory();
