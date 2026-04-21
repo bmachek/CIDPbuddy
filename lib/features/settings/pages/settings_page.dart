@@ -86,9 +86,31 @@ class _SettingsPageState extends State<SettingsPage> {
                   ListTile(
                     leading: const Icon(Icons.folder_open_outlined),
                     title: const Text('Backup-Verzeichnis'),
-                    subtitle: Text(path != null 
-                        ? (path.startsWith('Error') ? 'Zugriff verweigert (Bitte neu wählen)' : path) 
-                        : 'Verzeichnis wählen...'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(path != null 
+                            ? (path.startsWith('Error') ? 'Zugriff verweigert (Bitte neu wählen)' : path) 
+                            : 'Verzeichnis wählen...'),
+                        if (path?.startsWith('Error') == true)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                final safePath = await backupService.getSafeBackupDirectory();
+                                await backupService.setBackupDirectory(safePath);
+                                setState(() {});
+                              },
+                              icon: const Icon(Icons.security, size: 16),
+                              label: const Text('Sicheres Verzeichnis verwenden'),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                textStyle: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                     trailing: (path != null && !path.startsWith('Error')) 
                         ? const Icon(Icons.check_circle, color: Colors.green, size: 16) 
                         : (path?.startsWith('Error') == true ? const Icon(Icons.error_outline, color: Colors.red, size: 16) : null),
@@ -97,8 +119,24 @@ class _SettingsPageState extends State<SettingsPage> {
                       if (selected != null) {
                         setState(() {});
                         if (selected.startsWith('Error') && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Fehler: Auf dieses Verzeichnis kann nicht geschrieben werden.'))
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Zugriff auf Cloud-Ordner'),
+                              content: const Text(
+                                'Android erlaubt es Apps technisch nicht, automatisiert in Cloud-Verzeichnisse (wie pDrive, Google Drive oder OneDrive) zu schreiben, da diese kein echtes lokales Dateisystem nutzen.\n\n'
+                                'Empfehlung:\n'
+                                '1. Nutzen Sie das "Sichere Verzeichnis" für automatische Backups.\n'
+                                '2. Nutzen Sie "Sicherung jetzt exportieren" (oben), um manuell in pCloud zu speichern.\n'
+                                '3. Oder nutzen Sie eine Sync-App (wie FolderSync), die das sichere Verzeichnis mit pCloud synchronisiert.'
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Verstanden'),
+                                ),
+                              ],
+                            ),
                           );
                         }
                       }

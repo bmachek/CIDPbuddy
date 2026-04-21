@@ -67,7 +67,8 @@ class BackupService {
         final isWritable = await _isPathWritable(selectedDirectory);
         if (!isWritable) {
           dev.log('Gewähltes Verzeichnis ist nicht beschreibbar: $selectedDirectory');
-          return 'Error: Not writable';
+          // We return the error string so the UI can react to it
+          return 'Error: Not writable: $selectedDirectory';
         }
 
         final prefs = await SharedPreferences.getInstance();
@@ -78,6 +79,34 @@ class BackupService {
       dev.log('Fehler bei der Verzeichnisauswahl: $e');
     }
     return null;
+  }
+
+  Future<String> getSafeBackupDirectory() async {
+    if (Platform.isAndroid) {
+      // getExternalStorageDirectory is usually /storage/emulated/0/Android/data/com.example.app/files
+      // This is visible to the user and always writable.
+      final extDir = await getExternalStorageDirectory();
+      if (extDir != null) {
+        final backupDir = Directory(p.join(extDir.path, 'Backups'));
+        if (!await backupDir.exists()) {
+          await backupDir.create(recursive: true);
+        }
+        return backupDir.path;
+      }
+    }
+    
+    // Fallback to documents directory
+    final docDir = await getApplicationDocumentsDirectory();
+    final backupDir = Directory(p.join(docDir.path, 'Backups'));
+    if (!await backupDir.exists()) {
+      await backupDir.create(recursive: true);
+    }
+    return backupDir.path;
+  }
+
+  Future<void> setBackupDirectory(String path) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(kBackupDirectoryPath, path);
   }
 
   Future<bool> _isPathWritable(String path) async {
