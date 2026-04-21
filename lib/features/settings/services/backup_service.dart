@@ -7,10 +7,12 @@ import 'package:archive/archive_io.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as dev;
+import 'package:shared_storage/shared_storage.dart' as saf;
 
 class BackupService {
   static const String kAutoBackupEnabled = 'auto_backup_enabled';
   static const String kBackupDirectoryPath = 'backup_directory_path';
+  static const String kBackupIsSaf = 'backup_is_saf';
   static const String kLastBackupTime = 'last_backup_time';
 
   Future<void> exportDatabase() async {
@@ -58,6 +60,15 @@ class BackupService {
 
   // --- New Automated Zipped Backup Feature ---
 
+  // --- Universal Cloud Folder (SAF) Support ---
+
+  Future<void> setSafBackupDirectory(String uri) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(kBackupDirectoryPath, uri);
+    await prefs.setBool(kBackupIsSaf, true);
+    dev.log('BackupService: SAF-Verzeichnis gesetzt: $uri');
+  }
+
   Future<String?> selectBackupDirectory() async {
     try {
       String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
@@ -73,6 +84,7 @@ class BackupService {
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(kBackupDirectoryPath, selectedDirectory);
+        await prefs.setBool(kBackupIsSaf, false);
         return selectedDirectory;
       }
     } catch (e) {
@@ -138,6 +150,9 @@ class BackupService {
 
   Future<bool> performZippedBackup(String targetDir) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final bool isSaf = prefs.getBool(kBackupIsSaf) ?? false;
+      
       final dbFolder = await getApplicationDocumentsDirectory();
       final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
 
@@ -146,31 +161,71 @@ class BackupService {
         return false;
       }
 
-      // Ensure target directory exists and is writable
-      final directory = Directory(targetDir);
-      if (!await directory.exists()) {
-        dev.log('Backup-Verzeichnis existiert nicht: $targetDir. Versuche es zu erstellen...');
-        try {
-          await directory.create(recursive: true);
-        } catch (e) {
-          dev.log('Konnte Verzeichnis nicht erstellen: $e');
-          return false;
-        }
-      }
-
-      // Create ZIP
-      final encoder = ZipFileEncoder();
       final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
       final zipFileName = 'igkeeper_backup_$timestamp.zip';
-      final zipPath = p.join(targetDir, zipFileName);
 
-      dev.log('Erstelle ZIP in: $zipPath');
-      encoder.create(zipPath);
-      await encoder.addFile(dbFile);
-      encoder.close();
+      if (isSaf && Platform.isAndroid) {
+        // --- SAF / Cloud Folder Mode ---
+        dev.log('BackupService: Nutze SAF für Ziel: $targetDir');
+        
+        // 1. Create ZIP locally in temp folder
+        final tempDir = await getTemporaryDirectory();
+        final localZipPath = p.join(tempDir.path, zipFileName);
+        final encoder = ZipFileEncoder();
+        encoder.create(localZipPath);
+        await encoder.addFile(dbFile);
+        encoder.close();
 
-      dev.log('Zipped Backup erfolgreich erstellt: $zipPath');
-      return true;
+        // 2. Write to SAF folder
+        final uri = Uri.parse(targetDir);
+        final bytes = await File(localZipPath).readAsBytes();
+        
+        final result = await saf.createFile(
+          uri,
+          mimeType: 'application/zip',
+          displayName: zipFileName,
+          content: '', // Create empty first, content as String isn't for binary
+        );
+
+        if (result != null) {
+          // Write the actual binary bytes using the DocumentFile method
+          await result.writeToFileAsBytes(
+            bytes: bytes,
+          );
+          
+          dev.log('BackupService: SAF-Upload erfolgreich: ${result.uri}');
+          await File(localZipPath).delete(); // Cleanup temp
+          return true;
+        } else {
+          dev.log('BackupService: SAF-Upload fehlgeschlagen.');
+          return false;
+        }
+      } else {
+        // --- Classic Local Directory Mode ---
+        // Ensure target directory exists and is writable
+        final directory = Directory(targetDir);
+        if (!await directory.exists()) {
+          dev.log('Backup-Verzeichnis existiert nicht: $targetDir. Versuche es zu erstellen...');
+          try {
+            await directory.create(recursive: true);
+          } catch (e) {
+            dev.log('Konnte Verzeichnis nicht erstellen: $e');
+            return false;
+          }
+        }
+
+        // Create ZIP
+        final encoder = ZipFileEncoder();
+        final zipPath = p.join(targetDir, zipFileName);
+
+        dev.log('Erstelle ZIP in: $zipPath');
+        encoder.create(zipPath);
+        await encoder.addFile(dbFile);
+        encoder.close();
+
+        dev.log('Zipped Backup erfolgreich erstellt: $zipPath');
+        return true;
+      }
     } catch (e) {
       dev.log('Fehler beim Erstellen des zipped Backups: $e');
       return false;

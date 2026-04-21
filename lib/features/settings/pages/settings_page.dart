@@ -7,6 +7,7 @@ import '../../../core/constants/build_config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'reliability_check_page.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_storage/shared_storage.dart' as saf;
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -16,10 +17,16 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  final BackupService backupService = BackupService();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final backupService = BackupService();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -63,12 +70,14 @@ class _SettingsPageState extends State<SettingsPage> {
               final settings = snapshot.data ?? {
                 'enabled': false,
                 'path': null,
-                'last_time': null
+                'last_time': null,
+                'is_saf': false,
               };
               
               final bool enabled = settings['enabled'];
               final String? path = settings['path'];
               final String? lastTime = settings['last_time'];
+              final bool isSaf = settings['is_saf'] ?? false;
 
               return Column(
                 children: [
@@ -84,65 +93,31 @@ class _SettingsPageState extends State<SettingsPage> {
                     secondary: const Icon(Icons.backup_outlined),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.folder_open_outlined),
-                    title: const Text('Backup-Verzeichnis'),
+                    leading: Icon(isSaf ? Icons.cloud_done : Icons.folder_open_outlined),
+                    title: const Text('Backup-Verzeichnis (Cloud oder Lokal)'),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(path != null 
-                            ? (path.startsWith('Error') ? 'Zugriff verweigert (Bitte neu wählen)' : path) 
+                            ? (isSaf ? 'Cloud-Ordner ausgewählt' : path) 
                             : 'Verzeichnis wählen...'),
-                        if (path?.startsWith('Error') == true)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                final safePath = await backupService.getSafeBackupDirectory();
-                                await backupService.setBackupDirectory(safePath);
-                                setState(() {});
-                              },
-                              icon: const Icon(Icons.security, size: 16),
-                              label: const Text('Sicheres Verzeichnis verwenden'),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                textStyle: const TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ),
+                        if (isSaf)
+                          const Text('Verbunden via Android Cloud-Zugriff', style: TextStyle(fontSize: 11, color: Colors.green)),
                       ],
                     ),
-                    trailing: (path != null && !path.startsWith('Error')) 
+                    trailing: (path != null) 
                         ? const Icon(Icons.check_circle, color: Colors.green, size: 16) 
-                        : (path?.startsWith('Error') == true ? const Icon(Icons.error_outline, color: Colors.red, size: 16) : null),
+                        : null,
                     onTap: () async {
-                      final selected = await backupService.selectBackupDirectory();
-                      if (selected != null) {
+                      // Trigger the new SAF picker for easy cloud access
+                      final uri = await saf.openDocumentTree();
+                      if (uri != null) {
+                        await backupService.setSafBackupDirectory(uri.toString());
                         setState(() {});
-                        if (selected.startsWith('Error') && context.mounted) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Zugriff auf Cloud-Ordner'),
-                              content: const Text(
-                                'Android erlaubt es Apps technisch nicht, automatisiert in Cloud-Verzeichnisse (wie pDrive, Google Drive oder OneDrive) zu schreiben, da diese kein echtes lokales Dateisystem nutzen.\n\n'
-                                'Empfehlung:\n'
-                                '1. Nutzen Sie das "Sichere Verzeichnis" für automatische Backups.\n'
-                                '2. Nutzen Sie "Sicherung jetzt exportieren" (oben), um manuell in pCloud zu speichern.\n'
-                                '3. Oder nutzen Sie eine Sync-App (wie FolderSync), die das sichere Verzeichnis mit pCloud synchronisiert.'
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('Verstanden'),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
                       }
                     },
                   ),
-                  if (path != null && !path.startsWith('Error'))
+                  if (path != null)
                     ListTile(
                       leading: const Icon(Icons.play_circle_outline),
                       title: const Text('Backup jetzt testen'),
@@ -333,6 +308,7 @@ class _SettingsPageState extends State<SettingsPage> {
       'enabled': prefs.getBool(BackupService.kAutoBackupEnabled) ?? false,
       'path': prefs.getString(BackupService.kBackupDirectoryPath),
       'last_time': prefs.getString(BackupService.kLastBackupTime),
+      'is_saf': prefs.getBool('backup_is_saf') ?? false,
     };
   }
 
@@ -391,7 +367,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _confirmImport(BuildContext context, BackupService service) async {
-    // ... existing ...
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
