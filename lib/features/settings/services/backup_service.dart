@@ -7,7 +7,8 @@ import 'package:archive/archive_io.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as dev;
-import 'package:shared_storage/shared_storage.dart' as saf;
+import 'package:saf_util/saf_util.dart';
+import 'package:saf_stream/saf_stream.dart';
 
 class BackupService {
   static const String kAutoBackupEnabled = 'auto_backup_enabled';
@@ -62,11 +63,25 @@ class BackupService {
 
   // --- Universal Cloud Folder (SAF) Support ---
 
-  Future<void> setSafBackupDirectory(String uri) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(kBackupDirectoryPath, uri);
-    await prefs.setBool(kBackupIsSaf, true);
-    dev.log('BackupService: SAF-Verzeichnis gesetzt: $uri');
+  Future<String?> pickSafBackupDirectory() async {
+    try {
+      final safUtil = SafUtil();
+      final dir = await safUtil.pickDirectory(
+        writePermission: true,
+        persistablePermission: true,
+      );
+
+      if (dir != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(kBackupDirectoryPath, dir.uri);
+        await prefs.setBool(kBackupIsSaf, true);
+        dev.log('BackupService: SAF-Verzeichnis gesetzt: ${dir.uri}');
+        return dir.uri;
+      }
+    } catch (e) {
+      dev.log('BackupService: Fehler beim Wählen des SAF-Ordners: $e');
+    }
+    return null;
   }
 
   Future<String?> selectBackupDirectory() async {
@@ -166,7 +181,7 @@ class BackupService {
 
       if (isSaf && Platform.isAndroid) {
         // --- SAF / Cloud Folder Mode ---
-        dev.log('BackupService: Nutze SAF für Ziel: $targetDir');
+        dev.log('BackupService: Nutze SAF (modern) für Ziel-URI: $targetDir');
         
         // 1. Create ZIP locally in temp folder
         final tempDir = await getTemporaryDirectory();
@@ -176,32 +191,23 @@ class BackupService {
         await encoder.addFile(dbFile);
         encoder.close();
 
-        // 2. Write to SAF folder
-        final uri = Uri.parse(targetDir);
+        // 2. Write to SAF folder using saf_stream
         final bytes = await File(localZipPath).readAsBytes();
         
-        final result = await saf.createFile(
-          uri,
-          mimeType: 'application/zip',
-          displayName: zipFileName,
-          content: '', // Create empty first, content as String isn't for binary
-        );
-
-        if (result != null) {
-          try {
-            // Write the actual binary bytes using the DocumentFile method
-            await result.writeToFileAsBytes(
-              bytes: bytes,
-            );
-            dev.log('BackupService: SAF-Upload erfolgreich: ${result.uri}');
-            await File(localZipPath).delete(); // Cleanup temp
-            return true;
-          } catch (e) {
-            dev.log('BackupService: Fehler beim Schreiben in SAF-Dokument: $e');
-            return false;
-          }
-        } else {
-          dev.log('BackupService: SAF-Dokument konnte nicht erstellt werden (result is null).');
+        try {
+          final safStream = SafStream();
+          await safStream.writeFileBytes(
+            targetDir, // Tree URI
+            zipFileName,
+            'application/zip',
+            bytes,
+          );
+          
+          dev.log('BackupService: SAF-Upload (saf_stream) erfolgreich.');
+          await File(localZipPath).delete(); // Cleanup temp
+          return true;
+        } catch (e) {
+          dev.log('BackupService: Fehler beim Schreiben via saf_stream: $e');
           return false;
         }
       } else {

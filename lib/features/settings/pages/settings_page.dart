@@ -7,7 +7,7 @@ import '../../../core/constants/build_config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'reliability_check_page.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_storage/shared_storage.dart' as saf;
+// Remove shared_storage as we now use saf_util via BackupService
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -109,10 +109,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         ? const Icon(Icons.check_circle, color: Colors.green, size: 16) 
                         : null,
                     onTap: () async {
-                      // Trigger the new SAF picker for easy cloud access
-                      final uri = await saf.openDocumentTree();
-                      if (uri != null) {
-                        await backupService.setSafBackupDirectory(uri.toString());
+                      // Trigger the new, stable SAF picker via BackupService
+                      final uri = await backupService.pickSafBackupDirectory();
+                      if (uri != null && context.mounted) {
                         setState(() {});
                       }
                     },

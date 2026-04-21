@@ -80,7 +80,8 @@ dependencies:
   googleapis: ^16.0.0
   http: ^1.6.0
   extension_google_sign_in_as_googleapis_auth: ^3.0.0
-  shared_storage: ^0.8.1
+  saf_util: ^2.1.0
+  saf_stream: ^2.0.0
 
 flutter_launcher_icons:
   android: "launcher_icon"
