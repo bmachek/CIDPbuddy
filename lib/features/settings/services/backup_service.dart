@@ -59,14 +59,37 @@ class BackupService {
   // --- New Automated Zipped Backup Feature ---
 
   Future<String?> selectBackupDirectory() async {
-    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    try {
+      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
 
-    if (selectedDirectory != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(kBackupDirectoryPath, selectedDirectory);
-      return selectedDirectory;
+      if (selectedDirectory != null) {
+        // Validate if we can actually write to this directory
+        final isWritable = await _isPathWritable(selectedDirectory);
+        if (!isWritable) {
+          dev.log('Gewähltes Verzeichnis ist nicht beschreibbar: $selectedDirectory');
+          return 'Error: Not writable';
+        }
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(kBackupDirectoryPath, selectedDirectory);
+        return selectedDirectory;
+      }
+    } catch (e) {
+      dev.log('Fehler bei der Verzeichnisauswahl: $e');
     }
     return null;
+  }
+
+  Future<bool> _isPathWritable(String path) async {
+    try {
+      final testFile = File(p.join(path, '.write_test'));
+      await testFile.writeAsString('test');
+      await testFile.delete();
+      return true;
+    } catch (e) {
+      dev.log('Pfad-Validierung fehlgeschlagen ($path): $e');
+      return false;
+    }
   }
 
   Future<void> autoBackup() async {
@@ -89,7 +112,22 @@ class BackupService {
       final dbFolder = await getApplicationDocumentsDirectory();
       final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
 
-      if (!await dbFile.exists()) return false;
+      if (!await dbFile.exists()) {
+        dev.log('Backup fehlgeschlagen: Quelldatenbank nicht gefunden.');
+        return false;
+      }
+
+      // Ensure target directory exists and is writable
+      final directory = Directory(targetDir);
+      if (!await directory.exists()) {
+        dev.log('Backup-Verzeichnis existiert nicht: $targetDir. Versuche es zu erstellen...');
+        try {
+          await directory.create(recursive: true);
+        } catch (e) {
+          dev.log('Konnte Verzeichnis nicht erstellen: $e');
+          return false;
+        }
+      }
 
       // Create ZIP
       final encoder = ZipFileEncoder();
@@ -97,11 +135,12 @@ class BackupService {
       final zipFileName = 'igkeeper_backup_$timestamp.zip';
       final zipPath = p.join(targetDir, zipFileName);
 
+      dev.log('Erstelle ZIP in: $zipPath');
       encoder.create(zipPath);
       await encoder.addFile(dbFile);
       encoder.close();
 
-      dev.log('Zipped Backup erstellt: $zipPath');
+      dev.log('Zipped Backup erfolgreich erstellt: $zipPath');
       return true;
     } catch (e) {
       dev.log('Fehler beim Erstellen des zipped Backups: $e');

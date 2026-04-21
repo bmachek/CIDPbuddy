@@ -86,15 +86,41 @@ class _SettingsPageState extends State<SettingsPage> {
                   ListTile(
                     leading: const Icon(Icons.folder_open_outlined),
                     title: const Text('Backup-Verzeichnis'),
-                    subtitle: Text(path ?? 'Verzeichnis wählen...'),
-                    trailing: path != null ? const Icon(Icons.check_circle, color: Colors.green, size: 16) : null,
+                    subtitle: Text(path != null 
+                        ? (path.startsWith('Error') ? 'Zugriff verweigert (Bitte neu wählen)' : path) 
+                        : 'Verzeichnis wählen...'),
+                    trailing: (path != null && !path.startsWith('Error')) 
+                        ? const Icon(Icons.check_circle, color: Colors.green, size: 16) 
+                        : (path?.startsWith('Error') == true ? const Icon(Icons.error_outline, color: Colors.red, size: 16) : null),
                     onTap: () async {
                       final selected = await backupService.selectBackupDirectory();
                       if (selected != null) {
                         setState(() {});
+                        if (selected.startsWith('Error') && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Fehler: Auf dieses Verzeichnis kann nicht geschrieben werden.'))
+                          );
+                        }
                       }
                     },
                   ),
+                  if (path != null && !path.startsWith('Error'))
+                    ListTile(
+                      leading: const Icon(Icons.play_circle_outline),
+                      title: const Text('Backup jetzt testen'),
+                      onTap: () async {
+                        final success = await backupService.performZippedBackup(path);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(success ? 'Test-Backup erfolgreich!' : 'Test-Backup fehlgeschlagen.'),
+                              backgroundColor: success ? Colors.green : Colors.red,
+                            )
+                          );
+                        }
+                        setState(() {});
+                      },
+                    ),
                   if (lastTime != null)
                     ListTile(
                       leading: const Icon(Icons.history),

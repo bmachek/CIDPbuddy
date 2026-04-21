@@ -5,6 +5,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/database/database.dart';
+import 'package:drift/drift.dart' show Value;
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -23,7 +24,11 @@ class NotificationService {
       macOS: darwinSettings,
     );
 
-    await _notificationsPlugin.initialize(initSettings);
+    await _notificationsPlugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: _onNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+    );
     tz.initializeTimeZones();
     
     // Create the background service channel
@@ -108,16 +113,27 @@ class NotificationService {
     required String title,
     required String body,
     required DateTime scheduledTime,
+    String? payload,
+    bool showAction = true,
   }) async {
     try {
       final scheduleMode = await _getScheduleMode();
       
+      final List<AndroidNotificationAction>? actions = showAction ? [
+        const AndroidNotificationAction(
+          'complete_infusion',
+          'Erledigt',
+          showsUserInterface: false,
+          cancelNotification: true,
+        ),
+      ] : null;
+
       await _notificationsPlugin.zonedSchedule(
         id,
         title,
         body,
         tz.TZDateTime.from(scheduledTime, tz.local),
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'med_reminders',
             'Medikamenten Erinnerungen',
@@ -127,19 +143,78 @@ class NotificationService {
             showWhen: true,
             enableVibration: true,
             fullScreenIntent: false,
+            actions: actions,
+            // Re-using the same ID updates the notification. 
+            // We use 'onlyAlertOnce: false' to ensure it makes sound again when replaced.
+            onlyAlertOnce: false, 
           ),
-          iOS: DarwinNotificationDetails(),
-          macOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
+          macOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
       );
     } catch (e) {
       debugPrint('NotificationService: Failed to schedule notification $id: $e');
-      // If we hit the alarm limit, we shouldn't crash the whole app
     }
   }
 
+  static void _onNotificationResponse(NotificationResponse response) {
+    debugPrint('NotificationService: Notification tapped: ${response.payload}');
+    if (response.actionId == 'complete_infusion' && response.payload != null) {
+      final id = int.tryParse(response.payload!);
+      if (id != null) {
+        _handleCompleteInfusion(id);
+      }
+    }
+  }
+
+  static Future<void> _handleCompleteInfusion(int treatmentId) async {
+    try {
+      final db = AppDatabase();
+      // 1. Mark as completed
+      await db.completePlannedInfusion(treatmentId);
+      
+      // 2. Log infusion if possible (pills or no extra tracking)
+      // Note: For background isolation, we use a simple DB update.
+      // Full logging with stock deduction is better done when the app is open
+      // or via a dedicated service that doesn't rely on Provider.
+      
+      // We'll fetch the medication details first
+      final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
+      final med = await (db.select(db.medications)..where((t) => t.id.equals(treatment.medicationId))).getSingle();
+      
+      if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
+        // Automatic logging for simple items
+        await db.transaction(() async {
+          // Reduce stock
+          await db.updateMedication(med.copyWith(stock: med.stock - treatment.dosage));
+          
+          // Reduce accessory stock
+          final accessories = await db.getAccessoriesForMedication(med.id);
+          for (final link in accessories) {
+            final acc = await (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).getSingle();
+            await db.updateAccessory(acc.copyWith(stock: acc.stock - link.defaultQuantity));
+          }
+
+          // Insert log
+          await db.insertInfusionLog(InfusionLogCompanion.insert(
+            date: treatment.date,
+            medicationId: med.id,
+            dosage: treatment.dosage,
+            notes: const Value('Via Benachrichtigung erledigt'),
+          ));
+        });
+      }
+      
+      // Cancel other reminders for this treatment
+      await NotificationService().cancelTreatmentReminders(treatmentId);
+      debugPrint('NotificationService: Treatment $treatmentId marked as completed via notification action.');
+    } catch (e) {
+      debugPrint('NotificationService: Error handling complete infusion: $e');
+    }
+  }
   Future<void> scheduleTreatmentReminders(PlannedInfusion treatment) async {
     final now = DateTime.now();
     if (treatment.date.isBefore(now)) return;
@@ -157,60 +232,66 @@ class NotificationService {
       }
     }
 
+    // To "re-use" notifications and avoid repetition, we use a consistent ID pool.
+    // However, since we schedule them ahead of time, multiple simultaneous schedules with the same ID
+    // would overwrite each other in the alarm manager (only the last one remains).
+    // To solve this while satisfying "re-use tray slot", we use the SAME ID for all reminders 
+    // of a specific treatment. THIS MEANS ONLY THE NEXT LOGICAL REMINDER IS SCHEDULED.
+    
+    final int mainId = _getBaseId(treatment.id);
+    final int reminderId = mainId + 1;
+
     // 1. Initial notification
     if (!isQuiet(treatment.date)) {
       await scheduleNotification(
-        id: _getBaseId(treatment.id),
+        id: mainId,
         title: 'Erinnerung: Medikament fällig',
-        body: 'Es ist Zeit für deine Einnahme.',
+        body: 'Es ist Zeit für deine Einnahme von ${_getMedName(treatment)}.',
         scheduledTime: treatment.date,
+        payload: treatment.id.toString(),
       );
     }
 
     final snoozeEnabled = prefs.getBool('reminder_snooze') ?? true;
     final hourlyEnabled = prefs.getBool('reminder_hourly') ?? true;
 
-    // 2. Snooze chain (15, 30, 45 mins)
+    // 2. Identify the very next snooze/hourly that should happen.
+    DateTime? nextReminder;
     if (snoozeEnabled) {
       for (int i = 1; i <= 3; i++) {
-        final snoozeTime = treatment.date.add(Duration(minutes: i * 15));
-        if (!isQuiet(snoozeTime)) {
-          await scheduleNotification(
-            id: _getBaseId(treatment.id) + i,
-            title: 'Erinnerung (Snooze)',
-            body: 'Du hast deine Einnahme noch nicht als erledigt markiert.',
-            scheduledTime: snoozeTime,
-          );
+        final time = treatment.date.add(Duration(minutes: i * 15));
+        if (time.isAfter(now) && !isQuiet(time)) {
+          nextReminder = time;
+          break;
+        }
+      }
+    }
+    
+    if (nextReminder == null && hourlyEnabled) {
+      for (int i = 1; i <= 3; i++) {
+        final time = treatment.date.add(Duration(hours: i));
+        if (time.isAfter(now) && !isQuiet(time)) {
+          nextReminder = time;
+          break;
         }
       }
     }
 
-    // 3. Hourly pings (1, 2, 3 hours later)
-    if (hourlyEnabled) {
-      for (int i = 1; i <= 3; i++) {
-        final hourlyTime = treatment.date.add(Duration(hours: i));
-        if (!isQuiet(hourlyTime)) {
-          await scheduleNotification(
-            id: _getBaseId(treatment.id) + 10 + i,
-            title: 'Erinnerung (Stündlich)',
-            body: 'Bitte vergiss nicht deine Medikamente einzunehmen.',
-            scheduledTime: hourlyTime,
-          );
-        }
-      }
+    if (nextReminder != null) {
+      await scheduleNotification(
+        id: reminderId,
+        title: 'Erinnerung (Wiederholung)',
+        body: 'Du hast deine Einnahme noch nicht als erledigt markiert.',
+        scheduledTime: nextReminder,
+        payload: treatment.id.toString(),
+      );
     }
   }
 
   Future<void> cancelTreatmentReminders(int treatmentId) async {
     final baseId = _getBaseId(treatmentId);
-    // Cancel main + snoozes
-    for (int i = 0; i <= 3; i++) {
-      await _notificationsPlugin.cancel(baseId + i);
-    }
-    // Cancel hourlys
-    for (int i = 1; i <= 3; i++) {
-      await _notificationsPlugin.cancel(baseId + 10 + i);
-    }
+    await _notificationsPlugin.cancel(baseId);
+    await _notificationsPlugin.cancel(baseId + 1);
   }
 
   /// Cancels all scheduled notifications. 
@@ -223,9 +304,6 @@ class NotificationService {
     // Ensure treatment IDs don't collide with timer IDs (which are 999+)
     return treatmentId * 100;
   }
-
-  // schedulePremedicationTimer was removed as the user requested sounds only, 
-  // not scheduled notifications for each minute.
 
   Future<void> cancelPremedicationTimer() async {
     // Cancel IDs in the timer range
@@ -287,5 +365,65 @@ class NotificationService {
         ),
       ),
     );
+  }
+
+  String _getMedName(PlannedInfusion treatment) {
+    // Return a generic name if med details aren't passed
+    return 'deines Medikaments';
+  }
+}
+
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse response) {
+  debugPrint('NotificationService: Background action triggered: ${response.actionId}');
+  if (response.actionId == 'complete_infusion' && response.payload != null) {
+    final id = int.tryParse(response.payload!);
+    if (id != null) {
+      _handleCompleteInfusionInBackground(id);
+    }
+  }
+}
+
+Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
+  try {
+    final db = AppDatabase();
+    // 1. Mark as completed
+    await db.completePlannedInfusion(treatmentId);
+    
+    // We'll fetch the medication details
+    final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
+    final med = await (db.select(db.medications)..where((t) => t.id.equals(treatment.medicationId))).getSingle();
+    
+    if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
+      // Automatic logging for simple items
+      await db.transaction(() async {
+        // Reduce stock
+        await db.updateMedication(med.copyWith(stock: med.stock - treatment.dosage));
+        
+        // Reduce accessory stock
+        final accessories = await db.getAccessoriesForMedication(med.id);
+        for (final link in accessories) {
+          final acc = await (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).getSingle();
+          await db.updateAccessory(acc.copyWith(stock: acc.stock - link.defaultQuantity));
+        }
+
+        // Insert log
+        await db.insertInfusionLog(InfusionLogCompanion.insert(
+          date: treatment.date,
+          medicationId: med.id,
+          dosage: treatment.dosage,
+          notes: const Value('Via Benachrichtigung erledigt'),
+        ));
+      });
+    }
+    
+    // Cancel other reminders
+    final notifPlugin = FlutterLocalNotificationsPlugin();
+    await notifPlugin.cancel(treatmentId * 100);
+    await notifPlugin.cancel(treatmentId * 100 + 1);
+    
+    debugPrint('NotificationService: Background: Treatment $treatmentId processed.');
+  } catch (e) {
+    debugPrint('NotificationService: Background: Error: $e');
   }
 }
