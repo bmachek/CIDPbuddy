@@ -188,16 +188,20 @@ class BackupService {
         );
 
         if (result != null) {
-          // Write the actual binary bytes using the DocumentFile method
-          await result.writeToFileAsBytes(
-            bytes: bytes,
-          );
-          
-          dev.log('BackupService: SAF-Upload erfolgreich: ${result.uri}');
-          await File(localZipPath).delete(); // Cleanup temp
-          return true;
+          try {
+            // Write the actual binary bytes using the DocumentFile method
+            await result.writeToFileAsBytes(
+              bytes: bytes,
+            );
+            dev.log('BackupService: SAF-Upload erfolgreich: ${result.uri}');
+            await File(localZipPath).delete(); // Cleanup temp
+            return true;
+          } catch (e) {
+            dev.log('BackupService: Fehler beim Schreiben in SAF-Dokument: $e');
+            return false;
+          }
         } else {
-          dev.log('BackupService: SAF-Upload fehlgeschlagen.');
+          dev.log('BackupService: SAF-Dokument konnte nicht erstellt werden (result is null).');
           return false;
         }
       } else {
