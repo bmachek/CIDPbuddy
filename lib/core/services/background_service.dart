@@ -98,11 +98,14 @@ class BackgroundService {
           secondsRemaining--;
           
           if (secondsRemaining % 60 == 0 && secondsRemaining > 0) {
-            // Minute ping (single sound)
+            // Minute signal (bell sound, 3 times)
             try {
-              await audioPlayer.play(AssetSource('audio/ping.mp3'));
+              for (int i = 0; i < 3; i++) {
+                await audioPlayer.play(AssetSource('audio/bell.mp3'));
+                if (i < 2) await Future.delayed(const Duration(milliseconds: 1500));
+              }
             } catch (e) {
-              debugPrint('Background Ping Error: $e');
+              debugPrint('Background Minute Signal Error: $e');
             }
           }
 
@@ -122,14 +125,11 @@ class BackgroundService {
           }
         } else {
           await stopTimer();
-          // Final bell
+          // Final signal (ping sound)
           try {
-            for (int i = 0; i < 4; i++) {
-              await audioPlayer.play(AssetSource('audio/bell.mp3'));
-              if (i < 3) await Future.delayed(const Duration(milliseconds: 2000));
-            }
+            await audioPlayer.play(AssetSource('audio/ping.mp3'));
           } catch (e) {
-            debugPrint('Background Bell Error: $e');
+            debugPrint('Background Final Signal Error: $e');
           }
         }
       });
