@@ -85,42 +85,61 @@ class BackupService {
 
   Future<bool> restoreFromZippedBackup(BackupFile backup) async {
     try {
-      dev.log('Wiederherstellung von: ${backup.name} (${backup.isSaf ? 'SAF' : 'Local'})');
+      dev.log('Wiederherstellung gestartet von: ${backup.name}');
       
       final List<int> bytes;
       if (backup.isSaf && Platform.isAndroid) {
         final safStream = SafStream();
         bytes = await safStream.readFileBytes(backup.pathOrUri);
       } else {
-        bytes = await File(backup.pathOrUri).readAsBytes();
+        final file = File(backup.pathOrUri);
+        if (!await file.exists()) {
+          dev.log('Fehler: Backup-Datei existiert nicht lokal.');
+          return false;
+        }
+        bytes = await file.readAsBytes();
+      }
+
+      if (bytes.isEmpty) {
+        dev.log('Fehler: Backup-Datei ist leer.');
+        return false;
       }
 
       final archive = ZipDecoder().decodeBytes(bytes);
       final dbFolder = await getApplicationDocumentsDirectory();
       bool dbRestored = false;
 
+      dev.log('Extrahiere ${archive.length} Dateien nach ${dbFolder.path}');
+
       for (final file in archive) {
         if (file.isFile) {
           final data = file.content as List<int>;
           final outFile = File(p.join(dbFolder.path, file.name));
-          await outFile.writeAsBytes(data);
           
-          if (file.name == 'igkeeper.sqlite') {
-            dbRestored = true;
+          try {
+            // Attempt to write. If it fails due to lock, we'll see it in logs.
+            await outFile.writeAsBytes(data, flush: true);
+            
+            if (file.name == 'igkeeper.sqlite') {
+              dbRestored = true;
+            }
+            dev.log('Erfolgreich wiederhergestellt: ${file.name}');
+          } catch (e) {
+            dev.log('FEHLER beim Schreiben von ${file.name}: $e');
           }
-          dev.log('Wiederhergestellt: ${file.name}');
         }
       }
 
       if (dbRestored) {
-        dev.log('Backup erfolgreich wiederhergestellt: ${backup.name}');
+        dev.log('Backup-Wiederherstellung erfolgreich abgeschlossen.');
         return true;
       } else {
         dev.log('Kritisch: igkeeper.sqlite im ZIP nicht gefunden!');
         return false;
       }
-    } catch (e) {
-      dev.log('Fehler bei der Wiederherstellung: $e');
+    } catch (e, stack) {
+      dev.log('Schwerer Fehler bei der Wiederherstellung: $e');
+      dev.log(stack.toString());
       return false;
     }
   }

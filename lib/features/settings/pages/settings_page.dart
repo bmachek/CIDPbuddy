@@ -7,6 +7,8 @@ import '../../../core/constants/build_config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'reliability_check_page.dart';
 import 'package:intl/intl.dart';
+import '../../../core/database/database.dart';
+import 'dart:developer' as dev;
 // Remove shared_storage as we now use saf_util via BackupService
 
 class SettingsPage extends StatefulWidget {
@@ -545,6 +547,11 @@ class _SettingsPageState extends State<SettingsPage> {
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
+
+      // Get the database instance and close it to avoid file locks
+      final db = Provider.of<AppDatabase>(context, listen: false);
+      await db.close();
+      dev.log('Datenbankverbindung vor Wiederherstellung geschlossen.');
 
       final success = await backupService.restoreFromZippedBackup(backup);
       
