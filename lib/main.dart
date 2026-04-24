@@ -11,6 +11,7 @@ import 'package:igkeeper/core/services/scheduler_service.dart';
 import 'package:igkeeper/core/services/medication_service.dart';
 import 'package:igkeeper/core/services/background_service.dart';
 import 'package:igkeeper/main_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,15 @@ void main() async {
     
     // Initialize and sync infusion schedules
     await SchedulerService(db).syncPlannedInfusions();
+
+    // Check backup setup and schedule reminder if needed
+    final prefs = await SharedPreferences.getInstance();
+    final autoBackupEnabled = prefs.getBool('auto_backup_enabled') ?? false;
+    if (!autoBackupEnabled) {
+      await NotificationService().scheduleBackupReminder();
+    } else {
+      await NotificationService().cancelBackupReminder();
+    }
     
     runApp(
       MultiProvider(

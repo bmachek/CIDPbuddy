@@ -8,6 +8,7 @@ import '../../reminders/services/notification_service.dart';
 import '../../inventory/pages/shopping_wizard_dialog.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:igkeeper/core/services/medication_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -198,14 +199,21 @@ class _DashboardPageState extends State<DashboardPage> {
                   builder: (context, linksSnapshot) {
                     final medService = Provider.of<MedicationService>(context, listen: false);
                     
-                    return FutureBuilder<List<Medication>>(
-                      future: medService.getLowStockMedications(),
-                      builder: (context, lowMedsSnapshot) {
+                    return FutureBuilder<List<dynamic>>(
+                      future: Future.wait([
+                        medService.getLowStockMedications(),
+                        SharedPreferences.getInstance(),
+                      ]),
+                      builder: (context, combinedSnapshot) {
+                        final lowMeds = (combinedSnapshot.data?[0] as List<Medication>?) ?? [];
+                        final prefs = combinedSnapshot.data?[1] as SharedPreferences?;
+                        final autoBackupEnabled = prefs?.getBool('auto_backup_enabled') ?? false;
+
                         final allAccs = accSnapshot.data ?? [];
                         final allLinks = linksSnapshot.data ?? [];
                         
                         // Filter out items that already have a pending order
-                        final lowMeds = (lowMedsSnapshot.data ?? [])
+                        final filteredLowMeds = lowMeds
                             .where((m) => !pendingMedIds.contains(m.id))
                             .toList();
                             
@@ -226,67 +234,110 @@ class _DashboardPageState extends State<DashboardPage> {
                             }
                         }).toList();
 
-                        final isStockProblem = lowMeds.isNotEmpty || lowAccs.isNotEmpty;
+                        final isStockProblem = filteredLowMeds.isNotEmpty || lowAccs.isNotEmpty;
 
-                        // Stock Detail Bar (Compact and Light)
-                        if (isStockProblem) {
-                          return InkWell(
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => ShoppingWizardDialog(
-                                  initialMedication: lowMeds.isNotEmpty ? lowMeds.first : null,
-                                ),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(20),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Bestellung empfohlen',
-                                            style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, fontSize: 13),
-                                          ),
-                                          Text(
-                                            'Niedriger Bestand: ${[...lowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
-                                            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
+                        return Column(
+                          children: [
+                            if (!autoBackupEnabled) ...[
+                              InkWell(
+                                onTap: () {
+                                  // Open settings or show a dialog
+                                  // For now, let's assume there's a way to open settings
+                                  // Navigator.push(... SettingsPage)
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.cloud_off_rounded, color: Colors.orange, size: 22),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Kein Backup aktiviert',
+                                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 13),
+                                            ),
+                                            Text(
+                                              'Richte die automatische Sicherung ein, um Datenverlust zu vermeiden.',
+                                              style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.primary, size: 18),
-                                  ],
-                                ),
-                                const Divider(),
-                              ],
-                            ),
-                          );
-                        } else if (pendingItems.isNotEmpty) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            child: Row(
-                              children: [
-                                Icon(Icons.local_shipping_rounded, color: Theme.of(context).colorScheme.tertiary, size: 18),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Bestellungen sind unterwegs.',
-                                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.w500),
+                                      const Icon(Icons.arrow_forward_ios_rounded, color: Colors.orange, size: 14),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
+                              ),
+                            ],
+                            if (isStockProblem) ...[
+                              InkWell(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => ShoppingWizardDialog(
+                                      initialMedication: filteredLowMeds.isNotEmpty ? filteredLowMeds.first : null,
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Bestellung empfohlen',
+                                                style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, fontSize: 13),
+                                              ),
+                                              Text(
+                                                'Niedriger Bestand: ${[...filteredLowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
+                                                style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.primary, size: 18),
+                                      ],
+                                    ),
+                                    const Divider(),
+                                  ],
+                                ),
+                              ),
+                            ] else if (pendingItems.isNotEmpty) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.local_shipping_rounded, color: Theme.of(context).colorScheme.tertiary, size: 18),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Bestellungen sind unterwegs.',
+                                        style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
                       },
                     );
                   },

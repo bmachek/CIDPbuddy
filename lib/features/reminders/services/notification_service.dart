@@ -176,6 +176,9 @@ class NotificationService {
         } else if (response.actionId == 'skip_infusion') {
           _handleSkipInfusion(id);
         }
+      } else if (response.payload == 'open_backup_settings') {
+        // This is handled in the UI usually, but we can log it
+        debugPrint('NotificationService: Backup settings requested via notification');
       }
     }
   }
@@ -392,6 +395,42 @@ class NotificationService {
   String _getMedName(PlannedInfusion treatment) {
     // Return a generic name if med details aren't passed
     return 'deines Medikaments';
+  }
+
+  Future<void> scheduleBackupReminder() async {
+    const int backupReminderId = 7777;
+    
+    // Schedule for 10:00 AM every day
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 10, 0);
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    await _notificationsPlugin.zonedSchedule(
+      backupReminderId,
+      'Datensicherung einrichten',
+      'Deine Daten sind noch nicht automatisch gesichert. Tippe hier, um das Backup zu konfigurieren.',
+      scheduledDate,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'backup_warnings',
+          'Backup-Warnungen',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: 'open_backup_settings',
+    );
+    debugPrint('NotificationService: Daily backup reminder scheduled for 10:00.');
+  }
+
+  Future<void> cancelBackupReminder() async {
+    await _notificationsPlugin.cancel(7777);
   }
 }
 

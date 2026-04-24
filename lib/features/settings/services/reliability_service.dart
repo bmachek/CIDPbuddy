@@ -23,7 +23,7 @@ class ReliabilityService {
 
   Future<bool> isBatteryOptimizationDisabled() async {
     if (!Platform.isAndroid) return true;
-    return await DisableBatteryOptimization.isAllBatteryOptimizationDisabled ?? false;
+    return await DisableBatteryOptimization.isBatteryOptimizationDisabled ?? false;
   }
 
   Future<void> requestNotificationPermission() async {
