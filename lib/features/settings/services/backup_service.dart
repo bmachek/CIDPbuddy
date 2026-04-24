@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'dart:developer' as dev;
 import 'package:saf_util/saf_util.dart';
 import 'package:saf_stream/saf_stream.dart';
+import '../../reminders/services/notification_service.dart';
 
 class BackupFile {
   final String name;
@@ -281,6 +282,8 @@ class BackupService {
       if (success) {
         await prefs.setString(kLastBackupTime, DateTime.now().toIso8601String());
         await _cleanupOldBackups(targetDir);
+      } else {
+        await NotificationService().showBackupFailureNotification('Fehler beim Schreiben der Backup-Datei.');
       }
     }
   }

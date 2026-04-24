@@ -3,7 +3,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../../../core/database/database.dart';
 import 'package:drift/drift.dart' show Value;
 
@@ -431,6 +431,25 @@ class NotificationService {
 
   Future<void> cancelBackupReminder() async {
     await _notificationsPlugin.cancel(7777);
+  }
+
+  Future<void> showBackupFailureNotification(String error) async {
+    await _notificationsPlugin.show(
+      6666, // Constant ID for backup failure
+      'Backup fehlgeschlagen',
+      'Das automatische Backup konnte nicht erstellt werden: $error',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'backup_failures',
+          'Backup-Fehler',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: Colors.red,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      payload: 'open_backup_settings',
+    );
   }
 }
 
