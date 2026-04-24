@@ -15,6 +15,8 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
   bool _notificationsOk = true;
   bool _alarmsOk = true;
   bool _batteryOk = true;
+  bool _backupOk = true;
+  bool _lastBackupOk = true;
   bool _loading = true;
 
   @override
@@ -43,6 +45,8 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
       _service.isNotificationPermissionGranted(),
       _service.isExactAlarmPermissionGranted(),
       _service.isBatteryOptimizationDisabled(),
+      _service.isBackupSetup(),
+      _service.isLastBackupSuccessful(),
     ]);
 
     if (mounted) {
@@ -50,6 +54,8 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
         _notificationsOk = results[0];
         _alarmsOk = results[1];
         _batteryOk = results[2];
+        _backupOk = results[3];
+        _lastBackupOk = results[4];
         _loading = false;
       });
     }
@@ -91,6 +97,26 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
                   onFix: () => _service.openBatteryOptimizationSettings(),
                 ),
               ],
+              const SizedBox(height: 20),
+              _buildCheckItem(
+                icon: Icons.backup_outlined,
+                title: 'Automatisches Backup',
+                description: 'Sichert deine Daten regelmäßig in der Cloud oder lokal.',
+                isOk: _backupOk,
+                onFix: () => Navigator.pop(context), // Go back to settings
+              ),
+              if (_backupOk) ...[
+                const SizedBox(height: 20),
+                _buildCheckItem(
+                  icon: Icons.cloud_done_outlined,
+                  title: 'Backup-Status',
+                  description: _lastBackupOk 
+                      ? 'Dein letztes Backup ist aktuell.' 
+                      : 'Dein letztes Backup ist veraltet oder fehlgeschlagen.',
+                  isOk: _lastBackupOk,
+                  onFix: () => Navigator.pop(context), // Go back to settings to trigger manual
+                ),
+              ],
               const SizedBox(height: 40),
               _buildFooter(),
             ],
@@ -99,7 +125,7 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
   }
 
   Widget _buildHeader() {
-    final bool allOk = _notificationsOk && _alarmsOk && _batteryOk;
+    final bool allOk = _notificationsOk && _alarmsOk && _batteryOk && _backupOk && _lastBackupOk;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(

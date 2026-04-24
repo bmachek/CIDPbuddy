@@ -114,7 +114,11 @@ class DiaryEntries extends Table {
 
 @DriftDatabase(tables: [Medications, Accessories, InfusionLog, MedicationAccessories, PlannedInfusions, InfusionSchedules, PendingOrders, PendingOrderItems, DiaryEntries])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection()) {
+  static final AppDatabase _instance = AppDatabase._internal();
+
+  factory AppDatabase() => _instance;
+
+  AppDatabase._internal() : super(_openConnection()) {
     _setupAutoBackup();
   }
 
