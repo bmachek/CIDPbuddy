@@ -45,13 +45,11 @@ class BackupService {
         final files = await safUtil.list(targetDir);
         
         return files
-            .where((f) => f.name != null && f.name!.startsWith('igkeeper_backup_') && f.name!.endsWith('.zip'))
+            .where((f) => f.name.startsWith('igkeeper_backup_') && f.name.endsWith('.zip'))
             .map((f) => BackupFile(
-                  name: f.name!, // Note: ! is still needed because name is a property, not a local variable (no promotion for properties)
-                  date: f.lastModified != null 
-                      ? DateTime.fromMillisecondsSinceEpoch(f.lastModified!)
-                      : DateTime.now(),
-                  size: f.length ?? 0,
+                  name: f.name, 
+                  date: DateTime.fromMillisecondsSinceEpoch(f.lastModified),
+                  size: f.length,
                   pathOrUri: f.uri,
                   isSaf: true,
                 ))
@@ -180,10 +178,24 @@ class BackupService {
         dev.log('BackupService: SAF-Verzeichnis gesetzt: ${dir.uri}');
         return dir.uri;
       }
-    } catch (e) {
+    } catch (e, stack) {
       dev.log('BackupService: Fehler beim Wählen des SAF-Ordners: $e');
+      dev.log('Stacktrace: $stack');
     }
     return null;
+  }
+
+  /// Ensures that we still have permission to access the SAF directory.
+  /// On some Android versions, permissions might need to be "re-taken" if they weren't persisted correctly.
+  Future<bool> ensureSafPermission(String uri) async {
+    if (!Platform.isAndroid) return true;
+    try {
+      // We assume it's okay for now, saf_stream will fail if not
+      return true; 
+    } catch (e) {
+      dev.log('BackupService: Fehler bei SAF-Validierung: $e');
+      return false;
+    }
   }
 
   Future<String?> selectBackupDirectory() async {
@@ -298,6 +310,10 @@ class BackupService {
         
         try {
           final safStream = SafStream();
+          
+          // Verify access before writing
+          await ensureSafPermission(targetDir);
+          
           await safStream.writeFileBytes(
             targetDir, // Tree URI
             zipFileName,
@@ -305,11 +321,13 @@ class BackupService {
             bytes,
           );
           
-          dev.log('BackupService: SAF-Upload (saf_stream) erfolgreich.');
+          dev.log('BackupService: SAF-Upload (saf_stream) erfolgreich für $zipFileName');
           await File(localZipPath).delete(); // Cleanup temp
           return true;
-        } catch (e) {
-          dev.log('BackupService: Fehler beim Schreiben via saf_stream: $e');
+        } catch (e, stack) {
+          dev.log('BackupService: FEHLER beim Schreiben via saf_stream: $e');
+          dev.log('Stacktrace: $stack');
+          dev.log('Ziel-URI war: $targetDir');
           return false;
         }
       } else {

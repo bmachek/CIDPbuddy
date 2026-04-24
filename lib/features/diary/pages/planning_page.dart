@@ -259,32 +259,45 @@ class PlanningPage extends StatelessWidget {
                       'Dosis: ${appt.dosage} ${med.unit}',
                       style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
                     ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => AddInfusionPage(
-                              initialMedicationId: appt.medicationId,
-                              initialDosage: appt.dosage,
-                              initialDate: appt.date,
-                            ),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () => _confirmSkipAppointment(context, db, appt),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.grey,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                           ),
-                        ).then((result) async {
-                          if (result == true) {
-                            await db.completePlannedInfusion(appt.id);
-                            await NotificationService().cancelTreatmentReminders(appt.id);
-                          }
-                        });
-                      },
-                      icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                      label: const Text('Erledigt'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        elevation: 0,
-                        backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                        foregroundColor: Theme.of(context).colorScheme.primary,
-                      ),
+                          child: const Text('Überspringen'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AddInfusionPage(
+                                  initialMedicationId: appt.medicationId,
+                                  initialDosage: appt.dosage,
+                                  initialDate: appt.date,
+                                ),
+                              ),
+                            ).then((result) async {
+                              if (result == true) {
+                                await db.completePlannedInfusion(appt.id);
+                                await NotificationService().cancelTreatmentReminders(appt.id);
+                              }
+                            });
+                          },
+                          icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                          label: const Text('Erledigt'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            elevation: 0,
+                            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                            foregroundColor: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -294,6 +307,31 @@ class PlanningPage extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _confirmSkipAppointment(BuildContext context, AppDatabase db, PlannedInfusion appt) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Termin überspringen?'),
+        content: const Text('Möchtest du diesen Termin überspringen? Er wird als erledigt markiert, aber nicht im Tagebuch protokolliert.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Überspringen', style: TextStyle(color: Colors.orange)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await db.updatePlannedInfusion(appt.copyWith(
+        isCompleted: true,
+        notes: drift.Value('${appt.notes ?? ''} [Übersprungen via App]'.trim()),
+      ));
+      await NotificationService().cancelTreatmentReminders(appt.id);
+    }
   }
 
   void _confirmDeleteAppointment(BuildContext context, AppDatabase db, PlannedInfusion appt) async {

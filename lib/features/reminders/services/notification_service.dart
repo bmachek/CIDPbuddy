@@ -126,6 +126,12 @@ class NotificationService {
           showsUserInterface: false,
           cancelNotification: true,
         ),
+        const AndroidNotificationAction(
+          'skip_infusion',
+          'Überspringen',
+          showsUserInterface: false,
+          cancelNotification: true,
+        ),
       ] : null;
 
       await _notificationsPlugin.zonedSchedule(
@@ -162,10 +168,14 @@ class NotificationService {
 
   static void _onNotificationResponse(NotificationResponse response) {
     debugPrint('NotificationService: Notification tapped: ${response.payload}');
-    if (response.actionId == 'complete_infusion' && response.payload != null) {
+    if (response.payload != null) {
       final id = int.tryParse(response.payload!);
       if (id != null) {
-        _handleCompleteInfusion(id);
+        if (response.actionId == 'complete_infusion') {
+          _handleCompleteInfusion(id);
+        } else if (response.actionId == 'skip_infusion') {
+          _handleSkipInfusion(id);
+        }
       }
     }
   }
@@ -215,6 +225,25 @@ class NotificationService {
       debugPrint('NotificationService: Error handling complete infusion: $e');
     }
   }
+
+  static Future<void> _handleSkipInfusion(int treatmentId) async {
+    try {
+      final db = AppDatabase();
+      // Mark as completed but with a note that it was skipped
+      final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
+      await db.updatePlannedInfusion(treatment.copyWith(
+        isCompleted: true,
+        notes: Value('${treatment.notes ?? ''} [Übersprungen via Benachrichtigung]'.trim()),
+      ));
+      
+      // Cancel other reminders
+      await NotificationService().cancelTreatmentReminders(treatmentId);
+      debugPrint('NotificationService: Treatment $treatmentId skipped via notification action.');
+    } catch (e) {
+      debugPrint('NotificationService: Error handling skip infusion: $e');
+    }
+  }
+
   Future<void> scheduleTreatmentReminders(PlannedInfusion treatment) async {
     final now = DateTime.now();
     if (treatment.date.isBefore(now)) return;
@@ -232,14 +261,9 @@ class NotificationService {
       }
     }
 
-    // To "re-use" notifications and avoid repetition, we use a consistent ID pool.
-    // However, since we schedule them ahead of time, multiple simultaneous schedules with the same ID
-    // would overwrite each other in the alarm manager (only the last one remains).
-    // To solve this while satisfying "re-use tray slot", we use the SAME ID for all reminders 
-    // of a specific treatment. THIS MEANS ONLY THE NEXT LOGICAL REMINDER IS SCHEDULED.
-    
+    // Fix: Use the SAME ID for all reminders of a specific treatment
+    // This ensures only one entry exists in the notification tray
     final int mainId = _getBaseId(treatment.id);
-    final int reminderId = mainId + 1;
 
     // 1. Initial notification
     if (!isQuiet(treatment.date)) {
@@ -255,43 +279,41 @@ class NotificationService {
     final snoozeEnabled = prefs.getBool('reminder_snooze') ?? true;
     final hourlyEnabled = prefs.getBool('reminder_hourly') ?? true;
 
-    // 2. Identify the very next snooze/hourly that should happen.
-    DateTime? nextReminder;
+    // 2. Schedule follow-ups with the SAME ID to "re-popup"
     if (snoozeEnabled) {
       for (int i = 1; i <= 3; i++) {
         final time = treatment.date.add(Duration(minutes: i * 15));
         if (time.isAfter(now) && !isQuiet(time)) {
-          nextReminder = time;
-          break;
+          await scheduleNotification(
+            id: mainId, // Same ID!
+            title: 'Erinnerung (Wiederholung)',
+            body: 'Du hast deine Einnahme noch nicht als erledigt markiert.',
+            scheduledTime: time,
+            payload: treatment.id.toString(),
+          );
         }
       }
     }
     
-    if (nextReminder == null && hourlyEnabled) {
+    if (hourlyEnabled) {
       for (int i = 1; i <= 3; i++) {
         final time = treatment.date.add(Duration(hours: i));
         if (time.isAfter(now) && !isQuiet(time)) {
-          nextReminder = time;
-          break;
+          await scheduleNotification(
+            id: mainId, // Same ID!
+            title: 'Erinnerung (Stündlich)',
+            body: 'Bitte vergiss deine Einnahme nicht.',
+            scheduledTime: time,
+            payload: treatment.id.toString(),
+          );
         }
       }
-    }
-
-    if (nextReminder != null) {
-      await scheduleNotification(
-        id: reminderId,
-        title: 'Erinnerung (Wiederholung)',
-        body: 'Du hast deine Einnahme noch nicht als erledigt markiert.',
-        scheduledTime: nextReminder,
-        payload: treatment.id.toString(),
-      );
     }
   }
 
   Future<void> cancelTreatmentReminders(int treatmentId) async {
     final baseId = _getBaseId(treatmentId);
     await _notificationsPlugin.cancel(baseId);
-    await _notificationsPlugin.cancel(baseId + 1);
   }
 
   /// Cancels all scheduled notifications. 
@@ -376,11 +398,33 @@ class NotificationService {
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse response) {
   debugPrint('NotificationService: Background action triggered: ${response.actionId}');
-  if (response.actionId == 'complete_infusion' && response.payload != null) {
+  if (response.payload != null) {
     final id = int.tryParse(response.payload!);
     if (id != null) {
-      _handleCompleteInfusionInBackground(id);
+      if (response.actionId == 'complete_infusion') {
+        _handleCompleteInfusionInBackground(id);
+      } else if (response.actionId == 'skip_infusion') {
+        _handleSkipInfusionInBackground(id);
+      }
     }
+  }
+}
+
+Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
+  try {
+    final db = AppDatabase();
+    final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
+    await db.updatePlannedInfusion(treatment.copyWith(
+      isCompleted: true,
+      notes: Value('${treatment.notes ?? ''} [Übersprungen via Benachrichtigung]'.trim()),
+    ));
+    
+    final notifPlugin = FlutterLocalNotificationsPlugin();
+    await notifPlugin.cancel(treatmentId * 100);
+    
+    debugPrint('NotificationService: Background: Treatment $treatmentId skipped.');
+  } catch (e) {
+    debugPrint('NotificationService: Background: Error skipping: $e');
   }
 }
 
@@ -420,7 +464,6 @@ Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
     // Cancel other reminders
     final notifPlugin = FlutterLocalNotificationsPlugin();
     await notifPlugin.cancel(treatmentId * 100);
-    await notifPlugin.cancel(treatmentId * 100 + 1);
     
     debugPrint('NotificationService: Background: Treatment $treatmentId processed.');
   } catch (e) {
