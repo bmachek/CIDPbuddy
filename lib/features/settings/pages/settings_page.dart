@@ -495,8 +495,11 @@ class _SettingsPageState extends State<SettingsPage> {
                         title: Text(b.name),
                         subtitle: Text('${DateFormat('dd.MM.yyyy HH:mm').format(b.date)}  •  ${(b.size / 1024 / 1024).toStringAsFixed(2)} MB'),
                         onTap: () {
-                          Navigator.pop(context);
-                          _confirmZippedRestore(context, b);
+                          final backup = b;
+                          Navigator.pop(context); // Close bottom sheet
+                          // Use 'this.context' to ensure we use the SettingsPage context, 
+                          // not the now-closed bottom sheet context.
+                          _confirmZippedRestore(backup);
                         },
                       );
                     },
@@ -510,7 +513,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _confirmZippedRestore(BuildContext context, BackupFile backup) async {
+  void _confirmZippedRestore(BackupFile backup) async {
+    print('BACKUP_RESTORE: _confirmZippedRestore aufgerufen für ${backup.name}');
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -538,8 +542,13 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
 
+    print('BACKUP_RESTORE: Dialog bestätigt mit: $confirm');
+
     if (confirm == true) {
-      if (!context.mounted) return;
+      if (!mounted) {
+        print('BACKUP_RESTORE: Widget nicht mehr montiert, breche ab.');
+        return;
+      }
       
       // Show progress
       showDialog(
@@ -548,15 +557,14 @@ class _SettingsPageState extends State<SettingsPage> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Get the database instance and close it to avoid file locks
-      final db = Provider.of<AppDatabase>(context, listen: false);
-      print('BACKUP_RESTORE: Schließe Datenbank-Verbindung...');
-      await db.close();
+      // Use singleton directly instead of Provider to be safe
+      print('BACKUP_RESTORE: Schließe Datenbank-Verbindung (Singleton)...');
+      await AppDatabase().close();
       print('BACKUP_RESTORE: Datenbank-Verbindung geschlossen.');
 
       final success = await backupService.restoreFromZippedBackup(backup);
       
-      if (context.mounted) {
+      if (mounted) {
         Navigator.pop(context); // Close progress
         
         if (success) {
