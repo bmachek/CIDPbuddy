@@ -85,31 +85,37 @@ class BackupService {
 
   Future<bool> restoreFromZippedBackup(BackupFile backup) async {
     try {
-      dev.log('Wiederherstellung gestartet von: ${backup.name}');
+      print('BACKUP_RESTORE: Starte Wiederherstellung von: ${backup.name}');
       
       final List<int> bytes;
       if (backup.isSaf && Platform.isAndroid) {
+        print('BACKUP_RESTORE: Lese SAF URI: ${backup.pathOrUri}');
         final safStream = SafStream();
         bytes = await safStream.readFileBytes(backup.pathOrUri);
+        print('BACKUP_RESTORE: SAF Datei gelesen, Größe: ${bytes.length} Bytes');
       } else {
+        print('BACKUP_RESTORE: Lese lokale Datei: ${backup.pathOrUri}');
         final file = File(backup.pathOrUri);
         if (!await file.exists()) {
-          dev.log('Fehler: Backup-Datei existiert nicht lokal.');
+          print('BACKUP_RESTORE: FEHLER: Lokale Datei existiert nicht!');
           return false;
         }
         bytes = await file.readAsBytes();
+        print('BACKUP_RESTORE: Lokale Datei gelesen, Größe: ${bytes.length} Bytes');
       }
 
       if (bytes.isEmpty) {
-        dev.log('Fehler: Backup-Datei ist leer.');
+        print('BACKUP_RESTORE: FEHLER: Backup-Daten sind leer!');
         return false;
       }
 
       final archive = ZipDecoder().decodeBytes(bytes);
+      print('BACKUP_RESTORE: ZIP dekodiert, ${archive.length} Einträge gefunden');
+      
       final dbFolder = await getApplicationDocumentsDirectory();
+      print('BACKUP_RESTORE: Ziel-Ordner: ${dbFolder.path}');
+      
       bool dbRestored = false;
-
-      dev.log('Extrahiere ${archive.length} Dateien nach ${dbFolder.path}');
 
       for (final file in archive) {
         if (file.isFile) {
@@ -117,29 +123,34 @@ class BackupService {
           final outFile = File(p.join(dbFolder.path, file.name));
           
           try {
-            // Attempt to write. If it fails due to lock, we'll see it in logs.
+            if (await outFile.exists()) {
+              print('BACKUP_RESTORE: Lösche existierende Datei: ${file.name}');
+              await outFile.delete();
+            }
+            
+            print('BACKUP_RESTORE: Schreibe Datei: ${file.name} (${data.length} Bytes)...');
             await outFile.writeAsBytes(data, flush: true);
             
             if (file.name == 'igkeeper.sqlite') {
               dbRestored = true;
+              print('BACKUP_RESTORE: Datenbank-Hauptdatei erfolgreich geschrieben.');
             }
-            dev.log('Erfolgreich wiederhergestellt: ${file.name}');
           } catch (e) {
-            dev.log('FEHLER beim Schreiben von ${file.name}: $e');
+            print('BACKUP_RESTORE: FEHLER beim Schreiben von ${file.name}: $e');
           }
         }
       }
 
       if (dbRestored) {
-        dev.log('Backup-Wiederherstellung erfolgreich abgeschlossen.');
+        print('BACKUP_RESTORE: Wiederherstellung erfolgreich abgeschlossen.');
         return true;
       } else {
-        dev.log('Kritisch: igkeeper.sqlite im ZIP nicht gefunden!');
+        print('BACKUP_RESTORE: KRITISCH: igkeeper.sqlite wurde im ZIP nicht gefunden!');
         return false;
       }
     } catch (e, stack) {
-      dev.log('Schwerer Fehler bei der Wiederherstellung: $e');
-      dev.log(stack.toString());
+      print('BACKUP_RESTORE: SCHWERER AUSNAHMEFEHLER: $e');
+      print(stack);
       return false;
     }
   }

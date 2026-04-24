@@ -550,8 +550,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
       // Get the database instance and close it to avoid file locks
       final db = Provider.of<AppDatabase>(context, listen: false);
+      print('BACKUP_RESTORE: Schließe Datenbank-Verbindung...');
       await db.close();
-      dev.log('Datenbankverbindung vor Wiederherstellung geschlossen.');
+      print('BACKUP_RESTORE: Datenbank-Verbindung geschlossen.');
 
       final success = await backupService.restoreFromZippedBackup(backup);
       
