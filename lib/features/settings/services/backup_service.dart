@@ -95,15 +95,23 @@ class BackupService {
       }
 
       final archive = ZipDecoder().decodeBytes(bytes);
-      final dbFileInArchive = archive.findFile('igkeeper.sqlite');
+      final dbFolder = await getApplicationDocumentsDirectory();
+      bool dbRestored = false;
 
-      if (dbFileInArchive != null) {
-        final dbFolder = await getApplicationDocumentsDirectory();
-        final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
-        
-        // Backup the current DB just in case? Or just overwrite as decided.
-        await dbFile.writeAsBytes(dbFileInArchive.content as List<int>);
-        
+      for (final file in archive) {
+        if (file.isFile) {
+          final data = file.content as List<int>;
+          final outFile = File(p.join(dbFolder.path, file.name));
+          await outFile.writeAsBytes(data);
+          
+          if (file.name == 'igkeeper.sqlite') {
+            dbRestored = true;
+          }
+          dev.log('Wiederhergestellt: ${file.name}');
+        }
+      }
+
+      if (dbRestored) {
         dev.log('Backup erfolgreich wiederhergestellt: ${backup.name}');
         return true;
       } else {
@@ -302,7 +310,17 @@ class BackupService {
         final localZipPath = p.join(tempDir.path, zipFileName);
         final encoder = ZipFileEncoder();
         encoder.create(localZipPath);
+        
+        // Add DB
         await encoder.addFile(dbFile);
+        
+        // Add Photos
+        final List<FileSystemEntity> files = await dbFolder.list().toList();
+        final chargePhotos = files.whereType<File>().where((f) => p.basename(f.path).startsWith('charge_'));
+        for (final photo in chargePhotos) {
+          await encoder.addFile(photo);
+        }
+        
         encoder.close();
 
         // 2. Write to SAF folder using saf_stream
@@ -350,7 +368,17 @@ class BackupService {
 
         dev.log('Erstelle ZIP in: $zipPath');
         encoder.create(zipPath);
+        
+        // Add DB
         await encoder.addFile(dbFile);
+        
+        // Add Photos
+        final List<FileSystemEntity> files = await dbFolder.list().toList();
+        final chargePhotos = files.whereType<File>().where((f) => p.basename(f.path).startsWith('charge_'));
+        for (final photo in chargePhotos) {
+          await encoder.addFile(photo);
+        }
+        
         encoder.close();
 
         dev.log('Zipped Backup erfolgreich erstellt: $zipPath');
