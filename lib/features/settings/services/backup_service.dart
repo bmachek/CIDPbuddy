@@ -374,6 +374,7 @@ class BackupService {
           
           dev.log('BackupService: SAF-Upload (saf_stream) erfolgreich für $zipFileName');
           await File(localZipPath).delete(); // Cleanup temp
+          await prefs.setString(kLastBackupTime, DateTime.now().toIso8601String());
           return true;
         } catch (e, stack) {
           dev.log('BackupService: FEHLER beim Schreiben via saf_stream: $e');
@@ -415,6 +416,7 @@ class BackupService {
         encoder.close();
 
         dev.log('Zipped Backup erfolgreich erstellt: $zipPath');
+        await prefs.setString(kLastBackupTime, DateTime.now().toIso8601String());
         return true;
       }
     } catch (e) {

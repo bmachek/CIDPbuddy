@@ -53,10 +53,16 @@ class ReliabilityService {
 
   Future<bool> isLastBackupSuccessful() async {
     final prefs = await SharedPreferences.getInstance();
+    final isEnabled = prefs.getBool(BackupService.kAutoBackupEnabled) ?? false;
     final lastTime = prefs.getString(BackupService.kLastBackupTime);
-    if (lastTime == null) return false;
     
-    // If it was setup but lastTime is older than 2 days, count as failed/outdated
+    // If enabled but not run yet, count as OK (fresh setup)
+    if (isEnabled && lastTime == null) return true;
+    
+    // If not enabled and never run, also OK from a reliability perspective 
+    // (the other check "isBackupSetup" handles the warning for disabled backup)
+    if (lastTime == null) return true;
+    
     final lastDate = DateTime.parse(lastTime);
     return DateTime.now().difference(lastDate).inDays < 2;
   }
