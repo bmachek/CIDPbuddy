@@ -185,6 +185,7 @@ class NotificationService {
 
   static Future<void> _handleCompleteInfusion(int treatmentId) async {
     try {
+      await NotificationService()._notificationsPlugin.cancel(treatmentId * 100);
       final db = AppDatabase();
       // 1. Mark as completed
       await db.completePlannedInfusion(treatmentId);
@@ -231,6 +232,7 @@ class NotificationService {
 
   static Future<void> _handleSkipInfusion(int treatmentId) async {
     try {
+      await NotificationService()._notificationsPlugin.cancel(treatmentId * 100);
       final db = AppDatabase();
       // Mark as completed but with a note that it was skipped
       final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
@@ -470,15 +472,16 @@ void notificationTapBackground(NotificationResponse response) {
 
 Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
   try {
+    final notifPlugin = FlutterLocalNotificationsPlugin();
+    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
+    await notifPlugin.initialize(const InitializationSettings(android: androidSettings));
+    await notifPlugin.cancel(treatmentId * 100);
     final db = AppDatabase();
     final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
     await db.updatePlannedInfusion(treatment.copyWith(
       isCompleted: true,
       notes: Value('${treatment.notes ?? ''} [Übersprungen via Benachrichtigung]'.trim()),
     ));
-    
-    final notifPlugin = FlutterLocalNotificationsPlugin();
-    await notifPlugin.cancel(treatmentId * 100);
     
     debugPrint('NotificationService: Background: Treatment $treatmentId skipped.');
   } catch (e) {
@@ -488,6 +491,10 @@ Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
 
 Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
   try {
+    final notifPlugin = FlutterLocalNotificationsPlugin();
+    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
+    await notifPlugin.initialize(const InitializationSettings(android: androidSettings));
+    await notifPlugin.cancel(treatmentId * 100);
     final db = AppDatabase();
     // 1. Mark as completed
     await db.completePlannedInfusion(treatmentId);
@@ -518,11 +525,7 @@ Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
         ));
       });
     }
-    
-    // Cancel other reminders
-    final notifPlugin = FlutterLocalNotificationsPlugin();
-    await notifPlugin.cancel(treatmentId * 100);
-    
+
     debugPrint('NotificationService: Background: Treatment $treatmentId processed.');
   } catch (e) {
     debugPrint('NotificationService: Background: Error: $e');
