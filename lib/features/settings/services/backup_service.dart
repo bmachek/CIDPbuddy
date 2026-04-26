@@ -1,454 +1,392 @@
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
-import 'package:share_plus/share_plus.dart';
-import 'package:file_picker/file_picker.dart';
+import 'dart:typed_data';
 import 'package:archive/archive_io.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
-import 'dart:developer' as dev;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:saf_util/saf_util.dart';
-import 'package:saf_stream/saf_stream.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:developer' as dev;
 import '../../reminders/services/notification_service.dart';
+import 'backup_destination.dart';
 
-class BackupFile {
-  final String name;
-  final DateTime date;
-  final int size;
-  final String pathOrUri;
-  final bool isSaf;
+export 'backup_destination.dart' show BackupFile, BackupDestination, DestinationKind;
 
-  BackupFile({
-    required this.name,
-    required this.date,
-    required this.size,
-    required this.pathOrUri,
-    required this.isSaf,
+/// Result of a backup attempt — used by UI / WorkManager / reliability check.
+class BackupResult {
+  final bool success;
+  final String? error;
+  final String? fileName;
+  BackupResult.ok(this.fileName) : success = true, error = null;
+  BackupResult.fail(this.error) : success = false, fileName = null;
+}
+
+/// Snapshot of the current backup configuration + state for UI display.
+class BackupStatus {
+  final bool enabled;
+  final BackupDestination? destination;
+  final DateTime? lastSuccess;
+  final DateTime? lastAttempt;
+  final String? lastError;
+  final int consecutiveFailures;
+
+  const BackupStatus({
+    required this.enabled,
+    required this.destination,
+    required this.lastSuccess,
+    required this.lastAttempt,
+    required this.lastError,
+    required this.consecutiveFailures,
   });
+
+  bool get isHealthy =>
+      destination != null && lastError == null && consecutiveFailures == 0;
 }
 
 class BackupService {
+  // Pref keys (kept compatible with previous releases for upgrade path).
   static const String kAutoBackupEnabled = 'auto_backup_enabled';
   static const String kBackupDirectoryPath = 'backup_directory_path';
   static const String kBackupIsSaf = 'backup_is_saf';
   static const String kLastBackupTime = 'last_backup_time';
+  // New state keys.
+  static const String _kLastAttempt = 'backup_last_attempt_at';
+  static const String _kLastError = 'backup_last_error';
+  static const String _kConsecutiveFailures = 'backup_consecutive_failures';
 
-  Future<List<BackupFile>> getAvailableBackups() async {
+  /// Number of consecutive failures before we surface a notification.
+  static const int _failureNotifyThreshold = 2;
+
+  /// Skip an automatic backup if a successful one happened more recently than
+  /// this. Manual ("Test now") backups bypass this.
+  static const Duration _autoMinInterval = Duration(hours: 6);
+
+  /// Keep this many of the most recent backups; older ones are pruned.
+  static const int _retainCount = 5;
+
+  static final BackupService _instance = BackupService._();
+  factory BackupService() => _instance;
+  BackupService._();
+
+  // ---------------------------------------------------------------- Status
+
+  Future<BackupStatus> getStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? targetDir = prefs.getString(kBackupDirectoryPath);
-    final bool isSaf = prefs.getBool(kBackupIsSaf) ?? false;
+    final dest = await BackupDestination.load();
+    return BackupStatus(
+      enabled: prefs.getBool(kAutoBackupEnabled) ?? false,
+      destination: dest,
+      lastSuccess: _readDate(prefs, kLastBackupTime),
+      lastAttempt: _readDate(prefs, _kLastAttempt),
+      lastError: prefs.getString(_kLastError),
+      consecutiveFailures: prefs.getInt(_kConsecutiveFailures) ?? 0,
+    );
+  }
 
-    if (targetDir == null) return [];
+  Future<void> setEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(kAutoBackupEnabled, enabled);
+  }
+
+  DateTime? _readDate(SharedPreferences prefs, String key) {
+    final s = prefs.getString(key);
+    if (s == null) return null;
+    return DateTime.tryParse(s);
+  }
+
+  // ---------------------------------------------------- Destination picking
+
+  /// Picks an Android SAF tree (cloud or local) — preferred path on Android.
+  Future<BackupDestination?> pickSafBackupDirectory() async {
+    if (!Platform.isAndroid) return null;
+    try {
+      final util = SafUtil();
+      final dir = await util.pickDirectory(
+        writePermission: true,
+        persistablePermission: true,
+      );
+      if (dir == null) return null;
+      final destination = SafDestination(dir.uri);
+      // Verify before persisting — confirms the grant is actually usable.
+      final err = await destination.verifyAccess();
+      if (err != null) {
+        dev.log('BackupService: SAF picked but verify failed: $err');
+        return null;
+      }
+      await destination.persist();
+      await _resetFailureState();
+      return destination;
+    } catch (e, stack) {
+      dev.log('BackupService.pickSafBackupDirectory: $e\n$stack');
+      return null;
+    }
+  }
+
+  /// Plain filesystem directory — used on desktop or as Android fallback.
+  Future<BackupDestination?> pickLocalBackupDirectory() async {
+    try {
+      final selected = await FilePicker.platform.getDirectoryPath();
+      if (selected == null) return null;
+      final destination = LocalDestination(selected);
+      final err = await destination.verifyAccess();
+      if (err != null) {
+        dev.log('BackupService: Local picked but verify failed: $err');
+        return null;
+      }
+      await destination.persist();
+      await _resetFailureState();
+      return destination;
+    } catch (e) {
+      dev.log('BackupService.pickLocalBackupDirectory: $e');
+      return null;
+    }
+  }
+
+  Future<void> clearDestination() async {
+    await BackupDestination.clear();
+    await _resetFailureState();
+  }
+
+  // ------------------------------------------------------------ Run backup
+
+  /// Runs a backup. Used by the in-app debounce, the WorkManager periodic
+  /// task, and the manual "Backup jetzt testen" button.
+  ///
+  /// Always updates state; surfaces a failure notification once
+  /// [_failureNotifyThreshold] consecutive failures are reached.
+  Future<BackupResult> runBackup({bool manual = false}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kLastAttempt, DateTime.now().toIso8601String());
+
+    final dest = await BackupDestination.load();
+    if (dest == null) {
+      return _recordFailure(prefs, 'Kein Backup-Ziel ausgewählt.');
+    }
+
+    if (!manual && !(prefs.getBool(kAutoBackupEnabled) ?? false)) {
+      return BackupResult.fail('Automatisches Backup ist deaktiviert.');
+    }
+
+    // Skip if a recent success exists, but only for automatic runs.
+    if (!manual) {
+      final lastSuccess = _readDate(prefs, kLastBackupTime);
+      if (lastSuccess != null &&
+          DateTime.now().difference(lastSuccess) < _autoMinInterval) {
+        return BackupResult.fail('Übersprungen: aktuelles Backup vorhanden.');
+      }
+    }
+
+    final verifyError = await dest.verifyAccess();
+    if (verifyError != null) {
+      return _recordFailure(prefs, verifyError);
+    }
 
     try {
-      if (isSaf && Platform.isAndroid) {
-        final safUtil = SafUtil();
-        final files = await safUtil.list(targetDir);
-        
-        return files
-            .where((f) => f.name.startsWith('igkeeper_backup_') && f.name.endsWith('.zip'))
-            .map((f) => BackupFile(
-                  name: f.name, 
-                  date: DateTime.fromMillisecondsSinceEpoch(f.lastModified),
-                  size: f.length,
-                  pathOrUri: f.uri,
-                  isSaf: true,
-                ))
-            .toList()
-          ..sort((a, b) => b.date.compareTo(a.date));
-      } else {
-        final directory = Directory(targetDir);
-        if (!await directory.exists()) return [];
+      final fileName = _generateFileName();
+      final zipBytes = await _buildZipInMemory();
 
-        final List<FileSystemEntity> files = await directory.list().toList();
-        return files
-            .whereType<File>()
-            .where((f) => p.basename(f.path).startsWith('igkeeper_backup_') && f.path.endsWith('.zip'))
-            .map((f) {
-              final stat = f.statSync();
-              return BackupFile(
-                name: p.basename(f.path),
-                date: stat.modified,
-                size: stat.size,
-                pathOrUri: f.path,
-                isSaf: false,
-              );
-            })
-            .toList()
-          ..sort((a, b) => b.date.compareTo(a.date));
+      await dest.writeBackup(fileName, zipBytes);
+      await _pruneOldBackups(dest);
+
+      await prefs.setString(kLastBackupTime, DateTime.now().toIso8601String());
+      await prefs.remove(_kLastError);
+      await prefs.setInt(_kConsecutiveFailures, 0);
+      // If we previously notified about failure, clear the badge.
+      await NotificationService().cancelBackupFailureNotification();
+      return BackupResult.ok(fileName);
+    } catch (e, stack) {
+      dev.log('BackupService.runBackup write failed: $e\n$stack');
+      return _recordFailure(prefs, 'Schreibfehler: $e');
+    }
+  }
+
+  Future<BackupResult> _recordFailure(
+      SharedPreferences prefs, String error) async {
+    final failures = (prefs.getInt(_kConsecutiveFailures) ?? 0) + 1;
+    await prefs.setInt(_kConsecutiveFailures, failures);
+    await prefs.setString(_kLastError, error);
+    if (failures >= _failureNotifyThreshold) {
+      await NotificationService().showBackupFailureNotification(error);
+    }
+    return BackupResult.fail(error);
+  }
+
+  Future<void> _resetFailureState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kLastError);
+    await prefs.setInt(_kConsecutiveFailures, 0);
+    await NotificationService().cancelBackupFailureNotification();
+  }
+
+  String _generateFileName() {
+    final ts = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    return 'igkeeper_backup_$ts.zip';
+  }
+
+  /// Builds the backup archive in memory. Includes the SQLite DB plus any
+  /// `charge_*` photos in the documents dir.
+  Future<Uint8List> _buildZipInMemory() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
+    if (!await dbFile.exists()) {
+      throw StateError('Quelldatenbank nicht gefunden.');
+    }
+
+    final tempDir = await getTemporaryDirectory();
+    final tempZipPath =
+        p.join(tempDir.path, 'cidp_backup_${DateTime.now().microsecondsSinceEpoch}.zip');
+
+    final encoder = ZipFileEncoder();
+    encoder.create(tempZipPath);
+    try {
+      await encoder.addFile(dbFile);
+      // sqlite3 sidecar files — copy them too if present so the backup is
+      // a complete snapshot even when WAL hasn't been checkpointed.
+      for (final suffix in const ['-wal', '-shm']) {
+        final side = File(p.join(dbFolder.path, 'igkeeper.sqlite$suffix'));
+        if (await side.exists()) {
+          await encoder.addFile(side);
+        }
+      }
+      final entries = await dbFolder.list().toList();
+      for (final f in entries.whereType<File>()) {
+        final name = p.basename(f.path);
+        if (name.startsWith('charge_')) {
+          await encoder.addFile(f);
+        }
+      }
+    } finally {
+      encoder.close();
+    }
+
+    final tempZip = File(tempZipPath);
+    final bytes = await tempZip.readAsBytes();
+    try {
+      await tempZip.delete();
+    } catch (_) {/* best-effort */}
+    return bytes;
+  }
+
+  Future<void> _pruneOldBackups(BackupDestination dest) async {
+    try {
+      final list = await dest.listBackups();
+      if (list.length <= _retainCount) return;
+      final toDelete = list.skip(_retainCount).toList();
+      for (final f in toDelete) {
+        try {
+          await dest.deleteBackup(f);
+          dev.log('BackupService: pruned ${f.name}');
+        } catch (e) {
+          dev.log('BackupService: prune failed for ${f.name}: $e');
+        }
       }
     } catch (e) {
-      dev.log('Fehler beim Abrufen der Backups: $e');
+      dev.log('BackupService._pruneOldBackups: $e');
+    }
+  }
+
+  // -------------------------------------------------- List & restore & legacy
+
+  Future<List<BackupFile>> getAvailableBackups() async {
+    final dest = await BackupDestination.load();
+    if (dest == null) return [];
+    try {
+      return await dest.listBackups();
+    } catch (e) {
+      dev.log('BackupService.getAvailableBackups: $e');
       return [];
     }
   }
 
+  /// Restores the given backup atomically: the destination DB file is replaced
+  /// only after a successful, fully written `.tmp` copy.
   Future<bool> restoreFromZippedBackup(BackupFile backup) async {
     try {
-      print('BACKUP_RESTORE: Starte Wiederherstellung von: ${backup.name}');
-      
-      final List<int> bytes;
-      if (backup.isSaf && Platform.isAndroid) {
-        print('BACKUP_RESTORE: Lese SAF URI: ${backup.pathOrUri}');
-        final safStream = SafStream();
-        bytes = await safStream.readFileBytes(backup.pathOrUri);
-        print('BACKUP_RESTORE: SAF Datei gelesen, Größe: ${bytes.length} Bytes');
-      } else {
-        print('BACKUP_RESTORE: Lese lokale Datei: ${backup.pathOrUri}');
-        final file = File(backup.pathOrUri);
-        if (!await file.exists()) {
-          print('BACKUP_RESTORE: FEHLER: Lokale Datei existiert nicht!');
-          return false;
-        }
-        bytes = await file.readAsBytes();
-        print('BACKUP_RESTORE: Lokale Datei gelesen, Größe: ${bytes.length} Bytes');
-      }
-
-      if (bytes.isEmpty) {
-        print('BACKUP_RESTORE: FEHLER: Backup-Daten sind leer!');
-        return false;
-      }
+      dev.log('BackupService.restore: ${backup.name}');
+      final dest = await BackupDestination.load();
+      if (dest == null) return false;
+      final bytes = await dest.readBackup(backup);
+      if (bytes.isEmpty) return false;
 
       final archive = ZipDecoder().decodeBytes(bytes);
-      print('BACKUP_RESTORE: ZIP dekodiert, ${archive.length} Einträge gefunden');
-      
       final dbFolder = await getApplicationDocumentsDirectory();
-      print('BACKUP_RESTORE: Ziel-Ordner: ${dbFolder.path}');
-      
       bool dbRestored = false;
 
-      for (final file in archive) {
-        if (file.isFile) {
-          final data = file.content as List<int>;
-          final outFile = File(p.join(dbFolder.path, file.name));
-          
-          try {
-            if (await outFile.exists()) {
-              print('BACKUP_RESTORE: Lösche existierende Datei: ${file.name}');
-              await outFile.delete();
-            }
-            
-            print('BACKUP_RESTORE: Schreibe Datei: ${file.name} (${data.length} Bytes)...');
-            await outFile.writeAsBytes(data, flush: true);
-            
-            if (file.name == 'igkeeper.sqlite') {
-              dbRestored = true;
-              print('BACKUP_RESTORE: Datenbank-Hauptdatei erfolgreich geschrieben.');
-            }
-          } catch (e) {
-            print('BACKUP_RESTORE: FEHLER beim Schreiben von ${file.name}: $e');
-          }
+      // Two-phase write: stage all files as `.tmp`, then rename.
+      final staged = <File>[];
+      try {
+        for (final entry in archive) {
+          if (!entry.isFile) continue;
+          final data = entry.content as List<int>;
+          final outPath = p.join(dbFolder.path, entry.name);
+          final tmp = File('$outPath.restore_tmp');
+          await tmp.writeAsBytes(data, flush: true);
+          staged.add(tmp);
         }
+        for (final tmp in staged) {
+          final finalPath =
+              tmp.path.substring(0, tmp.path.length - '.restore_tmp'.length);
+          final finalFile = File(finalPath);
+          if (await finalFile.exists()) await finalFile.delete();
+          await tmp.rename(finalPath);
+          if (p.basename(finalPath) == 'igkeeper.sqlite') dbRestored = true;
+        }
+      } catch (e) {
+        dev.log('BackupService.restore staging failed: $e');
+        for (final tmp in staged) {
+          try {
+            if (await tmp.exists()) await tmp.delete();
+          } catch (_) {}
+        }
+        rethrow;
       }
 
-      if (dbRestored) {
-        print('BACKUP_RESTORE: Wiederherstellung erfolgreich abgeschlossen.');
-        return true;
-      } else {
-        print('BACKUP_RESTORE: KRITISCH: igkeeper.sqlite wurde im ZIP nicht gefunden!');
-        return false;
-      }
+      return dbRestored;
     } catch (e, stack) {
-      print('BACKUP_RESTORE: SCHWERER AUSNAHMEFEHLER: $e');
-      print(stack);
+      dev.log('BackupService.restore exception: $e\n$stack');
       return false;
     }
   }
 
+  /// Legacy "share the raw .sqlite" feature — kept for export-via-share.
   Future<void> exportDatabase() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
+    if (!await dbFile.exists()) return;
 
-    if (await dbFile.exists()) {
-      // Create a temporary copy to share
-      final tempDir = await getTemporaryDirectory();
-      final backupPath = p.join(tempDir.path, 'igkeeper_backup.sqlite');
-      
-      // Ensure the directory exists
-      final backupFile = File(backupPath);
-      if (!await backupFile.parent.exists()) {
-        await backupFile.parent.create(recursive: true);
-      }
-      
-      final tempFile = await dbFile.copy(backupPath);
+    final tempDir = await getTemporaryDirectory();
+    final backupPath = p.join(tempDir.path, 'igkeeper_backup.sqlite');
+    final tempFile = await dbFile.copy(backupPath);
 
-      await Share.shareXFiles(
-        [XFile(tempFile.path)],
-        subject: 'IgKeeper Backup',
-        text: 'Sicherung der IgKeeper Datenbank vom ${DateTime.now().toLocal()}',
-      );
-    }
-  }
-
-  Future<bool> importDatabase() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any, // .sqlite might not be recognized on all platforms
+    await Share.shareXFiles(
+      [XFile(tempFile.path)],
+      subject: 'CIDP Buddy Backup',
+      text:
+          'Sicherung der CIDP-Buddy-Datenbank vom ${DateTime.now().toLocal()}',
     );
-
-    if (result != null && result.files.single.path != null) {
-      final pickedFile = File(result.files.single.path!);
-      final dbFolder = await getApplicationDocumentsDirectory();
-      final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
-
-      // Replace the current database
-      // NOTE: In a real app, we should close the database connection first
-      await pickedFile.copy(dbFile.path);
-      return true;
-    }
-    return false;
   }
 
-  // --- New Automated Zipped Backup Feature ---
-
-  // --- Universal Cloud Folder (SAF) Support ---
-
-  Future<String?> pickSafBackupDirectory() async {
-    try {
-      final safUtil = SafUtil();
-      final dir = await safUtil.pickDirectory(
-        writePermission: true,
-        persistablePermission: true,
-      );
-
-      if (dir != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(kBackupDirectoryPath, dir.uri);
-        await prefs.setBool(kBackupIsSaf, true);
-        dev.log('BackupService: SAF-Verzeichnis gesetzt: ${dir.uri}');
-        return dir.uri;
-      }
-    } catch (e, stack) {
-      dev.log('BackupService: Fehler beim Wählen des SAF-Ordners: $e');
-      dev.log('Stacktrace: $stack');
-    }
-    return null;
+  /// Legacy single-file import via FilePicker (e.g. from older exports).
+  Future<bool> importDatabase() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.any);
+    if (result == null || result.files.single.path == null) return false;
+    final pickedFile = File(result.files.single.path!);
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
+    final tmp = File('${dbFile.path}.restore_tmp');
+    await pickedFile.copy(tmp.path);
+    if (await dbFile.exists()) await dbFile.delete();
+    await tmp.rename(dbFile.path);
+    return true;
   }
 
-  /// Ensures that we still have permission to access the SAF directory.
-  /// On some Android versions, permissions might need to be "re-taken" if they weren't persisted correctly.
-  Future<bool> ensureSafPermission(String uri) async {
-    if (!Platform.isAndroid) return true;
-    try {
-      // We assume it's okay for now, saf_stream will fail if not
-      return true; 
-    } catch (e) {
-      dev.log('BackupService: Fehler bei SAF-Validierung: $e');
-      return false;
-    }
-  }
+  // ---------------------------------------------------------- Compatibility
 
-  Future<String?> selectBackupDirectory() async {
-    try {
-      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
-
-      if (selectedDirectory != null) {
-        // Validate if we can actually write to this directory
-        final isWritable = await _isPathWritable(selectedDirectory);
-        if (!isWritable) {
-          dev.log('Gewähltes Verzeichnis ist nicht beschreibbar: $selectedDirectory');
-          // We return the error string so the UI can react to it
-          return 'Error: Not writable: $selectedDirectory';
-        }
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(kBackupDirectoryPath, selectedDirectory);
-        await prefs.setBool(kBackupIsSaf, false);
-        return selectedDirectory;
-      }
-    } catch (e) {
-      dev.log('Fehler bei der Verzeichnisauswahl: $e');
-    }
-    return null;
-  }
-
-  Future<String> getSafeBackupDirectory() async {
-    if (Platform.isAndroid) {
-      // getExternalStorageDirectory is usually /storage/emulated/0/Android/data/com.example.app/files
-      // This is visible to the user and always writable.
-      final extDir = await getExternalStorageDirectory();
-      if (extDir != null) {
-        final backupDir = Directory(p.join(extDir.path, 'Backups'));
-        if (!await backupDir.exists()) {
-          await backupDir.create(recursive: true);
-        }
-        return backupDir.path;
-      }
-    }
-    
-    // Fallback to documents directory
-    final docDir = await getApplicationDocumentsDirectory();
-    final backupDir = Directory(p.join(docDir.path, 'Backups'));
-    if (!await backupDir.exists()) {
-      await backupDir.create(recursive: true);
-    }
-    return backupDir.path;
-  }
-
-  Future<void> setBackupDirectory(String path) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(kBackupDirectoryPath, path);
-  }
-
-  Future<bool> _isPathWritable(String path) async {
-    try {
-      final testFile = File(p.join(path, '.write_test'));
-      await testFile.writeAsString('test');
-      await testFile.delete();
-      return true;
-    } catch (e) {
-      dev.log('Pfad-Validierung fehlgeschlagen ($path): $e');
-      return false;
-    }
-  }
-
+  /// Old call site (`tableUpdates().listen → autoBackup`) — kept so existing
+  /// hookups continue to work, just delegates to [runBackup].
   Future<void> autoBackup() async {
-    final prefs = await SharedPreferences.getInstance();
-    final bool isEnabled = prefs.getBool(kAutoBackupEnabled) ?? false;
-    final String? targetDir = prefs.getString(kBackupDirectoryPath);
-
-    if (isEnabled && targetDir != null) {
-      dev.log('Starte automatisches Backup nach: $targetDir');
-      final success = await performZippedBackup(targetDir);
-      if (success) {
-        await prefs.setString(kLastBackupTime, DateTime.now().toIso8601String());
-        await _cleanupOldBackups(targetDir);
-      } else {
-        await NotificationService().showBackupFailureNotification('Fehler beim Schreiben der Backup-Datei.');
-      }
-    }
-  }
-
-  Future<bool> performZippedBackup(String targetDir) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final bool isSaf = prefs.getBool(kBackupIsSaf) ?? false;
-      
-      final dbFolder = await getApplicationDocumentsDirectory();
-      final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
-
-      if (!await dbFile.exists()) {
-        dev.log('Backup fehlgeschlagen: Quelldatenbank nicht gefunden.');
-        return false;
-      }
-
-      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-      final zipFileName = 'igkeeper_backup_$timestamp.zip';
-
-      if (isSaf && Platform.isAndroid) {
-        // --- SAF / Cloud Folder Mode ---
-        dev.log('BackupService: Nutze SAF (modern) für Ziel-URI: $targetDir');
-        
-        // 1. Create ZIP locally in temp folder
-        final tempDir = await getTemporaryDirectory();
-        final localZipPath = p.join(tempDir.path, zipFileName);
-        final encoder = ZipFileEncoder();
-        encoder.create(localZipPath);
-        
-        // Add DB
-        await encoder.addFile(dbFile);
-        
-        // Add Photos
-        final List<FileSystemEntity> files = await dbFolder.list().toList();
-        final chargePhotos = files.whereType<File>().where((f) => p.basename(f.path).startsWith('charge_'));
-        for (final photo in chargePhotos) {
-          await encoder.addFile(photo);
-        }
-        
-        encoder.close();
-
-        // 2. Write to SAF folder using saf_stream
-        final bytes = await File(localZipPath).readAsBytes();
-        
-        try {
-          final safStream = SafStream();
-          
-          // Verify access before writing
-          await ensureSafPermission(targetDir);
-          
-          await safStream.writeFileBytes(
-            targetDir, // Tree URI
-            zipFileName,
-            'application/zip',
-            bytes,
-          );
-          
-          dev.log('BackupService: SAF-Upload (saf_stream) erfolgreich für $zipFileName');
-          await File(localZipPath).delete(); // Cleanup temp
-          await prefs.setString(kLastBackupTime, DateTime.now().toIso8601String());
-          return true;
-        } catch (e, stack) {
-          dev.log('BackupService: FEHLER beim Schreiben via saf_stream: $e');
-          dev.log('Stacktrace: $stack');
-          dev.log('Ziel-URI war: $targetDir');
-          return false;
-        }
-      } else {
-        // --- Classic Local Directory Mode ---
-        // Ensure target directory exists and is writable
-        final directory = Directory(targetDir);
-        if (!await directory.exists()) {
-          dev.log('Backup-Verzeichnis existiert nicht: $targetDir. Versuche es zu erstellen...');
-          try {
-            await directory.create(recursive: true);
-          } catch (e) {
-            dev.log('Konnte Verzeichnis nicht erstellen: $e');
-            return false;
-          }
-        }
-
-        // Create ZIP
-        final encoder = ZipFileEncoder();
-        final zipPath = p.join(targetDir, zipFileName);
-
-        dev.log('Erstelle ZIP in: $zipPath');
-        encoder.create(zipPath);
-        
-        // Add DB
-        await encoder.addFile(dbFile);
-        
-        // Add Photos
-        final List<FileSystemEntity> files = await dbFolder.list().toList();
-        final chargePhotos = files.whereType<File>().where((f) => p.basename(f.path).startsWith('charge_'));
-        for (final photo in chargePhotos) {
-          await encoder.addFile(photo);
-        }
-        
-        encoder.close();
-
-        dev.log('Zipped Backup erfolgreich erstellt: $zipPath');
-        await prefs.setString(kLastBackupTime, DateTime.now().toIso8601String());
-        return true;
-      }
-    } catch (e) {
-      dev.log('Fehler beim Erstellen des zipped Backups: $e');
-      return false;
-    }
-  }
-
-  Future<void> _cleanupOldBackups(String targetDir) async {
-    try {
-      final directory = Directory(targetDir);
-      final List<FileSystemEntity> files = await directory.list().toList();
-
-      // Filter for our backup files
-      final backupFiles = files.whereType<File>().where((file) {
-        final name = p.basename(file.path);
-        return name.startsWith('igkeeper_backup_') && name.endsWith('.zip');
-      }).toList();
-
-      // Sort by modification date (oldest first)
-      backupFiles.sort((a, b) => a.statSync().modified.compareTo(b.statSync().modified));
-
-      // Keep only last 5
-      if (backupFiles.length > 5) {
-        final toDelete = backupFiles.take(backupFiles.length - 5);
-        for (final file in toDelete) {
-          await file.delete();
-          dev.log('Altes Backup gelöscht: ${file.path}');
-        }
-      }
-    } catch (e) {
-      dev.log('Fehler bei der Bereinigung alter Backups: $e');
-    }
+    await runBackup(manual: false);
   }
 }

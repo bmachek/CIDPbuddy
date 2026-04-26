@@ -1,15 +1,16 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/backup_service.dart';
+import '../services/backup_worker.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/constants/build_config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'reliability_check_page.dart';
 import 'package:intl/intl.dart';
-import '../../../core/database/database.dart';
 import 'dart:developer' as dev;
-// Remove shared_storage as we now use saf_util via BackupService
+import '../../../core/database/database.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -66,85 +67,131 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const Divider(),
           _buildSectionHeader('Automatisches Backup'),
-          FutureBuilder<Map<String, dynamic>>(
-            future: _getAutoBackupSettings(),
+          FutureBuilder<BackupStatus>(
+            future: backupService.getStatus(),
             builder: (context, snapshot) {
-              final settings = snapshot.data ?? {
-                'enabled': false,
-                'path': null,
-                'last_time': null,
-                'is_saf': false,
-              };
-              
-              final bool enabled = settings['enabled'];
-              final String? path = settings['path'];
-              final String? lastTime = settings['last_time'];
-              final bool isSaf = settings['is_saf'] ?? false;
+              final status = snapshot.data;
+              final dest = status?.destination;
+              final isSaf = dest?.kind == DestinationKind.saf;
+              final hasError = (status?.lastError != null) ||
+                  ((status?.consecutiveFailures ?? 0) > 0);
 
               return Column(
                 children: [
                   SwitchListTile(
                     title: const Text('Automatisches Backup aktivieren'),
-                    subtitle: const Text('Sichert die Datenbank automatisch gezippt bei Änderungen'),
-                    value: enabled,
+                    subtitle: const Text(
+                      'Sichert deine Daten regelmäßig in den gewählten Ordner',
+                    ),
+                    value: status?.enabled ?? false,
                     onChanged: (val) async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool(BackupService.kAutoBackupEnabled, val);
-                      setState(() {});
+                      await backupService.setEnabled(val);
+                      await BackupScheduler.syncFromPrefs();
+                      if (mounted) setState(() {});
                     },
                     secondary: const Icon(Icons.backup_outlined),
                   ),
-                  ListTile(
-                    leading: Icon(isSaf ? Icons.cloud_done : Icons.folder_open_outlined),
-                    title: const Text('Backup-Verzeichnis (Cloud oder Lokal)'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(path != null 
-                            ? (isSaf ? 'Cloud-Ordner ausgewählt' : path) 
-                            : 'Verzeichnis wählen...'),
-                        if (isSaf)
-                          const Text('Verbunden via Android Cloud-Zugriff', style: TextStyle(fontSize: 11, color: Colors.green)),
-                      ],
+                  if (hasError && dest != null)
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.red),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Backup nicht möglich',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  status?.lastError ?? 'Unbekannter Fehler',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                const SizedBox(height: 8),
+                                FilledButton.tonal(
+                                  onPressed: _pickDestination,
+                                  child: const Text('Ordner erneut wählen'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    trailing: (path != null) 
-                        ? const Icon(Icons.check_circle, color: Colors.green, size: 16) 
+                  ListTile(
+                    leading: Icon(isSaf
+                        ? Icons.cloud_done
+                        : (dest != null
+                            ? Icons.folder
+                            : Icons.folder_open_outlined)),
+                    title: const Text('Backup-Verzeichnis'),
+                    subtitle: Text(
+                      dest == null
+                          ? 'Verzeichnis wählen...'
+                          : (isSaf ? 'Cloud-/SAF-Ordner ausgewählt' : dest.displayLabel),
+                    ),
+                    trailing: dest != null
+                        ? const Icon(Icons.check_circle,
+                            color: Colors.green, size: 16)
                         : null,
-                    onTap: () async {
-                      // Trigger the new, stable SAF picker via BackupService
-                      final uri = await backupService.pickSafBackupDirectory();
-                      if (uri != null && context.mounted) {
-                        setState(() {});
-                      }
-                    },
+                    onTap: _pickDestination,
                   ),
-                  if (path != null)
+                  if (dest != null)
                     ListTile(
                       leading: const Icon(Icons.play_circle_outline),
                       title: const Text('Backup jetzt testen'),
                       onTap: () async {
-                        final success = await backupService.performZippedBackup(path);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(success ? 'Test-Backup erfolgreich!' : 'Test-Backup fehlgeschlagen.'),
-                              backgroundColor: success ? Colors.green : Colors.red,
-                            )
-                          );
-                        }
-                        setState(() {});
+                        final result =
+                            await backupService.runBackup(manual: true);
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(result.success
+                                ? 'Test-Backup erfolgreich!'
+                                : 'Test-Backup fehlgeschlagen: ${result.error}'),
+                            backgroundColor:
+                                result.success ? Colors.green : Colors.red,
+                          ),
+                        );
+                        if (mounted) setState(() {});
                       },
                     ),
-                  if (lastTime != null)
+                  if (status?.lastSuccess != null)
                     ListTile(
                       leading: const Icon(Icons.history),
-                      title: const Text('Zuletzt gesichert'),
-                      subtitle: Text(DateFormat('dd.MM.yyyy HH:mm').format(DateTime.parse(lastTime))),
+                      title: const Text('Zuletzt erfolgreich'),
+                      subtitle: Text(
+                        DateFormat('dd.MM.yyyy HH:mm')
+                            .format(status!.lastSuccess!),
+                      ),
+                    ),
+                  if (status?.lastAttempt != null &&
+                      (status?.lastSuccess == null ||
+                          status!.lastAttempt!
+                              .isAfter(status.lastSuccess!)))
+                    ListTile(
+                      leading: const Icon(Icons.access_time),
+                      title: const Text('Letzter Versuch'),
+                      subtitle: Text(
+                        DateFormat('dd.MM.yyyy HH:mm')
+                            .format(status!.lastAttempt!),
+                      ),
                     ),
                   ListTile(
                     leading: const Icon(Icons.settings_backup_restore),
                     title: const Text('Sicherung wiederherstellen'),
-                    subtitle: const Text('Wähle ein automatisches Backup zum Einspielen'),
+                    subtitle: const Text(
+                        'Wähle ein automatisches Backup zum Einspielen'),
                     onTap: () => _showRestoreBackupDialog(context),
                   ),
                 ],
@@ -309,14 +356,33 @@ class _SettingsPageState extends State<SettingsPage> {
     };
   }
 
-  Future<Map<String, dynamic>> _getAutoBackupSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    return {
-      'enabled': prefs.getBool(BackupService.kAutoBackupEnabled) ?? false,
-      'path': prefs.getString(BackupService.kBackupDirectoryPath),
-      'last_time': prefs.getString(BackupService.kLastBackupTime),
-      'is_saf': prefs.getBool('backup_is_saf') ?? false,
-    };
+  Future<void> _pickDestination() async {
+    final BackupDestination? dest = Platform.isAndroid
+        ? await backupService.pickSafBackupDirectory()
+        : await backupService.pickLocalBackupDirectory();
+
+    if (!mounted) return;
+    if (dest == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Ordner konnte nicht verbunden werden. Bitte einen anderen Ordner wählen.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      // Ensure WorkManager registration matches new state.
+      await BackupScheduler.syncFromPrefs();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Backup-Ordner verbunden.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+    if (mounted) setState(() {});
   }
 
   void _updateReminderSetting(String key, dynamic value) async {
@@ -514,7 +580,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _confirmZippedRestore(BackupFile backup) async {
-    print('BACKUP_RESTORE: _confirmZippedRestore aufgerufen für ${backup.name}');
+    dev.log('BACKUP_RESTORE: _confirmZippedRestore aufgerufen für ${backup.name}');
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -542,14 +608,14 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
 
-    print('BACKUP_RESTORE: Dialog bestätigt mit: $confirm');
+    dev.log('BACKUP_RESTORE: Dialog bestätigt mit: $confirm');
 
     if (confirm == true) {
       if (!mounted) {
-        print('BACKUP_RESTORE: Widget nicht mehr montiert, breche ab.');
+        dev.log('BACKUP_RESTORE: Widget nicht mehr montiert, breche ab.');
         return;
       }
-      
+
       // Show progress
       showDialog(
         context: context,
@@ -557,10 +623,9 @@ class _SettingsPageState extends State<SettingsPage> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Use singleton directly instead of Provider to be safe
-      print('BACKUP_RESTORE: Schließe Datenbank-Verbindung (Singleton)...');
+      dev.log('BACKUP_RESTORE: Schließe Datenbank-Verbindung (Singleton)...');
       await AppDatabase().close();
-      print('BACKUP_RESTORE: Datenbank-Verbindung geschlossen.');
+      dev.log('BACKUP_RESTORE: Datenbank-Verbindung geschlossen.');
 
       final success = await backupService.restoreFromZippedBackup(backup);
       

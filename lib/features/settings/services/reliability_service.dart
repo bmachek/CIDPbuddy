@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:disable_battery_optimization/disable_battery_optimization.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'backup_service.dart';
 
 class ReliabilityService {
@@ -47,23 +46,17 @@ class ReliabilityService {
   }
 
   Future<bool> isBackupSetup() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(BackupService.kAutoBackupEnabled) ?? false;
+    final status = await BackupService().getStatus();
+    return status.enabled && status.destination != null;
   }
 
   Future<bool> isLastBackupSuccessful() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isEnabled = prefs.getBool(BackupService.kAutoBackupEnabled) ?? false;
-    final lastTime = prefs.getString(BackupService.kLastBackupTime);
-    
-    // If enabled but not run yet, count as OK (fresh setup)
-    if (isEnabled && lastTime == null) return true;
-    
-    // If not enabled and never run, also OK from a reliability perspective 
-    // (the other check "isBackupSetup" handles the warning for disabled backup)
-    if (lastTime == null) return true;
-    
-    final lastDate = DateTime.parse(lastTime);
-    return DateTime.now().difference(lastDate).inDays < 2;
+    final status = await BackupService().getStatus();
+    // Consecutive failures are the most direct signal of trouble.
+    if (status.consecutiveFailures > 0) return false;
+
+    if (!status.enabled) return true;
+    if (status.lastSuccess == null) return true; // fresh setup
+    return DateTime.now().difference(status.lastSuccess!).inDays < 2;
   }
 }
