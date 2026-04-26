@@ -47,7 +47,7 @@ CIDPbuddy ist eine Flutter-App zur Verwaltung von Infusionstherapien für Patien
 | Plattform | ID |
 |-----------|-----|
 | Android Package | `de.gbs-cidp.cidpbuddy` |
-| iOS Bundle ID | `com.example.igkeeper` |
+| iOS Bundle ID | `de.gbs-cidp.cidpbuddy` |
 | Version | 1.0.0+1 |
 
 ## Lokalisierung & Theme

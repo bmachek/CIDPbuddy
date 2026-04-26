@@ -100,7 +100,7 @@ Den ausgegebenen **SHA1**-Wert in das GCP-Formular eintragen.
 2. Anwendungstyp: **iOS**
 3. Felder ausfüllen:
    - **Name:** z.B. `CIDPbuddy iOS`
-   - **Bundle-ID:** `com.example.igkeeper` (oder der tatsächliche Bundle-Identifier)
+   - **Bundle-ID:** `de.gbs-cidp.cidpbuddy`
 4. **Erstellen**
 5. Die erzeugte **Client-ID** kopieren (Format: `XXXXXX.apps.googleusercontent.com`)
 
