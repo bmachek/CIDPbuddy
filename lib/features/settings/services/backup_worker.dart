@@ -47,9 +47,9 @@ class BackupScheduler {
       kBackupPeriodicTaskUniqueName,
       kBackupPeriodicTaskName,
       frequency: const Duration(hours: 6),
-      existingWorkPolicy: ExistingWorkPolicy.replace,
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
       constraints: Constraints(
-        networkType: NetworkType.not_required,
+        networkType: NetworkType.notRequired,
         requiresBatteryNotLow: true,
       ),
       backoffPolicy: BackoffPolicy.exponential,
