@@ -504,6 +504,10 @@ class NotificationService {
       payload: 'open_backup_settings',
     );
   }
+
+  Future<void> cancelBackupFailureNotification() async {
+    await _notificationsPlugin.cancel(6666);
+  }
 }
 
 @pragma('vm:entry-point')

@@ -82,6 +82,7 @@ dependencies:
   extension_google_sign_in_as_googleapis_auth: ^3.0.0
   saf_util: ^2.1.0
   saf_stream: ^2.0.0
+  workmanager: ^0.5.2
 
 flutter_launcher_icons:
   android: "launcher_icon"
