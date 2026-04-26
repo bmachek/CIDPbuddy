@@ -73,6 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
               final status = snapshot.data;
               final dest = status?.destination;
               final isSaf = dest?.kind == DestinationKind.saf;
+              final isDrive = dest?.kind == DestinationKind.googleDrive;
               final hasError = (status?.lastError != null) ||
                   ((status?.consecutiveFailures ?? 0) > 0);
 
@@ -129,16 +130,20 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                   ListTile(
-                    leading: Icon(isSaf
-                        ? Icons.cloud_done
-                        : (dest != null
-                            ? Icons.folder
-                            : Icons.folder_open_outlined)),
-                    title: const Text('Backup-Verzeichnis'),
+                    leading: Icon(isDrive
+                        ? Icons.cloud_circle
+                        : (isSaf
+                            ? Icons.cloud_done
+                            : (dest != null
+                                ? Icons.folder
+                                : Icons.folder_open_outlined))),
+                    title: const Text('Backup-Ziel'),
                     subtitle: Text(
                       dest == null
-                          ? 'Verzeichnis wählen...'
-                          : (isSaf ? 'Cloud-/SAF-Ordner ausgewählt' : dest.displayLabel),
+                          ? 'Ziel wählen...'
+                          : (isSaf
+                              ? 'Cloud-/SAF-Ordner ausgewählt'
+                              : dest.displayLabel),
                     ),
                     trailing: dest != null
                         ? const Icon(Icons.check_circle,
@@ -357,16 +362,72 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _pickDestination() async {
-    final BackupDestination? dest = Platform.isAndroid
-        ? await backupService.pickSafBackupDirectory()
-        : await backupService.pickLocalBackupDirectory();
+    final choice = await showModalBottomSheet<_DestChoice>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text('Backup-Ziel wählen',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.cloud_circle, color: Color(0xFF1A73E8)),
+              title: const Text('Google Drive'),
+              subtitle: const Text(
+                  'Sicherung in der App-Daten-Ablage deines Google-Kontos'),
+              onTap: () => Navigator.pop(ctx, _DestChoice.googleDrive),
+            ),
+            if (Platform.isIOS || Platform.isMacOS)
+              ListTile(
+                leading: const Icon(Icons.cloud, color: Colors.grey),
+                title: const Text('iCloud Drive'),
+                subtitle:
+                    const Text('Demnächst verfügbar'),
+                enabled: false,
+              ),
+            if (Platform.isAndroid)
+              ListTile(
+                leading: const Icon(Icons.cloud_done),
+                title: const Text('Cloud-/SAF-Ordner'),
+                subtitle: const Text(
+                    'Z. B. Google Drive-, Dropbox- oder OneDrive-Ordner'),
+                onTap: () => Navigator.pop(ctx, _DestChoice.saf),
+              ),
+            ListTile(
+              leading: const Icon(Icons.folder),
+              title: const Text('Lokaler Ordner'),
+              subtitle: const Text('Verzeichnis auf diesem Gerät'),
+              onTap: () => Navigator.pop(ctx, _DestChoice.local),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+
+    BackupDestination? dest;
+    switch (choice) {
+      case _DestChoice.googleDrive:
+        dest = await backupService.pickGoogleDriveBackup();
+        break;
+      case _DestChoice.saf:
+        dest = await backupService.pickSafBackupDirectory();
+        break;
+      case _DestChoice.local:
+        dest = await backupService.pickLocalBackupDirectory();
+        break;
+    }
 
     if (!mounted) return;
     if (dest == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-              'Ordner konnte nicht verbunden werden. Bitte einen anderen Ordner wählen.'),
+              'Ziel konnte nicht verbunden werden. Bitte ein anderes wählen.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -376,7 +437,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Backup-Ordner verbunden.'),
+            content: Text('Backup-Ziel verbunden.'),
             backgroundColor: Colors.green,
           ),
         );
@@ -652,3 +713,6 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 }
+
+enum _DestChoice { googleDrive, saf, local }
+

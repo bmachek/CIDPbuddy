@@ -11,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer' as dev;
 import '../../reminders/services/notification_service.dart';
 import 'backup_destination.dart';
+import 'cloud/google_drive_auth.dart';
+import 'cloud/google_drive_destination.dart';
 
 export 'backup_destination.dart' show BackupFile, BackupDestination, DestinationKind;
 
@@ -120,6 +122,28 @@ class BackupService {
       return destination;
     } catch (e, stack) {
       dev.log('BackupService.pickSafBackupDirectory: $e\n$stack');
+      return null;
+    }
+  }
+
+  /// Sign in with Google and use the user's Drive `appDataFolder` as the
+  /// backup target. Available on Android, iOS and macOS.
+  Future<BackupDestination?> pickGoogleDriveBackup() async {
+    if (!GoogleDriveAuth.instance.isPlatformSupported) return null;
+    try {
+      final account = await GoogleDriveAuth.instance.signInAndAuthorize();
+      if (account == null) return null;
+      final destination = GoogleDriveDestination(account.email);
+      final err = await destination.verifyAccess();
+      if (err != null) {
+        dev.log('BackupService: Drive picked but verify failed: $err');
+        return null;
+      }
+      await destination.persist();
+      await _resetFailureState();
+      return destination;
+    } catch (e, stack) {
+      dev.log('BackupService.pickGoogleDriveBackup: $e\n$stack');
       return null;
     }
   }

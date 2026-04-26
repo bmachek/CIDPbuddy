@@ -11,6 +11,7 @@ import 'package:igkeeper/core/services/scheduler_service.dart';
 import 'package:igkeeper/core/services/medication_service.dart';
 import 'package:igkeeper/core/services/background_service.dart';
 import 'package:igkeeper/features/settings/services/backup_worker.dart';
+import 'package:igkeeper/features/settings/services/cloud/google_drive_auth.dart';
 import 'package:igkeeper/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -23,6 +24,13 @@ void main() async {
     await BackgroundService.initialize();
     await BackupScheduler.init();
     await BackupScheduler.syncFromPrefs();
+    // Initialize Google Sign-In once for the foreground process. The
+    // WorkManager isolate calls ensureInitialized() separately on first use.
+    if (GoogleDriveAuth.instance.isPlatformSupported) {
+      // Best-effort — must not block app startup if it fails.
+      // ignore: discarded_futures
+      GoogleDriveAuth.instance.tryRestore();
+    }
     
     // Initialize and sync infusion schedules
     final scheduler = SchedulerService(db);
