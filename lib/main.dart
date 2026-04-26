@@ -22,7 +22,11 @@ void main() async {
     await BackgroundService.initialize();
     
     // Initialize and sync infusion schedules
-    await SchedulerService(db).syncPlannedInfusions();
+    final scheduler = SchedulerService(db);
+    await scheduler.syncPlannedInfusions();
+    // Surface any past-due Einnahmen that weren't confirmed or skipped —
+    // covers cases where alarms got dropped after an OS update or reboot.
+    await scheduler.checkMissedTreatments();
 
     // Check backup setup and schedule reminder if needed
     final prefs = await SharedPreferences.getInstance();

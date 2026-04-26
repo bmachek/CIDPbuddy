@@ -46,10 +46,18 @@ class NotificationService {
       importance: Importance.high,
     );
 
+    const AndroidNotificationChannel missedChannel = AndroidNotificationChannel(
+      'missed_treatments',
+      'Verpasste Einnahmen',
+      description: 'Hinweise auf nicht bestätigte oder verpasste Einnahmen',
+      importance: Importance.high,
+    );
+
     final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(channel);
       await androidPlugin.createNotificationChannel(stockChannel);
+      await androidPlugin.createNotificationChannel(missedChannel);
     }
 
     if (!isBackground) {
@@ -367,6 +375,49 @@ class NotificationService {
 
   Future<void> cancelTimerProgress() async {
     await _notificationsPlugin.cancel(9999);
+  }
+
+  Future<void> showMissedTreatmentsNotification(List<String> items) async {
+    const int missedId = 5555;
+    if (items.isEmpty) {
+      await _notificationsPlugin.cancel(missedId);
+      return;
+    }
+
+    final summary = items.length == 1
+        ? items.first
+        : '${items.length} Einnahmen nicht bestätigt';
+    final body = items.join('\n');
+
+    await _notificationsPlugin.show(
+      missedId,
+      'Verpasste Einnahmen',
+      summary,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'missed_treatments',
+          'Verpasste Einnahmen',
+          channelDescription: 'Hinweise auf nicht bestätigte oder verpasste Einnahmen',
+          importance: Importance.high,
+          priority: Priority.high,
+          visibility: NotificationVisibility.public,
+          styleInformation: BigTextStyleInformation(
+            body,
+            contentTitle: 'Verpasste Einnahmen',
+            summaryText: '${items.length} offen',
+          ),
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentSound: true,
+        ),
+        macOS: const DarwinNotificationDetails(),
+      ),
+    );
+  }
+
+  Future<void> cancelMissedTreatmentsNotification() async {
+    await _notificationsPlugin.cancel(5555);
   }
 
   Future<void> showStockWarningNotification(List<String> lowItems) async {

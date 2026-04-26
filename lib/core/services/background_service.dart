@@ -152,15 +152,17 @@ class BackgroundService {
   static Future<void> _performSync() async {
     try {
       final db = AppDatabase();
-      await SchedulerService(db).syncPlannedInfusions();
-      
+      final scheduler = SchedulerService(db);
+      await scheduler.syncPlannedInfusions();
+      await scheduler.checkMissedTreatments();
+
       // Perform stock check
       final medService = MedicationService(db);
       final lowItems = await medService.getLowStockItemsSummary();
       if (lowItems.isNotEmpty) {
         await NotificationService().showStockWarningNotification(lowItems);
       }
-      
+
       debugPrint('BackgroundService: Periodic sync and stock check completed.');
     } catch (e) {
       debugPrint('BackgroundService: Periodic sync failed: $e');

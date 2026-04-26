@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:intl/intl.dart';
 import '../database/database.dart';
 import '../../features/reminders/services/notification_service.dart';
 
@@ -73,6 +74,40 @@ class SchedulerService {
     for (final treatment in upcomingTreatments) {
       await NotificationService().scheduleTreatmentReminders(treatment);
     }
+  }
+
+  /// Surfaces past-due Einnahmen that were never confirmed or skipped.
+  /// Defensive fallback for cases where scheduled alarms get lost
+  /// (e.g. after an OS update or boot before the BootReceiver runs).
+  Future<void> checkMissedTreatments() async {
+    final now = DateTime.now();
+    final cutoff = now.subtract(const Duration(days: 7));
+
+    final missed = await (db.select(db.plannedInfusions)
+          ..where((t) =>
+              t.date.isSmallerThanValue(now) &
+              t.date.isBiggerThanValue(cutoff) &
+              t.isCompleted.equals(false))
+          ..orderBy([(t) => OrderingTerm(expression: t.date)]))
+        .get();
+
+    if (missed.isEmpty) {
+      await NotificationService().cancelMissedTreatmentsNotification();
+      return;
+    }
+
+    final medIds = missed.map((t) => t.medicationId).toSet().toList();
+    final meds = await (db.select(db.medications)
+          ..where((m) => m.id.isIn(medIds)))
+        .get();
+    final medNames = {for (final m in meds) m.id: m.name};
+
+    final dateFmt = DateFormat('dd.MM. HH:mm');
+    final items = missed
+        .map((t) => '${dateFmt.format(t.date)} – ${medNames[t.medicationId] ?? 'Medikament'}')
+        .toList();
+
+    await NotificationService().showMissedTreatmentsNotification(items);
   }
 
   List<DateTime> _calculateDates(InfusionSchedule schedule, DateTime start, DateTime end) {
