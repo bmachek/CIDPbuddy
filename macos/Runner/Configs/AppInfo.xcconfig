@@ -8,5 +8,5 @@
 PRODUCT_NAME = CIDP Buddy
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.bm.cidpbuddy
-PRODUCT_COPYRIGHT = Copyright © 2026 com.bm.cidpbuddy. All rights reserved.
+PRODUCT_BUNDLE_IDENTIFIER = de.gbs-cidp.cidpbuddy
+PRODUCT_COPYRIGHT = Copyright © 2026 de.gbs-cidp.cidpbuddy. All rights reserved.
