@@ -184,11 +184,72 @@ Output: `build/app/outputs/bundle/release/app-release.aab`
 
 ## iOS-Build
 
+### Lokal
+
 ```bash
-flutter build ios --release
+flutter build ipa --release \
+  --build-name=1.0.0 \
+  --build-number=1 \
+  --export-options-plist=ios/ExportOptions.plist
 ```
 
-Anschließend in Xcode archivieren und via Xcode Organizer in den App Store hochladen.
+Output: `build/ios/ipa/CIDPbuddy.ipa`
+
+Anschließend entweder manuell via Xcode Organizer in den App Store hochladen oder mit `xcrun altool` (siehe CI/CD-Abschnitt unten).
+
+### CI/CD via GitHub Actions
+
+Der Release-Workflow (`.github/workflows/release.yml`) enthält einen parallelen `ios-build`-Job der automatisch bei jedem `v*`-Tag ausgeführt wird.
+
+#### Benötigte GitHub Secrets
+
+| Secret | Inhalt |
+|--------|--------|
+| `IOS_CERTIFICATE_P12` | Base64-kodiertes Distribution Certificate (`.p12`) |
+| `IOS_CERTIFICATE_PASSWORD` | Passwort des `.p12`-Exports |
+| `IOS_PROVISIONING_PROFILE` | Base64-kodiertes App Store Provisioning Profile (`.mobileprovision`) |
+| `APPLE_TEAM_ID` | 10-stellige Apple Team ID (z.B. `ABCDE12345`) |
+| `APP_STORE_CONNECT_API_KEY_ID` | *(optional)* Key ID für TestFlight-Upload |
+| `APP_STORE_CONNECT_API_KEY_ISSUER_ID` | *(optional)* Issuer ID für TestFlight-Upload |
+| `APP_STORE_CONNECT_API_KEY_CONTENT` | *(optional)* Base64-kodierter `.p8`-Private-Key |
+
+Sind die drei `APP_STORE_CONNECT_*`-Secrets nicht gesetzt, wird der TestFlight-Upload übersprungen — die IPA wird trotzdem als GitHub-Release-Artefakt angehängt.
+
+#### Zertifikat & Profil vorbereiten
+
+**Distribution Certificate exportieren:**
+1. Xcode → Settings → Accounts → Team auswählen → Manage Certificates
+2. Apple Distribution Certificate → Rechtsklick → Export Certificate → als `.p12` speichern
+3. Als Base64 enkodieren:
+   ```bash
+   base64 -i certificate.p12 | pbcopy   # kopiert direkt ins Clipboard
+   ```
+
+**Provisioning Profile herunterladen:**
+1. [developer.apple.com](https://developer.apple.com/account) → Profiles → App Store-Profil für `de.gbs-cidp.cidpbuddy` erstellen/herunterladen
+2. Als Base64 enkodieren:
+   ```bash
+   base64 -i profile.mobileprovision | pbcopy
+   ```
+
+**App Store Connect API Key:**
+1. [App Store Connect](https://appstoreconnect.apple.com) → Benutzer & Zugriff → Integrations → App Store Connect API
+2. Neuen Key erstellen (Rolle: App Manager)
+3. Key ID und Issuer ID notieren, `.p8`-Datei herunterladen
+4. `.p8` als Base64:
+   ```bash
+   base64 -i AuthKey_XXXXX.p8 | pbcopy
+   ```
+
+#### Team ID ermitteln
+
+```bash
+# Aus installiertem Provisioning Profile:
+security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision \
+  | plutil -extract TeamIdentifier.0 raw -
+```
+
+Oder in Xcode: Runner-Target → Signing & Capabilities → Team.
 
 ## Schemaversion erhöhen
 

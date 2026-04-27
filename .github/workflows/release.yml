@@ -5,9 +5,14 @@ on:
     tags:
       - 'v*'
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Shared helper used by both jobs to parse the tag into build-name / build-number
+# ─────────────────────────────────────────────────────────────────────────────
+
 jobs:
-  build:
-    name: Build & Release
+  # ─── Android ────────────────────────────────────────────────────────────────
+  android-build:
+    name: Build & Release Android
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -18,11 +23,8 @@ jobs:
       - name: Extract version from tag
         id: get_version
         run: |
-          # Tag format expected: v1.2.3 or v1.2.3+4
           TAG=${{ github.ref_name }}
           VERSION=${TAG#v}
-          
-          # If there's a + in the version, split it into name and number
           if [[ $VERSION == *"+"* ]]; then
             BUILD_NAME=${VERSION%+*}
             BUILD_NUMBER=${VERSION#*+}
@@ -30,11 +32,8 @@ jobs:
             BUILD_NAME=$VERSION
             BUILD_NUMBER=${{ github.run_number }}
           fi
-          
           echo "build_name=$BUILD_NAME" >> $GITHUB_OUTPUT
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
-          echo "Using Build Name: $BUILD_NAME"
-          echo "Using Build Number: $BUILD_NUMBER"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -70,5 +69,144 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─── iOS ────────────────────────────────────────────────────────────────────
+  ios-build:
+    name: Build & Release iOS
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          TAG=${{ github.ref_name }}
+          VERSION=${TAG#v}
+          if [[ $VERSION == *"+"* ]]; then
+            BUILD_NAME=${VERSION%+*}
+            BUILD_NUMBER=${VERSION#*+}
+          else
+            BUILD_NAME=$VERSION
+            BUILD_NUMBER=${{ github.run_number }}
+          fi
+          echo "build_name=$BUILD_NAME" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run build_runner
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # ── Code-Signing ────────────────────────────────────────────────────────
+      - name: Import distribution certificate
+        env:
+          CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 32)"
+
+          echo "$CERTIFICATE_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/certificate.p12" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list \
+            -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+
+      - name: Install provisioning profile
+        env:
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+        run: |
+          PP_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          UUID=$(security cms -D -i "$PP_PATH" | plutil -extract UUID raw -)
+          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$UUID".mobileprovision
+
+      # ── Build ───────────────────────────────────────────────────────────────
+      - name: Generate ExportOptions.plist
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+        run: |
+          # Extract profile name from the decoded plist
+          PP_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          PROFILE_NAME=$(security cms -D -i "$PP_PATH" | plutil -extract Name raw -)
+
+          cat > ios/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>teamID</key>
+              <string>${APPLE_TEAM_ID}</string>
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>uploadBitcode</key>
+              <false/>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>de.gbs-cidp.cidpbuddy</key>
+                  <string>${PROFILE_NAME}</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Build IPA
+        run: |
+          flutter build ipa --release \
+            --build-name=${{ steps.get_version.outputs.build_name }} \
+            --build-number=${{ steps.get_version.outputs.build_number }} \
+            --export-options-plist=ios/ExportOptions.plist
+
+      # ── Upload ──────────────────────────────────────────────────────────────
+      - name: Upload to TestFlight
+        if: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID != '' }}
+        env:
+          API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$API_KEY_CONTENT" | base64 --decode \
+            > ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8
+
+          IPA_PATH="$(find build/ios/ipa -name '*.ipa' | head -1)"
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$API_KEY_ID" \
+            --apiIssuer "$API_ISSUER_ID" \
+            --verbose
+
+      - name: Attach IPA to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/ios/ipa/*.ipa
+          tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
