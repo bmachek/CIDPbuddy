@@ -10,7 +10,7 @@ CIDPbuddy ist eine Flutter-App zur Verwaltung von Infusionstherapien für Patien
 - **Inventar & Bestandsverwaltung** — Medikamente und Zubehör mit Mindestbestand-Warnungen, QR-Scan und OCR
 - **Einkaufsassistent** — Berechnet automatisch den genauen Bestellbedarf auf Basis des Plans und des aktuellen Lagerbestands
 - **Erinnerungen & Benachrichtigungen** — Lokale Alarme für Behandlungen, Vormedikation und Mindestbestand
-- **Datensicherung** — ZIP-basiertes Backup auf lokalem Speicher, Android SAF-Ordner oder Google Drive (automatisch, alle 6 Stunden)
+- **Datensicherung** — ZIP-basiertes Backup auf lokalem Speicher, Android SAF-Ordner, Google Drive oder iCloud Drive (automatisch, alle 6 Stunden)
 
 ## Schnellstart
 
@@ -29,6 +29,7 @@ CIDPbuddy ist eine Flutter-App zur Verwaltung von Infusionstherapien für Patien
 - [Features](Features) — Detailbeschreibung der Feature-Module
 - [Backup & Wiederherstellung](Backup-and-Restore) — Backup-System, Ziele, Auto-Backup-Logik
 - [Google-Drive-Einrichtung](Google-Drive-Setup) — Schritt-für-Schritt-Anleitung für das GCP-Projekt
+- [iCloud-Einrichtung](iCloud-Setup) — Xcode-Capability und Developer-Portal-Setup für iOS
 - [Bauen & Veröffentlichen](Building-and-Releasing) — Build-Befehle, Release-Prozess
 
 ## Technischer Stack
@@ -37,7 +38,8 @@ CIDPbuddy ist eine Flutter-App zur Verwaltung von Infusionstherapien für Patien
 - **Drift ORM** (SQLite, reaktive Streams)
 - **Provider** (State Management)
 - **RxDart** (Stream-Komposition)
-- **Google Sign-In + googleapis** (Drive-Backup)
+- **Google Sign-In + googleapis** (Drive-Backup, Android/macOS)
+- **icloud_storage** (iCloud-Backup, iOS)
 - **WorkManager** (Hintergrundaufgaben, Android)
 - **flutter_local_notifications** (Alarme)
 - **audioplayers** (Timer-Audio)
