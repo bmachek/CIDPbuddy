@@ -139,6 +139,14 @@ class BackgroundService {
       await stopTimer();
     });
 
+    service.on('getTimerState').listen((event) {
+      service.invoke('timerUpdate', {
+        'secondsRemaining': secondsRemaining,
+        'isRunning': isRunning,
+        'hasActiveTimer': isRunning,
+      });
+    });
+
     // Periodic tasks (Schedule Sync)
     // Run sync every 24 hours or on start
     Timer.periodic(const Duration(hours: 24), (t) async {

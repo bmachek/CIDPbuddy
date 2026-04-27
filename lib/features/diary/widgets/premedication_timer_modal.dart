@@ -31,21 +31,26 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
       _secondsRemaining = _totalSeconds;
     });
 
-    // Listen to background service updates
-    _serviceSubscription = FlutterBackgroundService().on('timerUpdate').listen((event) {
-      if (mounted && event != null) {
-        setState(() {
-          _secondsRemaining = event['secondsRemaining'] as int? ?? _secondsRemaining;
-          _isRunning = event['isRunning'] as bool? ?? _isRunning;
-        });
-      }
+    final service = FlutterBackgroundService();
+
+    // Listen to background service updates. Only adopt the service's
+    // remaining seconds when a timer is actually active — otherwise the
+    // service reports its idle counter (0) and the UI would jump to the end.
+    _serviceSubscription = service.on('timerUpdate').listen((event) {
+      if (!mounted || event == null) return;
+      final running = event['isRunning'] as bool? ?? false;
+      final remaining = event['secondsRemaining'] as int?;
+      setState(() {
+        _isRunning = running;
+        if (running && remaining != null) {
+          _secondsRemaining = remaining;
+        }
+      });
     });
 
-    // Check current status
-    final isRunning = await FlutterBackgroundService().isRunning();
-    setState(() {
-      _isRunning = isRunning;
-    });
+    // Ask the background service for the actual timer state (not the
+    // service's own running flag, which is always true since it runs 24/7).
+    service.invoke('getTimerState');
   }
 
   Future<void> _saveSettings(int ml) async {
