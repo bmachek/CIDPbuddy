@@ -139,11 +139,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 : Icons.folder_open_outlined))),
                     title: const Text('Backup-Ziel'),
                     subtitle: Text(
-                      dest == null
-                          ? 'Ziel wählen...'
-                          : (isSaf
-                              ? 'Cloud-/SAF-Ordner ausgewählt'
-                              : dest.displayLabel),
+                      dest == null ? 'Ziel wählen...' : dest.displayLabel,
                     ),
                     trailing: dest != null
                         ? const Icon(Icons.check_circle,

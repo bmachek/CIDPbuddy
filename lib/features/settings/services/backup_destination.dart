@@ -57,11 +57,14 @@ abstract class BackupDestination {
     await prefs.setString(_kKind, kind.name);
   }
 
+  static const _kSafDisplayName = 'backup_saf_display_name';
+
   static Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kPath);
     await prefs.remove(_kIsSaf);
     await prefs.remove(_kKind);
+    await prefs.remove(_kSafDisplayName);
     // Cloud-specific cleanup. Imported lazily to avoid a hard dep cycle here.
     await GoogleDriveDestination.clearStored();
   }
@@ -77,7 +80,8 @@ abstract class BackupDestination {
           return GoogleDriveDestination.tryLoad();
         case 'saf':
           final path = prefs.getString(_kPath);
-          if (path != null && Platform.isAndroid) return SafDestination(path);
+          final name = prefs.getString(_kSafDisplayName);
+          if (path != null && Platform.isAndroid) return SafDestination(path, displayName: name);
           return null;
         case 'local':
           final path = prefs.getString(_kPath);
@@ -93,7 +97,10 @@ abstract class BackupDestination {
     final path = prefs.getString(_kPath);
     if (path == null) return null;
     final isSaf = prefs.getBool(_kIsSaf) ?? false;
-    if (isSaf && Platform.isAndroid) return SafDestination(path);
+    if (isSaf && Platform.isAndroid) {
+      final name = prefs.getString(_kSafDisplayName);
+      return SafDestination(path, displayName: name);
+    }
     return LocalDestination(path);
   }
 }
@@ -177,7 +184,9 @@ class LocalDestination extends BackupDestination {
 
 class SafDestination extends BackupDestination {
   final String treeUri;
-  SafDestination(this.treeUri);
+  final String? displayName;
+
+  SafDestination(this.treeUri, {this.displayName});
 
   @override
   DestinationKind get kind => DestinationKind.saf;
@@ -186,7 +195,17 @@ class SafDestination extends BackupDestination {
   String get pathOrUri => treeUri;
 
   @override
-  String get displayLabel => 'Cloud-/SAF-Ordner';
+  String get displayLabel =>
+      displayName != null ? '$displayName (SAF)' : 'Cloud-/SAF-Ordner';
+
+  @override
+  Future<void> persist() async {
+    await super.persist();
+    if (displayName != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(BackupDestination._kSafDisplayName, displayName!);
+    }
+  }
 
   static const _healthName = '.cidp_health';
 

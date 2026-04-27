@@ -53,11 +53,26 @@ class NotificationService {
       importance: Importance.high,
     );
 
+    const AndroidNotificationChannel backupFailureChannel = AndroidNotificationChannel(
+      'backup_failures',
+      'Backup-Fehler',
+      description: 'Benachrichtigungen bei Problemen mit der automatischen Datensicherung',
+      importance: Importance.high,
+    );
+    const AndroidNotificationChannel backupWarningChannel = AndroidNotificationChannel(
+      'backup_warnings',
+      'Backup-Warnungen',
+      description: 'Hinweise zur Einrichtung der Datensicherung',
+      importance: Importance.defaultImportance,
+    );
+
     final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(channel);
       await androidPlugin.createNotificationChannel(stockChannel);
       await androidPlugin.createNotificationChannel(missedChannel);
+      await androidPlugin.createNotificationChannel(backupFailureChannel);
+      await androidPlugin.createNotificationChannel(backupWarningChannel);
     }
 
     if (!isBackground) {

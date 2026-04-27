@@ -110,7 +110,7 @@ class BackupService {
         persistablePermission: true,
       );
       if (dir == null) return null;
-      final destination = SafDestination(dir.uri);
+      final destination = SafDestination(dir.uri, displayName: dir.name);
       // Verify before persisting — confirms the grant is actually usable.
       final err = await destination.verifyAccess();
       if (err != null) {
@@ -412,5 +412,35 @@ class BackupService {
   /// hookups continue to work, just delegates to [runBackup].
   Future<void> autoBackup() async {
     await runBackup(manual: false);
+  }
+
+  /// Checks SAF access once on app startup to detect revoked pCloud/SAF
+  /// permissions before the next scheduled WorkManager run. Skips if a
+  /// recent successful backup exists or if a failure is already recorded.
+  Future<void> checkSafAccessOnStartup() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!(prefs.getBool(kAutoBackupEnabled) ?? false)) return;
+      final dest = await BackupDestination.load();
+      if (dest == null || dest.kind != DestinationKind.saf) return;
+
+      // Skip if already in a known error state — WorkManager handles retries.
+      if (prefs.getString(_kLastError) != null) return;
+
+      // Skip if a recent backup proves access still works.
+      final lastSuccess = _readDate(prefs, kLastBackupTime);
+      if (lastSuccess != null &&
+          DateTime.now().difference(lastSuccess) < const Duration(hours: 12)) {
+        return;
+      }
+
+      final error = await dest.verifyAccess();
+      if (error != null) {
+        dev.log('BackupService: Startup SAF check failed: $error');
+        await _recordFailure(prefs, error);
+      }
+    } catch (e) {
+      dev.log('BackupService.checkSafAccessOnStartup: $e');
+    }
   }
 }

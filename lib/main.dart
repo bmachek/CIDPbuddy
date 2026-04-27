@@ -10,6 +10,7 @@ import 'package:igkeeper/features/reminders/services/notification_service.dart';
 import 'package:igkeeper/core/services/scheduler_service.dart';
 import 'package:igkeeper/core/services/medication_service.dart';
 import 'package:igkeeper/core/services/background_service.dart';
+import 'package:igkeeper/features/settings/services/backup_service.dart';
 import 'package:igkeeper/features/settings/services/backup_worker.dart';
 import 'package:igkeeper/features/settings/services/cloud/google_drive_auth.dart';
 import 'package:igkeeper/main_screen.dart';
@@ -46,6 +47,9 @@ void main() async {
       await NotificationService().scheduleBackupReminder();
     } else {
       await NotificationService().cancelBackupReminder();
+      // Proactively detect lost SAF/pCloud permissions without blocking startup.
+      // ignore: discarded_futures
+      BackupService().checkSafAccessOnStartup();
     }
     
     runApp(
