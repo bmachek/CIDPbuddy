@@ -378,11 +378,10 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             if (Platform.isIOS || Platform.isMacOS)
               ListTile(
-                leading: const Icon(Icons.cloud, color: Colors.grey),
+                leading: const Icon(Icons.cloud, color: Color(0xFF147EFB)),
                 title: const Text('iCloud Drive'),
-                subtitle:
-                    const Text('Demnächst verfügbar'),
-                enabled: false,
+                subtitle: const Text('Sicherung im iCloud-Ordner dieser App'),
+                onTap: () => Navigator.pop(ctx, _DestChoice.iCloud),
               ),
             if (Platform.isAndroid)
               ListTile(
@@ -412,6 +411,9 @@ class _SettingsPageState extends State<SettingsPage> {
         break;
       case _DestChoice.saf:
         dest = await backupService.pickSafBackupDirectory();
+        break;
+      case _DestChoice.iCloud:
+        dest = await backupService.pickICloudBackup();
         break;
       case _DestChoice.local:
         dest = await backupService.pickLocalBackupDirectory();
@@ -710,5 +712,5 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-enum _DestChoice { googleDrive, saf, local }
+enum _DestChoice { googleDrive, saf, iCloud, local }
 

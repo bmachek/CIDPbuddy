@@ -13,6 +13,7 @@ import '../../reminders/services/notification_service.dart';
 import 'backup_destination.dart';
 import 'cloud/google_drive_auth.dart';
 import 'cloud/google_drive_destination.dart';
+import 'cloud/icloud_destination.dart';
 
 export 'backup_destination.dart' show BackupFile, BackupDestination, DestinationKind;
 
@@ -122,6 +123,27 @@ class BackupService {
       return destination;
     } catch (e, stack) {
       dev.log('BackupService.pickSafBackupDirectory: $e\n$stack');
+      return null;
+    }
+  }
+
+  /// iCloud Documents container als Backup-Ziel setzen.
+  /// Kein Login nötig — iCloud ist automatisch mit der Apple ID verbunden.
+  /// Nur auf iOS und macOS verfügbar.
+  Future<BackupDestination?> pickICloudBackup() async {
+    if (!Platform.isIOS && !Platform.isMacOS) return null;
+    try {
+      final destination = ICloudDestination();
+      final err = await destination.verifyAccess();
+      if (err != null) {
+        dev.log('BackupService: iCloud verify failed: $err');
+        return null;
+      }
+      await destination.persist();
+      await _resetFailureState();
+      return destination;
+    } catch (e, stack) {
+      dev.log('BackupService.pickICloudBackup: $e\n$stack');
       return null;
     }
   }

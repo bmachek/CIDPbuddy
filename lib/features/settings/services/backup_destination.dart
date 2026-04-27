@@ -6,6 +6,7 @@ import 'package:saf_stream/saf_stream.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer' as dev;
 import 'cloud/google_drive_destination.dart';
+import 'cloud/icloud_destination.dart';
 
 /// A backup file located in some destination (local dir or SAF tree).
 class BackupFile {
@@ -88,7 +89,7 @@ abstract class BackupDestination {
           if (path != null) return LocalDestination(path);
           return null;
         case 'iCloud':
-          // Reserved for the iOS implementation. See ICloudDestination.
+          if (Platform.isIOS || Platform.isMacOS) return ICloudDestination();
           return null;
       }
     }
