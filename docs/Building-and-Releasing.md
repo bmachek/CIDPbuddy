@@ -55,16 +55,118 @@ Die APK liegt anschließend unter `build/app/outputs/flutter-apk/app-release.apk
 
 ### Signing konfigurieren
 
-Für Release-Builds muss ein Keystore konfiguriert sein. In `android/key.properties` (nicht im Git):
+#### Lokaler Entwicklungsbuild
+
+Für Release-Builds muss ein Keystore vorhanden sein. Einmalige Erstellung:
+
+```bash
+keytool -genkey -v \
+  -keystore android/cidpbuddy-release.jks \
+  -keyalg RSA -keysize 4096 -validity 10000 \
+  -alias cidpbuddy
+```
+
+Dann `android/key.properties` anlegen (wird nicht ins Git eingecheckt):
 
 ```properties
 storePassword=<passwort>
 keyPassword=<passwort>
-keyAlias=<alias>
-storeFile=<pfad-zum-keystore>
+keyAlias=cidpbuddy
+storeFile=../cidpbuddy-release.jks
 ```
 
-In `android/app/build.gradle.kts` ist bereits der Verweis auf `key.properties` vorbereitet.
+Und `android/app/build.gradle.kts` anpassen — **Signing-Konfiguration hinzufügen** (aktuell fehlt das noch):
+
+```kotlin
+// Vor dem android { … }-Block:
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = java.util.Properties().also {
+    if (keystorePropertiesFile.exists()) it.load(keystorePropertiesFile.inputStream())
+}
+
+android {
+    // …
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("release")
+            // … isMinifyEnabled, proguardFiles bleiben wie gehabt
+        }
+    }
+}
+```
+
+#### CI/CD-Signing via GitHub Actions Secrets
+
+Der Release-Workflow (`release.yml`) baut aktuell mit Debug-Keys — das muss für einen produktionsfähigen Build auf echte Keystore-Secrets umgestellt werden.
+
+**Schritt 1 — Keystore als Base64-Secret hinterlegen:**
+
+```bash
+base64 -i android/cidpbuddy-release.jks | pbcopy   # macOS: kopiert in Clipboard
+```
+
+Unter **GitHub → Repository → Settings → Secrets → Actions** folgende Secrets anlegen:
+
+| Secret-Name         | Inhalt                                  |
+|---------------------|-----------------------------------------|
+| `KEYSTORE_BASE64`   | Base64-kodierter Keystore (s. o.)       |
+| `KEYSTORE_ALIAS`    | Key-Alias (z. B. `cidpbuddy`)           |
+| `KEY_PASSWORD`      | Passwort des Schlüssels                 |
+| `STORE_PASSWORD`    | Passwort des Keystores                  |
+
+**Schritt 2 — `release.yml` erweitern:**
+
+Den Build-APK-Step in `.github/workflows/release.yml` ersetzen durch:
+
+```yaml
+- name: Decode Keystore
+  run: |
+    echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode \
+      > android/cidpbuddy-release.jks
+
+- name: Build APK
+  env:
+    KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+    KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+    STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+    STORE_FILE: cidpbuddy-release.jks
+  run: |
+    cat > android/key.properties <<EOF
+    keyAlias=$KEY_ALIAS
+    keyPassword=$KEY_PASSWORD
+    storePassword=$STORE_PASSWORD
+    storeFile=../$STORE_FILE
+    EOF
+    flutter build apk --release \
+      --build-name=${{ steps.get_version.outputs.build_name }} \
+      --build-number=${{ steps.get_version.outputs.build_number }}
+```
+
+**Wichtig:** Den dekodierten Keystore und `key.properties` nicht cachen oder als Artefakt hochladen.
+
+#### SHA-1-Fingerprint für Google Sign-In ermitteln
+
+Google Sign-In auf Android funktioniert über Package-Name + SHA-1 des Signing-Zertifikats. Der Fingerprint des Release-Keystores muss in der **Google Cloud Console** unter dem Android-OAuth-Client registriert werden.
+
+```bash
+# SHA-1 des Release-Keystores ausgeben:
+keytool -list -v \
+  -keystore android/cidpbuddy-release.jks \
+  -alias cidpbuddy \
+  | grep "SHA1:"
+```
+
+Den ausgegebenen SHA-1 unter **Google Cloud Console → APIs & Dienste → Anmeldedaten → Android-OAuth-Client** eintragen. Solange nur Debug-Keys verwendet werden, funktioniert Google Sign-In im Release-APK nicht.
+
+Siehe auch: [`docs/Google-Drive-Setup.md`](Google-Drive-Setup.md)
 
 ### ProGuard / R8
 
