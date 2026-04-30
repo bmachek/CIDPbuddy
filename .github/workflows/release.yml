@@ -187,7 +187,6 @@ jobs:
 
       # ── Upload ──────────────────────────────────────────────────────────────
       - name: Upload to TestFlight
-        if: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID != '' }}
         env:
           API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
