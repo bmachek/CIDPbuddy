@@ -73,9 +73,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ─── iOS ────────────────────────────────────────────────────────────────────
+  # Disabled: App Store Connect secret missing — re-enable once secrets are restored
   ios-build:
     name: Build & Release iOS
     runs-on: macos-latest
+    if: false  # disabled until App Store Connect secrets are available
     permissions:
       contents: write
     steps:
