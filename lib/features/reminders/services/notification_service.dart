@@ -66,6 +66,22 @@ class NotificationService {
       importance: Importance.defaultImportance,
     );
 
+    const AndroidNotificationChannel medRemindersChannel = AndroidNotificationChannel(
+      'med_reminders',
+      'Medikamenten Erinnerungen',
+      description: 'Erinnerungen für geplante Einnahmen und Infusionen',
+      importance: Importance.max,
+      enableVibration: true,
+      playSound: true,
+    );
+
+    const AndroidNotificationChannel premedTimerChannel = AndroidNotificationChannel(
+      'premed_timer',
+      'Vormedikation Timer',
+      description: 'Laufender Timer für die Vormedikation',
+      importance: Importance.high,
+    );
+
     final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(channel);
@@ -73,6 +89,8 @@ class NotificationService {
       await androidPlugin.createNotificationChannel(missedChannel);
       await androidPlugin.createNotificationChannel(backupFailureChannel);
       await androidPlugin.createNotificationChannel(backupWarningChannel);
+      await androidPlugin.createNotificationChannel(medRemindersChannel);
+      await androidPlugin.createNotificationChannel(premedTimerChannel);
     }
 
     if (!isBackground) {
