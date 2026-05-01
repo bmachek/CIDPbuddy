@@ -54,6 +54,16 @@ jobs:
       - name: Run build_runner
         run: dart run build_runner build --delete-conflicting-outputs
 
+      - name: Set build timestamp
+        run: |
+          TS=$(TZ=Europe/Berlin date '+%d.%m.%Y %H:%M')
+          cat > lib/core/constants/build_config.dart << 'EOF'
+          class BuildConfig {
+            static const String buildTimestamp = '$TS';
+          }
+          EOF
+          sed -i "s|\$TS|$TS|g" lib/core/constants/build_config.dart
+
       - name: Build APK
         run: |
           flutter build apk --release \

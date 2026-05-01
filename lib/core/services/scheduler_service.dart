@@ -60,17 +60,23 @@ class SchedulerService {
       }
     }
 
-    // Phase 2: Ensure all upcoming UNCOMPLETED entries within the notification window have reminders
-    // First, clear all existing notifications to avoid hitting the 500 limit with stale/duplicate alarms
-    await NotificationService().cancelAllNotifications();
+    // Phase 2: Ensure all upcoming UNCOMPLETED entries within the notification window have reminders.
+    // Fetch all planned infusions (past the now-mark) and cancel only their IDs so we don't
+    // accidentally wipe the timer, missed-treatments or stock-warning notifications.
+    final allKnownTreatments = await (db.select(db.plannedInfusions)
+          ..where((t) => t.date.isBiggerThanValue(today)))
+        .get();
+    for (final t in allKnownTreatments) {
+      await NotificationService().cancelTreatmentReminders(t.id);
+    }
 
     final upcomingTreatments = await (db.select(db.plannedInfusions)
-          ..where((t) => 
-              t.date.isBiggerThanValue(now) & 
+          ..where((t) =>
+              t.date.isBiggerThanValue(now) &
               t.date.isSmallerThanValue(notificationLookAhead) &
               t.isCompleted.equals(false)))
         .get();
-        
+
     for (final treatment in upcomingTreatments) {
       await NotificationService().scheduleTreatmentReminders(treatment);
     }

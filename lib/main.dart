@@ -15,6 +15,8 @@ import 'package:igkeeper/features/settings/services/backup_worker.dart';
 import 'package:igkeeper/features/settings/services/cloud/google_drive_auth.dart';
 import 'package:igkeeper/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:disable_battery_optimization/disable_battery_optimization.dart';
+import 'dart:io';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +41,15 @@ void main() async {
     // Surface any past-due Einnahmen that weren't confirmed or skipped —
     // covers cases where alarms got dropped after an OS update or reboot.
     await scheduler.checkMissedTreatments();
+
+    // Request battery optimization exemption once so alarms survive app being swiped away
+    if (Platform.isAndroid) {
+      final batteryOptDisabled =
+          await DisableBatteryOptimization.isBatteryOptimizationDisabled ?? false;
+      if (!batteryOptDisabled) {
+        await DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
+      }
+    }
 
     // Check backup setup and schedule reminder if needed
     final prefs = await SharedPreferences.getInstance();
