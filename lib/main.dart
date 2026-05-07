@@ -27,6 +27,7 @@ void main() async {
     await BackgroundService.initialize();
     await BackupScheduler.init();
     await BackupScheduler.syncFromPrefs();
+    await BackupScheduler.enableMissedCheck();
     // Initialize Google Sign-In once for the foreground process. The
     // WorkManager isolate calls ensureInitialized() separately on first use.
     if (GoogleDriveAuth.instance.isPlatformSupported) {
