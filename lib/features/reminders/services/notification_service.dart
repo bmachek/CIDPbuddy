@@ -373,6 +373,44 @@ class NotificationService {
     return treatmentId * 100;
   }
 
+  static const int _timerCompletionId = 9998;
+
+  Future<void> scheduleTimerCompletionNotification(DateTime endTime) async {
+    await cancelTimerCompletionNotification();
+    try {
+      final scheduleMode = await _getScheduleMode();
+      await _notificationsPlugin.zonedSchedule(
+        _timerCompletionId,
+        'Vormedikation abgeschlossen',
+        'Der Timer ist abgelaufen — Infusion kann beginnen.',
+        // Use UTC explicitly: the background isolate sets tz.local = UTC,
+        // so fromMillisecondsSinceEpoch with tz.UTC is always correct
+        tz.TZDateTime.fromMillisecondsSinceEpoch(
+          tz.UTC,
+          endTime.millisecondsSinceEpoch,
+        ),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'premed_timer',
+            'Vormedikation Timer',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: scheduleMode,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (e) {
+      debugPrint('NotificationService: Failed to schedule timer completion: $e');
+    }
+  }
+
+  Future<void> cancelTimerCompletionNotification() async {
+    await _notificationsPlugin.cancel(_timerCompletionId);
+  }
+
   Future<void> cancelPremedicationTimer() async {
     // Cancel IDs in the timer range
     for (int i = 1; i <= 60; i++) {
@@ -381,6 +419,7 @@ class NotificationService {
       }
     }
     await cancelTimerProgress();
+    await cancelTimerCompletionNotification();
   }
 
   Future<void> showTimerProgress(int minutes, int seconds) async {

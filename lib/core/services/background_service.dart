@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/reminders/services/notification_service.dart';
 import '../database/database.dart';
 import 'scheduler_service.dart';
@@ -12,6 +13,8 @@ import 'package:audioplayers/audioplayers.dart';
 class BackgroundService {
   static const String timerKey = 'timer_seconds_remaining';
   static const String timerRunningKey = 'timer_is_running';
+  // Persisted across service restarts so the timer survives a force-kill
+  static const String timerEndEpochKey = 'timer_end_epoch_ms';
 
   static Future<void> initialize() async {
     final service = FlutterBackgroundService();
@@ -65,38 +68,45 @@ class BackgroundService {
     int secondsRemaining = 0;
     bool isRunning = false;
     final AudioPlayer audioPlayer = AudioPlayer();
+    final prefs = await SharedPreferences.getInstance();
 
     Future<void> stopTimer() async {
       timer?.cancel();
       isRunning = false;
+      await prefs.remove(timerEndEpochKey);
       await notifService.cancelPremedicationTimer();
       service.invoke('timerUpdate', {
         'secondsRemaining': secondsRemaining,
         'isRunning': isRunning,
       });
-      
+
       if (service is AndroidServiceInstance) {
         await service.setAsBackgroundService();
       }
     }
 
-    service.on('startTimer').listen((event) async {
+    Future<void> startTimerWithSeconds(int seconds) async {
       if (service is AndroidServiceInstance) {
         await service.setAsForegroundService();
       }
-      final seconds = event?['seconds'] as int? ?? 15 * 60;
       secondsRemaining = seconds;
       isRunning = true;
-      
       timer?.cancel();
-      
-      // No longer scheduling individual minute notifications as requested
-      // await notifService.schedulePremedicationTimer(secondsRemaining ~/ 60);
+
+      // Persist the absolute end time so we can resume after a force-kill
+      final endEpoch = DateTime.now().millisecondsSinceEpoch + seconds * 1000;
+      await prefs.setInt(timerEndEpochKey, endEpoch);
+
+      // Schedule an exact-alarm notification that fires when the timer ends;
+      // this fires even if the service cannot restart in time
+      await notifService.scheduleTimerCompletionNotification(
+        DateTime.fromMillisecondsSinceEpoch(endEpoch),
+      );
 
       timer = Timer.periodic(const Duration(seconds: 1), (t) async {
         if (secondsRemaining > 0) {
           secondsRemaining--;
-          
+
           if (secondsRemaining % 60 == 0 && secondsRemaining > 0) {
             // Minute signal (bell sound, 3 times)
             try {
@@ -125,7 +135,8 @@ class BackgroundService {
           }
         } else {
           await stopTimer();
-          // Final signal (ping sound)
+          // Final signal (ping sound) — the exact-alarm notification was already
+          // cancelled by stopTimer so we don't double-alert
           try {
             await audioPlayer.play(AssetSource('audio/ping.mp3'));
           } catch (e) {
@@ -133,6 +144,24 @@ class BackgroundService {
           }
         }
       });
+    }
+
+    // Auto-resume a timer that was running before the service was force-killed
+    final persistedEndEpoch = prefs.getInt(timerEndEpochKey);
+    if (persistedEndEpoch != null) {
+      final remaining = (persistedEndEpoch - DateTime.now().millisecondsSinceEpoch) ~/ 1000;
+      if (remaining > 0) {
+        await startTimerWithSeconds(remaining);
+      } else {
+        // Timer already expired while service was dead; clean up
+        await prefs.remove(timerEndEpochKey);
+        await notifService.cancelPremedicationTimer();
+      }
+    }
+
+    service.on('startTimer').listen((event) async {
+      final seconds = event?['seconds'] as int? ?? 15 * 60;
+      await startTimerWithSeconds(seconds);
     });
 
     service.on('stopTimer').listen((event) async {
