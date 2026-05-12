@@ -60,19 +60,26 @@ class SchedulerService {
       }
     }
 
-    // Phase 2: Ensure all upcoming UNCOMPLETED entries within the notification window have reminders.
-    // Fetch all planned infusions (past the now-mark) and cancel only their IDs so we don't
-    // accidentally wipe the timer, missed-treatments or stock-warning notifications.
+    // Phase 2: Ensure all uncompleted entries within the reminder window have reminders.
+    // Snooze/hourly follow-ups extend up to 3h after treatment.date, so a sync that
+    // runs shortly after the intake time must still re-schedule those follow-ups —
+    // otherwise the user gets no reminder at all once treatment.date has passed.
+    final reminderWindowStart = now.subtract(const Duration(hours: 3));
+
+    // Cancel reminders for any treatment that might currently hold pending alarms
+    // in our window. Reminders for completed treatments are also cleared.
     final allKnownTreatments = await (db.select(db.plannedInfusions)
-          ..where((t) => t.date.isBiggerThanValue(today)))
+          ..where((t) => t.date.isBiggerThanValue(reminderWindowStart)))
         .get();
     for (final t in allKnownTreatments) {
       await NotificationService().cancelTreatmentReminders(t.id);
     }
 
+    // Re-schedule for everything still actionable. scheduleTreatmentReminders
+    // skips individual slots whose time has already passed.
     final upcomingTreatments = await (db.select(db.plannedInfusions)
           ..where((t) =>
-              t.date.isBiggerThanValue(now) &
+              t.date.isBiggerThanValue(reminderWindowStart) &
               t.date.isSmallerThanValue(notificationLookAhead) &
               t.isCompleted.equals(false)))
         .get();

@@ -292,7 +292,6 @@ class NotificationService {
 
   Future<void> scheduleTreatmentReminders(PlannedInfusion treatment) async {
     final now = DateTime.now();
-    if (treatment.date.isBefore(now)) return;
 
     final prefs = await SharedPreferences.getInstance();
     final quietStart = prefs.getInt('quiet_hours_start') ?? 22;
@@ -307,14 +306,18 @@ class NotificationService {
       }
     }
 
-    // Fix: Use the SAME ID for all reminders of a specific treatment
-    // This ensures only one entry exists in the notification tray
-    final int mainId = _getBaseId(treatment.id);
+    // Each follow-up gets its own ID in the per-treatment block [baseId, baseId+99].
+    // Using the same ID would cause zonedSchedule to overwrite earlier alarms,
+    // so only the last-scheduled reminder would ever fire.
+    final int baseId = _getBaseId(treatment.id);
 
-    // 1. Initial notification
-    if (!isQuiet(treatment.date)) {
+    // Always cancel the whole block first so a re-schedule cleans up stale entries.
+    await cancelTreatmentReminders(treatment.id);
+
+    // 1. Initial notification at the treatment time.
+    if (treatment.date.isAfter(now) && !isQuiet(treatment.date)) {
       await scheduleNotification(
-        id: mainId,
+        id: baseId,
         title: 'Erinnerung: Medikament fällig',
         body: 'Es ist Zeit für deine Einnahme von ${_getMedName(treatment)}.',
         scheduledTime: treatment.date,
@@ -325,13 +328,13 @@ class NotificationService {
     final snoozeEnabled = prefs.getBool('reminder_snooze') ?? true;
     final hourlyEnabled = prefs.getBool('reminder_hourly') ?? true;
 
-    // 2. Schedule follow-ups with the SAME ID to "re-popup"
+    // 2. Snooze follow-ups (15 / 30 / 45 min) — distinct IDs so they coexist.
     if (snoozeEnabled) {
       for (int i = 1; i <= 3; i++) {
         final time = treatment.date.add(Duration(minutes: i * 15));
         if (time.isAfter(now) && !isQuiet(time)) {
           await scheduleNotification(
-            id: mainId, // Same ID!
+            id: baseId + i,
             title: 'Erinnerung (Wiederholung)',
             body: 'Du hast deine Einnahme noch nicht als erledigt markiert.',
             scheduledTime: time,
@@ -340,13 +343,14 @@ class NotificationService {
         }
       }
     }
-    
+
+    // 3. Hourly follow-ups (+1h / +2h / +3h) — distinct IDs so they coexist.
     if (hourlyEnabled) {
       for (int i = 1; i <= 3; i++) {
         final time = treatment.date.add(Duration(hours: i));
         if (time.isAfter(now) && !isQuiet(time)) {
           await scheduleNotification(
-            id: mainId, // Same ID!
+            id: baseId + 10 + i,
             title: 'Erinnerung (Stündlich)',
             body: 'Bitte vergiss deine Einnahme nicht.',
             scheduledTime: time,
@@ -359,7 +363,12 @@ class NotificationService {
 
   Future<void> cancelTreatmentReminders(int treatmentId) async {
     final baseId = _getBaseId(treatmentId);
+    // Main slot + 3 snooze slots + 3 hourly slots.
     await _notificationsPlugin.cancel(baseId);
+    for (int i = 1; i <= 3; i++) {
+      await _notificationsPlugin.cancel(baseId + i);
+      await _notificationsPlugin.cancel(baseId + 10 + i);
+    }
   }
 
   /// Cancels all scheduled notifications. 
