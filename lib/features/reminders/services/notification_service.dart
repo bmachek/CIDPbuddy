@@ -606,19 +606,29 @@ void notificationTapBackground(NotificationResponse response) {
   }
 }
 
+Future<void> _cancelTreatmentBlock(
+    FlutterLocalNotificationsPlugin plugin, int treatmentId) async {
+  final baseId = treatmentId * 100;
+  await plugin.cancel(baseId);
+  for (int i = 1; i <= 3; i++) {
+    await plugin.cancel(baseId + i);
+    await plugin.cancel(baseId + 10 + i);
+  }
+}
+
 Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
   try {
     final notifPlugin = FlutterLocalNotificationsPlugin();
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
     await notifPlugin.initialize(const InitializationSettings(android: androidSettings));
-    await notifPlugin.cancel(treatmentId * 100);
+    await _cancelTreatmentBlock(notifPlugin, treatmentId);
     final db = AppDatabase();
     final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
     await db.updatePlannedInfusion(treatment.copyWith(
       isCompleted: true,
       notes: Value('${treatment.notes ?? ''} [Übersprungen via Benachrichtigung]'.trim()),
     ));
-    
+
     debugPrint('NotificationService: Background: Treatment $treatmentId skipped.');
   } catch (e) {
     debugPrint('NotificationService: Background: Error skipping: $e');
@@ -630,7 +640,7 @@ Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
     final notifPlugin = FlutterLocalNotificationsPlugin();
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
     await notifPlugin.initialize(const InitializationSettings(android: androidSettings));
-    await notifPlugin.cancel(treatmentId * 100);
+    await _cancelTreatmentBlock(notifPlugin, treatmentId);
     final db = AppDatabase();
     // 1. Mark as completed
     await db.completePlannedInfusion(treatmentId);

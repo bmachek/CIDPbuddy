@@ -569,73 +569,209 @@ class _SettingsPageState extends State<SettingsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
+      builder: (sheetContext) => DraggableScrollableSheet(
         initialChildSize: 0.6,
         minChildSize: 0.4,
         maxChildSize: 0.9,
         expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
+        builder: (sheetContext, scrollController) {
+          return StatefulBuilder(
+            builder: (ctx, setSheetState) {
+              Future<void> pickAndReload() async {
+                final dest = await _pickRestoreSource(ctx);
+                if (dest == null) return;
+                setSheetState(() {}); // re-trigger FutureBuilder
+              }
+
+              return Column(
                 children: [
-                  const Text('Backup auswählen', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const Spacer(),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        const Text('Backup auswählen',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: FutureBuilder<_RestoreListState>(
+                      future: _loadRestoreState(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (snapshot.hasError) {
+                          return Center(child: Text('Fehler: ${snapshot.error}'));
+                        }
+                        final state = snapshot.data!;
+                        if (!state.hasDestination) {
+                          return _restoreEmptyState(
+                            icon: Icons.folder_off_outlined,
+                            title: 'Kein Backup-Ordner verbunden',
+                            body:
+                                'Wähle den Ordner aus, in dem deine Sicherungen liegen — z. B. den Cloud-Ordner aus einer früheren Installation.',
+                            buttonLabel: 'Backup-Ordner wählen',
+                            onPressed: pickAndReload,
+                          );
+                        }
+                        if (state.backups.isEmpty) {
+                          return _restoreEmptyState(
+                            icon: Icons.folder_open,
+                            title: 'Keine Backups gefunden',
+                            body:
+                                'Im verbundenen Ordner liegen keine Sicherungen. Falls deine Backups in einem anderen Ordner liegen, wähle ihn hier aus.',
+                            buttonLabel: 'Anderen Ordner wählen',
+                            onPressed: pickAndReload,
+                          );
+                        }
+                        return ListView.builder(
+                          controller: scrollController,
+                          itemCount: state.backups.length,
+                          itemBuilder: (context, index) {
+                            final b = state.backups[index];
+                            return ListTile(
+                              leading: const Icon(Icons.inventory_2_outlined),
+                              title: Text(b.name),
+                              subtitle: Text(
+                                  '${DateFormat('dd.MM.yyyy HH:mm').format(b.date)}  •  ${(b.size / 1024 / 1024).toStringAsFixed(2)} MB'),
+                              onTap: () {
+                                Navigator.pop(ctx);
+                                _confirmZippedRestore(b);
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
                 ],
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: FutureBuilder<List<BackupFile>>(
-                future: backupService.getAvailableBackups(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Fehler: ${snapshot.error}'));
-                  }
-                  final backups = snapshot.data ?? [];
-                  if (backups.isEmpty) {
-                    return const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.folder_open, size: 48, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text('Keine Backups gefunden.', style: TextStyle(color: Colors.grey)),
-                        ],
-                      ),
-                    );
-                  }
-                  return ListView.builder(
-                    controller: scrollController,
-                    itemCount: backups.length,
-                    itemBuilder: (context, index) {
-                      final b = backups[index];
-                      return ListTile(
-                        leading: const Icon(Icons.inventory_2_outlined),
-                        title: Text(b.name),
-                        subtitle: Text('${DateFormat('dd.MM.yyyy HH:mm').format(b.date)}  •  ${(b.size / 1024 / 1024).toStringAsFixed(2)} MB'),
-                        onTap: () {
-                          final backup = b;
-                          Navigator.pop(context); // Close bottom sheet
-                          // Use 'this.context' to ensure we use the SettingsPage context, 
-                          // not the now-closed bottom sheet context.
-                          _confirmZippedRestore(backup);
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<_RestoreListState> _loadRestoreState() async {
+    final dest = await BackupDestination.load();
+    if (dest == null) {
+      return const _RestoreListState(hasDestination: false, backups: []);
+    }
+    final list = await backupService.getAvailableBackups();
+    return _RestoreListState(hasDestination: true, backups: list);
+  }
+
+  Widget _restoreEmptyState({
+    required IconData icon,
+    required String title,
+    required String body,
+    required String buttonLabel,
+    required VoidCallback onPressed,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 48, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(title,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 8),
+            Text(body,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: onPressed,
+              icon: const Icon(Icons.folder_open),
+              label: Text(buttonLabel),
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// Same picker as in the destination configuration flow, but used from the
+  /// restore dialog to (re-)attach a folder that already contains backups —
+  /// the common case after a reinstall where SAF URI grants are revoked.
+  Future<BackupDestination?> _pickRestoreSource(BuildContext sheetCtx) async {
+    final choice = await showModalBottomSheet<_DestChoice>(
+      context: sheetCtx,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text('Backup-Ordner wählen',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.cloud_circle, color: Color(0xFF1A73E8)),
+              title: const Text('Google Drive'),
+              onTap: () => Navigator.pop(ctx, _DestChoice.googleDrive),
+            ),
+            if (Platform.isIOS || Platform.isMacOS)
+              ListTile(
+                leading: const Icon(Icons.cloud, color: Color(0xFF147EFB)),
+                title: const Text('iCloud Drive'),
+                onTap: () => Navigator.pop(ctx, _DestChoice.iCloud),
+              ),
+            if (Platform.isAndroid)
+              ListTile(
+                leading: const Icon(Icons.cloud_done),
+                title: const Text('Cloud-/SAF-Ordner'),
+                subtitle: const Text(
+                    'Z. B. Google Drive-, Dropbox- oder OneDrive-Ordner'),
+                onTap: () => Navigator.pop(ctx, _DestChoice.saf),
+              ),
+            ListTile(
+              leading: const Icon(Icons.folder),
+              title: const Text('Lokaler Ordner'),
+              onTap: () => Navigator.pop(ctx, _DestChoice.local),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (choice == null) return null;
+
+    BackupDestination? dest;
+    switch (choice) {
+      case _DestChoice.googleDrive:
+        dest = await backupService.pickGoogleDriveBackup();
+        break;
+      case _DestChoice.saf:
+        dest = await backupService.pickSafBackupDirectory();
+        break;
+      case _DestChoice.iCloud:
+        dest = await backupService.pickICloudBackup();
+        break;
+      case _DestChoice.local:
+        dest = await backupService.pickLocalBackupDirectory();
+        break;
+    }
+    if (dest == null && sheetCtx.mounted) {
+      ScaffoldMessenger.of(sheetCtx).showSnackBar(
+        const SnackBar(
+          content: Text('Ordner konnte nicht verbunden werden.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    return dest;
   }
 
   void _confirmZippedRestore(BackupFile backup) async {
@@ -713,4 +849,10 @@ class _SettingsPageState extends State<SettingsPage> {
 }
 
 enum _DestChoice { googleDrive, saf, iCloud, local }
+
+class _RestoreListState {
+  final bool hasDestination;
+  final List<BackupFile> backups;
+  const _RestoreListState({required this.hasDestination, required this.backups});
+}
 
