@@ -16,54 +16,18 @@ import 'package:igkeeper/features/settings/services/cloud/google_drive_auth.dart
 import 'package:igkeeper/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disable_battery_optimization/disable_battery_optimization.dart';
+import 'dart:async';
 import 'dart:io';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     final db = AppDatabase();
+    // Notifications must be initialized before runApp so cold-launches from a
+    // notification tap can route correctly. Everything else is deferred.
     await NotificationService().init();
-    await BackgroundService.initialize();
-    await BackupScheduler.init();
-    await BackupScheduler.syncFromPrefs();
-    await BackupScheduler.enableMissedCheck();
-    // Initialize Google Sign-In once for the foreground process. The
-    // WorkManager isolate calls ensureInitialized() separately on first use.
-    if (GoogleDriveAuth.instance.isPlatformSupported) {
-      // Best-effort — must not block app startup if it fails.
-      // ignore: discarded_futures
-      GoogleDriveAuth.instance.tryRestore();
-    }
-    
-    // Initialize and sync infusion schedules
-    final scheduler = SchedulerService(db);
-    await scheduler.syncPlannedInfusions();
-    // Surface any past-due Einnahmen that weren't confirmed or skipped —
-    // covers cases where alarms got dropped after an OS update or reboot.
-    await scheduler.checkMissedTreatments();
 
-    // Request battery optimization exemption once so alarms survive app being swiped away
-    if (Platform.isAndroid) {
-      final batteryOptDisabled =
-          await DisableBatteryOptimization.isBatteryOptimizationDisabled ?? false;
-      if (!batteryOptDisabled) {
-        await DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
-      }
-    }
-
-    // Check backup setup and schedule reminder if needed
-    final prefs = await SharedPreferences.getInstance();
-    final autoBackupEnabled = prefs.getBool('auto_backup_enabled') ?? false;
-    if (!autoBackupEnabled) {
-      await NotificationService().scheduleBackupReminder();
-    } else {
-      await NotificationService().cancelBackupReminder();
-      // Proactively detect lost SAF/pCloud permissions without blocking startup.
-      // ignore: discarded_futures
-      BackupService().checkSafAccessOnStartup();
-    }
-    
     runApp(
       MultiProvider(
         providers: [
@@ -82,6 +46,12 @@ void main() async {
         child: const CIDPBuddyApp(),
       ),
     );
+
+    // Defer heavy init (WorkManager, alarm rescheduling, battery-opt prompt,
+    // cloud auth, missed-treatments scan) until after the first frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_initDeferred(db));
+    });
   } catch (e, stack) {
     debugPrint('Initialization error: $e');
     debugPrint('Stack trace: $stack');
@@ -97,6 +67,53 @@ void main() async {
       ),
     ));
   }
+}
+
+/// Runs after the first frame. Each step is independently guarded so a
+/// failure in one (e.g. WorkManager not available on the platform) does not
+/// block the others.
+Future<void> _initDeferred(AppDatabase db) async {
+  Future<void> step(String name, Future<void> Function() body) async {
+    try {
+      await body();
+    } catch (e, stack) {
+      debugPrint('Deferred init "$name" failed: $e\n$stack');
+    }
+  }
+
+  await step('BackgroundService', BackgroundService.initialize);
+  await step('BackupScheduler.init', BackupScheduler.init);
+  await step('BackupScheduler.syncFromPrefs', BackupScheduler.syncFromPrefs);
+  await step('BackupScheduler.enableMissedCheck', BackupScheduler.enableMissedCheck);
+
+  if (GoogleDriveAuth.instance.isPlatformSupported) {
+    unawaited(GoogleDriveAuth.instance.tryRestore());
+  }
+
+  final scheduler = SchedulerService(db);
+  await step('syncPlannedInfusions', scheduler.syncPlannedInfusions);
+  await step('checkMissedTreatments', scheduler.checkMissedTreatments);
+
+  if (Platform.isAndroid) {
+    await step('batteryOptimization', () async {
+      final disabled =
+          await DisableBatteryOptimization.isBatteryOptimizationDisabled ?? false;
+      if (!disabled) {
+        await DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
+      }
+    });
+  }
+
+  await step('backupReminder', () async {
+    final prefs = await SharedPreferences.getInstance();
+    final autoBackupEnabled = prefs.getBool('auto_backup_enabled') ?? false;
+    if (!autoBackupEnabled) {
+      await NotificationService().scheduleBackupReminder();
+    } else {
+      await NotificationService().cancelBackupReminder();
+      unawaited(BackupService().checkSafAccessOnStartup());
+    }
+  });
 }
 
 class CIDPBuddyApp extends StatelessWidget {

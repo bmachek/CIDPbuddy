@@ -621,6 +621,16 @@ class _SettingsPageState extends State<SettingsPage> {
                             onPressed: pickAndReload,
                           );
                         }
+                        if (state.errorMessage != null) {
+                          return _restoreEmptyState(
+                            icon: Icons.lock_outline,
+                            title: 'Zugriff auf Backup-Ordner verloren',
+                            body:
+                                '${state.errorMessage}\n\nWähle den Ordner erneut, um die Berechtigung wiederherzustellen. Deine bestehenden Sicherungen bleiben erhalten.',
+                            buttonLabel: 'Ordner erneut wählen',
+                            onPressed: pickAndReload,
+                          );
+                        }
                         if (state.backups.isEmpty) {
                           return _restoreEmptyState(
                             icon: Icons.folder_open,
@@ -665,8 +675,28 @@ class _SettingsPageState extends State<SettingsPage> {
     if (dest == null) {
       return const _RestoreListState(hasDestination: false, backups: []);
     }
-    final list = await backupService.getAvailableBackups();
-    return _RestoreListState(hasDestination: true, backups: list);
+    // verifyAccess catches the common "SAF/iCloud grant revoked" case
+    // (e.g. after reinstall) — without it, listBackups silently returns an
+    // empty list and we'd wrongly tell the user there are no backups.
+    final verifyError = await dest.verifyAccess();
+    if (verifyError != null) {
+      return _RestoreListState(
+        hasDestination: true,
+        backups: const [],
+        errorMessage: verifyError,
+      );
+    }
+    try {
+      final list = await dest.listBackups();
+      return _RestoreListState(hasDestination: true, backups: list);
+    } catch (e, stack) {
+      dev.log('SettingsPage._loadRestoreState listBackups failed: $e\n$stack');
+      return _RestoreListState(
+        hasDestination: true,
+        backups: const [],
+        errorMessage: 'Backups konnten nicht gelesen werden: $e',
+      );
+    }
   }
 
   Widget _restoreEmptyState({
@@ -853,6 +883,11 @@ enum _DestChoice { googleDrive, saf, iCloud, local }
 class _RestoreListState {
   final bool hasDestination;
   final List<BackupFile> backups;
-  const _RestoreListState({required this.hasDestination, required this.backups});
+  final String? errorMessage;
+  const _RestoreListState({
+    required this.hasDestination,
+    required this.backups,
+    this.errorMessage,
+  });
 }
 
