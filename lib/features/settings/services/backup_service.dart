@@ -15,7 +15,8 @@ import 'cloud/google_drive_auth.dart';
 import 'cloud/google_drive_destination.dart';
 import 'cloud/icloud_destination.dart';
 
-export 'backup_destination.dart' show BackupFile, BackupDestination, DestinationKind;
+export 'backup_destination.dart'
+    show BackupFile, BackupDestination, DestinationKind, LocalDestination;
 
 /// Result of a backup attempt — used by UI / WorkManager / reliability check.
 class BackupResult {

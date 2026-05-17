@@ -622,21 +622,30 @@ class _SettingsPageState extends State<SettingsPage> {
                           );
                         }
                         if (state.errorMessage != null) {
+                          final pathHint = state.destinationLabel != null
+                              ? '\n\nAktueller Ordner:\n${state.destinationLabel}'
+                              : '';
                           return _restoreEmptyState(
                             icon: Icons.lock_outline,
                             title: 'Zugriff auf Backup-Ordner verloren',
                             body:
-                                '${state.errorMessage}\n\nWähle den Ordner erneut, um die Berechtigung wiederherzustellen. Deine bestehenden Sicherungen bleiben erhalten.',
+                                '${state.errorMessage}$pathHint\n\nWähle den Ordner erneut, um die Berechtigung wiederherzustellen. Deine bestehenden Sicherungen bleiben erhalten.',
                             buttonLabel: 'Ordner erneut wählen',
                             onPressed: pickAndReload,
                           );
                         }
                         if (state.backups.isEmpty) {
+                          final pathHint = state.destinationLabel != null
+                              ? '\n\nAktueller Ordner:\n${state.destinationLabel}'
+                              : '';
+                          final diag = state.diagnostic != null
+                              ? '\n\n${state.diagnostic}'
+                              : '';
                           return _restoreEmptyState(
                             icon: Icons.folder_open,
                             title: 'Keine Backups gefunden',
                             body:
-                                'Im verbundenen Ordner liegen keine Sicherungen. Falls deine Backups in einem anderen Ordner liegen, wähle ihn hier aus.',
+                                'Im verbundenen Ordner liegen keine Sicherungen (Dateien mit "igkeeper_backup_…zip").$pathHint$diag\n\nFalls deine Backups in einem anderen Ordner liegen, wähle ihn hier aus.',
                             buttonLabel: 'Anderen Ordner wählen',
                             onPressed: pickAndReload,
                           );
@@ -675,6 +684,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (dest == null) {
       return const _RestoreListState(hasDestination: false, backups: []);
     }
+    final label = dest.displayLabel;
     // verifyAccess catches the common "SAF/iCloud grant revoked" case
     // (e.g. after reinstall) — without it, listBackups silently returns an
     // empty list and we'd wrongly tell the user there are no backups.
@@ -684,17 +694,30 @@ class _SettingsPageState extends State<SettingsPage> {
         hasDestination: true,
         backups: const [],
         errorMessage: verifyError,
+        destinationLabel: label,
       );
     }
     try {
       final list = await dest.listBackups();
-      return _RestoreListState(hasDestination: true, backups: list);
+      String? diagnostic;
+      // Empty list could mean "wrong folder" — surface what's actually
+      // there so the user can verify it themselves.
+      if (list.isEmpty && dest is LocalDestination) {
+        diagnostic = await dest.describeContents();
+      }
+      return _RestoreListState(
+        hasDestination: true,
+        backups: list,
+        destinationLabel: label,
+        diagnostic: diagnostic,
+      );
     } catch (e, stack) {
       dev.log('SettingsPage._loadRestoreState listBackups failed: $e\n$stack');
       return _RestoreListState(
         hasDestination: true,
         backups: const [],
         errorMessage: 'Backups konnten nicht gelesen werden: $e',
+        destinationLabel: label,
       );
     }
   }
@@ -884,10 +907,14 @@ class _RestoreListState {
   final bool hasDestination;
   final List<BackupFile> backups;
   final String? errorMessage;
+  final String? destinationLabel;
+  final String? diagnostic;
   const _RestoreListState({
     required this.hasDestination,
     required this.backups,
     this.errorMessage,
+    this.destinationLabel,
+    this.diagnostic,
   });
 }
 

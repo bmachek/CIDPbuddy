@@ -121,23 +121,37 @@ class LocalDestination extends BackupDestination {
 
   @override
   Future<String?> verifyAccess() async {
+    final dir = Directory(dirPath);
+    // Do NOT silently create the directory here. The restore flow re-uses
+    // verifyAccess, and creating an empty dir would mask "I lost access to
+    // the real folder" as "folder exists but contains no backups".
+    bool exists;
     try {
-      final dir = Directory(dirPath);
-      if (!await dir.exists()) {
-        try {
-          await dir.create(recursive: true);
-        } catch (e) {
-          return 'Verzeichnis nicht zugänglich.';
-        }
-      }
+      exists = await dir.exists();
+    } catch (e) {
+      dev.log('LocalDestination.verifyAccess exists() threw: $e');
+      return 'Ordner nicht lesbar: $dirPath\n($e)';
+    }
+    if (!exists) {
+      return 'Ordner existiert nicht (mehr): $dirPath';
+    }
+    // Probe that we can actually read the directory contents — the sandbox
+    // case where stat() succeeds but readdir() is denied is the trickiest.
+    try {
+      await dir.list().take(1).toList();
+    } catch (e) {
+      dev.log('LocalDestination.verifyAccess list() threw: $e');
+      return 'Ordner nicht lesbar: $dirPath\n($e)';
+    }
+    try {
       final probe = File(p.join(dirPath, '.cidp_health'));
       await probe.writeAsString('ok', flush: true);
       await probe.delete();
-      return null;
     } catch (e) {
-      dev.log('LocalDestination.verifyAccess failed: $e');
-      return 'Schreibzugriff verweigert.';
+      dev.log('LocalDestination.verifyAccess probe failed: $e');
+      return 'Schreibzugriff verweigert: $dirPath\n($e)';
     }
+    return null;
   }
 
   @override
@@ -152,8 +166,14 @@ class LocalDestination extends BackupDestination {
   @override
   Future<List<BackupFile>> listBackups() async {
     final dir = Directory(dirPath);
-    if (!await dir.exists()) return [];
+    if (!await dir.exists()) {
+      throw FileSystemException('Ordner existiert nicht', dirPath);
+    }
     final entries = await dir.list().toList();
+    dev.log(
+      'LocalDestination.listBackups: $dirPath enthält ${entries.length} '
+      'Einträge (insgesamt, vor Filter)',
+    );
     final files = entries.whereType<File>().where((f) {
       final name = p.basename(f.path);
       return name.startsWith('igkeeper_backup_') && name.endsWith('.zip');
@@ -169,6 +189,27 @@ class LocalDestination extends BackupDestination {
     }).toList();
     files.sort((a, b) => b.date.compareTo(a.date));
     return files;
+  }
+
+  /// Diagnostic helper used by the restore UI when listBackups returns 0
+  /// matches — surfaces what is actually in the folder so the user can tell
+  /// "wrong folder" apart from "lost permission" apart from "weird filename".
+  Future<String> describeContents() async {
+    final dir = Directory(dirPath);
+    if (!await dir.exists()) return 'Ordner existiert nicht.';
+    try {
+      final entries = await dir.list().toList();
+      if (entries.isEmpty) return 'Ordner ist leer.';
+      final names = entries
+          .map((e) => p.basename(e.path))
+          .where((n) => !n.startsWith('.'))
+          .take(8)
+          .toList();
+      return 'Gefunden (${entries.length}): ${names.join(", ")}'
+          '${entries.length > names.length ? ' …' : ''}';
+    } catch (e) {
+      return 'Ordner konnte nicht gelistet werden: $e';
+    }
   }
 
   @override
