@@ -204,16 +204,24 @@ class _SettingsPageState extends State<SettingsPage> {
           FutureBuilder<Map<String, dynamic>>(
             future: _getReminderSettings(),
             builder: (context, snapshot) {
-              final settings = snapshot.data ?? {'snooze': true, 'hourly': true, 'quiet_start': 22, 'quiet_end': 7};
+              final settings = snapshot.data ?? {'snooze': true, 'hourly': true, 'snooze_interval': 15, 'quiet_start': 22, 'quiet_end': 7};
+              final snoozeInterval = settings['snooze_interval'] as int;
               return Column(
                 children: [
                   SwitchListTile(
                     title: const Text('Schlummer-Funktion'),
-                    subtitle: const Text('Erneut erinnern alle 15 Minuten'),
+                    subtitle: Text('Erneut erinnern alle $snoozeInterval Minuten (3×)'),
                     value: settings['snooze'],
                     onChanged: (val) => _updateReminderSetting('snooze', val),
                     secondary: const Icon(Icons.snooze_rounded),
                   ),
+                  if (settings['snooze'] == true)
+                    ListTile(
+                      leading: const Icon(Icons.timelapse_rounded),
+                      title: const Text('Schlummer-Intervall'),
+                      subtitle: Text('Aktuell: alle $snoozeInterval Minuten'),
+                      onTap: () => _showSnoozeIntervalPicker(context, snoozeInterval),
+                    ),
                   SwitchListTile(
                     title: const Text('Stündliche Erinnerung'),
                     subtitle: const Text('Erinnern zur vollen Stunde'),
@@ -352,6 +360,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return {
       'snooze': prefs.getBool('reminder_snooze') ?? true,
       'hourly': prefs.getBool('reminder_hourly') ?? true,
+      'snooze_interval': prefs.getInt('reminder_snooze_interval') ?? 15,
       'quiet_start': prefs.getInt('quiet_hours_start') ?? 22,
       'quiet_end': prefs.getInt('quiet_hours_end') ?? 7,
     };
@@ -449,9 +458,44 @@ class _SettingsPageState extends State<SettingsPage> {
     if (value is bool) {
       await prefs.setBool('reminder_$key', value);
     } else if (value is int) {
-      await prefs.setInt('quiet_hours_$key', value);
+      if (key == 'snooze_interval') {
+        await prefs.setInt('reminder_snooze_interval', value);
+      } else {
+        await prefs.setInt('quiet_hours_$key', value);
+      }
     }
     setState(() {});
+  }
+
+  void _showSnoozeIntervalPicker(BuildContext context, int current) {
+    const options = [5, 10, 15, 20, 30, 45, 60];
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Schlummer-Intervall',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            ...options.map((min) => ListTile(
+                  title: Text('Alle $min Minuten'),
+                  trailing: min == current
+                      ? Icon(Icons.check_rounded,
+                          color: Theme.of(context).colorScheme.primary)
+                      : null,
+                  onTap: () {
+                    _updateReminderSetting('snooze_interval', min);
+                    Navigator.pop(ctx);
+                  },
+                )),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showQuietHoursPicker(BuildContext context, int currentStart, int currentEnd) {

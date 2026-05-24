@@ -327,11 +327,13 @@ class NotificationService {
 
     final snoozeEnabled = prefs.getBool('reminder_snooze') ?? true;
     final hourlyEnabled = prefs.getBool('reminder_hourly') ?? true;
+    final snoozeIntervalMin = prefs.getInt('reminder_snooze_interval') ?? 15;
 
-    // 2. Snooze follow-ups (15 / 30 / 45 min) — distinct IDs so they coexist.
+    // 2. Snooze follow-ups (3 reminders at the configured interval) — distinct
+    // IDs so they coexist. Default 15 min → 15/30/45 min after the treatment.
     if (snoozeEnabled) {
       for (int i = 1; i <= 3; i++) {
-        final time = treatment.date.add(Duration(minutes: i * 15));
+        final time = treatment.date.add(Duration(minutes: i * snoozeIntervalMin));
         if (time.isAfter(now) && !isQuiet(time)) {
           await scheduleNotification(
             id: baseId + i,
@@ -606,6 +608,7 @@ void notificationTapBackground(NotificationResponse response) {
   }
 }
 
+@pragma('vm:entry-point')
 Future<void> _cancelTreatmentBlock(
     FlutterLocalNotificationsPlugin plugin, int treatmentId) async {
   final baseId = treatmentId * 100;
@@ -616,6 +619,7 @@ Future<void> _cancelTreatmentBlock(
   }
 }
 
+@pragma('vm:entry-point')
 Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
   try {
     final notifPlugin = FlutterLocalNotificationsPlugin();
@@ -635,6 +639,7 @@ Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
   }
 }
 
+@pragma('vm:entry-point')
 Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
   try {
     final notifPlugin = FlutterLocalNotificationsPlugin();
