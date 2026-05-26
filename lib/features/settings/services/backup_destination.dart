@@ -324,4 +324,22 @@ class SafDestination extends BackupDestination {
     final util = SafUtil();
     await util.delete(file.pathOrUri, false);
   }
+
+  /// Diagnostic: shows what's actually in the SAF tree so the user can
+  /// distinguish "wrong folder selected" from "files have unexpected names".
+  Future<String> describeContents() async {
+    try {
+      final util = SafUtil();
+      final entries = await util.list(treeUri);
+      if (entries.isEmpty) return 'SAF-Ordner ist leer.';
+      final names = entries
+          .map((f) => f.isDirectory ? '[${f.name}/]' : f.name)
+          .take(8)
+          .toList();
+      return 'Gefunden (${entries.length}): ${names.join(", ")}'
+          '${entries.length > names.length ? ' …' : ''}';
+    } catch (e) {
+      return 'SAF-Ordner konnte nicht gelistet werden: $e';
+    }
+  }
 }
