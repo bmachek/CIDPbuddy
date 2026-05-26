@@ -16,7 +16,7 @@ import 'cloud/google_drive_destination.dart';
 import 'cloud/icloud_destination.dart';
 
 export 'backup_destination.dart'
-    show BackupFile, BackupDestination, DestinationKind, LocalDestination;
+    show BackupFile, BackupDestination, DestinationKind, LocalDestination, SafDestination;
 
 /// Result of a backup attempt — used by UI / WorkManager / reliability check.
 class BackupResult {
@@ -356,45 +356,62 @@ class BackupService {
       if (dest == null) return false;
       final bytes = await dest.readBackup(backup);
       if (bytes.isEmpty) return false;
-
-      final archive = ZipDecoder().decodeBytes(bytes);
-      final dbFolder = await getApplicationDocumentsDirectory();
-      bool dbRestored = false;
-
-      // Two-phase write: stage all files as `.tmp`, then rename.
-      final staged = <File>[];
-      try {
-        for (final entry in archive) {
-          if (!entry.isFile) continue;
-          final data = entry.content as List<int>;
-          final outPath = p.join(dbFolder.path, entry.name);
-          final tmp = File('$outPath.restore_tmp');
-          await tmp.writeAsBytes(data, flush: true);
-          staged.add(tmp);
-        }
-        for (final tmp in staged) {
-          final finalPath =
-              tmp.path.substring(0, tmp.path.length - '.restore_tmp'.length);
-          final finalFile = File(finalPath);
-          if (await finalFile.exists()) await finalFile.delete();
-          await tmp.rename(finalPath);
-          if (p.basename(finalPath) == 'igkeeper.sqlite') dbRestored = true;
-        }
-      } catch (e) {
-        dev.log('BackupService.restore staging failed: $e');
-        for (final tmp in staged) {
-          try {
-            if (await tmp.exists()) await tmp.delete();
-          } catch (_) {}
-        }
-        rethrow;
-      }
-
-      return dbRestored;
+      return await _restoreFromZipBytes(bytes);
     } catch (e, stack) {
       dev.log('BackupService.restore exception: $e\n$stack');
       return false;
     }
+  }
+
+  /// Restores from a locally-accessible ZIP file path (e.g. picked via
+  /// FilePicker). Useful when the configured backup destination doesn't list
+  /// the file — the user can point directly at any igkeeper backup ZIP.
+  Future<bool> restoreFromZipPath(String filePath) async {
+    try {
+      dev.log('BackupService.restoreFromZipPath: $filePath');
+      final bytes = await File(filePath).readAsBytes();
+      if (bytes.isEmpty) return false;
+      return await _restoreFromZipBytes(bytes);
+    } catch (e, stack) {
+      dev.log('BackupService.restoreFromZipPath exception: $e\n$stack');
+      return false;
+    }
+  }
+
+  Future<bool> _restoreFromZipBytes(Uint8List bytes) async {
+    final archive = ZipDecoder().decodeBytes(bytes);
+    final dbFolder = await getApplicationDocumentsDirectory();
+    bool dbRestored = false;
+
+    final staged = <File>[];
+    try {
+      for (final entry in archive) {
+        if (!entry.isFile) continue;
+        final data = entry.content as List<int>;
+        final outPath = p.join(dbFolder.path, entry.name);
+        final tmp = File('$outPath.restore_tmp');
+        await tmp.writeAsBytes(data, flush: true);
+        staged.add(tmp);
+      }
+      for (final tmp in staged) {
+        final finalPath =
+            tmp.path.substring(0, tmp.path.length - '.restore_tmp'.length);
+        final finalFile = File(finalPath);
+        if (await finalFile.exists()) await finalFile.delete();
+        await tmp.rename(finalPath);
+        if (p.basename(finalPath) == 'igkeeper.sqlite') dbRestored = true;
+      }
+    } catch (e) {
+      dev.log('BackupService._restoreFromZipBytes staging failed: $e');
+      for (final tmp in staged) {
+        try {
+          if (await tmp.exists()) await tmp.delete();
+        } catch (_) {}
+      }
+      rethrow;
+    }
+
+    return dbRestored;
   }
 
   /// Legacy "share the raw .sqlite" feature — kept for export-via-share.

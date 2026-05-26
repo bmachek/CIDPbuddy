@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -714,6 +715,18 @@ class _SettingsPageState extends State<SettingsPage> {
                       },
                     ),
                   ),
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: TextButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _pickAndRestoreZipDirectly();
+                      },
+                      icon: const Icon(Icons.folder_zip_outlined),
+                      label: const Text('ZIP-Datei direkt wählen'),
+                    ),
+                  ),
                 ],
               );
             },
@@ -746,8 +759,12 @@ class _SettingsPageState extends State<SettingsPage> {
       String? diagnostic;
       // Empty list could mean "wrong folder" — surface what's actually
       // there so the user can verify it themselves.
-      if (list.isEmpty && dest is LocalDestination) {
-        diagnostic = await dest.describeContents();
+      if (list.isEmpty) {
+        if (dest is LocalDestination) {
+          diagnostic = await dest.describeContents();
+        } else if (dest is SafDestination) {
+          diagnostic = await dest.describeContents();
+        }
       }
       return _RestoreListState(
         hasDestination: true,
@@ -869,6 +886,68 @@ class _SettingsPageState extends State<SettingsPage> {
       );
     }
     return dest;
+  }
+
+  void _pickAndRestoreZipDirectly() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['zip'],
+    );
+    if (result == null || result.files.single.path == null) return;
+    final path = result.files.single.path!;
+    final name = result.files.single.name;
+
+    if (!mounted) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sicherung einspielen?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Möchtest du die Datei "$name" wirklich wiederherstellen?'),
+            const SizedBox(height: 16),
+            const Text(
+              'ACHTUNG: Alle aktuellen Daten werden unwiderruflich überschrieben!',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Wiederherstellen'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    await AppDatabase().close();
+    final success = await backupService.restoreFromZipPath(path);
+
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success
+              ? 'Daten erfolgreich wiederhergestellt. Bitte starte die App neu.'
+              : 'Fehler bei der Wiederherstellung.'),
+          duration: const Duration(seconds: 10),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+    }
   }
 
   void _confirmZippedRestore(BackupFile backup) async {
