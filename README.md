@@ -1,6 +1,22 @@
 # CIDP Buddy
 
+<p align="center">
+  <img src="assets/images/app_store_icon.png" alt="CIDP Buddy Logo" width="120"/>
+</p>
+
+<p align="center">
+  <img src="assets/images/cidpbuddy_feature_graphic.png" alt="CIDP Buddy Feature Graphic" width="100%"/>
+</p>
+
 CIDP Buddy is a comprehensive medication and symptom management application specifically designed for patients with Chronic Inflammatory Demyelinating Polyneuropathy (CIDP). It helps users manage complex infusion schedules, track inventory of medications and supplies, and monitor their health journey through a detailed vitals and symptom diary.
+
+## 📱 Screenshots
+
+<p align="center">
+  <img src="assets/images/Screenshot_1.png" alt="Screenshot 1" width="30%"/>
+  &nbsp;&nbsp;
+  <img src="assets/images/Screenshot_2.png" alt="Screenshot 2" width="30%"/>
+</p>
 
 ## ✨ Key Features
 
