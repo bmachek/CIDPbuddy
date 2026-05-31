@@ -333,7 +333,7 @@ class SafDestination extends BackupDestination {
       final entries = await util.list(treeUri);
       if (entries.isEmpty) return 'SAF-Ordner ist leer.';
       final names = entries
-          .map((f) => f.isDirectory ? '[${f.name}/]' : f.name)
+          .map((f) => f.isDir ? '[${f.name}/]' : f.name)
           .take(8)
           .toList();
       return 'Gefunden (${entries.length}): ${names.join(", ")}'
