@@ -99,7 +99,8 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
             _isFirstLoad = false;
           }
 
-          return SingleChildScrollView(
+          return SafeArea(
+            child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,6 +310,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                 ),
                 const SizedBox(height: 24),
               ],
+            ),
             ),
           );
         },

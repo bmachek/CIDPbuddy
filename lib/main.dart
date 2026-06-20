@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cidpbuddy/core/database/database.dart';
@@ -20,6 +21,9 @@ import 'dart:io';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Force Flutter to build & expose the semantics tree so UI-test tools
+  // (Maestro) can find widgets by text/id without a screen reader running.
+  SemanticsBinding.instance.ensureSemantics();
 
   try {
     final db = AppDatabase();

@@ -7,23 +7,26 @@ appId: de.fokuspunk.cidpbuddy
 #              maestro test  .maestro/screenshot_tour.yaml
 # ══════════════════════════════════════════════════════════
 
-# ── Phase 1: App-Start & Berechtigungen ──────────────────
+# ── Phase 1: App-Start ───────────────────────────────────
 
 - launchApp:
-    clearState: true
+    clearState: false
 
+# App braucht nach Cold-Start einige Sekunden bis der erste Frame steht.
+# Auf echten Dashboard-Inhalt warten, bevor irgendetwas angetippt wird.
 - extendedWaitUntil:
-    visible:
-      text: "Medikation"
-    timeout: 15000
+    visible: "Deine Übersicht"
+    timeout: 30000
 
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/01_dashboard_leer
 
 # ── Phase 2: Medikament anlegen ──────────────────────────
+# Glas-Bottom-Nav ist NICHT im Semantics-Tree -> Koordinaten.
+# 4 Slots (x): 12% / 37% / 62% / 88%, Flutter-Nav bei y=92%.
 
 - tapOn:
-    text: "Medikation"
+    point: "62%,92%"
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/02_medikation_leer
 
@@ -31,9 +34,6 @@ appId: de.fokuspunk.cidpbuddy
     text: "Hinzufügen"
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/03_neues_element_formular
-
-# Kategorie bleibt auf "Medikament" (Default)
-# Darreichungsform bleibt auf "Infusion" (Default)
 
 - tapOn:
     text: "Medikamentenname"
@@ -46,29 +46,27 @@ appId: de.fokuspunk.cidpbuddy
 - tapOn:
     text: "Anfangsbestand"
 - eraseText: 20
-- inputText: "12"
+- inputText: "10"
 
 - tapOn:
     text: "Standard-Nachbestellmenge"
 - eraseText: 20
-- inputText: "12"
+- inputText: "10"
 
 - tapOn:
     text: "Warnschwelle (in Tagen)"
 - eraseText: 20
-- inputText: "30"
+- inputText: "14"
 
 - hideKeyboard
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/04_medikament_ausgefuellt
 
-# Speichern → navigiert automatisch zu AddSchedulePage
 - tapOn:
     text: "Speichern"
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/05_infusionsplan_erstellen
 
-# Hizentra ist vorausgewählt – Zeitplan direkt aktivieren
 - tapOn:
     text: "Zeitplan aktivieren"
 - waitForAnimationToEnd
@@ -76,7 +74,7 @@ appId: de.fokuspunk.cidpbuddy
 # ── Phase 3: Dashboard-Tour ──────────────────────────────
 
 - tapOn:
-    text: "Dashboard"
+    point: "12%,92%"
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/06_dashboard
 
@@ -90,7 +88,6 @@ appId: de.fokuspunk.cidpbuddy
     duration: 500
 - waitForAnimationToEnd
 
-# Termin planen (FAB)
 - tapOn:
     text: "Termin planen"
 - waitForAnimationToEnd
@@ -101,7 +98,7 @@ appId: de.fokuspunk.cidpbuddy
 # ── Phase 4: Tagebuch-Tour ───────────────────────────────
 
 - tapOn:
-    text: "Tagebuch"
+    point: "37%,92%"
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/09_tagebuch
 
@@ -115,7 +112,6 @@ appId: de.fokuspunk.cidpbuddy
     duration: 500
 - waitForAnimationToEnd
 
-# Vitalwerte & Symptome Formular
 - tapOn:
     text: "Vitalwerte & Symptome"
 - waitForAnimationToEnd
@@ -130,13 +126,11 @@ appId: de.fokuspunk.cidpbuddy
 - pressKey: Back
 - waitForAnimationToEnd
 
-# Infusion erfassen
 - tapOn:
     text: "Infusion erfassen"
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/13_infusion_erfassen
 
-# Medikament wählen
 - tapOn:
     text: "Medikament wählen"
 - waitForAnimationToEnd
@@ -159,11 +153,10 @@ appId: de.fokuspunk.cidpbuddy
 # ── Phase 5: Medikation-Tour ─────────────────────────────
 
 - tapOn:
-    text: "Medikation"
+    point: "62%,92%"
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/15_medikation
 
-# Medikament-Detail antippen
 - tapOn:
     text: "Hizentra"
 - waitForAnimationToEnd
@@ -178,7 +171,6 @@ appId: de.fokuspunk.cidpbuddy
 - pressKey: Back
 - waitForAnimationToEnd
 
-# Abgesetzte Medikamente
 - tapOn:
     text: "Abgesetzte Medikamente"
 - waitForAnimationToEnd
@@ -186,7 +178,6 @@ appId: de.fokuspunk.cidpbuddy
 - pressKey: Back
 - waitForAnimationToEnd
 
-# Verbrauchsmaterial anlegen
 - tapOn:
     text: "Hinzufügen"
 - waitForAnimationToEnd
@@ -218,7 +209,7 @@ appId: de.fokuspunk.cidpbuddy
 # ── Phase 6: Einstellungen-Tour ──────────────────────────
 
 - tapOn:
-    text: "Einstellungen"
+    point: "88%,92%"
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/21_einstellungen
 
@@ -235,6 +226,6 @@ appId: de.fokuspunk.cidpbuddy
 # ── Finale ───────────────────────────────────────────────
 
 - tapOn:
-    text: "Dashboard"
+    point: "12%,92%"
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/23_dashboard_final
