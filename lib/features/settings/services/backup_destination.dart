@@ -167,7 +167,7 @@ class LocalDestination extends BackupDestination {
     );
     final files = entries.whereType<File>().where((f) {
       final name = p.basename(f.path);
-      return name.startsWith('igkeeper_backup_') && name.endsWith('.zip');
+      return (name.startsWith('cidpbuddy_backup_') || name.startsWith('igkeeper_backup_')) && name.endsWith('.zip');
     }).map((f) {
       final stat = f.statSync();
       return BackupFile(
@@ -290,7 +290,7 @@ class SafDestination extends BackupDestination {
     final files = await util.list(treeUri);
     final result = files
         .where((f) =>
-            f.name.startsWith('igkeeper_backup_') && f.name.endsWith('.zip'))
+            (f.name.startsWith('cidpbuddy_backup_') || f.name.startsWith('igkeeper_backup_')) && f.name.endsWith('.zip'))
         .map((f) => BackupFile(
               name: f.name,
               date: DateTime.fromMillisecondsSinceEpoch(f.lastModified),

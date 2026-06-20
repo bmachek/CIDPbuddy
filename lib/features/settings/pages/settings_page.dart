@@ -634,12 +634,20 @@ class _SettingsPageState extends State<SettingsPage> {
               return Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
                     child: Row(
                       children: [
                         const Text('Backup auswählen',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         const Spacer(),
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            _pickAndRestoreZipDirectly();
+                          },
+                          icon: const Icon(Icons.folder_zip_outlined, size: 18),
+                          label: const Text('ZIP wählen'),
+                        ),
                         IconButton(
                           onPressed: () => Navigator.pop(ctx),
                           icon: const Icon(Icons.close),
@@ -693,7 +701,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             icon: Icons.folder_open,
                             title: 'Keine Backups gefunden',
                             body:
-                                'Im verbundenen Ordner liegen keine Sicherungen (Dateien mit "igkeeper_backup_…zip").$pathHint$diag\n\nFalls deine Backups in einem anderen Ordner liegen, wähle ihn hier aus.',
+                                'Im verbundenen Ordner liegen keine Sicherungen (Dateien mit "cidpbuddy_backup_…zip" oder "igkeeper_backup_…zip").$pathHint$diag\n\nFalls deine Backups in einem anderen Ordner liegen, wähle ihn hier aus.',
                             buttonLabel: 'Anderen Ordner wählen',
                             onPressed: pickAndReload,
                           );
@@ -716,18 +724,6 @@ class _SettingsPageState extends State<SettingsPage> {
                           },
                         );
                       },
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: TextButton.icon(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        _pickAndRestoreZipDirectly();
-                      },
-                      icon: const Icon(Icons.folder_zip_outlined),
-                      label: const Text('ZIP-Datei direkt wählen'),
                     ),
                   ),
                 ],

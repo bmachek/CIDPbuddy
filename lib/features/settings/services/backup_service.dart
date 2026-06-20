@@ -223,7 +223,7 @@ class BackupService {
 
   String _generateFileName() {
     final ts = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    return 'igkeeper_backup_$ts.zip';
+    return 'cidpbuddy_backup_$ts.zip';
   }
 
   /// Builds the backup archive in memory. Includes the SQLite DB plus any
