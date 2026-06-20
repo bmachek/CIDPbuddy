@@ -53,3 +53,4 @@ app.*.map.json
 analyze_output*.txt
 entities.json
 mempalace.yaml
+android/.kotlin/sessions/
