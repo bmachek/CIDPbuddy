@@ -389,29 +389,35 @@ class MedicationDetailsPage extends StatelessWidget {
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Verbrauchsmaterial verknüpfen'),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<Accessory>(
-                items: allAcc.map((a) => DropdownMenuItem(value: a, child: Text(a.name))).toList(),
-                onChanged: (val) => setDialogState(() => selected = val),
-                decoration: const InputDecoration(labelText: 'Verbrauchsmaterial wählen', border: OutlineInputBorder()),
+          content: Scrollbar(
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              primary: true,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<Accessory>(
+                    items: allAcc.map((a) => DropdownMenuItem(value: a, child: Text(a.name))).toList(),
+                    onChanged: (val) => setDialogState(() => selected = val),
+                    decoration: const InputDecoration(labelText: 'Verbrauchsmaterial wählen', border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: qtyController,
+                    decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    title: const Text('Immer mitbestellen', style: TextStyle(fontSize: 14)),
+                    subtitle: const Text('Wird im Einkaufsassistent hervorgehoben', style: TextStyle(fontSize: 12)),
+                    value: isMandatory,
+                    onChanged: (val) => setDialogState(() => isMandatory = val),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: qtyController,
-                decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                title: const Text('Immer mitbestellen', style: TextStyle(fontSize: 14)),
-                subtitle: const Text('Wird im Einkaufsassistent hervorgehoben', style: TextStyle(fontSize: 12)),
-                value: isMandatory,
-                onChanged: (val) => setDialogState(() => isMandatory = val),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
@@ -453,8 +459,11 @@ class MedicationDetailsPage extends StatelessWidget {
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Neues Verbrauchsmaterial anlegen'),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          content: SingleChildScrollView(
-            child: Column(
+          content: Scrollbar(
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              primary: true,
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
@@ -494,6 +503,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                 ),
               ],
+            ),
             ),
           ),
           actions: [
