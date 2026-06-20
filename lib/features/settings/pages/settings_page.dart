@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -75,7 +74,6 @@ class _SettingsPageState extends State<SettingsPage> {
             builder: (context, snapshot) {
               final status = snapshot.data;
               final dest = status?.destination;
-              final isSaf = dest?.kind == DestinationKind.saf;
               final hasError = (status?.lastError != null) ||
                   ((status?.consecutiveFailures ?? 0) > 0);
 
@@ -132,11 +130,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                   ListTile(
-                    leading: Icon(isSaf
-                        ? Icons.cloud_done
-                        : (dest != null
-                            ? Icons.folder
-                            : Icons.folder_open_outlined)),
+                    leading: Icon(dest != null
+                        ? Icons.folder
+                        : Icons.folder_open_outlined),
                     title: const Text('Backup-Ziel'),
                     subtitle: Text(
                       dest == null ? 'Ziel wählen...' : dest.displayLabel,
@@ -391,47 +387,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _pickDestination() async {
-    final choice = await showModalBottomSheet<_DestChoice>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text('Backup-Ziel wählen',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-            if (Platform.isAndroid)
-              ListTile(
-                leading: const Icon(Icons.cloud_done),
-                title: const Text('Cloud-/SAF-Ordner'),
-                subtitle: const Text(
-                    'Z. B. Google Drive-, Dropbox- oder OneDrive-Ordner'),
-                onTap: () => Navigator.pop(ctx, _DestChoice.saf),
-              ),
-            ListTile(
-              leading: const Icon(Icons.folder),
-              title: const Text('Lokaler Ordner'),
-              subtitle: const Text('Verzeichnis auf diesem Gerät'),
-              onTap: () => Navigator.pop(ctx, _DestChoice.local),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-    if (choice == null || !mounted) return;
-
-    BackupDestination? dest;
-    switch (choice) {
-      case _DestChoice.saf:
-        dest = await backupService.pickSafBackupDirectory();
-        break;
-      case _DestChoice.local:
-        dest = await backupService.pickLocalBackupDirectory();
-        break;
-    }
+    final dest = await backupService.pickLocalBackupDirectory();
 
     if (!mounted) return;
     if (dest == null) {
@@ -815,50 +771,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  /// Same picker as in the destination configuration flow, but used from the
-  /// restore dialog to (re-)attach a folder that already contains backups —
-  /// the common case after a reinstall where SAF URI grants are revoked.
   Future<BackupDestination?> _pickRestoreSource(BuildContext sheetCtx) async {
-    final choice = await showModalBottomSheet<_DestChoice>(
-      context: sheetCtx,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text('Backup-Ordner wählen',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-            if (Platform.isAndroid)
-              ListTile(
-                leading: const Icon(Icons.cloud_done),
-                title: const Text('Cloud-/SAF-Ordner'),
-                subtitle: const Text(
-                    'Z. B. Google Drive-, Dropbox- oder OneDrive-Ordner'),
-                onTap: () => Navigator.pop(ctx, _DestChoice.saf),
-              ),
-            ListTile(
-              leading: const Icon(Icons.folder),
-              title: const Text('Lokaler Ordner'),
-              onTap: () => Navigator.pop(ctx, _DestChoice.local),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-    if (choice == null) return null;
-
-    BackupDestination? dest;
-    switch (choice) {
-      case _DestChoice.saf:
-        dest = await backupService.pickSafBackupDirectory();
-        break;
-      case _DestChoice.local:
-        dest = await backupService.pickLocalBackupDirectory();
-        break;
-    }
+    final dest = await backupService.pickLocalBackupDirectory();
     if (dest == null && sheetCtx.mounted) {
       ScaffoldMessenger.of(sheetCtx).showSnackBar(
         const SnackBar(
@@ -1006,7 +920,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-enum _DestChoice { saf, local }
 
 class _RestoreListState {
   final bool hasDestination;
