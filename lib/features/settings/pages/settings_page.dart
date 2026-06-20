@@ -145,7 +145,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (dest != null)
                     ListTile(
                       leading: const Icon(Icons.play_circle_outline),
-                      title: const Text('Backup jetzt testen'),
+                      title: const Text('Backup jetzt ausführen'),
                       onTap: () async {
                         final result =
                             await backupService.runBackup(manual: true);
@@ -153,8 +153,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(result.success
-                                ? 'Test-Backup erfolgreich!'
-                                : 'Test-Backup fehlgeschlagen: ${result.error}'),
+                                ? 'Backup erfolgreich!'
+                                : 'Backup fehlgeschlagen: ${result.error}'),
                             backgroundColor:
                                 result.success ? Colors.green : Colors.red,
                           ),
