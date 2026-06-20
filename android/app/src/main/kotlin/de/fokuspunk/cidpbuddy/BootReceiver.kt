@@ -1,4 +1,4 @@
-package de.gbs_cidp.cidpbuddy
+package de.fokuspunk.cidpbuddy
 
 import android.content.BroadcastReceiver
 import android.content.Context

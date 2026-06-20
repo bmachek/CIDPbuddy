@@ -1,4 +1,4 @@
-package de.gbs_cidp.cidpbuddy
+package de.fokuspunk.cidpbuddy
 
 import io.flutter.embedding.android.FlutterActivity
 
