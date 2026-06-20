@@ -256,12 +256,16 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               onPressed: () => _save(diaryProvider),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.check_circle_outline_rounded),
                   const SizedBox(width: 12),
-                  Text(
-                    _shouldShowTimer ? 'Speichern & Timer starten' : 'Infusion speichern & Bestand abbuchen',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Flexible(
+                    child: Text(
+                      _shouldShowTimer ? 'Speichern & Timer starten' : 'Infusion speichern & Bestand abbuchen',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
               ),

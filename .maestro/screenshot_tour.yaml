@@ -41,7 +41,7 @@ appId: de.fokuspunk.cidpbuddy
 
 - tapOn:
     text: "Dosis / Stärke"
-- inputText: "20%"
+- inputText: "10g"
 
 - tapOn:
     text: "Anfangsbestand"
@@ -67,14 +67,33 @@ appId: de.fokuspunk.cidpbuddy
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/05_infusionsplan_erstellen
 
+# scrollUntilVisible scrollt die Flutter-SingleChildScrollView NICHT zuverlässig:
+# der Button-Sliver am unteren Rand gilt sofort als "sichtbar", es wird gar nicht
+# gescrollt und der Tap landet auf dem abgeschnittenen Button (= keine Reaktion).
+# Darum eine echte Wisch-Geste, bis der Button vollständig im tappbaren Bereich liegt.
+- swipe:
+    start: "50%,70%"
+    end: "50%,25%"
+    duration: 500
+- waitForAnimationToEnd
 - tapOn:
     text: "Zeitplan aktivieren"
+# Bestätigen, dass der Tap die Seite wirklich verlassen hat. Sonst läuft der
+# Flow auf der Plan-Seite weiter und alle Folge-Schritte (Dashboard etc.)
+# schlagen mit irreführenden "not found"-Fehlern fehl.
+- extendedWaitUntil:
+    notVisible: "Zeitplan aktivieren"
+    timeout: 10000
 - waitForAnimationToEnd
 
 # ── Phase 3: Dashboard-Tour ──────────────────────────────
 
 - tapOn:
     point: "12%,92%"
+# Warten bis das Dashboard (und damit der "Termin planen"-FAB) wirklich da ist.
+- extendedWaitUntil:
+    visible: "Termin planen"
+    timeout: 10000
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/06_dashboard
 
@@ -157,8 +176,12 @@ appId: de.fokuspunk.cidpbuddy
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/15_medikation
 
+# Die Medikamenten-Kachel ist eine getappte ListTile -> Flutter merged Titel,
+# Dosis-Badge und Untertitel zu EINEM Accessibility-Node mit Label
+# "Hizentra\n20%\nPZN: ". Maestros text-Selector macht einen Voll-String-Match,
+# darum matcht "Hizentra" allein nicht. (?s) erlaubt das . über Zeilenumbrüche.
 - tapOn:
-    text: "Hizentra"
+    text: "(?s)Hizentra.*"
 - waitForAnimationToEnd
 - takeScreenshot: screenshots/16_hizentra_details
 
@@ -182,15 +205,21 @@ appId: de.fokuspunk.cidpbuddy
     text: "Hinzufügen"
 - waitForAnimationToEnd
 
+# Die Kategorie ist jetzt ein Dropdown (Button-Node "Kategorie\nMedikament"),
+# kein Umschalter mehr. Erst das Dropdown öffnen, dann "Verbrauchsmaterial"
+# aus der geöffneten Liste wählen.
 - tapOn:
-    text: "Medikament"
+    text: "(?s)Kategorie.*"
 - tapOn:
     text: "Verbrauchsmaterial"
 - waitForAnimationToEnd
 
+# Maestros inputText kann keine Umlaute tippen (adb-Text-Input ist ASCII-only,
+# siehe maestro #146) -> ASCII-Name verwenden. "Tupfer" passt als Infusions-
+# Verbrauchsmaterial und sieht im Screenshot korrekt aus.
 - tapOn:
     text: "Medikamentenname"
-- inputText: "Kanülen"
+- inputText: "Tupfer"
 
 - tapOn:
     text: "Anfangsbestand"
