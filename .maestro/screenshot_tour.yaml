@@ -1,0 +1,112 @@
+appId: de.fokuspunk.cidpbuddy
+---
+
+# CIDPbuddy – vollständige Screenshot- & Screen-Recording-Tour
+# Ausführen: maestro record .maestro/screenshot_tour.yaml
+#             maestro test .maestro/screenshot_tour.yaml
+
+- launchApp:
+    clearState: false
+
+# ── 1. Dashboard ─────────────────────────────────────────────────────────────
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/01_dashboard
+
+- swipe:
+    direction: DOWN
+    duration: 800
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/02_dashboard_scrolled
+
+- swipe:
+    direction: UP
+    duration: 800
+
+# ── 2. Termin planen (FAB) ───────────────────────────────────────────────────
+- tapOn:
+    text: "Termin planen"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/03_termin_planen_dialog
+- pressKey: Back
+
+# ── 3. Tagebuch-Tab ──────────────────────────────────────────────────────────
+- tapOn:
+    text: "Tagebuch"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/04_tagebuch
+
+- swipe:
+    direction: DOWN
+    duration: 800
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/05_tagebuch_scrolled
+
+- swipe:
+    direction: UP
+    duration: 800
+
+# Vitalwerte & Symptome erfassen
+- tapOn:
+    text: "Vitalwerte & Symptome"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/06_vitalwerte_erfassen
+- pressKey: Back
+
+# Infusion erfassen
+- tapOn:
+    text: "Infusion erfassen"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/07_infusion_erfassen
+- pressKey: Back
+
+# ── 4. Medikation-Tab ────────────────────────────────────────────────────────
+- tapOn:
+    text: "Medikation"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/08_medikation
+
+- swipe:
+    direction: DOWN
+    duration: 800
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/09_medikation_scrolled
+
+- swipe:
+    direction: UP
+    duration: 800
+
+# Hinzufügen-Dialog
+- tapOn:
+    text: "Hinzufügen"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/10_medikament_hinzufuegen
+- pressKey: Back
+
+# Abgesetzte Medikamente
+- tapOn:
+    text: "Abgesetzte Medikamente"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/11_abgesetzte_medikamente
+- pressKey: Back
+
+# ── 5. Einstellungen-Tab ─────────────────────────────────────────────────────
+- tapOn:
+    text: "Einstellungen"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/13_einstellungen
+
+- swipe:
+    direction: DOWN
+    duration: 800
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/14_einstellungen_scrolled
+
+- swipe:
+    direction: UP
+    duration: 800
+
+# ── 6. Abschluss: zurück zum Dashboard ───────────────────────────────────────
+- tapOn:
+    text: "Dashboard"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/15_dashboard_final
