@@ -649,14 +649,11 @@ class _SettingsPageState extends State<SettingsPage> {
                           final pathHint = state.destinationLabel != null
                               ? '\n\nAktueller Ordner:\n${state.destinationLabel}'
                               : '';
-                          final diag = state.diagnostic != null
-                              ? '\n\n${state.diagnostic}'
-                              : '';
                           return _restoreEmptyState(
                             icon: Icons.folder_open,
                             title: 'Keine Backups gefunden',
                             body:
-                                'Im verbundenen Ordner liegen keine Sicherungen (Dateien mit "cidpbuddy_backup_…zip" oder "igkeeper_backup_…zip").$pathHint$diag\n\nFalls deine Backups in einem anderen Ordner liegen, wähle ihn hier aus.',
+                                'Im verbundenen Ordner liegen keine Sicherungen (Dateien mit "cidpbuddy_backup_…zip" oder "igkeeper_backup_…zip").$pathHint\n\nFalls deine Backups in einem anderen Ordner liegen, wähle ihn hier aus.',
                             buttonLabel: 'Anderen Ordner wählen',
                             onPressed: pickAndReload,
                           );
@@ -710,21 +707,10 @@ class _SettingsPageState extends State<SettingsPage> {
     }
     try {
       final list = await dest.listBackups();
-      String? diagnostic;
-      // Empty list could mean "wrong folder" — surface what's actually
-      // there so the user can verify it themselves.
-      if (list.isEmpty) {
-        if (dest is LocalDestination) {
-          diagnostic = await dest.describeContents();
-        } else if (dest is SafDestination) {
-          diagnostic = await dest.describeContents();
-        }
-      }
       return _RestoreListState(
         hasDestination: true,
         backups: list,
         destinationLabel: label,
-        diagnostic: diagnostic,
       );
     } catch (e) {
       return _RestoreListState(
@@ -743,28 +729,27 @@ class _SettingsPageState extends State<SettingsPage> {
     required String buttonLabel,
     required VoidCallback onPressed,
   }) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 48, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 8),
-            Text(body,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey)),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: onPressed,
-              icon: const Icon(Icons.folder_open),
-              label: Text(buttonLabel),
-            ),
-          ],
-        ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 48, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          Text(body,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey)),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: onPressed,
+            icon: const Icon(Icons.folder_open),
+            label: Text(buttonLabel),
+          ),
+        ],
       ),
     );
   }
@@ -916,13 +901,11 @@ class _RestoreListState {
   final List<BackupFile> backups;
   final String? errorMessage;
   final String? destinationLabel;
-  final String? diagnostic;
   const _RestoreListState({
     required this.hasDestination,
     required this.backups,
     this.errorMessage,
     this.destinationLabel,
-    this.diagnostic,
   });
 }
 
