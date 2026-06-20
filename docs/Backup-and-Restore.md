@@ -9,9 +9,6 @@ CIDPbuddy sichert die gesamte SQLite-Datenbank als ZIP-Datei. Backups werden aut
 | Ziel | Plattform | Beschreibung |
 |------|-----------|--------------|
 | Lokal | Alle | App-interner Speicher (privates App-Verzeichnis) |
-| SAF-Ordner | Android | Benutzerwählbarer Ordner via Storage Access Framework |
-| Google Drive | Android, iOS | App-Data-Ordner (versteckt, nutzerspezifisch) |
-| iCloud | iOS (geplant) | Reserviert, noch nicht implementiert |
 
 ## Backup-Ablauf
 
@@ -61,30 +58,3 @@ Die Seite **Zuverlässigkeitscheck** (`reliability_check_page.dart`) zeigt:
 
 > **Wichtig:** Da `AppDatabase` ein Singleton ist, muss die Verbindung beim Restore kontrolliert neu aufgebaut werden, um Verbindungslecks zu vermeiden.
 
-## SAF-Integration (Android)
-
-Der SAF-Ordner wird vom Benutzer einmalig via System-Picker ausgewählt. Das persistierte URI wird in SharedPreferences gespeichert. `saf_util` und `saf_stream` übernehmen Lese- und Schreiboperationen auf persistierten Tree-URIs.
-
-## Google Drive Integration
-
-Backups landen im **App-Data-Ordner** von Google Drive (`appDataFolder`). Dieser Ordner ist:
-- Für den Benutzer in der Drive-Oberfläche unsichtbar (aber in Einstellungen → Apps → Speicher einsehbar)
-- Nur für diese App zugänglich (kein Zugriff durch andere Apps)
-- Automatisch gelöscht, wenn die App deinstalliert wird
-
-Für die Einrichtung des Google Cloud Projekts: siehe [Google-Drive-Einrichtung](Google-Drive-Setup).
-
-### OAuth-Scope
-
-```
-https://www.googleapis.com/auth/drive.appdata
-```
-
-Dieser eingeschränkte Scope erlaubt nur den Zugriff auf den App-Data-Ordner — keine anderen Drive-Dateien des Benutzers.
-
-### Token-Lebenszyklus
-
-- `tryRestore()` beim App-Start: Stilles Token-Refresh ohne UI
-- `signInAndAuthorize()`: Interaktiver Sign-In mit Scope-Bestätigung
-- `authorizedClient()`: Gibt HTTP-Client mit automatisch erneutem Bearer-Token zurück
-- Token-Management übernimmt vollständig `google_sign_in` — es werden keine Raw-Token gespeichert
