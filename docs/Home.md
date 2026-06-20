@@ -24,6 +24,7 @@ CIDPbuddy ist eine Flutter-App zur Verwaltung von Infusionstherapien für Patien
 
 ## Wiki-Inhalte
 
+- [Screenshots & Rundgang](Screenshots) — Geführter Bildschirm-Rundgang durch die App
 - [Architektur](Architecture) — State Management, Hintergrundservices, Navigation, Theme
 - [Datenbankschema](Database-Schema) — Alle Tabellen, Felder und Migrationen
 - [Features](Features) — Detailbeschreibung der Feature-Module
