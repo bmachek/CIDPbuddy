@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:workmanager/workmanager.dart';
-import 'dart:developer' as dev;
 import 'backup_service.dart';
 import '../../../core/database/database.dart';
 import '../../../core/services/scheduler_service.dart';
@@ -22,22 +21,14 @@ void backupCallbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     WidgetsFlutterBinding.ensureInitialized();
     try {
-      dev.log('BackupWorker: task=$task firing');
-
       if (task == kMissedCheckTaskName) {
         return await _runMissedTreatmentsCheck();
       }
 
       final result = await BackupService().runBackup();
-      if (result.success) {
-        dev.log('BackupWorker: success ${result.fileName}');
-        return true;
-      }
-      dev.log('BackupWorker: failed: ${result.error}');
       // Returning false signals WorkManager to apply backoff and retry.
-      return false;
-    } catch (e, stack) {
-      dev.log('BackupWorker: uncaught: $e\n$stack');
+      return result.success;
+    } catch (e) {
       return false;
     }
   });
@@ -52,10 +43,8 @@ Future<bool> _runMissedTreatmentsCheck() async {
     final db = AppDatabase();
     final scheduler = SchedulerService(db);
     await scheduler.checkMissedTreatments();
-    dev.log('BackupWorker: missed treatments check completed.');
     return true;
-  } catch (e, stack) {
-    dev.log('BackupWorker: missed check failed: $e\n$stack');
+  } catch (e) {
     return false;
   }
 }
@@ -83,12 +72,10 @@ class BackupScheduler {
       backoffPolicy: BackoffPolicy.exponential,
       backoffPolicyDelay: const Duration(minutes: 30),
     );
-    dev.log('BackupScheduler: periodic task registered.');
   }
 
   static Future<void> disable() async {
     await Workmanager().cancelByUniqueName(kBackupPeriodicTaskUniqueName);
-    dev.log('BackupScheduler: periodic task cancelled.');
   }
 
   /// Sync the WorkManager registration with current SharedPreferences state.
@@ -115,6 +102,5 @@ class BackupScheduler {
         networkType: NetworkType.notRequired,
       ),
     );
-    dev.log('BackupScheduler: missed treatments check task registered.');
   }
 }

@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:saf_util/saf_util.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:developer' as dev;
 import '../../reminders/services/notification_service.dart';
 import 'backup_destination.dart';
 
@@ -112,15 +111,11 @@ class BackupService {
       final destination = SafDestination(dir.uri, displayName: dir.name);
       // Verify before persisting — confirms the grant is actually usable.
       final err = await destination.verifyAccess();
-      if (err != null) {
-        dev.log('BackupService: SAF picked but verify failed: $err');
-        return null;
-      }
+      if (err != null) return null;
       await destination.persist();
       await _resetFailureState();
       return destination;
-    } catch (e, stack) {
-      dev.log('BackupService.pickSafBackupDirectory: $e\n$stack');
+    } catch (e) {
       return null;
     }
   }
@@ -132,15 +127,11 @@ class BackupService {
       if (selected == null) return null;
       final destination = LocalDestination(selected);
       final err = await destination.verifyAccess();
-      if (err != null) {
-        dev.log('BackupService: Local picked but verify failed: $err');
-        return null;
-      }
+      if (err != null) return null;
       await destination.persist();
       await _resetFailureState();
       return destination;
     } catch (e) {
-      dev.log('BackupService.pickLocalBackupDirectory: $e');
       return null;
     }
   }
@@ -197,8 +188,7 @@ class BackupService {
       // If we previously notified about failure, clear the badge.
       await NotificationService().cancelBackupFailureNotification();
       return BackupResult.ok(fileName);
-    } catch (e, stack) {
-      dev.log('BackupService.runBackup write failed: $e\n$stack');
+    } catch (e) {
       return _recordFailure(prefs, 'Schreibfehler: $e');
     }
   }
@@ -278,14 +268,9 @@ class BackupService {
       for (final f in toDelete) {
         try {
           await dest.deleteBackup(f);
-          dev.log('BackupService: pruned ${f.name}');
-        } catch (e) {
-          dev.log('BackupService: prune failed for ${f.name}: $e');
-        }
+        } catch (_) {} // ignore: empty_catches
       }
-    } catch (e) {
-      dev.log('BackupService._pruneOldBackups: $e');
-    }
+    } catch (_) {} // ignore: empty_catches
   }
 
   // -------------------------------------------------- List & restore & legacy
@@ -296,7 +281,6 @@ class BackupService {
     try {
       return await dest.listBackups();
     } catch (e) {
-      dev.log('BackupService.getAvailableBackups: $e');
       return [];
     }
   }
@@ -305,14 +289,12 @@ class BackupService {
   /// only after a successful, fully written `.tmp` copy.
   Future<bool> restoreFromZippedBackup(BackupFile backup) async {
     try {
-      dev.log('BackupService.restore: ${backup.name}');
       final dest = await BackupDestination.load();
       if (dest == null) return false;
       final bytes = await dest.readBackup(backup);
       if (bytes.isEmpty) return false;
       return await _restoreFromZipBytes(bytes);
-    } catch (e, stack) {
-      dev.log('BackupService.restore exception: $e\n$stack');
+    } catch (e) {
       return false;
     }
   }
@@ -322,12 +304,10 @@ class BackupService {
   /// the file — the user can point directly at any igkeeper backup ZIP.
   Future<bool> restoreFromZipPath(String filePath) async {
     try {
-      dev.log('BackupService.restoreFromZipPath: $filePath');
       final bytes = await File(filePath).readAsBytes();
       if (bytes.isEmpty) return false;
       return await _restoreFromZipBytes(bytes);
-    } catch (e, stack) {
-      dev.log('BackupService.restoreFromZipPath exception: $e\n$stack');
+    } catch (e) {
       return false;
     }
   }
@@ -356,7 +336,6 @@ class BackupService {
         if (p.basename(finalPath) == 'igkeeper.sqlite') dbRestored = true;
       }
     } catch (e) {
-      dev.log('BackupService._restoreFromZipBytes staging failed: $e');
       for (final tmp in staged) {
         try {
           if (await tmp.exists()) await tmp.delete();
@@ -430,11 +409,8 @@ class BackupService {
 
       final error = await dest.verifyAccess();
       if (error != null) {
-        dev.log('BackupService: Startup SAF check failed: $error');
         await _recordFailure(prefs, error);
       }
-    } catch (e) {
-      dev.log('BackupService.checkSafAccessOnStartup: $e');
-    }
+    } catch (_) {} // ignore: empty_catches
   }
 }

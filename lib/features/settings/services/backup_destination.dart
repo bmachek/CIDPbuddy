@@ -4,7 +4,6 @@ import 'package:path/path.dart' as p;
 import 'package:saf_util/saf_util.dart';
 import 'package:saf_stream/saf_stream.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:developer' as dev;
 
 /// A backup file located in some destination (local dir or SAF tree).
 class BackupFile {
@@ -120,7 +119,6 @@ class LocalDestination extends BackupDestination {
     try {
       exists = await dir.exists();
     } catch (e) {
-      dev.log('LocalDestination.verifyAccess exists() threw: $e');
       return 'Ordner nicht lesbar: $dirPath\n($e)';
     }
     if (!exists) {
@@ -131,7 +129,6 @@ class LocalDestination extends BackupDestination {
     try {
       await dir.list().take(1).toList();
     } catch (e) {
-      dev.log('LocalDestination.verifyAccess list() threw: $e');
       return 'Ordner nicht lesbar: $dirPath\n($e)';
     }
     try {
@@ -139,7 +136,6 @@ class LocalDestination extends BackupDestination {
       await probe.writeAsString('ok', flush: true);
       await probe.delete();
     } catch (e) {
-      dev.log('LocalDestination.verifyAccess probe failed: $e');
       return 'Schreibzugriff verweigert: $dirPath\n($e)';
     }
     return null;
@@ -161,10 +157,6 @@ class LocalDestination extends BackupDestination {
       throw FileSystemException('Ordner existiert nicht', dirPath);
     }
     final entries = await dir.list().toList();
-    dev.log(
-      'LocalDestination.listBackups: $dirPath enthält ${entries.length} '
-      'Einträge (insgesamt, vor Filter)',
-    );
     final files = entries.whereType<File>().where((f) {
       final name = p.basename(f.path);
       return (name.startsWith('cidpbuddy_backup_') || name.startsWith('igkeeper_backup_')) && name.endsWith('.zip');
@@ -263,12 +255,9 @@ class SafDestination extends BackupDestination {
             await util.delete(f.uri, false);
           }
         }
-      } catch (e) {
-        dev.log('SafDestination: cleanup of $_healthName failed (non-fatal): $e');
-      }
+      } catch (_) {}
       return null;
     } catch (e) {
-      dev.log('SafDestination.verifyAccess failed: $e');
       return 'Berechtigung für Cloud-Ordner verloren. Bitte Ordner erneut wählen.';
     }
   }

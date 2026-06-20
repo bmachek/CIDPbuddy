@@ -9,7 +9,6 @@ import '../../../core/constants/build_config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'reliability_check_page.dart';
 import 'package:intl/intl.dart';
-import 'dart:developer' as dev;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_links.dart';
 import '../../../core/database/database.dart';
@@ -727,8 +726,7 @@ class _SettingsPageState extends State<SettingsPage> {
         destinationLabel: label,
         diagnostic: diagnostic,
       );
-    } catch (e, stack) {
-      dev.log('SettingsPage._loadRestoreState listBackups failed: $e\n$stack');
+    } catch (e) {
       return _RestoreListState(
         hasDestination: true,
         backups: const [],
@@ -847,7 +845,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _confirmZippedRestore(BackupFile backup) async {
-    dev.log('BACKUP_RESTORE: _confirmZippedRestore aufgerufen für ${backup.name}');
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -875,13 +872,8 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
 
-    dev.log('BACKUP_RESTORE: Dialog bestätigt mit: $confirm');
-
     if (confirm == true) {
-      if (!mounted) {
-        dev.log('BACKUP_RESTORE: Widget nicht mehr montiert, breche ab.');
-        return;
-      }
+      if (!mounted) return;
 
       // Show progress
       showDialog(
@@ -890,9 +882,7 @@ class _SettingsPageState extends State<SettingsPage> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      dev.log('BACKUP_RESTORE: Schließe Datenbank-Verbindung (Singleton)...');
       await AppDatabase().close();
-      dev.log('BACKUP_RESTORE: Datenbank-Verbindung geschlossen.');
 
       final success = await backupService.restoreFromZippedBackup(backup);
       
