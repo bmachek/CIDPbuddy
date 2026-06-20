@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:workmanager/workmanager.dart';
 import 'dart:developer' as dev;
 import 'backup_service.dart';
-import 'cloud/google_drive_auth.dart';
 import '../../../core/database/database.dart';
 import '../../../core/services/scheduler_service.dart';
 import '../../reminders/services/notification_service.dart';
@@ -29,11 +28,6 @@ void backupCallbackDispatcher() {
         return await _runMissedTreatmentsCheck();
       }
 
-      // GoogleSignIn must be (re-)initialized in this isolate before the
-      // Drive destination can fetch a token.
-      if (GoogleDriveAuth.instance.isPlatformSupported) {
-        await GoogleDriveAuth.instance.tryRestore();
-      }
       final result = await BackupService().runBackup();
       if (result.success) {
         dev.log('BackupWorker: success ${result.fileName}');

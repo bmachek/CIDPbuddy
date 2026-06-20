@@ -12,7 +12,6 @@ import 'package:igkeeper/core/services/medication_service.dart';
 import 'package:igkeeper/core/services/background_service.dart';
 import 'package:igkeeper/features/settings/services/backup_service.dart';
 import 'package:igkeeper/features/settings/services/backup_worker.dart';
-import 'package:igkeeper/features/settings/services/cloud/google_drive_auth.dart';
 import 'package:igkeeper/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disable_battery_optimization/disable_battery_optimization.dart';
@@ -48,7 +47,7 @@ void main() async {
     );
 
     // Defer heavy init (WorkManager, alarm rescheduling, battery-opt prompt,
-    // cloud auth, missed-treatments scan) until after the first frame.
+    // missed-treatments scan) until after the first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_initDeferred(db));
     });
@@ -85,10 +84,6 @@ Future<void> _initDeferred(AppDatabase db) async {
   await step('BackupScheduler.init', BackupScheduler.init);
   await step('BackupScheduler.syncFromPrefs', BackupScheduler.syncFromPrefs);
   await step('BackupScheduler.enableMissedCheck', BackupScheduler.enableMissedCheck);
-
-  if (GoogleDriveAuth.instance.isPlatformSupported) {
-    unawaited(GoogleDriveAuth.instance.tryRestore());
-  }
 
   final scheduler = SchedulerService(db);
   await step('syncPlannedInfusions', scheduler.syncPlannedInfusions);

@@ -11,6 +11,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'reliability_check_page.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as dev;
+import 'package:url_launcher/url_launcher.dart';
+import '../../../core/constants/app_links.dart';
 import '../../../core/database/database.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -74,7 +76,6 @@ class _SettingsPageState extends State<SettingsPage> {
               final status = snapshot.data;
               final dest = status?.destination;
               final isSaf = dest?.kind == DestinationKind.saf;
-              final isDrive = dest?.kind == DestinationKind.googleDrive;
               final hasError = (status?.lastError != null) ||
                   ((status?.consecutiveFailures ?? 0) > 0);
 
@@ -131,13 +132,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                   ListTile(
-                    leading: Icon(isDrive
-                        ? Icons.cloud_circle
-                        : (isSaf
-                            ? Icons.cloud_done
-                            : (dest != null
-                                ? Icons.folder
-                                : Icons.folder_open_outlined))),
+                    leading: Icon(isSaf
+                        ? Icons.cloud_done
+                        : (dest != null
+                            ? Icons.folder
+                            : Icons.folder_open_outlined)),
                     title: const Text('Backup-Ziel'),
                     subtitle: Text(
                       dest == null ? 'Ziel wählen...' : dest.displayLabel,
@@ -283,6 +282,30 @@ class _SettingsPageState extends State<SettingsPage> {
               );
             },
           ),
+          if (AppLinks.impressumUrl != null || AppLinks.datenschutzUrl != null) ...[
+            const Divider(),
+            _buildSectionHeader('Rechtliches'),
+            if (AppLinks.impressumUrl != null)
+              ListTile(
+                leading: const Icon(Icons.gavel_outlined),
+                title: const Text('Impressum'),
+                trailing: const Icon(Icons.open_in_new, size: 16),
+                onTap: () => launchUrl(
+                  Uri.parse(AppLinks.impressumUrl!),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+            if (AppLinks.datenschutzUrl != null)
+              ListTile(
+                leading: const Icon(Icons.privacy_tip_outlined),
+                title: const Text('Datenschutzerklärung'),
+                trailing: const Icon(Icons.open_in_new, size: 16),
+                onTap: () => launchUrl(
+                  Uri.parse(AppLinks.datenschutzUrl!),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+          ],
           const Divider(),
           _buildSectionHeader('Über CIDP Buddy'),
           FutureBuilder<PackageInfo>(
@@ -379,20 +402,6 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Text('Backup-Ziel wählen',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
-            ListTile(
-              leading: const Icon(Icons.cloud_circle, color: Color(0xFF1A73E8)),
-              title: const Text('Google Drive'),
-              subtitle: const Text(
-                  'Sicherung in der App-Daten-Ablage deines Google-Kontos'),
-              onTap: () => Navigator.pop(ctx, _DestChoice.googleDrive),
-            ),
-            if (Platform.isIOS || Platform.isMacOS)
-              ListTile(
-                leading: const Icon(Icons.cloud, color: Color(0xFF147EFB)),
-                title: const Text('iCloud Drive'),
-                subtitle: const Text('Sicherung im iCloud-Ordner dieser App'),
-                onTap: () => Navigator.pop(ctx, _DestChoice.iCloud),
-              ),
             if (Platform.isAndroid)
               ListTile(
                 leading: const Icon(Icons.cloud_done),
@@ -416,14 +425,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
     BackupDestination? dest;
     switch (choice) {
-      case _DestChoice.googleDrive:
-        dest = await backupService.pickGoogleDriveBackup();
-        break;
       case _DestChoice.saf:
         dest = await backupService.pickSafBackupDirectory();
-        break;
-      case _DestChoice.iCloud:
-        dest = await backupService.pickICloudBackup();
         break;
       case _DestChoice.local:
         dest = await backupService.pickLocalBackupDirectory();
@@ -831,17 +834,6 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Text('Backup-Ordner wählen',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
-            ListTile(
-              leading: const Icon(Icons.cloud_circle, color: Color(0xFF1A73E8)),
-              title: const Text('Google Drive'),
-              onTap: () => Navigator.pop(ctx, _DestChoice.googleDrive),
-            ),
-            if (Platform.isIOS || Platform.isMacOS)
-              ListTile(
-                leading: const Icon(Icons.cloud, color: Color(0xFF147EFB)),
-                title: const Text('iCloud Drive'),
-                onTap: () => Navigator.pop(ctx, _DestChoice.iCloud),
-              ),
             if (Platform.isAndroid)
               ListTile(
                 leading: const Icon(Icons.cloud_done),
@@ -864,14 +856,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
     BackupDestination? dest;
     switch (choice) {
-      case _DestChoice.googleDrive:
-        dest = await backupService.pickGoogleDriveBackup();
-        break;
       case _DestChoice.saf:
         dest = await backupService.pickSafBackupDirectory();
-        break;
-      case _DestChoice.iCloud:
-        dest = await backupService.pickICloudBackup();
         break;
       case _DestChoice.local:
         dest = await backupService.pickLocalBackupDirectory();
@@ -1024,7 +1010,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-enum _DestChoice { googleDrive, saf, iCloud, local }
+enum _DestChoice { saf, local }
 
 class _RestoreListState {
   final bool hasDestination;

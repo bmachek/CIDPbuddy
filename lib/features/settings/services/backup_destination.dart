@@ -5,8 +5,6 @@ import 'package:saf_util/saf_util.dart';
 import 'package:saf_stream/saf_stream.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer' as dev;
-import 'cloud/google_drive_destination.dart';
-import 'cloud/icloud_destination.dart';
 
 /// A backup file located in some destination (local dir or SAF tree).
 class BackupFile {
@@ -25,7 +23,7 @@ class BackupFile {
   });
 }
 
-enum DestinationKind { local, saf, googleDrive, iCloud }
+enum DestinationKind { local, saf }
 
 /// Storage abstraction. Each destination owns its own access logic and
 /// must implement a non-destructive [verifyAccess] healthcheck.
@@ -66,8 +64,6 @@ abstract class BackupDestination {
     await prefs.remove(_kIsSaf);
     await prefs.remove(_kKind);
     await prefs.remove(_kSafDisplayName);
-    // Cloud-specific cleanup. Imported lazily to avoid a hard dep cycle here.
-    await GoogleDriveDestination.clearStored();
   }
 
   static Future<BackupDestination?> load() async {
@@ -77,8 +73,6 @@ abstract class BackupDestination {
     // New-style: explicit kind written by `persist()`.
     if (kindStr != null) {
       switch (kindStr) {
-        case 'googleDrive':
-          return GoogleDriveDestination.tryLoad();
         case 'saf':
           final path = prefs.getString(_kPath);
           final name = prefs.getString(_kSafDisplayName);
@@ -87,9 +81,6 @@ abstract class BackupDestination {
         case 'local':
           final path = prefs.getString(_kPath);
           if (path != null) return LocalDestination(path);
-          return null;
-        case 'iCloud':
-          if (Platform.isIOS || Platform.isMacOS) return ICloudDestination();
           return null;
       }
     }

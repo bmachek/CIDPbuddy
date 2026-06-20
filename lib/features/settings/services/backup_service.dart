@@ -11,9 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer' as dev;
 import '../../reminders/services/notification_service.dart';
 import 'backup_destination.dart';
-import 'cloud/google_drive_auth.dart';
-import 'cloud/google_drive_destination.dart';
-import 'cloud/icloud_destination.dart';
 
 export 'backup_destination.dart'
     show BackupFile, BackupDestination, DestinationKind, LocalDestination, SafDestination;
@@ -124,49 +121,6 @@ class BackupService {
       return destination;
     } catch (e, stack) {
       dev.log('BackupService.pickSafBackupDirectory: $e\n$stack');
-      return null;
-    }
-  }
-
-  /// iCloud Documents container als Backup-Ziel setzen.
-  /// Kein Login nötig — iCloud ist automatisch mit der Apple ID verbunden.
-  /// Nur auf iOS und macOS verfügbar.
-  Future<BackupDestination?> pickICloudBackup() async {
-    if (!Platform.isIOS && !Platform.isMacOS) return null;
-    try {
-      final destination = ICloudDestination();
-      final err = await destination.verifyAccess();
-      if (err != null) {
-        dev.log('BackupService: iCloud verify failed: $err');
-        return null;
-      }
-      await destination.persist();
-      await _resetFailureState();
-      return destination;
-    } catch (e, stack) {
-      dev.log('BackupService.pickICloudBackup: $e\n$stack');
-      return null;
-    }
-  }
-
-  /// Sign in with Google and use the user's Drive `appDataFolder` as the
-  /// backup target. Available on Android, iOS and macOS.
-  Future<BackupDestination?> pickGoogleDriveBackup() async {
-    if (!GoogleDriveAuth.instance.isPlatformSupported) return null;
-    try {
-      final account = await GoogleDriveAuth.instance.signInAndAuthorize();
-      if (account == null) return null;
-      final destination = GoogleDriveDestination(account.email);
-      final err = await destination.verifyAccess();
-      if (err != null) {
-        dev.log('BackupService: Drive picked but verify failed: $err');
-        return null;
-      }
-      await destination.persist();
-      await _resetFailureState();
-      return destination;
-    } catch (e, stack) {
-      dev.log('BackupService.pickGoogleDriveBackup: $e\n$stack');
       return null;
     }
   }
