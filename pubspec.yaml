@@ -85,6 +85,7 @@ dependencies:
   saf_stream: ^2.0.0
   workmanager: ^0.9.0+3
   url_launcher: ^6.3.0
+  restart_app: ^1.8.3
 
 flutter_launcher_icons:
   android: "launcher_icon"

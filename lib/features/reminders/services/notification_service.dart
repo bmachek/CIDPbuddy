@@ -295,7 +295,7 @@ class NotificationService {
 
     final prefs = await SharedPreferences.getInstance();
     final quietStart = prefs.getInt('quiet_hours_start') ?? 22;
-    final quietEnd = prefs.getInt('quiet_hours_end') ?? 7;
+    final quietEnd = prefs.getInt('quiet_hours_end') ?? 6;
 
     bool isQuiet(DateTime time) {
       final hour = time.hour;

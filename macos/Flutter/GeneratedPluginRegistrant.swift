@@ -15,6 +15,7 @@ import google_sign_in_ios
 import icloud_storage
 import mobile_scanner
 import package_info_plus
+import restart_app
 import share_plus
 import shared_preferences_foundation
 import sqlite3_flutter_libs
@@ -32,6 +33,7 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   IcloudStoragePlugin.register(with: registry.registrar(forPlugin: "IcloudStoragePlugin"))
   MobileScannerPlugin.register(with: registry.registrar(forPlugin: "MobileScannerPlugin"))
   FPPPackageInfoPlusPlugin.register(with: registry.registrar(forPlugin: "FPPPackageInfoPlusPlugin"))
+  RestartAppPlugin.register(with: registry.registrar(forPlugin: "RestartAppPlugin"))
   SharePlusMacosPlugin.register(with: registry.registrar(forPlugin: "SharePlusMacosPlugin"))
   SharedPreferencesPlugin.register(with: registry.registrar(forPlugin: "SharedPreferencesPlugin"))
   Sqlite3FlutterLibsPlugin.register(with: registry.registrar(forPlugin: "Sqlite3FlutterLibsPlugin"))

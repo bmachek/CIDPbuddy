@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:restart_app/restart_app.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/backup_service.dart';
@@ -44,27 +45,6 @@ class _SettingsPageState extends State<SettingsPage> {
             value: themeProvider.themeMode == ThemeMode.dark,
             onChanged: (val) => themeProvider.toggleTheme(),
             secondary: const Icon(Icons.brightness_4),
-          ),
-          const Divider(),
-          _buildSectionHeader('Datensicherung'),
-          ListTile(
-            leading: const Icon(Icons.cloud_upload_outlined),
-            title: const Text('Daten exportieren'),
-            subtitle: const Text('Erstelle eine Sicherung deiner Datenbank'),
-            onTap: () async {
-              await backupService.exportDatabase();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Backup wird bereitgestellt...'))
-                );
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.cloud_download_outlined),
-            title: const Text('Daten importieren'),
-            subtitle: const Text('Stelle eine Sicherung wieder her (Überschreibt aktuelle Daten)'),
-            onTap: () => _confirmImport(context, backupService),
           ),
           const Divider(),
           _buildSectionHeader('Automatisches Backup'),
@@ -199,7 +179,7 @@ class _SettingsPageState extends State<SettingsPage> {
           FutureBuilder<Map<String, dynamic>>(
             future: _getReminderSettings(),
             builder: (context, snapshot) {
-              final settings = snapshot.data ?? {'snooze': true, 'hourly': true, 'snooze_interval': 15, 'quiet_start': 22, 'quiet_end': 7};
+              final settings = snapshot.data ?? {'snooze': true, 'hourly': true, 'snooze_interval': 15, 'quiet_start': 22, 'quiet_end': 6};
               final snoozeInterval = settings['snooze_interval'] as int;
               return Column(
                 children: [
@@ -381,7 +361,7 @@ class _SettingsPageState extends State<SettingsPage> {
       'hourly': prefs.getBool('reminder_hourly') ?? true,
       'snooze_interval': prefs.getInt('reminder_snooze_interval') ?? 15,
       'quiet_start': prefs.getInt('quiet_hours_start') ?? 22,
-      'quiet_end': prefs.getInt('quiet_hours_end') ?? 7,
+      'quiet_end': prefs.getInt('quiet_hours_end') ?? 6,
     };
   }
 
@@ -499,39 +479,6 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ],
     );
-  }
-
-  void _confirmImport(BuildContext context, BackupService service) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Backup wiederherstellen?'),
-        content: const Text('Warnung: Die aktuellen Daten werden durch das Backup überschrieben. Dies kann nicht rückgängig gemacht werden.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(context, true), 
-            child: const Text('Wiederherstellen'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      final success = await service.importDatabase();
-      if (context.mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Daten erfolgreich wiederhergestellt. Bitte App neu starten.'))
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Import abgebrochen.'))
-          );
-        }
-      }
-    }
   }
 
   void _showDurationPicker(BuildContext context, int current) {
@@ -817,15 +764,17 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (mounted) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success
-              ? 'Daten erfolgreich wiederhergestellt. Bitte starte die App neu.'
-              : 'Fehler bei der Wiederherstellung.'),
-          duration: const Duration(seconds: 10),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ),
-      );
+      if (success) {
+        await _restartAfterRestore(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fehler bei der Wiederherstellung.'),
+            duration: Duration(seconds: 10),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -873,15 +822,9 @@ class _SettingsPageState extends State<SettingsPage> {
       
       if (mounted) {
         Navigator.pop(context); // Close progress
-        
+
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Daten erfolgreich wiederhergestellt. Bitte starte die App neu.'),
-              duration: Duration(seconds: 10),
-              backgroundColor: Colors.green,
-            )
-          );
+          await _restartAfterRestore(context);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -890,6 +833,35 @@ class _SettingsPageState extends State<SettingsPage> {
             )
           );
         }
+      }
+    }
+  }
+
+  /// Restarts the app after a successful restore. The DB connection was closed
+  /// during restore, so a full process restart is needed to reopen it cleanly.
+  /// On platforms where a native restart isn't available we fall back to a hint
+  /// asking the user to restart manually.
+  Future<void> _restartAfterRestore(BuildContext context) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Daten erfolgreich wiederhergestellt. App wird neu gestartet…'),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.green,
+      ),
+    );
+    // Give the snackbar a moment to show before the process is killed.
+    await Future.delayed(const Duration(seconds: 2));
+    try {
+      await Restart.restartApp();
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bitte starte die App manuell neu.'),
+            duration: Duration(seconds: 10),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     }
   }
