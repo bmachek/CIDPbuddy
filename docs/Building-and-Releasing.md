@@ -255,9 +255,9 @@ Oder in Xcode: Runner-Target → Signing & Capabilities → Team.
 
 Bei DB-Schemaänderungen:
 
-1. Neue Tabellenfelder/-tabellen in `lib/core/database/tables/` definieren
+1. Neue Tabellenfelder/-tabellen in `lib/core/database/database.dart` definieren
 2. Schemaversion in `@DriftDatabase` erhöhen
-3. `onUpgrade`-Schritt in `lib/core/database/app_database.dart` hinzufügen
+3. `onUpgrade`-Schritt in `lib/core/database/database.dart` hinzufügen
 4. Code neu generieren:
    ```bash
    dart run build_runner build --delete-conflicting-outputs

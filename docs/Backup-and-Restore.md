@@ -26,8 +26,10 @@ DB-Änderung
 ### Dateiname
 
 ```
-igkeeper_backup_YYYY-MM-DD_HHmmss.zip
+cidpbuddy_backup_YYYYMMDD_HHmmss.zip
 ```
+
+> Hinweis: Beim Auflisten/Wiederherstellen wird zusätzlich das alte Präfix `igkeeper_backup_` als Fallback erkannt.
 
 ### Hintergrund-Backup (Android)
 

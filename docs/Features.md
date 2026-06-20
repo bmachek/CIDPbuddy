@@ -119,7 +119,7 @@ Android 13+ Berechtigungen: `POST_NOTIFICATIONS` + `SCHEDULE_EXACT_ALARM` werden
 Siehe [Backup & Wiederherstellung](Backup-and-Restore) für Details zur Backup-Logik.
 
 Die Einstellungsseite ermöglicht:
-- Backup-Ziele hinzufügen/entfernen (lokal, SAF, Google Drive)
+- Backup-Ziele hinzufügen/entfernen (lokal, SAF)
 - Auto-Backup aktivieren/deaktivieren
 - Manuellen Backup-Test durchführen
 - Backups auflisten und Wiederherstellung starten

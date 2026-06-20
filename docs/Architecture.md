@@ -53,7 +53,7 @@ combinedEntriesStream = Rx.combineLatest4(
 `AppDatabase` ist eine App-weite Singleton-Instanz. Das ist kritisch für Backup/Restore: Beim Wiederherstellen wird die DB-Datei ersetzt und die Singleton-Verbindung neu aufgebaut — ohne Singleton könnten Verbindungslecks entstehen.
 
 ```dart
-// lib/core/database/app_database.dart
+// lib/core/database/database.dart
 static AppDatabase? _instance;
 static AppDatabase get instance => _instance ??= AppDatabase._internal();
 ```

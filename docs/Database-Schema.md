@@ -1,6 +1,6 @@
 # Datenbankschema
 
-CIDPbuddy verwendet **Drift ORM** mit SQLite. Die aktuelle Schemaversion ist **13**. Alle Migrationen sind explizit in `lib/core/database/app_database.dart` mit `onUpgrade`-Schritten hinterlegt.
+CIDPbuddy verwendet **Drift ORM** mit SQLite. Die aktuelle Schemaversion ist **13**. Alle Migrationen sind explizit in `lib/core/database/database.dart` mit `onUpgrade`-Schritten hinterlegt.
 
 ## Tabellenübersicht
 
@@ -132,8 +132,8 @@ Gesundheitstagebuch: Vitalwerte und CIDP-Symptomscores.
 |------|-----|--------------|
 | `id` | INTEGER PK | Auto-increment |
 | `date` | DATETIME | Erfassungszeitpunkt |
-| `systolicBP` | INTEGER? | Systolischer Blutdruck (mmHg) |
-| `diastolicBP` | INTEGER? | Diastolischer Blutdruck (mmHg) |
+| `systolicBP` | REAL? | Systolischer Blutdruck (mmHg) |
+| `diastolicBP` | REAL? | Diastolischer Blutdruck (mmHg) |
 | `heartRate` | INTEGER? | Herzfrequenz (bpm) |
 | `temperature` | REAL? | Körpertemperatur (°C) |
 | `weight` | REAL? | Körpergewicht (kg) |
