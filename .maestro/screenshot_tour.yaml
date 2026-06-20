@@ -1,112 +1,240 @@
 appId: de.fokuspunk.cidpbuddy
 ---
 
-# CIDPbuddy – vollständige Screenshot- & Screen-Recording-Tour
-# Ausführen: maestro record .maestro/screenshot_tour.yaml
-#             maestro test .maestro/screenshot_tour.yaml
+# ══════════════════════════════════════════════════════════
+#  CIDPbuddy – Screenshot- & Screen-Recording-Tour
+#  Ausführen: maestro record .maestro/screenshot_tour.yaml
+#              maestro test  .maestro/screenshot_tour.yaml
+# ══════════════════════════════════════════════════════════
+
+# ── Phase 1: App-Start & Berechtigungen ──────────────────
 
 - launchApp:
-    clearState: false
+    clearState: true
 
-# ── 1. Dashboard ─────────────────────────────────────────────────────────────
+- extendedWaitUntil:
+    visible:
+      text: "Medikation"
+    timeout: 15000
+
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/01_dashboard
+- takeScreenshot: screenshots/01_dashboard_leer
+
+# ── Phase 2: Medikament anlegen ──────────────────────────
+
+- tapOn:
+    text: "Medikation"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/02_medikation_leer
+
+- tapOn:
+    text: "Hinzufügen"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/03_neues_element_formular
+
+# Kategorie bleibt auf "Medikament" (Default)
+# Darreichungsform bleibt auf "Infusion" (Default)
+
+- tapOn:
+    text: "Medikamentenname"
+- inputText: "Hizentra"
+
+- tapOn:
+    text: "Dosis / Stärke"
+- inputText: "20%"
+
+- tapOn:
+    text: "Anfangsbestand"
+- eraseText: 20
+- inputText: "12"
+
+- tapOn:
+    text: "Standard-Nachbestellmenge"
+- eraseText: 20
+- inputText: "12"
+
+- tapOn:
+    text: "Warnschwelle (in Tagen)"
+- eraseText: 20
+- inputText: "30"
+
+- hideKeyboard
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/04_medikament_ausgefuellt
+
+# Speichern → navigiert automatisch zu AddSchedulePage
+- tapOn:
+    text: "Speichern"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/05_infusionsplan_erstellen
+
+# Hizentra ist vorausgewählt – Zeitplan direkt aktivieren
+- tapOn:
+    text: "Zeitplan aktivieren"
+- waitForAnimationToEnd
+
+# ── Phase 3: Dashboard-Tour ──────────────────────────────
+
+- tapOn:
+    text: "Dashboard"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/06_dashboard
 
 - swipe:
     direction: DOWN
     duration: 800
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/02_dashboard_scrolled
-
+- takeScreenshot: screenshots/07_dashboard_scrolled
 - swipe:
     direction: UP
-    duration: 800
+    duration: 500
+- waitForAnimationToEnd
 
-# ── 2. Termin planen (FAB) ───────────────────────────────────────────────────
+# Termin planen (FAB)
 - tapOn:
     text: "Termin planen"
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/03_termin_planen_dialog
+- takeScreenshot: screenshots/08_termin_planen_dialog
 - pressKey: Back
+- waitForAnimationToEnd
 
-# ── 3. Tagebuch-Tab ──────────────────────────────────────────────────────────
+# ── Phase 4: Tagebuch-Tour ───────────────────────────────
+
 - tapOn:
     text: "Tagebuch"
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/04_tagebuch
+- takeScreenshot: screenshots/09_tagebuch
 
 - swipe:
     direction: DOWN
     duration: 800
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/05_tagebuch_scrolled
-
+- takeScreenshot: screenshots/10_tagebuch_scrolled
 - swipe:
     direction: UP
-    duration: 800
+    duration: 500
+- waitForAnimationToEnd
 
-# Vitalwerte & Symptome erfassen
+# Vitalwerte & Symptome Formular
 - tapOn:
     text: "Vitalwerte & Symptome"
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/06_vitalwerte_erfassen
+- takeScreenshot: screenshots/11_vitalwerte_formular
+
+- swipe:
+    direction: DOWN
+    duration: 600
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/12_vitalwerte_formular_scrolled
+
 - pressKey: Back
+- waitForAnimationToEnd
 
 # Infusion erfassen
 - tapOn:
     text: "Infusion erfassen"
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/07_infusion_erfassen
-- pressKey: Back
+- takeScreenshot: screenshots/13_infusion_erfassen
 
-# ── 4. Medikation-Tab ────────────────────────────────────────────────────────
+# Medikament wählen
+- tapOn:
+    text: "Medikament wählen"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Hizentra"
+- waitForAnimationToEnd
+
+- tapOn:
+    text: "Dosierung / Einheiten"
+- eraseText: 20
+- inputText: "1.0"
+
+- hideKeyboard
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/14_infusion_ausgefuellt
+
+- pressKey: Back
+- waitForAnimationToEnd
+
+# ── Phase 5: Medikation-Tour ─────────────────────────────
+
 - tapOn:
     text: "Medikation"
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/08_medikation
+- takeScreenshot: screenshots/15_medikation
+
+# Medikament-Detail antippen
+- tapOn:
+    text: "Hizentra"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/16_hizentra_details
 
 - swipe:
     direction: DOWN
-    duration: 800
+    duration: 600
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/09_medikation_scrolled
+- takeScreenshot: screenshots/17_hizentra_details_scrolled
 
-- swipe:
-    direction: UP
-    duration: 800
-
-# Hinzufügen-Dialog
-- tapOn:
-    text: "Hinzufügen"
-- waitForAnimationToEnd
-- takeScreenshot: screenshots/10_medikament_hinzufuegen
 - pressKey: Back
+- waitForAnimationToEnd
 
 # Abgesetzte Medikamente
 - tapOn:
     text: "Abgesetzte Medikamente"
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/11_abgesetzte_medikamente
+- takeScreenshot: screenshots/18_abgesetzte_medikamente
 - pressKey: Back
+- waitForAnimationToEnd
 
-# ── 5. Einstellungen-Tab ─────────────────────────────────────────────────────
+# Verbrauchsmaterial anlegen
+- tapOn:
+    text: "Hinzufügen"
+- waitForAnimationToEnd
+
+- tapOn:
+    text: "Medikament"
+- tapOn:
+    text: "Verbrauchsmaterial"
+- waitForAnimationToEnd
+
+- tapOn:
+    text: "Medikamentenname"
+- inputText: "Kanülen"
+
+- tapOn:
+    text: "Anfangsbestand"
+- eraseText: 20
+- inputText: "50"
+
+- hideKeyboard
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/19_verbrauchsmaterial_formular
+
+- tapOn:
+    text: "Speichern"
+- waitForAnimationToEnd
+- takeScreenshot: screenshots/20_medikation_komplett
+
+# ── Phase 6: Einstellungen-Tour ──────────────────────────
+
 - tapOn:
     text: "Einstellungen"
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/13_einstellungen
+- takeScreenshot: screenshots/21_einstellungen
 
 - swipe:
     direction: DOWN
     duration: 800
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/14_einstellungen_scrolled
-
+- takeScreenshot: screenshots/22_einstellungen_scrolled
 - swipe:
     direction: UP
-    duration: 800
+    duration: 500
+- waitForAnimationToEnd
 
-# ── 6. Abschluss: zurück zum Dashboard ───────────────────────────────────────
+# ── Finale ───────────────────────────────────────────────
+
 - tapOn:
     text: "Dashboard"
 - waitForAnimationToEnd
-- takeScreenshot: screenshots/15_dashboard_final
+- takeScreenshot: screenshots/23_dashboard_final
