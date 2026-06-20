@@ -70,10 +70,18 @@ jobs:
             --build-name=${{ steps.get_version.outputs.build_name }} \
             --build-number=${{ steps.get_version.outputs.build_number }}
 
+      - name: Rename APK with app name & version
+        id: rename_apk
+        run: |
+          APK_NAME="CIDPbuddy-${{ steps.get_version.outputs.build_name }}+${{ steps.get_version.outputs.build_number }}.apk"
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             "build/app/outputs/flutter-apk/$APK_NAME"
+          echo "apk_path=build/app/outputs/flutter-apk/$APK_NAME" >> $GITHUB_OUTPUT
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: ${{ steps.rename_apk.outputs.apk_path }}
           tag_name: ${{ github.ref_name }}
           name: Release ${{ steps.get_version.outputs.build_name }} (Build ${{ steps.get_version.outputs.build_number }})
           draft: false
@@ -214,10 +222,18 @@ jobs:
             --apiIssuer "$API_ISSUER_ID" \
             --verbose
 
+      - name: Rename IPA with app name & version
+        id: rename_ipa
+        run: |
+          IPA_SRC="$(find build/ios/ipa -name '*.ipa' | head -1)"
+          IPA_NAME="CIDPbuddy-${{ steps.get_version.outputs.build_name }}+${{ steps.get_version.outputs.build_number }}.ipa"
+          mv "$IPA_SRC" "build/ios/ipa/$IPA_NAME"
+          echo "ipa_path=build/ios/ipa/$IPA_NAME" >> $GITHUB_OUTPUT
+
       - name: Attach IPA to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/ios/ipa/*.ipa
+          files: ${{ steps.rename_ipa.outputs.ipa_path }}
           tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
