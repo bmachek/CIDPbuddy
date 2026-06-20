@@ -1,9 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:igkeeper/features/diary/pages/dashboard_page.dart';
-import 'package:igkeeper/features/inventory/pages/inventory_page.dart';
-import 'package:igkeeper/features/diary/pages/diary_page.dart';
-import 'package:igkeeper/features/settings/pages/settings_page.dart';
+import 'package:cidpbuddy/features/diary/pages/dashboard_page.dart';
+import 'package:cidpbuddy/features/inventory/pages/inventory_page.dart';
+import 'package:cidpbuddy/features/diary/pages/diary_page.dart';
+import 'package:cidpbuddy/features/settings/pages/settings_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

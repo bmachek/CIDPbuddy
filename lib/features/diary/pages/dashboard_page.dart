@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:igkeeper/core/database/database.dart';
+import 'package:cidpbuddy/core/database/database.dart';
 import '../providers/diary_provider.dart';
 import 'add_infusion_page.dart';
 import '../../reminders/services/notification_service.dart';
 import '../../inventory/pages/shopping_wizard_dialog.dart';
 import 'package:drift/drift.dart' show Value;
-import 'package:igkeeper/core/services/medication_service.dart';
+import 'package:cidpbuddy/core/services/medication_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardPage extends StatefulWidget {

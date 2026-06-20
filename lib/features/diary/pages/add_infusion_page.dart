@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 import '../providers/diary_provider.dart';
 import '../../inventory/providers/inventory_provider.dart';
-import 'package:igkeeper/core/database/database.dart';
+import 'package:cidpbuddy/core/database/database.dart';
 import '../widgets/premedication_timer_modal.dart';
 
 class AddInfusionPage extends StatefulWidget {
