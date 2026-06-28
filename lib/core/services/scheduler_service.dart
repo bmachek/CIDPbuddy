@@ -87,6 +87,15 @@ class SchedulerService {
     for (final treatment in upcomingTreatments) {
       await NotificationService().scheduleTreatmentReminders(treatment);
     }
+
+    // Phase 3: Sweep orphaned OS alarms. Reminders scheduled before a medication
+    // was discontinued/deleted can outlive their PlannedInfusion rows and keep
+    // firing. Cancel any pending treatment reminder that no longer maps to an
+    // existing planned infusion. This self-heals devices that accumulated stale
+    // alarms (e.g. from duplicate schedules created by a double-tap).
+    final allPlanned = await db.select(db.plannedInfusions).get();
+    final validIds = allPlanned.map((e) => e.id).toSet();
+    await NotificationService().cancelOrphanTreatmentReminders(validIds);
   }
 
   /// Surfaces past-due Einnahmen that were never confirmed or skipped.

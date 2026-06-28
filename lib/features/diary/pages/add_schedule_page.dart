@@ -23,6 +23,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
   final List<int> _selectedWeekdays = [];
   final List<TimeOfDay> _intakeTimes = [const TimeOfDay(hour: 8, minute: 0)];
   bool _isFirstLoad = true;
+  bool _isSaving = false;
 
   final List<Map<String, String>> _frequencies = [
     {'value': 'daily', 'label': 'Täglich'},
@@ -288,7 +289,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                 ),
                 const SizedBox(height: 48),
                 ElevatedButton(
-                  onPressed: _selectedMedication == null ? null : () => _saveSchedule(db),
+                  onPressed: (_selectedMedication == null || _isSaving) ? null : () => _saveSchedule(db),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(60),
                     backgroundColor: Theme.of(context).colorScheme.primary,
@@ -299,7 +300,14 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.save_rounded),
+                      if (_isSaving)
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      else
+                        const Icon(Icons.save_rounded),
                       const SizedBox(width: 12),
                       Text(
                         widget.initialSchedule == null ? 'Zeitplan aktivieren' : 'Änderungen speichern',
@@ -326,6 +334,12 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
   }
 
   void _saveSchedule(AppDatabase db) async {
+    // Guard against double-taps: saving runs an async sync (which schedules
+    // notifications) before the page closes. Without this, rapid taps would
+    // each insert a new schedule, leaving multiple active duplicates.
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
     String finalFreq = _frequencyType;
     int? interval;
     if (_frequencyType == 'interval') {
@@ -339,37 +353,42 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
 
     final intakeTimesStr = _intakeTimes.map((t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}').join(',');
 
-    if (widget.initialSchedule != null) {
-      // Update existing schedule
-      await db.updateSchedule(widget.initialSchedule!.copyWith(
-        medicationId: _selectedMedication!.id,
-        dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
-        frequencyType: finalFreq,
-        intervalValue: drift.Value(interval),
-        selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
-        startDate: _startDate,
-        intakeTimes: drift.Value(intakeTimesStr),
-      ));
-      
-      // Clear out future entries to force regeneration
-      await db.deletePlannedInfusionsForSchedule(widget.initialSchedule!.id);
-    } else {
-      // Insert new schedule
-      await db.insertSchedule(InfusionSchedulesCompanion.insert(
-        medicationId: _selectedMedication!.id,
-        dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
-        frequencyType: finalFreq,
-        intervalValue: drift.Value(interval),
-        selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
-        startDate: _startDate,
-        intakeTimes: drift.Value(intakeTimesStr),
-      ));
+    try {
+      if (widget.initialSchedule != null) {
+        // Update existing schedule
+        await db.updateSchedule(widget.initialSchedule!.copyWith(
+          medicationId: _selectedMedication!.id,
+          dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
+          frequencyType: finalFreq,
+          intervalValue: drift.Value(interval),
+          selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
+          startDate: _startDate,
+          intakeTimes: drift.Value(intakeTimesStr),
+        ));
+
+        // Clear out future entries to force regeneration
+        await db.deletePlannedInfusionsForSchedule(widget.initialSchedule!.id);
+      } else {
+        // Insert new schedule
+        await db.insertSchedule(InfusionSchedulesCompanion.insert(
+          medicationId: _selectedMedication!.id,
+          dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
+          frequencyType: finalFreq,
+          intervalValue: drift.Value(interval),
+          selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
+          startDate: _startDate,
+          intakeTimes: drift.Value(intakeTimesStr),
+        ));
+      }
+
+      // Force immediate sync
+      final scheduler = SchedulerService(db);
+      await scheduler.syncPlannedInfusions();
+
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      // Re-enable the button so the user can retry instead of being stuck.
+      if (mounted) setState(() => _isSaving = false);
     }
-
-    // Force immediate sync
-    final scheduler = SchedulerService(db);
-    await scheduler.syncPlannedInfusions();
-
-    if (mounted) Navigator.pop(context);
   }
 }

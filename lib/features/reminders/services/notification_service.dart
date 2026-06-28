@@ -373,10 +373,37 @@ class NotificationService {
     }
   }
 
-  /// Cancels all scheduled notifications. 
+  /// Cancels all scheduled notifications.
   /// Note: This is a heavy operation but useful during full resync.
   Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
+  }
+
+  // Offsets within a treatment's reminder block [baseId, baseId+13]:
+  // baseId (initial), +1..+3 (snooze), +11..+13 (hourly).
+  static const Set<int> _treatmentReminderOffsets = {0, 1, 2, 3, 11, 12, 13};
+
+  /// Cancels orphaned treatment-reminder alarms whose backing PlannedInfusion
+  /// no longer exists (e.g. left over after a medication was discontinued or
+  /// deleted while the OS alarms were still pending). [validTreatmentIds] are
+  /// the ids of planned infusions that should keep their reminders.
+  Future<void> cancelOrphanTreatmentReminders(Set<int> validTreatmentIds) async {
+    try {
+      final pending = await _notificationsPlugin.pendingNotificationRequests();
+      for (final req in pending) {
+        final id = req.id;
+        if (id < 100) continue; // reserved/system ids live below the treatment range
+        final offset = id % 100;
+        if (!_treatmentReminderOffsets.contains(offset)) continue;
+        final treatmentId = id ~/ 100;
+        if (!validTreatmentIds.contains(treatmentId)) {
+          await _notificationsPlugin.cancel(id);
+          debugPrint('NotificationService: Cancelled orphaned reminder $id (treatment $treatmentId).');
+        }
+      }
+    } catch (e) {
+      debugPrint('NotificationService: Failed to sweep orphaned reminders: $e');
+    }
   }
 
   int _getBaseId(int treatmentId) {

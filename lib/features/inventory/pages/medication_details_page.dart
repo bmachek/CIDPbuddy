@@ -66,7 +66,7 @@ class MedicationDetailsPage extends StatelessWidget {
                     ),
                   IconButton(
                     icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error),
-                    onPressed: () => _confirmDeleteMedication(context, db, medication),
+                    onPressed: () => _confirmDeleteMedication(context, invProvider, medication),
                     tooltip: 'Vollständig löschen',
                   ),
                   const SizedBox(width: 8),
@@ -240,7 +240,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: () => _confirmDeleteMedication(context, db, medication),
+                  onPressed: () => _confirmDeleteMedication(context, invProvider, medication),
                   icon: const Icon(Icons.delete_outline_rounded),
                   label: const Text('Vollständig aus Datenbank löschen'),
                   style: OutlinedButton.styleFrom(
@@ -601,7 +601,7 @@ class MedicationDetailsPage extends StatelessWidget {
     );
   }
 
-  void _confirmDeleteMedication(BuildContext context, AppDatabase db, Medication med) {
+  void _confirmDeleteMedication(BuildContext context, InventoryProvider provider, Medication med) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -611,7 +611,7 @@ class MedicationDetailsPage extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
           TextButton(
             onPressed: () async {
-              await db.deleteMedication(med);
+              await provider.deleteMedication(med);
               if (context.mounted) {
                 Navigator.pop(context); // Close dialog
                 Navigator.pop(context); // Go back to inventory
