@@ -193,7 +193,21 @@ class AppDatabase extends _$AppDatabase {
   Future<int> insertMedication(MedicationsCompanion med) =>
       into(medications).insert(med);
   Future updateMedication(Medication med) => update(medications).replace(med);
-  Future deleteMedication(Medication med) => delete(medications).delete(med);
+  Future deleteMedication(Medication med) async {
+    // Foreign keys are not enforced, so deleting only the medication row would
+    // leave orphaned schedules and planned infusions behind. Clean them up too,
+    // otherwise their already-scheduled OS reminders keep firing forever.
+    await transaction(() async {
+      await (delete(plannedInfusions)..where((t) => t.medicationId.equals(med.id))).go();
+      await (delete(infusionSchedules)..where((t) => t.medicationId.equals(med.id))).go();
+      await delete(medications).delete(med);
+    });
+  }
+
+  /// All planned infusions for a medication (used to cancel their reminders
+  /// before the rows are removed on discontinue/delete).
+  Future<List<PlannedInfusion>> getPlannedInfusionsForMedication(int medId) =>
+      (select(plannedInfusions)..where((t) => t.medicationId.equals(medId))).get();
 
   // Accessories
   Future<List<Accessory>> getAllAccessories() => select(accessories).get();

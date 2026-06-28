@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/database/database.dart';
+import '../../reminders/services/notification_service.dart';
 import 'package:drift/drift.dart';
 
 class InventoryProvider extends ChangeNotifier {
@@ -11,8 +12,25 @@ class InventoryProvider extends ChangeNotifier {
   Stream<List<Medication>> get discontinuedMedicationsStream => _db.watchDiscontinuedMedications();
   Stream<List<Accessory>> get accessoriesStream => _db.watchAllAccessories();
 
+  /// Cancels any OS-scheduled reminders for a medication's planned infusions.
+  /// Must run before the rows are deleted, since the database layer has no
+  /// access to the NotificationService.
+  Future<void> _cancelRemindersForMedication(int medId) async {
+    final planned = await _db.getPlannedInfusionsForMedication(medId);
+    for (final p in planned) {
+      await NotificationService().cancelTreatmentReminders(p.id);
+    }
+  }
+
   Future<void> discontinueMedication(int id) async {
+    await _cancelRemindersForMedication(id);
     await _db.discontinueMedication(id);
+    notifyListeners();
+  }
+
+  Future<void> deleteMedication(Medication med) async {
+    await _cancelRemindersForMedication(med.id);
+    await _db.deleteMedication(med);
     notifyListeners();
   }
 
