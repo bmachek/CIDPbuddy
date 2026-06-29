@@ -298,6 +298,21 @@ class AppDatabase extends _$AppDatabase {
   Future deleteIncompletePlannedInfusionsBefore(DateTime date) =>
       (delete(plannedInfusions)..where((t) => t.date.isSmallerThan(Constant(date)) & t.isCompleted.equals(false))).go();
 
+  /// Removes planned infusions that reference a medication which no longer
+  /// exists. These orphans can appear after a restore where the backup
+  /// pointed at a medication absent from the restored state — on the
+  /// dashboard they show up as actionless date-only rows that can neither be
+  /// confirmed nor removed. Returns the number of deleted rows.
+  Future<int> deleteOrphanedPlannedInfusions() async {
+    final meds = await select(medications).get();
+    final medIds = meds.map((m) => m.id).toList();
+    if (medIds.isEmpty) {
+      // No medications at all -> every planned infusion is orphaned.
+      return delete(plannedInfusions).go();
+    }
+    return (delete(plannedInfusions)..where((t) => t.medicationId.isNotIn(medIds))).go();
+  }
+
   // Schedules
   Stream<List<InfusionSchedule>> watchSchedules() => select(infusionSchedules).watch();
   Future<List<InfusionSchedule>> getAllActiveSchedules() => (select(infusionSchedules)..where((t) => t.isActive.equals(true))).get();

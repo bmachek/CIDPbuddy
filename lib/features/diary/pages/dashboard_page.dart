@@ -633,7 +633,15 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     return FutureBuilder<Medication>(
       future: (db.select(db.medications)..where((t) => t.id.equals(treatment.medicationId))).getSingle(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox();
+        // Still loading: keep it empty to avoid a flash of the fallback card.
+        if (snapshot.connectionState != ConnectionState.done) return const SizedBox();
+        // Medication missing (orphaned planned infusion, e.g. after a restore
+        // whose backup referenced a deleted/absent medication). It can neither
+        // be confirmed (no medication to log) nor reached otherwise — offer a
+        // delete action so it can be cleared.
+        if (!snapshot.hasData) {
+          return _buildOrphanedTreatmentCard(context, db, treatment);
+        }
         final med = snapshot.data!;
         final medDate = treatment.date;
         final now = DateTime.now();
@@ -727,6 +735,68 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
           ],
         );
       },
+    );
+  }
+
+  /// Fallback card for a planned infusion whose medication no longer exists.
+  /// Since there is nothing to log, the only sensible action is to remove the
+  /// stray entry.
+  Widget _buildOrphanedTreatmentCard(BuildContext context, AppDatabase db, PlannedInfusion treatment) {
+    final dateStr = DateFormat('dd.MM. HH:mm').format(treatment.date);
+
+    Future<void> onDelete() async {
+      await db.deletePlannedInfusion(treatment.id);
+      await NotificationService().cancelTreatmentReminders(treatment.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Verwaisten Termin entfernt'),
+            backgroundColor: Theme.of(context).colorScheme.tertiary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+          ),
+        );
+      }
+    }
+
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          leading: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.help_outline_rounded,
+              color: Theme.of(context).colorScheme.error,
+              size: 24,
+            ),
+          ),
+          title: const Text('Unbekanntes Medikament', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          subtitle: Text(
+            'Geplant $dateStr Uhr • Medikament nicht gefunden',
+            style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
+          trailing: ElevatedButton(
+            onPressed: onDelete,
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              foregroundColor: Theme.of(context).colorScheme.error,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              side: BorderSide(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1)),
+            ),
+            child: const Text('Entfernen', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ),
+        const Divider(),
+      ],
     );
   }
 
