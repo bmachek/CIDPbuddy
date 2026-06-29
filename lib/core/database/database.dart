@@ -313,6 +313,20 @@ class AppDatabase extends _$AppDatabase {
     return (delete(plannedInfusions)..where((t) => t.medicationId.isNotIn(medIds))).go();
   }
 
+  /// Removes schedules whose medication no longer exists (e.g. after a restore
+  /// referencing an absent medication). Such schedules can never produce valid
+  /// planned infusions and would otherwise keep regenerating orphaned entries
+  /// on every sync. Returns the number of deleted rows.
+  Future<int> deleteOrphanedSchedules() async {
+    final meds = await select(medications).get();
+    final medIds = meds.map((m) => m.id).toList();
+    if (medIds.isEmpty) {
+      // No medications at all -> every schedule is orphaned.
+      return delete(infusionSchedules).go();
+    }
+    return (delete(infusionSchedules)..where((t) => t.medicationId.isNotIn(medIds))).go();
+  }
+
   // Schedules
   Stream<List<InfusionSchedule>> watchSchedules() => select(infusionSchedules).watch();
   Future<List<InfusionSchedule>> getAllActiveSchedules() => (select(infusionSchedules)..where((t) => t.isActive.equals(true))).get();
