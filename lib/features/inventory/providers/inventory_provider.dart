@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/database/database.dart';
 import '../../reminders/services/notification_service.dart';
@@ -12,26 +13,46 @@ class InventoryProvider extends ChangeNotifier {
   Stream<List<Medication>> get discontinuedMedicationsStream => _db.watchDiscontinuedMedications();
   Stream<List<Accessory>> get accessoriesStream => _db.watchAllAccessories();
 
-  /// Cancels any OS-scheduled reminders for a medication's planned infusions.
-  /// Must run before the rows are deleted, since the database layer has no
-  /// access to the NotificationService.
-  Future<void> _cancelRemindersForMedication(int medId) async {
-    final planned = await _db.getPlannedInfusionsForMedication(medId);
-    for (final p in planned) {
-      await NotificationService().cancelTreatmentReminders(p.id);
-    }
-  }
-
   Future<void> discontinueMedication(int id) async {
-    await _cancelRemindersForMedication(id);
+    // Capture reminder ids first (the rows are about to be removed), then run
+    // the user-critical DB operation. Reminder cleanup is best-effort and must
+    // never block or fail the discontinue itself.
+    final reminderIds = await _plannedInfusionIds(id);
     await _db.discontinueMedication(id);
     notifyListeners();
+    unawaited(_cancelReminders(reminderIds));
   }
 
   Future<void> deleteMedication(Medication med) async {
-    await _cancelRemindersForMedication(med.id);
+    final reminderIds = await _plannedInfusionIds(med.id);
     await _db.deleteMedication(med);
     notifyListeners();
+    unawaited(_cancelReminders(reminderIds));
+  }
+
+  /// Ids of a medication's planned infusions, used to cancel their OS reminders.
+  /// Returns an empty list on any error so it never blocks discontinue/delete.
+  Future<List<int>> _plannedInfusionIds(int medId) async {
+    try {
+      final planned = await _db.getPlannedInfusionsForMedication(medId);
+      return planned.map((p) => p.id).toList();
+    } catch (e) {
+      debugPrint('InventoryProvider: could not load planned infusions for $medId: $e');
+      return const [];
+    }
+  }
+
+  /// Best-effort cancellation of OS-scheduled reminders. Each call is guarded so
+  /// one failure cannot abort the rest, and the whole thing runs unawaited so it
+  /// never delays the UI. Any survivors are swept by syncPlannedInfusions.
+  Future<void> _cancelReminders(List<int> treatmentIds) async {
+    for (final id in treatmentIds) {
+      try {
+        await NotificationService().cancelTreatmentReminders(id);
+      } catch (e) {
+        debugPrint('InventoryProvider: could not cancel reminders for $id: $e');
+      }
+    }
   }
 
   Future<void> reenrollMedication(int id) async {
