@@ -305,6 +305,55 @@ class AppDatabase extends _$AppDatabase {
   Future deleteSchedule(int id) => (delete(infusionSchedules)..where((t) => t.id.equals(id))).go();
   Future updateSchedule(InfusionSchedule schedule) => update(infusionSchedules).replace(schedule);
 
+  /// Removes exact-duplicate active schedules left behind by the old
+  /// double-tap-on-"Zeitplan aktivieren" bug, keeping the lowest id of each
+  /// identical group. Two schedules are duplicates only when every defining
+  /// field matches, so legitimately distinct schedules (different times, doses,
+  /// frequencies) are never touched. Deletes the extras and their planned
+  /// infusions in a transaction and returns the planned-infusion ids whose OS
+  /// reminders should now be cancelled.
+  Future<List<int>> dedupeActiveSchedules() async {
+    final schedules = await getAllActiveSchedules();
+    final Map<String, InfusionSchedule> kept = {};
+    final List<int> removedScheduleIds = [];
+
+    for (final s in schedules) {
+      final key = [
+        s.medicationId,
+        s.dosage,
+        s.frequencyType,
+        s.intervalValue,
+        s.selectedWeekdays,
+        s.startDate.toIso8601String(),
+        s.intakeTimes,
+      ].join('|');
+
+      final existing = kept[key];
+      if (existing == null) {
+        kept[key] = s;
+      } else if (s.id < existing.id) {
+        removedScheduleIds.add(existing.id);
+        kept[key] = s;
+      } else {
+        removedScheduleIds.add(s.id);
+      }
+    }
+
+    if (removedScheduleIds.isEmpty) return const [];
+
+    final planned = await (select(plannedInfusions)
+          ..where((t) => t.scheduleId.isIn(removedScheduleIds)))
+        .get();
+    final reminderIds = planned.map((p) => p.id).toList();
+
+    await transaction(() async {
+      await (delete(plannedInfusions)..where((t) => t.scheduleId.isIn(removedScheduleIds))).go();
+      await (delete(infusionSchedules)..where((t) => t.id.isIn(removedScheduleIds))).go();
+    });
+
+    return reminderIds;
+  }
+
   // Pending Orders
   Stream<List<PendingOrder>> watchPendingOrders() =>
       (select(pendingOrders)..where((t) => t.isConfirmed.equals(false))..orderBy([(t) => OrderingTerm(expression: t.deliveryDate)])).watch();
