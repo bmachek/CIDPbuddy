@@ -26,6 +26,13 @@ class SchedulerService {
     }
 
     final activeSchedules = await db.getAllActiveSchedules();
+    // Skip schedules whose medication no longer exists (e.g. a restore whose
+    // backup referenced an absent medication). Generating for them would
+    // recreate orphaned planned infusions on every sync — actionless rows that
+    // can neither be confirmed nor permanently removed.
+    final existingMedIds = (await db.getAllMedications()).map((m) => m.id).toSet();
+    final validSchedules =
+        activeSchedules.where((s) => existingMedIds.contains(s.medicationId)).toList();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final lookAhead = today.add(const Duration(days: 90));
@@ -42,7 +49,7 @@ class SchedulerService {
         .map((e) => '${e.scheduleId}_${e.date.toIso8601String()}')
         .toSet();
 
-    for (final schedule in activeSchedules) {
+    for (final schedule in validSchedules) {
       final dates = _calculateDates(schedule, today, lookAhead);
       for (final date in dates) {
         final key = '${schedule.id}_${date.toIso8601String()}';
