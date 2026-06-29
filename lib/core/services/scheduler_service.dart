@@ -12,6 +12,19 @@ class SchedulerService {
   /// Generates missing entries for the next 90 days.
   /// Notifications are scheduled only for the next 7 days to avoid Android alarm limits.
   Future<void> syncPlannedInfusions() async {
+    // Self-heal: drop exact-duplicate active schedules from the old double-tap
+    // bug and cancel their now-removed reminders. Without this, every duplicate
+    // keeps generating its own valid planned infusions and alarms, so a single
+    // medication can fire dozens of reminders at the same time.
+    final removedReminderIds = await db.dedupeActiveSchedules();
+    for (final id in removedReminderIds) {
+      try {
+        await NotificationService().cancelTreatmentReminders(id);
+      } catch (e) {
+        // Best-effort: a failed cancel must not abort the rest of the sync.
+      }
+    }
+
     final activeSchedules = await db.getAllActiveSchedules();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -381,11 +382,14 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
         ));
       }
 
-      // Force immediate sync
-      final scheduler = SchedulerService(db);
-      await scheduler.syncPlannedInfusions();
-
+      // The schedule row is now persisted. Close the page immediately and run
+      // the (potentially heavy) notification sync in the background — for a
+      // medication with many schedules it issues thousands of platform calls
+      // and must never block the dialog from closing.
       if (mounted) Navigator.pop(context);
+      unawaited(SchedulerService(db).syncPlannedInfusions().catchError(
+            (e) => debugPrint('AddSchedulePage: background sync failed: $e'),
+          ));
     } catch (e) {
       // Re-enable the button so the user can retry instead of being stuck.
       if (mounted) setState(() => _isSaving = false);
