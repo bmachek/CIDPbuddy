@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:intl/intl.dart';
 import '../database/database.dart';
@@ -10,7 +11,8 @@ class SchedulerService {
 
   /// Synchronizes planned infusions from active schedules.
   /// Generates missing entries for the next 90 days.
-  /// Notifications are scheduled only for the next 7 days to avoid Android alarm limits.
+  /// Notifications are scheduled only for the next 7 days to avoid Android's
+  /// alarm limits, and further capped on iOS to stay under its pending-request ceiling.
   Future<void> syncPlannedInfusions() async {
     // Self-heal: drop exact-duplicate active schedules from the old double-tap
     // bug and cancel their now-removed reminders. Without this, every duplicate
@@ -96,15 +98,35 @@ class SchedulerService {
     }
 
     // Re-schedule for everything still actionable. scheduleTreatmentReminders
-    // skips individual slots whose time has already passed.
+    // skips individual slots whose time has already passed. Ordered soonest
+    // first so the iOS budget below (if it runs out) drops the furthest-out
+    // treatments rather than an arbitrary DB-order subset.
     final upcomingTreatments = await (db.select(db.plannedInfusions)
           ..where((t) =>
               t.date.isBiggerThanValue(reminderWindowStart) &
               t.date.isSmallerThanValue(notificationLookAhead) &
-              t.isCompleted.equals(false)))
+              t.isCompleted.equals(false))
+          ..orderBy([(t) => OrderingTerm(expression: t.date)]))
         .get();
 
+    // iOS silently drops any local notification scheduled once ~64 requests
+    // are pending — with no error, just no alarm. Each treatment can add up
+    // to 7 (initial + 3 snooze + 3 hourly), so a handful of multi-dose
+    // medications in the 7-day window blow past that easily. Stop scheduling
+    // once we'd risk hitting the ceiling instead of losing reminders at
+    // random; Android has no such limit so it keeps its previous behavior.
+    int? remainingIosBudget;
+    if (Platform.isIOS) {
+      const iosSafePendingLimit = 60;
+      final pendingNow = await NotificationService().getPendingNotificationCount();
+      remainingIosBudget = iosSafePendingLimit - pendingNow;
+    }
+
     for (final treatment in upcomingTreatments) {
+      if (remainingIosBudget != null) {
+        if (remainingIosBudget <= 0) break;
+        remainingIosBudget -= 7;
+      }
       await NotificationService().scheduleTreatmentReminders(treatment);
     }
 
