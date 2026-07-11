@@ -14,9 +14,23 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
+  // iOS registers notification actions via a category attached to the
+  // request, unlike Android where actions are inlined per-notification.
+  static const String treatmentReminderCategoryId = 'treatment_reminder_actions';
+
   Future<void> init({bool isBackground = false}) async {
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
-    const DarwinInitializationSettings darwinSettings = DarwinInitializationSettings();
+    const DarwinInitializationSettings darwinSettings = DarwinInitializationSettings(
+      notificationCategories: [
+        DarwinNotificationCategory(
+          treatmentReminderCategoryId,
+          actions: [
+            DarwinNotificationAction.plain('complete_infusion', 'Erledigt'),
+            DarwinNotificationAction.plain('skip_infusion', 'Überspringen'),
+          ],
+        ),
+      ],
+    );
 
     const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
@@ -195,8 +209,12 @@ class NotificationService {
             // We use 'onlyAlertOnce: false' to ensure it makes sound again when replaced.
             onlyAlertOnce: false, 
           ),
-          iOS: const DarwinNotificationDetails(),
-          macOS: const DarwinNotificationDetails(),
+          iOS: DarwinNotificationDetails(
+            categoryIdentifier: showAction ? treatmentReminderCategoryId : null,
+          ),
+          macOS: DarwinNotificationDetails(
+            categoryIdentifier: showAction ? treatmentReminderCategoryId : null,
+          ),
         ),
         androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
@@ -377,6 +395,14 @@ class NotificationService {
   /// Note: This is a heavy operation but useful during full resync.
   Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
+  }
+
+  /// Number of currently pending (scheduled but not yet delivered) requests.
+  /// Used to stay under iOS's undocumented ~64-pending-request ceiling,
+  /// which Android has no equivalent of.
+  Future<int> getPendingNotificationCount() async {
+    final pending = await _notificationsPlugin.pendingNotificationRequests();
+    return pending.length;
   }
 
   // Offsets within a treatment's reminder block [baseId, baseId+13]:
