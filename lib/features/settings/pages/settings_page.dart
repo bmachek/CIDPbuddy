@@ -156,7 +156,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       subtitle: const Text(
                           'Letzte Sicherung z. B. in Dateien oder iCloud Drive speichern'),
                       onTap: () async {
-                        final ok = await backupService.shareLatestBackup();
+                        final box = context.findRenderObject() as RenderBox?;
+                        final origin = box != null
+                            ? box.localToGlobal(Offset.zero) & box.size
+                            : null;
+                        final ok = await backupService.shareLatestBackup(
+                          sharePositionOrigin: origin,
+                        );
                         if (!context.mounted || ok) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(

@@ -38,5 +38,13 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      # permission_handler compiles each permission group's native check as a
+      # no-op stub unless explicitly enabled here — without this,
+      # Permission.notification.isGranted/.request() never reflects the real
+      # UNUserNotificationCenter authorization status on iOS.
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'PERMISSION_NOTIFICATIONS=1'
+    end
   end
 end

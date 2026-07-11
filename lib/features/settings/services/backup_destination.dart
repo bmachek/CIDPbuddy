@@ -81,6 +81,19 @@ abstract class BackupDestination {
 
   static Future<BackupDestination?> load() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // iOS never trusts a persisted path: it's always our own auto-managed
+    // internal folder (see [provisionIosDefault]), never user-picked, and
+    // the app's Documents container UUID can change across reinstalls
+    // (e.g. sideloading) — a path saved under the old container silently
+    // stops existing, so re-deriving fresh here is both correct and
+    // self-healing.
+    if (Platform.isIOS) {
+      final destination = await provisionIosDefault();
+      await destination.persist();
+      return destination;
+    }
+
     final kindStr = prefs.getString(_kKind);
 
     // New-style: explicit kind written by `persist()`.
@@ -100,16 +113,7 @@ abstract class BackupDestination {
 
     // Legacy fallback for installs predating the `_kKind` field.
     final path = prefs.getString(_kPath);
-    if (path == null) {
-      // Fresh install / never configured — iOS auto-provisions instead of
-      // requiring a folder pick that can't work reliably there.
-      if (Platform.isIOS) {
-        final destination = await provisionIosDefault();
-        await destination.persist();
-        return destination;
-      }
-      return null;
-    }
+    if (path == null) return null;
     final isSaf = prefs.getBool(_kIsSaf) ?? false;
     if (isSaf && Platform.isAndroid) {
       final name = prefs.getString(_kSafDisplayName);

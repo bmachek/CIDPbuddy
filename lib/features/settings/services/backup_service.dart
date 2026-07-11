@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' show Rect;
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -154,21 +155,32 @@ class BackupService {
   /// for iOS users (whose backups live in an app-internal folder, see
   /// [pickLocalBackupDirectory]) to get a copy into Files/iCloud
   /// Drive/AirDrop/etc.
-  Future<bool> shareLatestBackup() async {
-    final dest = await BackupDestination.load();
-    if (dest == null) return false;
-    final backups = await dest.listBackups();
-    if (backups.isEmpty) return false;
-    final latest = backups.first;
-    final bytes = await dest.readBackup(latest);
-    final tempDir = await getTemporaryDirectory();
-    final tempFile = await File(p.join(tempDir.path, latest.name))
-        .writeAsBytes(bytes, flush: true);
-    final result = await Share.shareXFiles(
-      [XFile(tempFile.path)],
-      subject: 'CIDP Buddy Backup',
-    );
-    return result.status != ShareResultStatus.unavailable;
+  ///
+  /// [sharePositionOrigin] anchors the iPad popover. share_plus's iOS side
+  /// treats `popoverPresentationController` as non-null on iPhone too (not
+  /// just iPad) on some iOS versions, so omitting this origin makes the
+  /// native call fail with a "sharePositionOrigin must be set" error on
+  /// *any* device — silently, since nothing here used to catch it.
+  Future<bool> shareLatestBackup({Rect? sharePositionOrigin}) async {
+    try {
+      final dest = await BackupDestination.load();
+      if (dest == null) return false;
+      final backups = await dest.listBackups();
+      if (backups.isEmpty) return false;
+      final latest = backups.first;
+      final bytes = await dest.readBackup(latest);
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = await File(p.join(tempDir.path, latest.name))
+          .writeAsBytes(bytes, flush: true);
+      final result = await Share.shareXFiles(
+        [XFile(tempFile.path)],
+        subject: 'CIDP Buddy Backup',
+        sharePositionOrigin: sharePositionOrigin,
+      );
+      return result.status != ShareResultStatus.unavailable;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<void> clearDestination() async {

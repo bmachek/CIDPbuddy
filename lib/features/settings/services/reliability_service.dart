@@ -28,7 +28,18 @@ class ReliabilityService {
   }
 
   Future<void> requestNotificationPermission() async {
-    await Permission.notification.request();
+    // iOS (and Android 13+) only ever show the native permission dialog
+    // once; after a denial, `request()` silently no-ops instead of
+    // re-prompting — the only way to fix it is the Settings app.
+    final status = await Permission.notification.status;
+    if (status.isPermanentlyDenied) {
+      await openAppSettings();
+      return;
+    }
+    final result = await Permission.notification.request();
+    if (result.isPermanentlyDenied) {
+      await openAppSettings();
+    }
   }
 
   Future<void> requestExactAlarmPermission() async {
