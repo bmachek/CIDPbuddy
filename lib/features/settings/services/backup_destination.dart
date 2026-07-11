@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:saf_util/saf_util.dart';
 import 'package:saf_stream/saf_stream.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -57,6 +58,19 @@ abstract class BackupDestination {
 
   static const _kSafDisplayName = 'backup_saf_display_name';
 
+  /// iOS has no durable way to grant write access to an arbitrary
+  /// externally-picked folder: `file_picker`'s `UIDocumentPickerViewController`
+  /// only grants transient security-scoped access around the pick call
+  /// itself (never persisted, no bookmark), so any later read/write on that
+  /// path fails. On iOS backups therefore always live in this app-internal
+  /// folder instead; users get a copy out via the share sheet.
+  static Future<LocalDestination> provisionIosDefault() async {
+    final docs = await getApplicationDocumentsDirectory();
+    final dir = Directory(p.join(docs.path, 'Backups'));
+    if (!await dir.exists()) await dir.create(recursive: true);
+    return LocalDestination(dir.path);
+  }
+
   static Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kPath);
@@ -86,7 +100,16 @@ abstract class BackupDestination {
 
     // Legacy fallback for installs predating the `_kKind` field.
     final path = prefs.getString(_kPath);
-    if (path == null) return null;
+    if (path == null) {
+      // Fresh install / never configured — iOS auto-provisions instead of
+      // requiring a folder pick that can't work reliably there.
+      if (Platform.isIOS) {
+        final destination = await provisionIosDefault();
+        await destination.persist();
+        return destination;
+      }
+      return null;
+    }
     final isSaf = prefs.getBool(_kIsSaf) ?? false;
     if (isSaf && Platform.isAndroid) {
       final name = prefs.getString(_kSafDisplayName);

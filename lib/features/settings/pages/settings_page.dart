@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:restart_app/restart_app.dart';
@@ -114,13 +115,19 @@ class _SettingsPageState extends State<SettingsPage> {
                         : Icons.folder_open_outlined),
                     title: const Text('Backup-Ziel'),
                     subtitle: Text(
-                      dest == null ? 'Ziel wählen...' : dest.displayLabel,
+                      dest == null
+                          ? 'Ziel wählen...'
+                          : (Platform.isIOS
+                              ? 'App-interner Speicher (automatisch)'
+                              : dest.displayLabel),
                     ),
                     trailing: dest != null
                         ? const Icon(Icons.check_circle,
                             color: Colors.green, size: 16)
                         : null,
-                    onTap: _pickDestination,
+                    onTap: Platform.isIOS
+                        ? () => _showIosStorageInfo(context)
+                        : _pickDestination,
                   ),
                   if (dest != null)
                     ListTile(
@@ -140,6 +147,24 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         );
                         if (mounted) setState(() {});
+                      },
+                    ),
+                  if (dest != null)
+                    ListTile(
+                      leading: const Icon(Icons.ios_share),
+                      title: const Text('Backup exportieren'),
+                      subtitle: const Text(
+                          'Letzte Sicherung z. B. in Dateien oder iCloud Drive speichern'),
+                      onTap: () async {
+                        final ok = await backupService.shareLatestBackup();
+                        if (!context.mounted || ok) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Kein Backup zum Exportieren gefunden. Führe zuerst ein Backup aus.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
                       },
                     ),
                   if (status?.lastSuccess != null)
@@ -363,6 +388,27 @@ class _SettingsPageState extends State<SettingsPage> {
       'quiet_start': prefs.getInt('quiet_hours_start') ?? 22,
       'quiet_end': prefs.getInt('quiet_hours_end') ?? 6,
     };
+  }
+
+  void _showIosStorageInfo(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Backup-Ziel'),
+        content: const Text(
+            'Auf iOS werden automatische Backups app-intern gespeichert, da '
+            'Apple keinen dauerhaften Schreibzugriff auf frei gewählte '
+            'Ordner erlaubt.\n\n'
+            'Nutze "Backup exportieren", um eine Sicherung z. B. in die '
+            'Dateien-App, iCloud Drive oder per AirDrop zu speichern.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _pickDestination() async {

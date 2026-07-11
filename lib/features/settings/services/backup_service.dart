@@ -121,8 +121,22 @@ class BackupService {
   }
 
   /// Plain filesystem directory — used on desktop or as Android fallback.
+  ///
+  /// On iOS this does NOT open a folder picker: `file_picker`'s directory
+  /// picker there can't grant durable write access (see
+  /// [BackupDestination.provisionIosDefault]), so we instead (re)provision
+  /// the app-internal backup folder. This still lets the "Ordner erneut
+  /// wählen" retry button recover from a deleted/corrupted internal folder.
   Future<BackupDestination?> pickLocalBackupDirectory() async {
     try {
+      if (Platform.isIOS) {
+        final destination = await BackupDestination.provisionIosDefault();
+        final err = await destination.verifyAccess();
+        if (err != null) return null;
+        await destination.persist();
+        await _resetFailureState();
+        return destination;
+      }
       final selected = await FilePicker.platform.getDirectoryPath();
       if (selected == null) return null;
       final destination = LocalDestination(selected);
@@ -134,6 +148,27 @@ class BackupService {
     } catch (e) {
       return null;
     }
+  }
+
+  /// Shares the most recent backup file via the OS share sheet — the way
+  /// for iOS users (whose backups live in an app-internal folder, see
+  /// [pickLocalBackupDirectory]) to get a copy into Files/iCloud
+  /// Drive/AirDrop/etc.
+  Future<bool> shareLatestBackup() async {
+    final dest = await BackupDestination.load();
+    if (dest == null) return false;
+    final backups = await dest.listBackups();
+    if (backups.isEmpty) return false;
+    final latest = backups.first;
+    final bytes = await dest.readBackup(latest);
+    final tempDir = await getTemporaryDirectory();
+    final tempFile = await File(p.join(tempDir.path, latest.name))
+        .writeAsBytes(bytes, flush: true);
+    final result = await Share.shareXFiles(
+      [XFile(tempFile.path)],
+      subject: 'CIDP Buddy Backup',
+    );
+    return result.status != ShareResultStatus.unavailable;
   }
 
   Future<void> clearDestination() async {
