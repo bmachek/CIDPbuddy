@@ -392,54 +392,56 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
-    
-    if (image != null) {
-      // Save permanently to app directory
-      final directory = await getApplicationDocumentsDirectory();
-      final path = p.join(directory.path, 'charge_${DateTime.now().millisecondsSinceEpoch}.jpg');
-      await File(image.path).copy(path);
-      
-      setState(() {
-        _capturedPhotoPath = path;
-        _isProcessingOcr = true;
-      });
+    if (!mounted || image == null) return;
 
-      // Perform OCR
-      try {
-        final inputImage = InputImage.fromFilePath(path);
-        final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-        final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
-        
-        // Simple logic for batch number: first sequence of uppercase letters/numbers
-        String? foundBatch;
-        final patterns = [
-          RegExp(r'LOT\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
-          RegExp(r'CH.-B\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
-          RegExp(r'Batch\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
-          RegExp(r'([A-Z0-9]{6,12})'), // Alphanumeric candidates (common for Takeda/CSL)
-        ];
+    // Save permanently to app directory
+    final directory = await getApplicationDocumentsDirectory();
+    final path = p.join(directory.path, 'charge_${DateTime.now().millisecondsSinceEpoch}.jpg');
+    await File(image.path).copy(path);
+    if (!mounted) return;
 
-        for (final block in recognizedText.blocks) {
-          for (final line in block.lines) {
-            for (final pattern in patterns) {
-              final match = pattern.firstMatch(line.text);
-              if (match != null) {
-                foundBatch = match.groupCount >= 1 ? match.group(1) : match.group(0);
-                break;
-              }
+    setState(() {
+      _capturedPhotoPath = path;
+      _isProcessingOcr = true;
+    });
+
+    // Perform OCR
+    try {
+      final inputImage = InputImage.fromFilePath(path);
+      final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+
+      // Simple logic for batch number: first sequence of uppercase letters/numbers
+      String? foundBatch;
+      final patterns = [
+        RegExp(r'LOT\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
+        RegExp(r'CH.-B\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
+        RegExp(r'Batch\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
+        RegExp(r'([A-Z0-9]{6,12})'), // Alphanumeric candidates (common for Takeda/CSL)
+      ];
+
+      for (final block in recognizedText.blocks) {
+        for (final line in block.lines) {
+          for (final pattern in patterns) {
+            final match = pattern.firstMatch(line.text);
+            if (match != null) {
+              foundBatch = match.groupCount >= 1 ? match.group(1) : match.group(0);
+              break;
             }
-            if (foundBatch != null) break;
           }
           if (foundBatch != null) break;
         }
+        if (foundBatch != null) break;
+      }
 
-        if (foundBatch != null) {
-          setState(() => _batchController.text = foundBatch!);
-        }
-        textRecognizer.close();
-      } catch (e) {
-        debugPrint('OCR Error: $e');
-      } finally {
+      if (foundBatch != null && mounted) {
+        setState(() => _batchController.text = foundBatch!);
+      }
+      textRecognizer.close();
+    } catch (e) {
+      debugPrint('OCR Error: $e');
+    } finally {
+      if (mounted) {
         setState(() => _isProcessingOcr = false);
       }
     }

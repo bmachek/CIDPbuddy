@@ -104,10 +104,20 @@ class BackgroundService {
       );
 
       timer = Timer.periodic(const Duration(seconds: 1), (t) async {
-        if (secondsRemaining > 0) {
-          secondsRemaining--;
+        // Recompute from the persisted absolute end time rather than just
+        // decrementing a counter. On iOS this Dart isolate is starved of CPU
+        // time whenever the app is backgrounded (no true foreground service
+        // like Android), so a plain decrement would sit frozen for the whole
+        // background duration and only resume counting down once the app
+        // returns — i.e. the timer would appear to "pause" instead of
+        // reflecting the real elapsed time. Deriving from wall-clock time
+        // self-corrects the instant this tick gets to run again.
+        final previousRemaining = secondsRemaining;
+        final storedEnd = prefs.getInt(timerEndEpochKey) ?? endEpoch;
+        secondsRemaining = ((storedEnd - DateTime.now().millisecondsSinceEpoch) / 1000).ceil();
 
-          if (secondsRemaining % 60 == 0 && secondsRemaining > 0) {
+        if (secondsRemaining > 0) {
+          if (secondsRemaining ~/ 60 < previousRemaining ~/ 60) {
             // Minute signal (bell sound, 3 times)
             try {
               for (int i = 0; i < 3; i++) {
@@ -134,6 +144,7 @@ class BackgroundService {
             await notifService.showTimerProgress(mins, secs);
           }
         } else {
+          secondsRemaining = 0;
           await stopTimer();
           // Final signal (ping sound) — the exact-alarm notification was already
           // cancelled by stopTimer so we don't double-alert
@@ -169,6 +180,19 @@ class BackgroundService {
     });
 
     service.on('getTimerState').listen((event) {
+      // Recompute here too rather than trusting `secondsRemaining`: on iOS
+      // the periodic tick can be starved for the whole time the app was
+      // backgrounded, so the closure variable may still reflect the moment
+      // it was last able to run rather than the real elapsed time. The
+      // modal calls this immediately on reopening, so it must not wait for
+      // the next tick to self-correct.
+      if (isRunning) {
+        final storedEnd = prefs.getInt(timerEndEpochKey);
+        if (storedEnd != null) {
+          final computed = ((storedEnd - DateTime.now().millisecondsSinceEpoch) / 1000).ceil();
+          secondsRemaining = computed < 0 ? 0 : computed;
+        }
+      }
       service.invoke('timerUpdate', {
         'secondsRemaining': secondsRemaining,
         'isRunning': isRunning,
