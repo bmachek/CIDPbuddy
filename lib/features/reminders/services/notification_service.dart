@@ -20,7 +20,7 @@ class NotificationService {
 
   Future<void> init({bool isBackground = false}) async {
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
-    const DarwinInitializationSettings darwinSettings = DarwinInitializationSettings(
+    final DarwinInitializationSettings darwinSettings = DarwinInitializationSettings(
       notificationCategories: [
         DarwinNotificationCategory(
           treatmentReminderCategoryId,
@@ -32,7 +32,7 @@ class NotificationService {
       ],
     );
 
-    const InitializationSettings initSettings = InitializationSettings(
+    final InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
       iOS: darwinSettings,
       macOS: darwinSettings,
