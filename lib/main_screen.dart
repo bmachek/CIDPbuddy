@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:cidpbuddy/core/database/database.dart';
 import 'package:cidpbuddy/features/diary/pages/dashboard_page.dart';
 import 'package:cidpbuddy/features/inventory/pages/inventory_page.dart';
 import 'package:cidpbuddy/features/diary/pages/diary_page.dart';
@@ -12,7 +13,7 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
@@ -21,6 +22,30 @@ class _MainScreenState extends State<MainScreen> {
     const InventoryPage(),
     const SettingsPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Picks up writes made by background isolates (notification actions,
+      // the periodic sync service) while the app was backgrounded — those
+      // isolates use their own database connection, so the tabs kept alive
+      // in the IndexedStack below never receive drift's normal stream
+      // update notification for them.
+      AppDatabase().refreshLiveQueries();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

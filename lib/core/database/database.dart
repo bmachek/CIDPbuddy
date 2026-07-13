@@ -446,6 +446,22 @@ class AppDatabase extends _$AppDatabase {
     // This is a helper for the history view
     return []; // Placeholder if needed, but I'll use raw streams in UI
   }
+
+  /// Forces every currently active stream query on this connection to
+  /// re-run against the on-disk database.
+  ///
+  /// Background isolates (iOS notification actions, the periodic
+  /// BackgroundService sync) each instantiate their own `AppDatabase()`,
+  /// which opens its own separate NativeDatabase connection to the same
+  /// sqlite file. Drift only auto-notifies stream queries within the
+  /// connection that performed the write, so a completion recorded from a
+  /// notification action while the app was backgrounded is invisible to
+  /// the UI's streams (e.g. the dashboard's upcoming-intake list) until
+  /// something forces a fresh query. Call this when the app returns to the
+  /// foreground so those writes show up immediately.
+  void refreshLiveQueries() {
+    markTablesUpdated(allTables.toSet());
+  }
 }
 
 QueryExecutor _openConnection() => c.openConnection();
