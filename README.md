@@ -1,5 +1,7 @@
 # CIDP Buddy
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/W7X2240HF4)
+
 <p align="center">
   <img src="assets/images/app_store_icon.png" alt="CIDP Buddy Logo" width="120"/>
 </p>
