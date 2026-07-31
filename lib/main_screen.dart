@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cidpbuddy/core/database/database.dart';
+import 'package:cidpbuddy/core/services/scheduler_service.dart';
 import 'package:cidpbuddy/features/diary/pages/dashboard_page.dart';
 import 'package:cidpbuddy/features/inventory/pages/inventory_page.dart';
 import 'package:cidpbuddy/features/diary/pages/diary_page.dart';
@@ -43,7 +45,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       // isolates use their own database connection, so the tabs kept alive
       // in the IndexedStack below never receive drift's normal stream
       // update notification for them.
-      AppDatabase().refreshLiveQueries();
+      final db = AppDatabase();
+      db.refreshLiveQueries();
+      // Re-evaluate the "Verpasste Einnahmen" summary. It is a delivered
+      // notification that otherwise only gets recomputed on a cold start, so
+      // on iOS — where the periodic background sync never gets to run — it
+      // would keep showing entries the user has since confirmed.
+      unawaited(SchedulerService(db).checkMissedTreatments());
     }
   }
 

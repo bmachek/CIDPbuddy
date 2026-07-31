@@ -13,6 +13,7 @@ import 'reliability_check_page.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_links.dart';
+import '../../../core/constants/disclaimer.dart';
 import '../../../core/database/database.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -288,9 +289,31 @@ class _SettingsPageState extends State<SettingsPage> {
               );
             },
           ),
+          const Divider(),
+          _buildSectionHeader('Rechtliches'),
+          ListTile(
+            leading: const Icon(Icons.warning_amber_rounded),
+            title: const Text(Disclaimer.liabilityTitle),
+            subtitle: const Text('Kein Medizinprodukt, keine medizinische Beratung'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => _showLegalText(
+              context,
+              Disclaimer.liabilityTitle,
+              Disclaimer.liability,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.qr_code_2_rounded),
+            title: const Text('Chargendokumentation'),
+            subtitle: const Text('Ersetzt nicht die gesetzliche Dokumentation'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => _showLegalText(
+              context,
+              'Chargendokumentation',
+              Disclaimer.batchDocumentationLong,
+            ),
+          ),
           if (AppLinks.impressumUrl != null || AppLinks.datenschutzUrl != null) ...[
-            const Divider(),
-            _buildSectionHeader('Rechtliches'),
             if (AppLinks.impressumUrl != null)
               ListTile(
                 leading: const Icon(Icons.gavel_outlined),
@@ -370,6 +393,24 @@ class _SettingsPageState extends State<SettingsPage> {
             subtitle: Text('Alle Daten werden lokal auf diesem Gerät gespeichert.'),
           ),
           const SizedBox(height: 100), // Padding for bottom bar
+        ],
+      ),
+    );
+  }
+
+  void _showLegalText(BuildContext context, String title, String body) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Text(body, style: const TextStyle(height: 1.45)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Verstanden'),
+          ),
         ],
       ),
     );

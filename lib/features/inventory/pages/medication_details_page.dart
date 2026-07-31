@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cidpbuddy/features/reminders/services/notification_service.dart';
 import '../providers/inventory_provider.dart';
 import 'package:cidpbuddy/core/database/database.dart';
+import 'package:cidpbuddy/core/constants/disclaimer.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:cidpbuddy/features/diary/pages/add_schedule_page.dart';
 import 'package:intl/intl.dart';
@@ -802,6 +803,18 @@ class MedicationDetailsPage extends StatelessWidget {
             onChanged: (val) => provider.updateMedication(medication.copyWith(trackBatchNumber: val)),
             secondary: Icon(Icons.qr_code_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
+          if (medication.trackBatchNumber)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Text(
+                Disclaimer.batchDocumentationShort,
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.35,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
           const Divider(height: 1),
           SwitchListTile(
             title: const Text('Körpergewicht erfassen'),

@@ -6,8 +6,10 @@ import '../providers/diary_provider.dart';
 import 'add_infusion_page.dart';
 import '../../reminders/services/notification_service.dart';
 import '../../inventory/pages/shopping_wizard_dialog.dart';
+import '../widgets/active_timer_banner.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:cidpbuddy/core/services/medication_service.dart';
+import 'package:cidpbuddy/core/services/scheduler_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -63,13 +65,14 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ],
           ),
-          SliverToBoxAdapter(
+          const SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
+                  ActiveTimerBanner(),
                 ],
               ),
             ),
@@ -520,9 +523,8 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
           dosage: treatment.dosage,
           date: treatment.date,
         );
-        await db.completePlannedInfusion(treatment.id);
-        await NotificationService().cancelTreatmentReminders(treatment.id);
-        
+        await SchedulerService(db).completeTreatment(treatment.id);
+
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -547,8 +549,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         ),
       ).then((result) async {
         if (result == true) {
-          await db.completePlannedInfusion(treatment.id);
-          await NotificationService().cancelTreatmentReminders(treatment.id);
+          await SchedulerService(db).completeTreatment(treatment.id);
         }
       });
     }
@@ -658,9 +659,8 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               dosage: treatment.dosage,
               date: treatment.date,
             );
-            await db.completePlannedInfusion(treatment.id);
-            await NotificationService().cancelTreatmentReminders(treatment.id);
-            
+            await SchedulerService(db).completeTreatment(treatment.id);
+
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -692,8 +692,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
             ),
           ).then((result) async {
             if (result == true) {
-              await db.completePlannedInfusion(treatment.id);
-              await NotificationService().cancelTreatmentReminders(treatment.id);
+              await SchedulerService(db).completeTreatment(treatment.id);
             }
           });
         }
