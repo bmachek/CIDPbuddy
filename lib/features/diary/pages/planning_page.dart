@@ -6,6 +6,7 @@ import '../../../core/database/database.dart';
 import 'add_infusion_page.dart';
 import 'add_schedule_page.dart';
 import '../../reminders/services/notification_service.dart';
+import '../../../core/services/scheduler_service.dart';
 
 class PlanningPage extends StatelessWidget {
   const PlanningPage({super.key});
@@ -283,8 +284,7 @@ class PlanningPage extends StatelessWidget {
                               ),
                             ).then((result) async {
                               if (result == true) {
-                                await db.completePlannedInfusion(appt.id);
-                                await NotificationService().cancelTreatmentReminders(appt.id);
+                                await SchedulerService(db).completeTreatment(appt.id);
                               }
                             });
                           },

@@ -67,22 +67,38 @@ class BackgroundService {
     Timer? timer;
     int secondsRemaining = 0;
     bool isRunning = false;
+    // True from the moment a timer is started until it finishes or is reset.
+    // Stays true while merely paused, so the UI can still offer a way back
+    // into a half-finished timer after the modal was swiped away.
+    bool sessionActive = false;
     final AudioPlayer audioPlayer = AudioPlayer();
     final prefs = await SharedPreferences.getInstance();
 
-    Future<void> stopTimer() async {
+    void broadcastState() {
+      service.invoke('timerUpdate', {
+        'secondsRemaining': secondsRemaining,
+        'isRunning': isRunning,
+        'sessionActive': sessionActive,
+      });
+    }
+
+    /// Stops the countdown but keeps the session, i.e. pause.
+    Future<void> pauseTimer() async {
       timer?.cancel();
       isRunning = false;
       await prefs.remove(timerEndEpochKey);
       await notifService.cancelPremedicationTimer();
-      service.invoke('timerUpdate', {
-        'secondsRemaining': secondsRemaining,
-        'isRunning': isRunning,
-      });
+      broadcastState();
 
       if (service is AndroidServiceInstance) {
         await service.setAsBackgroundService();
       }
+    }
+
+    /// Ends the session entirely (finished or explicitly reset).
+    Future<void> endSession() async {
+      sessionActive = false;
+      await pauseTimer();
     }
 
     Future<void> startTimerWithSeconds(int seconds) async {
@@ -91,6 +107,7 @@ class BackgroundService {
       }
       secondsRemaining = seconds;
       isRunning = true;
+      sessionActive = true;
       timer?.cancel();
 
       // Persist the absolute end time so we can resume after a force-kill
@@ -129,10 +146,7 @@ class BackgroundService {
             }
           }
 
-          service.invoke('timerUpdate', {
-            'secondsRemaining': secondsRemaining,
-            'isRunning': isRunning,
-          });
+          broadcastState();
 
           if (service is AndroidServiceInstance) {
             final mins = secondsRemaining ~/ 60;
@@ -145,9 +159,9 @@ class BackgroundService {
           }
         } else {
           secondsRemaining = 0;
-          await stopTimer();
+          await endSession();
           // Final signal (ping sound) — the exact-alarm notification was already
-          // cancelled by stopTimer so we don't double-alert
+          // cancelled by endSession so we don't double-alert
           try {
             await audioPlayer.play(AssetSource('audio/ping.mp3'));
           } catch (e) {
@@ -176,7 +190,12 @@ class BackgroundService {
     });
 
     service.on('stopTimer').listen((event) async {
-      await stopTimer();
+      await pauseTimer();
+    });
+
+    service.on('resetTimer').listen((event) async {
+      secondsRemaining = event?['seconds'] as int? ?? 0;
+      await endSession();
     });
 
     service.on('getTimerState').listen((event) {
@@ -193,11 +212,7 @@ class BackgroundService {
           secondsRemaining = computed < 0 ? 0 : computed;
         }
       }
-      service.invoke('timerUpdate', {
-        'secondsRemaining': secondsRemaining,
-        'isRunning': isRunning,
-        'hasActiveTimer': isRunning,
-      });
+      broadcastState();
     });
 
     // Periodic tasks (Schedule Sync)

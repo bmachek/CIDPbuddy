@@ -33,16 +33,19 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
 
     final service = FlutterBackgroundService();
 
-    // Listen to background service updates. Only adopt the service's
-    // remaining seconds when a timer is actually active — otherwise the
-    // service reports its idle counter (0) and the UI would jump to the end.
+    // Listen to background service updates. Only adopt the service's remaining
+    // seconds while a session is active — otherwise the service reports its
+    // idle counter (0) and the UI would jump to the end. A paused session
+    // still counts, so reopening the modal after a swipe-away restores the
+    // remaining time instead of silently resetting to the full duration.
     _serviceSubscription = service.on('timerUpdate').listen((event) {
       if (!mounted || event == null) return;
       final running = event['isRunning'] as bool? ?? false;
+      final sessionActive = event['sessionActive'] as bool? ?? running;
       final remaining = event['secondsRemaining'] as int?;
       setState(() {
         _isRunning = running;
-        if (running && remaining != null) {
+        if (sessionActive && remaining != null) {
           _secondsRemaining = remaining;
         }
       });
@@ -76,8 +79,14 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
   }
 
   void _resetTimer() {
-    _stopTimer();
-    setState(() => _secondsRemaining = _totalSeconds);
+    // Ends the session in the service too, so no "Timer läuft" entry point
+    // survives a reset.
+    FlutterBackgroundService().invoke('resetTimer', {'seconds': _totalSeconds});
+    setState(() {
+      _isRunning = false;
+      _secondsRemaining = _totalSeconds;
+    });
+    WakelockPlus.disable();
   }
 
   @override
@@ -318,6 +327,10 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                       _totalSeconds = (m - 1) * 60;
                       _secondsRemaining = _totalSeconds;
                     });
+                    // Discard any paused session so the service does not push
+                    // the old remaining time back onto the new duration.
+                    FlutterBackgroundService()
+                        .invoke('resetTimer', {'seconds': _totalSeconds});
                     _saveSettings(m);
                     Navigator.pop(context);
                   }

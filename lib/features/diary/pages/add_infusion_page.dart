@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import '../providers/diary_provider.dart';
 import '../../inventory/providers/inventory_provider.dart';
 import 'package:cidpbuddy/core/database/database.dart';
+import 'package:cidpbuddy/core/constants/disclaimer.dart';
 import '../widgets/premedication_timer_modal.dart';
 
 class AddInfusionPage extends StatefulWidget {
@@ -194,6 +195,8 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   ),
                 ),
               ],
+              const SizedBox(height: 12),
+              _buildBatchDocumentationHint(context),
             ],
             const SizedBox(height: 20),
             TextFormField(
@@ -272,6 +275,32 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Rechtlicher Hinweis: die App-Erfassung ersetzt die vorgeschriebene
+  /// Chargendokumentation nicht.
+  Widget _buildBatchDocumentationHint(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline_rounded, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              Disclaimer.batchDocumentationShort,
+              style: TextStyle(fontSize: 12, height: 1.35, color: color),
+            ),
+          ),
+        ],
       ),
     );
   }

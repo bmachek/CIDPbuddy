@@ -5,6 +5,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import '../../../core/database/database.dart';
+import '../../../core/services/scheduler_service.dart';
 import 'package:drift/drift.dart' show Value;
 
 class NotificationService {
@@ -281,8 +282,10 @@ class NotificationService {
         });
       }
       
-      // Cancel other reminders for this treatment
+      // Cancel other reminders for this treatment and refresh the "verpasst"
+      // summary so it does not keep listing a treatment that is now done.
       await NotificationService().cancelTreatmentReminders(treatmentId);
+      await SchedulerService(db).checkMissedTreatments();
       debugPrint('NotificationService: Treatment $treatmentId marked as completed via notification action.');
     } catch (e) {
       debugPrint('NotificationService: Error handling complete infusion: $e');
@@ -302,6 +305,7 @@ class NotificationService {
       
       // Cancel other reminders
       await NotificationService().cancelTreatmentReminders(treatmentId);
+      await SchedulerService(db).checkMissedTreatments();
       debugPrint('NotificationService: Treatment $treatmentId skipped via notification action.');
     } catch (e) {
       debugPrint('NotificationService: Error handling skip infusion: $e');
@@ -685,6 +689,7 @@ Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
       isCompleted: true,
       notes: Value('${treatment.notes ?? ''} [Übersprungen via Benachrichtigung]'.trim()),
     ));
+    await SchedulerService(db).checkMissedTreatments();
 
     debugPrint('NotificationService: Background: Treatment $treatmentId skipped.');
   } catch (e) {
@@ -729,6 +734,7 @@ Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
         ));
       });
     }
+    await SchedulerService(db).checkMissedTreatments();
 
     debugPrint('NotificationService: Background: Treatment $treatmentId processed.');
   } catch (e) {

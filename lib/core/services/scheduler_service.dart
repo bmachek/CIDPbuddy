@@ -140,6 +140,23 @@ class SchedulerService {
     await NotificationService().cancelOrphanTreatmentReminders(validIds);
   }
 
+  /// Marks a planned treatment as done and clears everything the OS still
+  /// holds for it: its own reminder block plus the "Verpasste Einnahmen"
+  /// summary.
+  ///
+  /// Refreshing the summary here is what makes an in-app confirmation actually
+  /// silence the notification. It is a plain `show()` notification that only
+  /// gets recomputed by [checkMissedTreatments] — on startup, in the periodic
+  /// background sync and in the backup worker. On iOS none of those run while
+  /// the app is in the foreground (the background service's periodic timer is
+  /// starved and `onIosBackground` is a no-op), so without this the stale
+  /// "verpasst" banner sat in Notification Center until the next cold start.
+  Future<void> completeTreatment(int treatmentId) async {
+    await db.completePlannedInfusion(treatmentId);
+    await NotificationService().cancelTreatmentReminders(treatmentId);
+    await checkMissedTreatments();
+  }
+
   /// Surfaces past-due Einnahmen that were never confirmed or skipped.
   /// Defensive fallback for cases where scheduled alarms get lost
   /// (e.g. after an OS update or boot before the BootReceiver runs).
