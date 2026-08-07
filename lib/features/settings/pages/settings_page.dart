@@ -110,17 +110,51 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
                     ),
+                  // App-internal backups are deleted together with the app, so
+                  // they are no protection against a reinstall — the one case
+                  // where a backup matters most. Say so instead of showing a
+                  // green check and letting the user assume they are covered.
+                  if (dest != null && !dest.isDurable && !hasError)
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Backups liegen in der App',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Sie werden mit der App gelöscht. Exportiere '
+                                  'regelmäßig eine Kopie nach iCloud Drive – über '
+                                  '"Backup exportieren" oder die Dateien-App.',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ListTile(
                     leading: Icon(dest != null
                         ? Icons.folder
                         : Icons.folder_open_outlined),
                     title: const Text('Backup-Ziel'),
                     subtitle: Text(
-                      dest == null
-                          ? 'Ziel wählen...'
-                          : (Platform.isIOS
-                              ? 'App-interner Speicher (automatisch)'
-                              : dest.displayLabel),
+                      dest == null ? 'Ziel wählen...' : dest.displayLabel,
                     ),
                     trailing: dest != null
                         ? const Icon(Icons.check_circle,
