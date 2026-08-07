@@ -41,7 +41,17 @@ class DiaryProvider extends ChangeNotifier {
   DateTime _getDate(dynamic entry) {
     if (entry is InfusionLogData) return entry.date;
     if (entry is DiaryEntry) return entry.date;
-    if (entry is PendingOrder) return entry.deliveryDate ?? DateTime.now();
+    // A delivered order without a delivery date used to fall back to
+    // DateTime.now(). That is always the newest possible timestamp, and it was
+    // recomputed on every stream emission, so such an order sat pinned at the
+    // very top of the diary permanently. The delivery date is optional in the
+    // wizard ("Gleich nach Bestätigung"), so fall back to when it was actually
+    // confirmed; only rows predating that column have no date and sort last.
+    if (entry is PendingOrder) {
+      return entry.deliveryDate ??
+          entry.confirmedAt ??
+          DateTime.fromMillisecondsSinceEpoch(0);
+    }
     if (entry is MedicationEvent) return entry.date;
     return DateTime.now();
   }
