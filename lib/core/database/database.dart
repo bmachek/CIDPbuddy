@@ -81,6 +81,10 @@ class PendingOrders extends Table {
   RealColumn get medicationQty => real()();
   DateTimeColumn get deliveryDate => dateTime().nullable()();
   BoolColumn get isConfirmed => boolean().withDefault(const Constant(false))();
+  /// When the order was confirmed as delivered. The delivery date is optional
+  /// ("Gleich nach Bestätigung" in the wizard), and without this the diary had
+  /// no date at all to place such an order by.
+  DateTimeColumn get confirmedAt => dateTime().nullable()();
 }
 
 class PendingOrderItems extends Table {
@@ -132,7 +136,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 13; // Incremented schema version to 13 for Accessories minStock
+  int get schemaVersion => 14; // 14: PendingOrders.confirmedAt
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -180,6 +184,25 @@ class AppDatabase extends _$AppDatabase {
       }
       if (to >= 13 && from < 13) {
         await m.addColumn(accessories, accessories.minStock);
+      }
+      if (to >= 14 && from < 14) {
+        await m.addColumn(pendingOrders, pendingOrders.confirmedAt);
+        // Orders that carry a delivery date: that date *is* when they arrived.
+        await customStatement(
+          'UPDATE pending_orders SET confirmed_at = delivery_date '
+          'WHERE is_confirmed = 1 AND delivery_date IS NOT NULL',
+        );
+        // Orders confirmed without a delivery date have no recorded time at
+        // all. Ids are assigned in creation order, so the newest delivery date
+        // among earlier orders is the best available lower bound — it puts them
+        // back in a plausible spot instead of at one end of the diary. Rows
+        // with no earlier dated order stay null and sort last.
+        await customStatement(
+          'UPDATE pending_orders SET confirmed_at = ('
+          '  SELECT MAX(p2.delivery_date) FROM pending_orders p2'
+          '  WHERE p2.id < pending_orders.id AND p2.delivery_date IS NOT NULL'
+          ') WHERE is_confirmed = 1 AND delivery_date IS NULL AND confirmed_at IS NULL',
+        );
       }
     },
   );
@@ -415,7 +438,11 @@ class AppDatabase extends _$AppDatabase {
           await update(accessories).replace(acc.copyWith(stock: acc.stock + item.quantity));
         }
       }
-      await (update(pendingOrders)..where((t) => t.id.equals(orderId))).write(PendingOrdersCompanion(isConfirmed: Value(true)));
+      await (update(pendingOrders)..where((t) => t.id.equals(orderId))).write(
+          PendingOrdersCompanion(
+        isConfirmed: const Value(true),
+        confirmedAt: Value(DateTime.now()),
+      ));
     });
   }
 

@@ -3280,6 +3280,17 @@ class $PendingOrdersTable extends PendingOrders
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _confirmedAtMeta = const VerificationMeta(
+    'confirmedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> confirmedAt = GeneratedColumn<DateTime>(
+    'confirmed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3287,6 +3298,7 @@ class $PendingOrdersTable extends PendingOrders
     medicationQty,
     deliveryDate,
     isConfirmed,
+    confirmedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3343,6 +3355,15 @@ class $PendingOrdersTable extends PendingOrders
         ),
       );
     }
+    if (data.containsKey('confirmed_at')) {
+      context.handle(
+        _confirmedAtMeta,
+        confirmedAt.isAcceptableOrUnknown(
+          data['confirmed_at']!,
+          _confirmedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3372,6 +3393,10 @@ class $PendingOrdersTable extends PendingOrders
         DriftSqlType.bool,
         data['${effectivePrefix}is_confirmed'],
       )!,
+      confirmedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}confirmed_at'],
+      ),
     );
   }
 
@@ -3387,12 +3412,18 @@ class PendingOrder extends DataClass implements Insertable<PendingOrder> {
   final double medicationQty;
   final DateTime? deliveryDate;
   final bool isConfirmed;
+
+  /// When the order was confirmed as delivered. The delivery date is optional
+  /// ("Gleich nach Bestätigung" in the wizard), and without this the diary had
+  /// no date at all to place such an order by.
+  final DateTime? confirmedAt;
   const PendingOrder({
     required this.id,
     required this.medicationId,
     required this.medicationQty,
     this.deliveryDate,
     required this.isConfirmed,
+    this.confirmedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3404,6 +3435,9 @@ class PendingOrder extends DataClass implements Insertable<PendingOrder> {
       map['delivery_date'] = Variable<DateTime>(deliveryDate);
     }
     map['is_confirmed'] = Variable<bool>(isConfirmed);
+    if (!nullToAbsent || confirmedAt != null) {
+      map['confirmed_at'] = Variable<DateTime>(confirmedAt);
+    }
     return map;
   }
 
@@ -3416,6 +3450,9 @@ class PendingOrder extends DataClass implements Insertable<PendingOrder> {
           ? const Value.absent()
           : Value(deliveryDate),
       isConfirmed: Value(isConfirmed),
+      confirmedAt: confirmedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(confirmedAt),
     );
   }
 
@@ -3430,6 +3467,7 @@ class PendingOrder extends DataClass implements Insertable<PendingOrder> {
       medicationQty: serializer.fromJson<double>(json['medicationQty']),
       deliveryDate: serializer.fromJson<DateTime?>(json['deliveryDate']),
       isConfirmed: serializer.fromJson<bool>(json['isConfirmed']),
+      confirmedAt: serializer.fromJson<DateTime?>(json['confirmedAt']),
     );
   }
   @override
@@ -3441,6 +3479,7 @@ class PendingOrder extends DataClass implements Insertable<PendingOrder> {
       'medicationQty': serializer.toJson<double>(medicationQty),
       'deliveryDate': serializer.toJson<DateTime?>(deliveryDate),
       'isConfirmed': serializer.toJson<bool>(isConfirmed),
+      'confirmedAt': serializer.toJson<DateTime?>(confirmedAt),
     };
   }
 
@@ -3450,12 +3489,14 @@ class PendingOrder extends DataClass implements Insertable<PendingOrder> {
     double? medicationQty,
     Value<DateTime?> deliveryDate = const Value.absent(),
     bool? isConfirmed,
+    Value<DateTime?> confirmedAt = const Value.absent(),
   }) => PendingOrder(
     id: id ?? this.id,
     medicationId: medicationId ?? this.medicationId,
     medicationQty: medicationQty ?? this.medicationQty,
     deliveryDate: deliveryDate.present ? deliveryDate.value : this.deliveryDate,
     isConfirmed: isConfirmed ?? this.isConfirmed,
+    confirmedAt: confirmedAt.present ? confirmedAt.value : this.confirmedAt,
   );
   PendingOrder copyWithCompanion(PendingOrdersCompanion data) {
     return PendingOrder(
@@ -3472,6 +3513,9 @@ class PendingOrder extends DataClass implements Insertable<PendingOrder> {
       isConfirmed: data.isConfirmed.present
           ? data.isConfirmed.value
           : this.isConfirmed,
+      confirmedAt: data.confirmedAt.present
+          ? data.confirmedAt.value
+          : this.confirmedAt,
     );
   }
 
@@ -3482,14 +3526,21 @@ class PendingOrder extends DataClass implements Insertable<PendingOrder> {
           ..write('medicationId: $medicationId, ')
           ..write('medicationQty: $medicationQty, ')
           ..write('deliveryDate: $deliveryDate, ')
-          ..write('isConfirmed: $isConfirmed')
+          ..write('isConfirmed: $isConfirmed, ')
+          ..write('confirmedAt: $confirmedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, medicationId, medicationQty, deliveryDate, isConfirmed);
+  int get hashCode => Object.hash(
+    id,
+    medicationId,
+    medicationQty,
+    deliveryDate,
+    isConfirmed,
+    confirmedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3498,7 +3549,8 @@ class PendingOrder extends DataClass implements Insertable<PendingOrder> {
           other.medicationId == this.medicationId &&
           other.medicationQty == this.medicationQty &&
           other.deliveryDate == this.deliveryDate &&
-          other.isConfirmed == this.isConfirmed);
+          other.isConfirmed == this.isConfirmed &&
+          other.confirmedAt == this.confirmedAt);
 }
 
 class PendingOrdersCompanion extends UpdateCompanion<PendingOrder> {
@@ -3507,12 +3559,14 @@ class PendingOrdersCompanion extends UpdateCompanion<PendingOrder> {
   final Value<double> medicationQty;
   final Value<DateTime?> deliveryDate;
   final Value<bool> isConfirmed;
+  final Value<DateTime?> confirmedAt;
   const PendingOrdersCompanion({
     this.id = const Value.absent(),
     this.medicationId = const Value.absent(),
     this.medicationQty = const Value.absent(),
     this.deliveryDate = const Value.absent(),
     this.isConfirmed = const Value.absent(),
+    this.confirmedAt = const Value.absent(),
   });
   PendingOrdersCompanion.insert({
     this.id = const Value.absent(),
@@ -3520,6 +3574,7 @@ class PendingOrdersCompanion extends UpdateCompanion<PendingOrder> {
     required double medicationQty,
     this.deliveryDate = const Value.absent(),
     this.isConfirmed = const Value.absent(),
+    this.confirmedAt = const Value.absent(),
   }) : medicationId = Value(medicationId),
        medicationQty = Value(medicationQty);
   static Insertable<PendingOrder> custom({
@@ -3528,6 +3583,7 @@ class PendingOrdersCompanion extends UpdateCompanion<PendingOrder> {
     Expression<double>? medicationQty,
     Expression<DateTime>? deliveryDate,
     Expression<bool>? isConfirmed,
+    Expression<DateTime>? confirmedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3535,6 +3591,7 @@ class PendingOrdersCompanion extends UpdateCompanion<PendingOrder> {
       if (medicationQty != null) 'medication_qty': medicationQty,
       if (deliveryDate != null) 'delivery_date': deliveryDate,
       if (isConfirmed != null) 'is_confirmed': isConfirmed,
+      if (confirmedAt != null) 'confirmed_at': confirmedAt,
     });
   }
 
@@ -3544,6 +3601,7 @@ class PendingOrdersCompanion extends UpdateCompanion<PendingOrder> {
     Value<double>? medicationQty,
     Value<DateTime?>? deliveryDate,
     Value<bool>? isConfirmed,
+    Value<DateTime?>? confirmedAt,
   }) {
     return PendingOrdersCompanion(
       id: id ?? this.id,
@@ -3551,6 +3609,7 @@ class PendingOrdersCompanion extends UpdateCompanion<PendingOrder> {
       medicationQty: medicationQty ?? this.medicationQty,
       deliveryDate: deliveryDate ?? this.deliveryDate,
       isConfirmed: isConfirmed ?? this.isConfirmed,
+      confirmedAt: confirmedAt ?? this.confirmedAt,
     );
   }
 
@@ -3572,6 +3631,9 @@ class PendingOrdersCompanion extends UpdateCompanion<PendingOrder> {
     if (isConfirmed.present) {
       map['is_confirmed'] = Variable<bool>(isConfirmed.value);
     }
+    if (confirmedAt.present) {
+      map['confirmed_at'] = Variable<DateTime>(confirmedAt.value);
+    }
     return map;
   }
 
@@ -3582,7 +3644,8 @@ class PendingOrdersCompanion extends UpdateCompanion<PendingOrder> {
           ..write('medicationId: $medicationId, ')
           ..write('medicationQty: $medicationQty, ')
           ..write('deliveryDate: $deliveryDate, ')
-          ..write('isConfirmed: $isConfirmed')
+          ..write('isConfirmed: $isConfirmed, ')
+          ..write('confirmedAt: $confirmedAt')
           ..write(')'))
         .toString();
   }
@@ -8018,6 +8081,7 @@ typedef $$PendingOrdersTableCreateCompanionBuilder =
       required double medicationQty,
       Value<DateTime?> deliveryDate,
       Value<bool> isConfirmed,
+      Value<DateTime?> confirmedAt,
     });
 typedef $$PendingOrdersTableUpdateCompanionBuilder =
     PendingOrdersCompanion Function({
@@ -8026,6 +8090,7 @@ typedef $$PendingOrdersTableUpdateCompanionBuilder =
       Value<double> medicationQty,
       Value<DateTime?> deliveryDate,
       Value<bool> isConfirmed,
+      Value<DateTime?> confirmedAt,
     });
 
 final class $$PendingOrdersTableReferences
@@ -8109,6 +8174,11 @@ class $$PendingOrdersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<DateTime> get confirmedAt => $composableBuilder(
+    column: $table.confirmedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$MedicationsTableFilterComposer get medicationId {
     final $$MedicationsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -8187,6 +8257,11 @@ class $$PendingOrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get confirmedAt => $composableBuilder(
+    column: $table.confirmedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$MedicationsTableOrderingComposer get medicationId {
     final $$MedicationsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -8235,6 +8310,11 @@ class $$PendingOrdersTableAnnotationComposer
 
   GeneratedColumn<bool> get isConfirmed => $composableBuilder(
     column: $table.isConfirmed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get confirmedAt => $composableBuilder(
+    column: $table.confirmedAt,
     builder: (column) => column,
   );
 
@@ -8324,12 +8404,14 @@ class $$PendingOrdersTableTableManager
                 Value<double> medicationQty = const Value.absent(),
                 Value<DateTime?> deliveryDate = const Value.absent(),
                 Value<bool> isConfirmed = const Value.absent(),
+                Value<DateTime?> confirmedAt = const Value.absent(),
               }) => PendingOrdersCompanion(
                 id: id,
                 medicationId: medicationId,
                 medicationQty: medicationQty,
                 deliveryDate: deliveryDate,
                 isConfirmed: isConfirmed,
+                confirmedAt: confirmedAt,
               ),
           createCompanionCallback:
               ({
@@ -8338,12 +8420,14 @@ class $$PendingOrdersTableTableManager
                 required double medicationQty,
                 Value<DateTime?> deliveryDate = const Value.absent(),
                 Value<bool> isConfirmed = const Value.absent(),
+                Value<DateTime?> confirmedAt = const Value.absent(),
               }) => PendingOrdersCompanion.insert(
                 id: id,
                 medicationId: medicationId,
                 medicationQty: medicationQty,
                 deliveryDate: deliveryDate,
                 isConfirmed: isConfirmed,
+                confirmedAt: confirmedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
