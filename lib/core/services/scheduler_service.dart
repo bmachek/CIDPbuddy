@@ -130,14 +130,26 @@ class SchedulerService {
       await NotificationService().scheduleTreatmentReminders(treatment);
     }
 
-    // Phase 3: Sweep orphaned OS alarms. Reminders scheduled before a medication
-    // was discontinued/deleted can outlive their PlannedInfusion rows and keep
-    // firing. Cancel any pending treatment reminder that no longer maps to an
-    // existing planned infusion. This self-heals devices that accumulated stale
-    // alarms (e.g. from duplicate schedules created by a double-tap).
+    // Phase 3: Sweep stale OS alarms — see [sweepStaleReminders].
+    await sweepStaleReminders();
+  }
+
+  /// Cancels every pending treatment reminder that should no longer fire:
+  /// orphans whose PlannedInfusion is gone (a discontinued/deleted medication,
+  /// or duplicate schedules from the old double-tap bug) and, importantly,
+  /// reminders for intakes that are already confirmed or skipped.
+  ///
+  /// Completed intakes are included because cancellation at confirmation time
+  /// is not guaranteed to have happened: on iOS the "Erledigt" action runs in a
+  /// headless engine that can fail before it gets to cancel anything, and a
+  /// confirmation written by one isolate does not clear alarms another isolate
+  /// scheduled. Sweeping against the current DB state makes the follow-ups stop
+  /// regardless of which path confirmed the intake.
+  Future<void> sweepStaleReminders() async {
     final allPlanned = await db.select(db.plannedInfusions).get();
-    final validIds = allPlanned.map((e) => e.id).toSet();
-    await NotificationService().cancelOrphanTreatmentReminders(validIds);
+    final openIds =
+        allPlanned.where((e) => !e.isCompleted).map((e) => e.id).toSet();
+    await NotificationService().cancelStaleTreatmentReminders(openIds);
   }
 
   /// Marks a planned treatment as done and clears everything the OS still

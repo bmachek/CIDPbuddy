@@ -4,6 +4,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import '../../../core/database/database.dart';
 import '../../../core/services/scheduler_service.dart';
 import 'package:drift/drift.dart' show Value;
@@ -413,11 +414,16 @@ class NotificationService {
   // baseId (initial), +1..+3 (snooze), +11..+13 (hourly).
   static const Set<int> _treatmentReminderOffsets = {0, 1, 2, 3, 11, 12, 13};
 
-  /// Cancels orphaned treatment-reminder alarms whose backing PlannedInfusion
-  /// no longer exists (e.g. left over after a medication was discontinued or
-  /// deleted while the OS alarms were still pending). [validTreatmentIds] are
-  /// the ids of planned infusions that should keep their reminders.
-  Future<void> cancelOrphanTreatmentReminders(Set<int> validTreatmentIds) async {
+  /// Cancels treatment-reminder alarms the app no longer wants delivered:
+  /// orphans whose backing PlannedInfusion is gone (e.g. a discontinued or
+  /// deleted medication) *and* reminders for intakes that have since been
+  /// confirmed or skipped. [validTreatmentIds] are the ids of planned infusions
+  /// that should keep their reminders — i.e. the still-open ones.
+  ///
+  /// This is the safety net for the completed case: it does not care *how* the
+  /// pending alarms survived confirmation, so a device that already accumulated
+  /// them self-heals on the next sweep.
+  Future<void> cancelStaleTreatmentReminders(Set<int> validTreatmentIds) async {
     try {
       final pending = await _notificationsPlugin.pendingNotificationRequests();
       for (final req in pending) {
@@ -428,11 +434,11 @@ class NotificationService {
         final treatmentId = id ~/ 100;
         if (!validTreatmentIds.contains(treatmentId)) {
           await _notificationsPlugin.cancel(id);
-          debugPrint('NotificationService: Cancelled orphaned reminder $id (treatment $treatmentId).');
+          debugPrint('NotificationService: Cancelled stale reminder $id (treatment $treatmentId).');
         }
       }
     } catch (e) {
-      debugPrint('NotificationService: Failed to sweep orphaned reminders: $e');
+      debugPrint('NotificationService: Failed to sweep stale reminders: $e');
     }
   }
 
@@ -517,10 +523,24 @@ class NotificationService {
     await _notificationsPlugin.cancel(9999);
   }
 
+  static const String _missedSignatureKey = 'missed_treatments_signature';
+
   Future<void> showMissedTreatmentsNotification(List<String> items) async {
     const int missedId = 5555;
     if (items.isEmpty) {
-      await _notificationsPlugin.cancel(missedId);
+      await cancelMissedTreatmentsNotification();
+      return;
+    }
+
+    // Re-showing an identical summary is what made this banner feel like it
+    // "keeps coming back": the list is recomputed on every resume, every
+    // confirmation and every sync, and on iOS each show() of the same id
+    // re-delivers a fresh alert with sound. Only re-alert when the set of open
+    // intakes actually changed.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload(); // another isolate may have updated it
+    final signature = items.join('|');
+    if (prefs.getString(_missedSignatureKey) == signature) {
       return;
     }
 
@@ -554,10 +574,16 @@ class NotificationService {
         macOS: const DarwinNotificationDetails(),
       ),
     );
+
+    await prefs.setString(_missedSignatureKey, signature);
   }
 
   Future<void> cancelMissedTreatmentsNotification() async {
     await _notificationsPlugin.cancel(5555);
+    // Forget the signature too, otherwise the next genuinely-missed intake with
+    // the same summary text would be suppressed by the de-duplication above.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_missedSignatureKey);
   }
 
   Future<void> showStockWarningNotification(List<String> lowItems) async {
@@ -665,6 +691,33 @@ void notificationTapBackground(NotificationResponse response) {
   }
 }
 
+/// Initializes a plugin instance inside the headless action isolate.
+///
+/// The settings must match the platform: `initialize` throws an [ArgumentError]
+/// when the entry for the current platform is missing, and on iOS that
+/// exception aborted the whole action handler before it could mark the intake
+/// as done or cancel its follow-up reminders.
+@pragma('vm:entry-point')
+Future<void> _initBackgroundPlugin(FlutterLocalNotificationsPlugin plugin) async {
+  const androidSettings = AndroidInitializationSettings('notification_icon');
+  // No categories/permission requests here — the main isolate already
+  // registered them; re-requesting from a headless engine is unnecessary.
+  const darwinSettings = DarwinInitializationSettings(
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
+  );
+
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.iOS:
+      await plugin.initialize(const InitializationSettings(iOS: darwinSettings));
+    case TargetPlatform.macOS:
+      await plugin.initialize(const InitializationSettings(macOS: darwinSettings));
+    default:
+      await plugin.initialize(const InitializationSettings(android: androidSettings));
+  }
+}
+
 @pragma('vm:entry-point')
 Future<void> _cancelTreatmentBlock(
     FlutterLocalNotificationsPlugin plugin, int treatmentId) async {
@@ -680,8 +733,7 @@ Future<void> _cancelTreatmentBlock(
 Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
   try {
     final notifPlugin = FlutterLocalNotificationsPlugin();
-    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
-    await notifPlugin.initialize(const InitializationSettings(android: androidSettings));
+    await _initBackgroundPlugin(notifPlugin);
     await _cancelTreatmentBlock(notifPlugin, treatmentId);
     final db = AppDatabase();
     final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
@@ -701,8 +753,7 @@ Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
 Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
   try {
     final notifPlugin = FlutterLocalNotificationsPlugin();
-    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
-    await notifPlugin.initialize(const InitializationSettings(android: androidSettings));
+    await _initBackgroundPlugin(notifPlugin);
     await _cancelTreatmentBlock(notifPlugin, treatmentId);
     final db = AppDatabase();
     // 1. Mark as completed

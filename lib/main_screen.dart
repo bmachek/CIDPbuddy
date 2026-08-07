@@ -51,7 +51,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       // notification that otherwise only gets recomputed on a cold start, so
       // on iOS — where the periodic background sync never gets to run — it
       // would keep showing entries the user has since confirmed.
-      unawaited(SchedulerService(db).checkMissedTreatments());
+      final scheduler = SchedulerService(db);
+      unawaited(scheduler.checkMissedTreatments());
+      // Drop reminders for intakes that are already done. Confirmations made
+      // outside this isolate (notification actions, the background sync) leave
+      // their follow-up alarms pending here, and on iOS nothing else re-runs
+      // the sweep between cold starts — so they would keep firing all day.
+      unawaited(scheduler.sweepStaleReminders());
     }
   }
 
