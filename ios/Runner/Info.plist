@@ -26,6 +26,15 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Exposes the app's Documents folder (and with it Documents/Backups) in
+	     the Files app under "Auf meinem iPhone → CIDP Buddy". Backups live
+	     inside the app sandbox and are erased together with the app, so users
+	     need a way to see and drag them to iCloud Drive *before* deleting or
+	     reinstalling — not only via the share sheet. -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Wird benötigt, um die Chargennummer auf dem Medikamenten-Aufkleber zu fotografieren und den Barcode-Scanner zu nutzen.</string>
 	<key>UIApplicationSceneManifest</key>

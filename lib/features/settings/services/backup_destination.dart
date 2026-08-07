@@ -36,6 +36,15 @@ abstract class BackupDestination {
   String get displayLabel;
   String get pathOrUri;
 
+  /// What [persist] writes to prefs. Defaults to [pathOrUri]; destinations
+  /// whose absolute path is not stable across app updates override this with
+  /// a portable marker — see [appInternalMarker].
+  String get persistedPathOrUri => pathOrUri;
+
+  /// Whether backups here outlive the app itself. False for storage inside
+  /// the app sandbox, which iOS erases together with the app.
+  bool get isDurable => true;
+
   /// Roundtrip a tiny token file. Returns null on success, or a German
   /// error string suitable for user display on failure.
   Future<String?> verifyAccess();
@@ -51,24 +60,39 @@ abstract class BackupDestination {
 
   Future<void> persist() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kPath, pathOrUri);
+    await prefs.setString(_kPath, persistedPathOrUri);
     await prefs.setBool(_kIsSaf, kind == DestinationKind.saf);
     await prefs.setString(_kKind, kind.name);
   }
 
   static const _kSafDisplayName = 'backup_saf_display_name';
 
+  /// Persisted instead of an absolute path for the app-internal destination.
+  ///
+  /// iOS reassigns the app's data-container UUID on *every* app update, so a
+  /// stored `/var/mobile/Containers/Data/Application/<uuid>/Documents/Backups`
+  /// is dead the moment the app updates — pointing at a container that no
+  /// longer exists. The marker carries no UUID and is resolved against the
+  /// current container every time it is loaded.
+  static const String appInternalMarker = 'app-documents:Backups';
+
+  /// True for absolute paths inside *an* iOS app container. Such a path is
+  /// only ever valid for the container that produced it, so one read back from
+  /// prefs after an update must be re-resolved rather than trusted.
+  static bool isContainerScopedPath(String path) =>
+      path.contains('/Containers/Data/Application/');
+
   /// iOS has no durable way to grant write access to an arbitrary
   /// externally-picked folder: `file_picker`'s `UIDocumentPickerViewController`
   /// only grants transient security-scoped access around the pick call
   /// itself (never persisted, no bookmark), so any later read/write on that
   /// path fails. On iOS backups therefore always live in this app-internal
-  /// folder instead; users get a copy out via the share sheet.
-  static Future<LocalDestination> provisionIosDefault() async {
+  /// folder instead; users get a copy out via the Files app or share sheet.
+  static Future<AppInternalDestination> provisionAppInternal() async {
     final docs = await getApplicationDocumentsDirectory();
     final dir = Directory(p.join(docs.path, 'Backups'));
     if (!await dir.exists()) await dir.create(recursive: true);
-    return LocalDestination(dir.path);
+    return AppInternalDestination(dir.path);
   }
 
   static Future<void> clear() async {
@@ -83,13 +107,12 @@ abstract class BackupDestination {
     final prefs = await SharedPreferences.getInstance();
 
     // iOS never trusts a persisted path: it's always our own auto-managed
-    // internal folder (see [provisionIosDefault]), never user-picked, and
-    // the app's Documents container UUID can change across reinstalls
-    // (e.g. sideloading) — a path saved under the old container silently
-    // stops existing, so re-deriving fresh here is both correct and
-    // self-healing.
+    // internal folder (see [provisionAppInternal]), never user-picked, and
+    // the app's Documents container UUID changes on every app update — a path
+    // saved under the old container silently stops existing, so re-deriving
+    // fresh here is both correct and self-healing.
     if (Platform.isIOS) {
-      final destination = await provisionIosDefault();
+      final destination = await provisionAppInternal();
       await destination.persist();
       return destination;
     }
@@ -106,8 +129,8 @@ abstract class BackupDestination {
           return null;
         case 'local':
           final path = prefs.getString(_kPath);
-          if (path != null) return LocalDestination(path);
-          return null;
+          if (path == null) return null;
+          return _resolveLocal(path);
       }
     }
 
@@ -118,6 +141,19 @@ abstract class BackupDestination {
     if (isSaf && Platform.isAndroid) {
       final name = prefs.getString(_kSafDisplayName);
       return SafDestination(path, displayName: name);
+    }
+    return _resolveLocal(path);
+  }
+
+  /// Turns a persisted local value back into a usable destination. Both the
+  /// portable marker and a stale absolute container path from an older release
+  /// resolve to the app-internal folder in the *current* container.
+  static Future<BackupDestination> _resolveLocal(String path) async {
+    if (path == appInternalMarker || isContainerScopedPath(path)) {
+      final destination = await provisionAppInternal();
+      // Rewrite the stale absolute path so it is not read back again.
+      await destination.persist();
+      return destination;
     }
     return LocalDestination(path);
   }
@@ -232,6 +268,28 @@ class LocalDestination extends BackupDestination {
     final f = File(file.pathOrUri);
     if (await f.exists()) await f.delete();
   }
+}
+
+/// The app's own `Documents/Backups` folder.
+///
+/// Its absolute path embeds the iOS data-container UUID, which is reassigned
+/// on every app update, so the path is never persisted — only
+/// [BackupDestination.appInternalMarker] is, and it is resolved against the
+/// current container on load.
+///
+/// Backups here are erased together with the app, so [isDurable] is false and
+/// the UI must push the user to export a copy.
+class AppInternalDestination extends LocalDestination {
+  AppInternalDestination(super.dirPath);
+
+  @override
+  String get persistedPathOrUri => BackupDestination.appInternalMarker;
+
+  @override
+  String get displayLabel => 'App-Ordner (Dateien-App → CIDP Buddy → Backups)';
+
+  @override
+  bool get isDurable => false;
 }
 
 class SafDestination extends BackupDestination {

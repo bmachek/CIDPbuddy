@@ -125,13 +125,13 @@ class BackupService {
   ///
   /// On iOS this does NOT open a folder picker: `file_picker`'s directory
   /// picker there can't grant durable write access (see
-  /// [BackupDestination.provisionIosDefault]), so we instead (re)provision
+  /// [BackupDestination.provisionAppInternal]), so we instead (re)provision
   /// the app-internal backup folder. This still lets the "Ordner erneut
   /// wählen" retry button recover from a deleted/corrupted internal folder.
   Future<BackupDestination?> pickLocalBackupDirectory() async {
     try {
       if (Platform.isIOS) {
-        final destination = await BackupDestination.provisionIosDefault();
+        final destination = await BackupDestination.provisionAppInternal();
         final err = await destination.verifyAccess();
         if (err != null) return null;
         await destination.persist();
