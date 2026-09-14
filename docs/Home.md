@@ -10,7 +10,7 @@ CIDPbuddy ist eine Flutter-App zur Verwaltung von Infusionstherapien für Patien
 - **Inventar & Bestandsverwaltung** — Medikamente und Zubehör mit Mindestbestand-Warnungen, QR-Scan und OCR
 - **Einkaufsassistent** — Berechnet automatisch den genauen Bestellbedarf auf Basis des Plans und des aktuellen Lagerbestands
 - **Erinnerungen & Benachrichtigungen** — Lokale Alarme für Behandlungen, Vormedikation und Mindestbestand
-- **Datensicherung** — ZIP-basiertes Backup auf lokalem Speicher, Android SAF-Ordner, Google Drive oder iCloud Drive (automatisch, alle 6 Stunden)
+- **Datensicherung** — ZIP-basiertes Backup in einen lokalen Ordner oder einen per Android SAF gewählten Ordner (automatisch, frühestens alle 6 Stunden)
 
 ## Schnellstart
 
@@ -33,26 +33,31 @@ CIDPbuddy ist eine Flutter-App zur Verwaltung von Infusionstherapien für Patien
 
 ## Technischer Stack
 
-- **Flutter** ^3.11.4, Dart, Material 3
+- **Flutter** / Dart SDK ^3.11.4, Material 3
 - **Drift ORM** (SQLite, reaktive Streams)
 - **Provider** (State Management)
 - **RxDart** (Stream-Komposition)
-- **Google Sign-In + googleapis** (Drive-Backup, Android/macOS)
-- **icloud_storage** (iCloud-Backup, iOS)
-- **WorkManager** (Hintergrundaufgaben, Android)
+- **saf_util + saf_stream** (Android Storage Access Framework als Backup-Ziel)
+- **archive** (ZIP-Erzeugung für Backups)
+- **WorkManager** (periodische Hintergrundaufgaben, Android)
+- **flutter_background_service** (Vormedikations-Timer)
 - **flutter_local_notifications** (Alarme)
 - **audioplayers** (Timer-Audio)
+- **fl_chart** (Verlaufscharts)
+- **mobile_scanner + google_mlkit_text_recognition** (QR-Scan, OCR)
 
 ## App-Identifikation
 
 | Plattform | ID |
 |-----------|-----|
-| Android Package | `de.gbs-cidp.cidpbuddy` |
-| iOS Bundle ID | `de.gbs-cidp.cidpbuddy` |
-| Version | 1.0.0+1 |
+| Android Package | `de.fokuspunk.cidpbuddy` |
+| iOS Bundle ID | `de.fokuspunk.cidpbuddy` |
+| Version | `0.99.0-dev+17` (siehe `pubspec.yaml`; CI-Releases setzen Name/Nummer aus dem Git-Tag) |
 
 ## Lokalisierung & Theme
 
 Die App ist **ausschließlich auf Deutsch** (`Locale('de', 'DE')`). Alle UI-Texte müssen auf Deutsch sein.
 
 Primärfarben: Blau `#0066FF`, Smaragd `#00BFA6`, Gold `#FFB300`
+
+Es gibt ein helles und ein dunkles Design (`AppTheme.lightTheme` / `AppTheme.darkTheme`). Die Umschaltung liegt in den Einstellungen unter „Erscheinungsbild".

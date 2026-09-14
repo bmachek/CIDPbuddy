@@ -16,8 +16,10 @@ Datenbank (Drift Streams)
 
 Die App verwendet `ChangeNotifier` + `ChangeNotifierProxyProvider` aus dem `provider`-Paket.
 
-- **`DiaryProvider`** — Kombiniert Infusions-Logs, Tagebucheinträge und ausstehende Bestellungen zu einem einheitlichen Timeline-Stream via `RxDart.combineLatest`
+- **`DiaryProvider`** — Kombiniert Infusions-Logs, Tagebucheinträge, gelieferte Bestellungen und Medikations-Ereignisse zu einem einheitlichen Timeline-Stream via `RxDart.combineLatest`
 - **`InventoryProvider`** — Streams für aktive Medikamente, abgesetzte Medikamente und Zubehör
+- **`ThemeProvider`** (`lib/core/theme/theme_provider.dart`) — hält den `ThemeMode` (hell/dunkel/System)
+- **`MedicationService`** — kein `ChangeNotifier`, sondern als einfacher `Provider` registriert; kapselt Bestands- und Reichweitenberechnungen
 
 Providers werden in `main.dart` mit `MultiProvider` registriert und erhalten Zugriff auf die `AppDatabase`-Singleton-Instanz.
 
@@ -37,14 +39,23 @@ Jede `watch*()`-Methode emittiert bei jeder relevanten Tabellenänderung. Der Pr
 Wenn mehrere Streams zu einem kombinierten State zusammengeführt werden (z.B. im Diary-Dashboard):
 
 ```dart
+// lib/features/diary/providers/diary_provider.dart
 combinedEntriesStream = Rx.combineLatest4(
-  db.watchInfusionLogs(),
-  db.watchDiaryEntries(),
-  db.watchPlannedInfusions(),
-  db.watchPendingOrders(),
-  (logs, entries, planned, orders) => _merge(logs, entries, planned, orders),
+  _db.watchInfusionLogs(),
+  _db.watchDiaryEntries(),
+  _db.watchConfirmedOrders(),   // nur gelieferte Bestellungen
+  _db.watchAllMedications(),    // wird zu MedicationEvents aufgelöst
+  (logs, entries, orders, meds) => _merge(logs, entries, orders, meds),
 );
 ```
+
+Aus jedem `Medication`-Datensatz erzeugt der Provider bis zu zwei `MedicationEvent`s
+(`created` aus `createdAt`, `discontinued` aus `discontinuedAt`), sodass Verordnungen und
+Absetzungen als eigene Timeline-Einträge erscheinen.
+
+> **Nicht enthalten:** Geplante Termine (`PlannedInfusions`) und noch offene Bestellungen
+> laufen *nicht* durch diesen Stream — das Tagebuch zeigt ausschließlich Vergangenes.
+> Geplante Termine erscheinen auf dem Dashboard und in der Planungsseite.
 
 ## Datenbankarchitektur
 
@@ -54,31 +65,55 @@ combinedEntriesStream = Rx.combineLatest4(
 
 ```dart
 // lib/core/database/database.dart
-static AppDatabase? _instance;
-static AppDatabase get instance => _instance ??= AppDatabase._internal();
+static final AppDatabase _instance = AppDatabase._internal();
+
+factory AppDatabase() => _instance;
+
+AppDatabase._internal() : super(_openConnection()) {
+  _setupAutoBackup();
+}
 ```
+
+Jedes `AppDatabase()` im Code liefert also dieselbe Instanz — es gibt keinen separaten
+`AppDatabase.instance`-Getter.
 
 ### Auto-Backup-Trigger
 
-Der Backup-Service registriert sich auf alle Tabellenänderungen und debounced diese auf 30 Sekunden:
+`AppDatabase` registriert im eigenen Konstruktor (`_setupAutoBackup()`) einen Listener auf alle
+Tabellenänderungen und debounced diese auf 30 Sekunden:
 
 ```dart
-db.tableUpdates()
-    .debounceTime(const Duration(seconds: 30))
-    .listen((_) => autoBackup());
+tableUpdates().debounceTime(const Duration(seconds: 30)).listen((updates) {
+  if (updates.isNotEmpty) {
+    BackupService().autoBackup();
+  }
+});
 ```
+
+Ob daraus tatsächlich ein Backup wird, entscheidet danach der `BackupService` — er
+überspringt automatische Läufe, wenn die letzte erfolgreiche Sicherung weniger als
+6 Stunden her ist.
 
 ## Hintergrundservices
 
 ### BackgroundService (24/7-Dienst)
 
-`lib/core/services/background_service.dart` läuft als Flutter-Foreground-Service dauerhaft im Hintergrund.
+`lib/core/services/background_service.dart` läuft über `flutter_background_service` in einem
+eigenen Isolate.
 
 **Aufgaben:**
-1. **Vormedikations-Timer** — Countdown mit minütlichen Audio-Glocken (`bell.mp3`) und abschließendem Ping (`ping.mp3`); Foreground-Notification zeigt laufenden Countdown
+1. **Vormedikations-Timer** — Countdown mit minütlichen Audio-Glocken (`bell.mp3`, 3× im Abstand von 1,5 s) und abschließendem Ping (`ping.mp3`); Foreground-Notification zeigt laufenden Countdown
 2. **24h-Synchronisation** — Regeneriert den 90-Tage-Behandlungsplan (via `SchedulerService`) und aktualisiert Benachrichtigungen
 
 Hintergrundisolate-Zugriff auf Flutter-Plugins wird durch `DartPluginRegistrant.ensureInitialized()` sichergestellt.
+
+> **Plattformunterschied:** Nur Android hat einen echten Foreground-Service. Auf iOS wird das
+> Isolate im Hintergrund von der CPU ausgehungert, der Sekundentakt friert also ein. Der
+> Countdown rechnet deshalb nicht herunter, sondern leitet die Restzeit bei jedem Tick aus
+> einem persistierten absoluten Endzeitpunkt (`timerEndEpochKey`) ab — damit korrigiert er
+> sich selbst, sobald die App wieder in den Vordergrund kommt. Zusätzlich wird die
+> Abschluss-Benachrichtigung vorab geplant, falls der Service nicht rechtzeitig
+> weiterlaufen kann.
 
 ### WorkManager (Periodisch)
 
@@ -112,6 +147,7 @@ Der `IndexedStack` erhält alle Widgets immer am Leben, sodass Scrollposition un
 
 - Material 3 mit Premium-Gradient-Hintergründen und Glassmorphic-Navigation (`BackdropFilter`)
 - Farbpalette: Blau `#0066FF`, Smaragd `#00BFA6`, Gold `#FFB300`
+- **Helles und dunkles Design**: `AppTheme.lightTheme` / `AppTheme.darkTheme`, gesteuert über `ThemeProvider`. Startwert ist `ThemeMode.system`; der Schalter „Dunkles Design" in den Einstellungen wechselt zwischen hell und dunkel. Die Auswahl wird derzeit **nicht** persistiert und fällt bei jedem App-Start auf `ThemeMode.system` zurück.
 - **Nur Deutsch** (`Locale('de', 'DE')`) — alle UI-Strings müssen auf Deutsch sein
 - Datumsformat: deutsches Format (z.B. `dd.MM. HH:mm`)
 
