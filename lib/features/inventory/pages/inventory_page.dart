@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../providers/inventory_provider.dart';
 import 'package:cidpbuddy/core/database/database.dart';
 import 'package:cidpbuddy/core/services/medication_service.dart';
@@ -9,6 +8,7 @@ import 'medication_details_page.dart';
 import 'shopping_wizard_dialog.dart';
 import 'discontinued_medications_page.dart';
 import 'package:drift/drift.dart' hide Column;
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class InventoryPage extends StatelessWidget {
   const InventoryPage({super.key});
@@ -30,7 +30,7 @@ class InventoryPage extends StatelessWidget {
               SliverAppBar.large(
                 backgroundColor: Colors.transparent,
                 surfaceTintColor: Colors.transparent,
-                title: const Text('Medikation'),
+                title: Text(context.l10n.navMedication),
                 pinned: true,
                 actions: [
                   IconButton(
@@ -42,7 +42,7 @@ class InventoryPage extends StatelessWidget {
                       ),
                       child: const Icon(Icons.shopping_cart_checkout_rounded),
                     ),
-                    tooltip: 'Einkaufs-Assistent',
+                    tooltip: context.l10n.shoppingWizardTitle,
                     onPressed: () => showDialog(
                       context: context,
                       builder: (context) => const ShoppingWizardDialog(),
@@ -66,7 +66,7 @@ class InventoryPage extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Hinzufügen'),
+              label: Text(context.l10n.actionAdd),
             ),
           ),
         );
@@ -88,9 +88,9 @@ class InventoryPage extends StatelessWidget {
                 child: Icon(Icons.medication_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'MEDIKAMENTE',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2),
+              Text(
+                context.l10n.inventorySectionMedications,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2),
               ),
             ],
           ),
@@ -100,7 +100,7 @@ class InventoryPage extends StatelessWidget {
           builder: (context, snapshot) {
             final meds = snapshot.data ?? [];
             if (meds.isEmpty && snapshot.connectionState == ConnectionState.done) {
-               return const _EmptySection(message: 'Keine Medikamente angelegt');
+               return _EmptySection(message: context.l10n.inventoryNoMedications);
             }
             return Column(
               children: [
@@ -118,7 +118,7 @@ class InventoryPage extends StatelessWidget {
                         MaterialPageRoute(builder: (_) => const DiscontinuedMedicationsPage()),
                       ),
                       icon: const Icon(Icons.history_rounded, size: 16),
-                      label: const Text('Abgesetzte Medikamente', style: TextStyle(fontSize: 13)),
+                      label: Text(context.l10n.discontinuedTitle, style: const TextStyle(fontSize: 13)),
                     ),
                   ),
                 ),
@@ -155,9 +155,9 @@ class InventoryPage extends StatelessWidget {
                             child: Icon(Icons.inventory_2_rounded, color: Theme.of(context).colorScheme.tertiary, size: 20),
                           ),
                           const SizedBox(width: 12),
-                          const Text(
-                            'STANDALONE MATERIAL',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2),
+                          Text(
+                            context.l10n.inventorySectionStandaloneSupplies,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2),
                           ),
                         ],
                       ),
@@ -171,7 +171,7 @@ class InventoryPage extends StatelessWidget {
                             child: Icon(Icons.build_circle_rounded, color: Theme.of(context).colorScheme.tertiary, size: 20),
                           ),
                           title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('Bestand: ${acc.stock.toStringAsFixed(0)} ${acc.unit}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          subtitle: Text(context.l10n.stockValue(acc.stock.toStringAsFixed(0), acc.unit), style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -217,13 +217,18 @@ class InventoryPage extends StatelessWidget {
           ).getSingleOrNull(),
           builder: (context, nextInfSnapshot) {
             final nextInf = nextInfSnapshot.data;
-            final nextInfText = nextInf != null 
-                ? '\nNächste: ${DateFormat('dd.MM. HH:mm').format(nextInf.date)} Uhr' 
+            final nextInfText = nextInf != null
+                ? '\n${context.l10n.inventoryNextTreatment(AppDateFormat.dayMonthTime(context, nextInf.date))}'
                 : '';
 
-            final reachText = daysRemaining != null 
-              ? 'Reicht bis: ${DateFormat('dd.MM.yyyy').format(DateTime.now().add(Duration(days: daysRemaining.floor())))}' 
-              : (isLowStock ? 'Niedriger Bestand!' : (hasPendingOrder ? 'Bestellung unterwegs' : 'PZN: ${med.pzn ?? "-"}'));
+            final reachText = daysRemaining != null
+                ? context.l10n.inventoryLastsUntil(AppDateFormat.date(
+                    context, DateTime.now().add(Duration(days: daysRemaining.floor()))))
+                : (isLowStock
+                    ? context.l10n.inventoryLowStock
+                    : (hasPendingOrder
+                        ? context.l10n.inventoryOrderOnTheWay
+                        : context.l10n.inventoryPzn(med.pzn ?? '-')));
 
             return StreamBuilder<List<MedicationAccessory>>(
               stream: db.watchAccessoriesForMedication(med.id),
@@ -386,42 +391,42 @@ class InventoryPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Verbrauchsmaterial bearbeiten'),
+        title: Text(context.l10n.accessoryEditTitle),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldName, border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: unitController,
-              decoration: const InputDecoration(labelText: 'Einheit', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldUnit, border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: stockController,
-              decoration: const InputDecoration(labelText: 'Momentaner Lagerstand', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldCurrentStock, border: const OutlineInputBorder()),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: pkgSizeController,
-              decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldPackageSize, border: const OutlineInputBorder()),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: minStockController,
-              decoration: const InputDecoration(labelText: 'Warnschwelle (Bestand)', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldMinStock, border: const OutlineInputBorder()),
               keyboardType: TextInputType.number,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           ElevatedButton(
             onPressed: () async {
               await db.updateAccessory(acc.copyWith(
@@ -433,7 +438,7 @@ class InventoryPage extends StatelessWidget {
               ));
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Speichern'),
+            child: Text(context.l10n.actionSave),
           ),
         ],
       ),
@@ -444,16 +449,16 @@ class InventoryPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Verbrauchsmaterial löschen?'),
-        content: Text('Möchtest du "${acc.name}" wirklich löschen?'),
+        title: Text(context.l10n.accessoryDeleteTitle),
+        content: Text(context.l10n.confirmDeleteNamed(acc.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           TextButton(
             onPressed: () async {
               await (db.delete(db.accessories)..where((t) => t.id.equals(acc.id))).go();
               if (context.mounted) Navigator.pop(context);
             },
-            child: Text('Löschen', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            child: Text(context.l10n.actionDelete, style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),

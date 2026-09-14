@@ -1,0 +1,2154 @@
+{
+  "@@locale": "en",
+  "statisticsTitle": "Statistics",
+  "@statisticsTitle": {
+    "description": "Title of the statistics page"
+  },
+  "statisticsEmpty": "No data available for statistics yet.",
+  "@statisticsEmpty": {
+    "description": "Shown when no infusions have been logged yet"
+  },
+  "statisticsMonthlyDose": "Monthly dose",
+  "@statisticsMonthlyDose": {
+    "description": "Heading of the monthly dose bar chart"
+  },
+  "statisticsMonthlyDoseSubtitle": "Units administered over the last 6 months",
+  "@statisticsMonthlyDoseSubtitle": {
+    "description": "Subtitle under the monthly dose chart heading"
+  },
+  "statisticsSummary": "Summary",
+  "@statisticsSummary": {
+    "description": "Heading of the summary card on the statistics page"
+  },
+  "statisticsTotalInfusions": "Total infusions",
+  "@statisticsTotalInfusions": {
+    "description": "Summary row label: number of infusions recorded"
+  },
+  "statisticsTotalDose": "Total dose",
+  "@statisticsTotalDose": {
+    "description": "Summary row label: sum of all doses"
+  },
+  "statisticsAverageDose": "Ø dose / administration",
+  "@statisticsAverageDose": {
+    "description": "Summary row label: average dose per administration"
+  },
+  "statisticsLastWeight": "Last weight",
+  "@statisticsLastWeight": {
+    "description": "Summary row label: most recently recorded body weight"
+  },
+  "unitsValue": "{value} units",
+  "@unitsValue": {
+    "description": "A dose expressed in units",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "150.0"
+      }
+    }
+  },
+  "kilogramsValue": "{value} kg",
+  "@kilogramsValue": {
+    "description": "A body weight in kilograms",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "72.5"
+      }
+    }
+  },
+  "timerBannerRunning": "Premedication timer running",
+  "@timerBannerRunning": {
+    "description": "Dashboard banner title while the premedication timer counts down"
+  },
+  "timerBannerPaused": "Premedication timer paused",
+  "@timerBannerPaused": {
+    "description": "Dashboard banner title while the premedication timer is paused"
+  },
+  "timerBannerRemaining": "{time} remaining • Tap to open",
+  "@timerBannerRemaining": {
+    "description": "Dashboard banner subtitle; time is a mm:ss countdown",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "04:32"
+      }
+    }
+  },
+  "discontinuedTitle": "Discontinued medications",
+  "@discontinuedTitle": {
+    "description": "Title of the discontinued medications page"
+  },
+  "discontinuedEmpty": "No discontinued medications.",
+  "@discontinuedEmpty": {
+    "description": "Shown when nothing has been discontinued"
+  },
+  "discontinuedOn": "Discontinued on: {date}",
+  "@discontinuedOn": {
+    "description": "Subtitle showing when a medication was discontinued",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "14/09/2026"
+      }
+    }
+  },
+  "timerTitle": "Premedication timer",
+  "@timerTitle": {
+    "description": "Title of the premedication timer sheet"
+  },
+  "timerSubtitle": "Ping every minute • {seconds} sec timer",
+  "@timerSubtitle": {
+    "description": "Timer sheet subtitle; seconds is the configured total duration",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timerRemainingLabel": "remaining",
+  "@timerRemainingLabel": {
+    "description": "Label under the countdown digits"
+  },
+  "timerSyringeProgress": "Syringe progress",
+  "@timerSyringeProgress": {
+    "description": "Label of the syringe progress bar"
+  },
+  "timerVolumePickerTitle": "Premedication volume (ml)",
+  "@timerVolumePickerTitle": {
+    "description": "Title of the sheet for picking the premedication volume"
+  },
+  "backgroundServiceRunning": "Service running in the background",
+  "@backgroundServiceRunning": {
+    "description": "Content of the silent Android foreground-service notification"
+  },
+  "timerNotificationRemaining": "Remaining: {time}",
+  "@timerNotificationRemaining": {
+    "description": "Notification content showing the premedication countdown",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "04:32"
+      }
+    }
+  },
+  "medicationFallbackName": "Medication",
+  "@medicationFallbackName": {
+    "description": "Stand-in name when a medication record can no longer be resolved"
+  },
+  "appTitle": "CIDP Buddy",
+  "@appTitle": {
+    "description": "The app name shown in the OS task switcher"
+  },
+  "startupFailed": "The app could not be initialized:\n{error}",
+  "@startupFailed": {
+    "description": "Shown when initialization crashed before the UI could load",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "DatabaseException"
+      }
+    }
+  },
+  "navDashboard": "Dashboard",
+  "@navDashboard": {
+    "description": "Bottom navigation label for the dashboard tab"
+  },
+  "navDiary": "Diary",
+  "@navDiary": {
+    "description": "Bottom navigation label for the diary tab"
+  },
+  "navMedication": "Medication",
+  "@navMedication": {
+    "description": "Bottom navigation label for the medication/inventory tab"
+  },
+  "navSettings": "Settings",
+  "@navSettings": {
+    "description": "Bottom navigation label for the settings tab"
+  },
+  "diaryEntryTitleNew": "Vitals & symptoms",
+  "@diaryEntryTitleNew": {
+    "description": "App bar title when adding a new vitals/symptoms entry"
+  },
+  "diaryEntryTitleEdit": "Edit entry",
+  "@diaryEntryTitleEdit": {
+    "description": "App bar title when editing an existing diary entry"
+  },
+  "diaryEntrySave": "Save entry",
+  "@diaryEntrySave": {
+    "description": "Button that saves the diary entry"
+  },
+  "diaryNotesHint": "How are you feeling today?",
+  "@diaryNotesHint": {
+    "description": "Placeholder in the free-text notes field"
+  },
+  "sectionDateTime": "Date & time",
+  "@sectionDateTime": {
+    "description": "Form section header for the date and time picker"
+  },
+  "sectionVitals": "Vital signs (optional)",
+  "@sectionVitals": {
+    "description": "Form section header for the optional vital signs"
+  },
+  "sectionSymptoms": "CIDP symptoms (1-10)",
+  "@sectionSymptoms": {
+    "description": "Form section header for the CIDP symptom sliders, rated 1 to 10"
+  },
+  "sectionNotes": "Additional notes",
+  "@sectionNotes": {
+    "description": "Form section header for free-text notes"
+  },
+  "fieldSystolic": "Syst. (mmHg)",
+  "@fieldSystolic": {
+    "description": "Input label: systolic blood pressure in mmHg"
+  },
+  "fieldDiastolic": "Diast. (mmHg)",
+  "@fieldDiastolic": {
+    "description": "Input label: diastolic blood pressure in mmHg"
+  },
+  "fieldHeartRate": "Pulse (bpm)",
+  "@fieldHeartRate": {
+    "description": "Input label: heart rate in beats per minute"
+  },
+  "fieldTemperature": "Temp. (°C)",
+  "@fieldTemperature": {
+    "description": "Input label: body temperature in degrees Celsius"
+  },
+  "fieldWeight": "Weight (kg)",
+  "@fieldWeight": {
+    "description": "Input label: body weight in kilograms"
+  },
+  "symptomStrength": "Strength",
+  "@symptomStrength": {
+    "description": "Symptom slider label: muscle strength"
+  },
+  "symptomSensory": "Sensation",
+  "@symptomSensory": {
+    "description": "Symptom slider label: sensation / sensory function"
+  },
+  "symptomFatigue": "Fatigue",
+  "@symptomFatigue": {
+    "description": "Symptom slider label: fatigue / exhaustion"
+  },
+  "symptomPain": "Pain",
+  "@symptomPain": {
+    "description": "Symptom slider label: pain"
+  },
+  "symptomBalance": "Balance",
+  "@symptomBalance": {
+    "description": "Symptom slider label: balance"
+  },
+  "addInfusionTitle": "Log infusion",
+  "@addInfusionTitle": {
+    "description": "App bar title of the page for logging an infusion"
+  },
+  "addInfusionDetailsHeading": "Infusion details",
+  "@addInfusionDetailsHeading": {
+    "description": "Heading above the infusion form fields"
+  },
+  "addInfusionPickMedication": "Select medication",
+  "@addInfusionPickMedication": {
+    "description": "Dropdown label for choosing which medication was infused"
+  },
+  "addInfusionWhen": "Time of infusion",
+  "@addInfusionWhen": {
+    "description": "Label above the infusion date and time"
+  },
+  "addInfusionSaveAndStartTimer": "Save & start timer",
+  "@addInfusionSaveAndStartTimer": {
+    "description": "Save button when the medication has a premedication timer"
+  },
+  "addInfusionSaveAndDeductStock": "Save infusion & deduct stock",
+  "@addInfusionSaveAndDeductStock": {
+    "description": "Save button; saving also deducts the dose from inventory"
+  },
+  "fieldBatchNumber": "Batch number / barcode",
+  "@fieldBatchNumber": {
+    "description": "Input label for the medication's batch/lot number"
+  },
+  "fieldBatchNumberHint": "Scan or type",
+  "@fieldBatchNumberHint": {
+    "description": "Placeholder for the batch number field"
+  },
+  "fieldDosageUnits": "Dosage / units",
+  "@fieldDosageUnits": {
+    "description": "Input label for the administered dose"
+  },
+  "fieldBodyWeight": "Body weight (kg)",
+  "@fieldBodyWeight": {
+    "description": "Input label for the patient's body weight at infusion time"
+  },
+  "fieldInfusionNotes": "Notes (how you felt, how it went)",
+  "@fieldInfusionNotes": {
+    "description": "Input label for notes about how the infusion went"
+  },
+  "actionScanBarcode": "Scan barcode",
+  "@actionScanBarcode": {
+    "description": "Button and sheet title for scanning a barcode with the camera"
+  },
+  "actionPhotoOfLabel": "Photo of batch/label",
+  "@actionPhotoOfLabel": {
+    "description": "Tooltip for taking a photo of the batch label, which is then read via OCR"
+  },
+  "validationPickOne": "Please select",
+  "@validationPickOne": {
+    "description": "Validation error shown when a required dropdown is left empty"
+  },
+  "legalBatchDocumentationShort": "Batch documentation in this app is a personal note and does not replace the legally required documentation kept by you or your treating facility.",
+  "@legalBatchDocumentationShort": {
+    "description": "Short legal notice shown next to the batch-number field"
+  },
+  "scheduleTitleNew": "Create infusion schedule",
+  "@scheduleTitleNew": {
+    "description": "App bar title when creating a treatment schedule"
+  },
+  "scheduleTitleEdit": "Edit infusion schedule",
+  "@scheduleTitleEdit": {
+    "description": "App bar title when editing a treatment schedule"
+  },
+  "scheduleSelectDays": "Select days:",
+  "@scheduleSelectDays": {
+    "description": "Label above the weekday chips"
+  },
+  "scheduleAddTime": "Add another time",
+  "@scheduleAddTime": {
+    "description": "Button that adds another intake time to the schedule"
+  },
+  "scheduleActivate": "Activate schedule",
+  "@scheduleActivate": {
+    "description": "Button that saves and activates a new schedule"
+  },
+  "sectionMedicationAndDose": "Medication & dose",
+  "@sectionMedicationAndDose": {
+    "description": "Form section header for medication and dose"
+  },
+  "sectionFrequency": "Frequency",
+  "@sectionFrequency": {
+    "description": "Form section header for how often the treatment repeats"
+  },
+  "sectionPeriod": "Period",
+  "@sectionPeriod": {
+    "description": "Form section header for the schedule's start date"
+  },
+  "sectionIntakeTimes": "Intake times",
+  "@sectionIntakeTimes": {
+    "description": "Form section header for the times of day a dose is taken"
+  },
+  "fieldUnitsPerInfusion": "Units per infusion",
+  "@fieldUnitsPerInfusion": {
+    "description": "Input label for the dose of a single scheduled infusion"
+  },
+  "fieldNumberOfDays": "Number of days",
+  "@fieldNumberOfDays": {
+    "description": "Input label for the interval length in days"
+  },
+  "fieldNumberOfDaysHint": "E.g. every 5 days",
+  "@fieldNumberOfDaysHint": {
+    "description": "Placeholder example for the interval field"
+  },
+  "fieldStartDate": "Start date",
+  "@fieldStartDate": {
+    "description": "Label above the schedule's start date"
+  },
+  "frequencyDaily": "Daily",
+  "@frequencyDaily": {
+    "description": "Frequency option: every day"
+  },
+  "frequencyInterval": "Every X days",
+  "@frequencyInterval": {
+    "description": "Frequency option: every N days, where N is entered separately"
+  },
+  "frequencyWeekly": "Weekly",
+  "@frequencyWeekly": {
+    "description": "Frequency option: once a week"
+  },
+  "frequencyBiweekly": "Every 2 weeks",
+  "@frequencyBiweekly": {
+    "description": "Frequency option: every two weeks"
+  },
+  "frequencyWeekdays": "Specific weekdays",
+  "@frequencyWeekdays": {
+    "description": "Frequency option: on specific weekdays picked by the user"
+  },
+  "actionSaveChanges": "Save changes",
+  "@actionSaveChanges": {
+    "description": "Generic button that saves edits to an existing record"
+  },
+  "diaryTitle": "My diary",
+  "@diaryTitle": {
+    "description": "Large app bar title of the diary tab"
+  },
+  "diaryEmptyTitle": "Your diary is still empty",
+  "@diaryEmptyTitle": {
+    "description": "Headline of the diary empty state"
+  },
+  "diaryEmptyBody": "Log your first infusion to keep track of your treatment.",
+  "@diaryEmptyBody": {
+    "description": "Explanatory text of the diary empty state"
+  },
+  "diaryVitalsAndSymptomsLabel": "VITALS & SYMPTOMS:",
+  "@diaryVitalsAndSymptomsLabel": {
+    "description": "All-caps label above the symptom mini bars on a diary card"
+  },
+  "diaryDeleteEntryTitle": "Delete entry?",
+  "@diaryDeleteEntryTitle": {
+    "description": "Title of the confirmation dialog for deleting an infusion log"
+  },
+  "diaryDeleteEntryBody": "Delete this entry? The stock will be credited back automatically.",
+  "@diaryDeleteEntryBody": {
+    "description": "Body of the delete-entry dialog; deleting returns the dose to inventory"
+  },
+  "diaryOrderReceived": "Order received",
+  "@diaryOrderReceived": {
+    "description": "Diary timeline title for a delivered order"
+  },
+  "diaryEventDiscontinued": "Discontinued: {name}",
+  "@diaryEventDiscontinued": {
+    "description": "Diary timeline title when a medication was discontinued",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Hyqvia"
+      }
+    }
+  },
+  "diaryEventPrescribed": "Newly prescribed: {name}",
+  "@diaryEventPrescribed": {
+    "description": "Diary timeline title when a medication was newly prescribed",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Hyqvia"
+      }
+    }
+  },
+  "fieldBatchNumberShort": "Batch number",
+  "@fieldBatchNumberShort": {
+    "description": "Short input label for the batch number, used where space is tight"
+  },
+  "fieldNotes": "Notes",
+  "@fieldNotes": {
+    "description": "Generic input label for a free-text notes field"
+  },
+  "batchValue": "Batch: {batch}",
+  "@batchValue": {
+    "description": "Shows a recorded batch number on a diary card",
+    "placeholders": {
+      "batch": {
+        "type": "String",
+        "example": "A1B2C3"
+      }
+    }
+  },
+  "bpmValue": "{value} bpm",
+  "@bpmValue": {
+    "description": "A heart rate in beats per minute",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "72"
+      }
+    }
+  },
+  "actionCancel": "Cancel",
+  "@actionCancel": {
+    "description": "Generic dialog button that dismisses without saving"
+  },
+  "actionSave": "Save",
+  "@actionSave": {
+    "description": "Generic button that saves the current form"
+  },
+  "actionDelete": "Delete",
+  "@actionDelete": {
+    "description": "Generic button that deletes a record"
+  },
+  "planningTitle": "Appointments & plans",
+  "@planningTitle": {
+    "description": "Large app bar title of the planning page"
+  },
+  "planningTabUpcoming": "Upcoming",
+  "@planningTabUpcoming": {
+    "description": "Tab label and section heading for future appointments"
+  },
+  "planningTabSchedules": "Schedules",
+  "@planningTabSchedules": {
+    "description": "Tab label for the list of recurring schedules"
+  },
+  "planningOverdue": "Overdue",
+  "@planningOverdue": {
+    "description": "Section heading for appointments whose date has passed"
+  },
+  "planningNoUpcoming": "No upcoming appointments",
+  "@planningNoUpcoming": {
+    "description": "Empty state on the upcoming appointments tab"
+  },
+  "planningNoSchedules": "No active schedules",
+  "@planningNoSchedules": {
+    "description": "Empty state on the schedules tab"
+  },
+  "planningScheduledFor": "Scheduled for {date}",
+  "@planningScheduledFor": {
+    "description": "Subtitle of an appointment card",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "14 September 2026"
+      }
+    }
+  },
+  "planningDeletePastTitle": "Delete past appointments?",
+  "@planningDeletePastTitle": {
+    "description": "Title of the dialog for bulk-deleting past appointments"
+  },
+  "planningDeletePastBody": "Permanently delete all planned appointments in the past?\n\nThis does not create any diary entries.",
+  "@planningDeletePastBody": {
+    "description": "Body of the bulk-delete dialog"
+  },
+  "planningSkipTitle": "Skip appointment?",
+  "@planningSkipTitle": {
+    "description": "Title of the dialog confirming that an appointment is skipped"
+  },
+  "planningSkipBody": "Skip this appointment? It will be marked as done but not recorded in the diary.",
+  "@planningSkipBody": {
+    "description": "Body of the skip-appointment dialog"
+  },
+  "planningSkippedNote": "[Skipped via app]",
+  "@planningSkippedNote": {
+    "description": "Marker appended to an appointment's notes when it is skipped from the app"
+  },
+  "planningDeleteAppointmentTitle": "Delete appointment?",
+  "@planningDeleteAppointmentTitle": {
+    "description": "Title of the dialog for deleting a single appointment"
+  },
+  "planningDeleteAppointmentBody": "Remove this specific appointment from your plan?",
+  "@planningDeleteAppointmentBody": {
+    "description": "Body of the delete-appointment dialog"
+  },
+  "planningEditAppointmentTitle": "Edit appointment",
+  "@planningEditAppointmentTitle": {
+    "description": "Title of the edit-appointment dialog"
+  },
+  "planningDeleteScheduleTitle": "Delete schedule?",
+  "@planningDeleteScheduleTitle": {
+    "description": "Title of the dialog for deleting a recurring schedule"
+  },
+  "planningDeleteScheduleBody": "All future (uncompleted) appointments from this schedule will be deleted too.",
+  "@planningDeleteScheduleBody": {
+    "description": "Body of the delete-schedule dialog"
+  },
+  "planningOneOffTitle": "One-off appointment",
+  "@planningOneOffTitle": {
+    "description": "Option title: add a single, non-recurring appointment"
+  },
+  "planningOneOffSubtitle": "Add a single appointment",
+  "@planningOneOffSubtitle": {
+    "description": "Option subtitle for the one-off appointment choice"
+  },
+  "planningRecurringTitle": "Recurring schedule",
+  "@planningRecurringTitle": {
+    "description": "Option title: create a recurring treatment schedule"
+  },
+  "planningRecurringSubtitle": "Set up an automatic infusion rhythm",
+  "@planningRecurringSubtitle": {
+    "description": "Option subtitle for the recurring schedule choice"
+  },
+  "planningNeedMedicationsFirst": "Add medications to your inventory first!",
+  "@planningNeedMedicationsFirst": {
+    "description": "Snackbar shown when scheduling is attempted with an empty inventory"
+  },
+  "planningScheduleAppointmentTitle": "Schedule appointment",
+  "@planningScheduleAppointmentTitle": {
+    "description": "Title of the dialog for planning a one-off appointment"
+  },
+  "frequencyEveryNDays": "Every {days} days",
+  "@frequencyEveryNDays": {
+    "description": "Frequency summary on a schedule card",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "frequencyWeekdaysShort": "Weekdays",
+  "@frequencyWeekdaysShort": {
+    "description": "Short frequency summary for schedules bound to specific weekdays"
+  },
+  "fieldDate": "Date",
+  "@fieldDate": {
+    "description": "Generic input label for a date"
+  },
+  "fieldPlannedDose": "Planned dose",
+  "@fieldPlannedDose": {
+    "description": "Input label for the dose planned for an appointment"
+  },
+  "fieldDoseWithUnit": "Dose ({unit})",
+  "@fieldDoseWithUnit": {
+    "description": "Input label for a dose, with the medication's unit in brackets",
+    "placeholders": {
+      "unit": {
+        "type": "String",
+        "example": "ml"
+      }
+    }
+  },
+  "doseValue": "Dose: {amount} {unit}",
+  "@doseValue": {
+    "description": "Displays a dose with its amount and unit",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "10.0"
+      },
+      "unit": {
+        "type": "String",
+        "example": "ml"
+      }
+    }
+  },
+  "actionAdd": "Add",
+  "@actionAdd": {
+    "description": "Generic button that opens an add flow"
+  },
+  "actionDeleteAll": "Delete all",
+  "@actionDeleteAll": {
+    "description": "Button that deletes every item in a list"
+  },
+  "actionSkip": "Skip",
+  "@actionSkip": {
+    "description": "Button that skips a planned appointment"
+  },
+  "actionDone": "Done",
+  "@actionDone": {
+    "description": "Button that marks a planned appointment as completed"
+  },
+  "dashboardTitle": "Your overview",
+  "@dashboardTitle": {
+    "description": "App bar title of the dashboard tab"
+  },
+  "dashboardSectionLater": "PLANNED LATER ({count})",
+  "@dashboardSectionLater": {
+    "description": "Collapsible section header for treatments planned further out; all caps",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardSectionPast": "PAST APPOINTMENTS ({count})",
+  "@dashboardSectionPast": {
+    "description": "Collapsible section header for past appointments; all caps",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardNoBackupTitle": "No backup enabled",
+  "@dashboardNoBackupTitle": {
+    "description": "Warning card title shown when automatic backup is off"
+  },
+  "dashboardNoBackupBody": "Set up automatic backup to avoid losing your data.",
+  "@dashboardNoBackupBody": {
+    "description": "Warning card body prompting the user to set up automatic backup"
+  },
+  "dashboardOrderRecommended": "Order recommended",
+  "@dashboardOrderRecommended": {
+    "description": "Notification card title suggesting the user place an order"
+  },
+  "dashboardLowStockNames": "Low stock: {names}",
+  "@dashboardLowStockNames": {
+    "description": "Lists the items that are running low; names is a comma-separated list",
+    "placeholders": {
+      "names": {
+        "type": "String",
+        "example": "Hyqvia, Needles"
+      }
+    }
+  },
+  "dashboardOrdersOnTheWay": "Orders are on the way.",
+  "@dashboardOrdersOnTheWay": {
+    "description": "Notification shown when orders have been placed but not yet delivered"
+  },
+  "dashboardPendingDeliveries": "PENDING DELIVERIES",
+  "@dashboardPendingDeliveries": {
+    "description": "Section header above open orders; all caps"
+  },
+  "dashboardDeliveryDate": "Delivery date: {date}",
+  "@dashboardDeliveryDate": {
+    "description": "Shows an order's expected delivery date",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "14/09/2026"
+      }
+    }
+  },
+  "dashboardNoDeliveryDate": "No date set yet",
+  "@dashboardNoDeliveryDate": {
+    "description": "Shown for an order that has no delivery date yet"
+  },
+  "dashboardDeleteOrderTitle": "Delete order?",
+  "@dashboardDeleteOrderTitle": {
+    "description": "Title of the dialog for deleting a pending order"
+  },
+  "dashboardDeleteOrderBody": "Remove this pending order?",
+  "@dashboardDeleteOrderBody": {
+    "description": "Body of the delete-order dialog"
+  },
+  "dashboardConfirmDeliveryTitle": "Delivery received?",
+  "@dashboardConfirmDeliveryTitle": {
+    "description": "Title of the dialog confirming that an order arrived"
+  },
+  "dashboardConfirmDeliveryBody": "Confirm receipt of this delivery? Your stock will be updated automatically.",
+  "@dashboardConfirmDeliveryBody": {
+    "description": "Body of the confirm-delivery dialog"
+  },
+  "dashboardConfirmDeliveryYes": "Yes, received",
+  "@dashboardConfirmDeliveryYes": {
+    "description": "Affirmative button in the confirm-delivery dialog"
+  },
+  "dashboardStockUpdated": "Stock updated!",
+  "@dashboardStockUpdated": {
+    "description": "Snackbar confirming inventory was updated after a delivery"
+  },
+  "dashboardReceived": "Received",
+  "@dashboardReceived": {
+    "description": "Button on an order card that marks it as delivered"
+  },
+  "dashboardMissedAt": "Missed (planned for {time})",
+  "@dashboardMissedAt": {
+    "description": "Status of a pill dose whose time has passed",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "8:00 AM"
+      }
+    }
+  },
+  "dashboardTodayAt": "Today at {time}",
+  "@dashboardTodayAt": {
+    "description": "Status of a pill dose due later today",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "8:00 PM"
+      }
+    }
+  },
+  "dashboardMissedInfusion": "Missed infusion (planned for today)",
+  "@dashboardMissedInfusion": {
+    "description": "Status of an infusion that was planned for today but not logged"
+  },
+  "dashboardPlannedToday": "Planned today ({amount} {unit})",
+  "@dashboardPlannedToday": {
+    "description": "Status of an infusion planned for today",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "10.0"
+      },
+      "unit": {
+        "type": "String",
+        "example": "ml"
+      }
+    }
+  },
+  "dashboardMarkedDone": "{name} done!",
+  "@dashboardMarkedDone": {
+    "description": "Snackbar after confirming a dose",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Hyqvia"
+      }
+    }
+  },
+  "dashboardLogInfusionNow": "Log infusion now",
+  "@dashboardLogInfusionNow": {
+    "description": "Button that opens the log-infusion form for a due treatment"
+  },
+  "dashboardAllDoneTitle": "All done!",
+  "@dashboardAllDoneTitle": {
+    "description": "Headline of the dashboard empty state"
+  },
+  "dashboardAllDoneBody": "No pending tasks.",
+  "@dashboardAllDoneBody": {
+    "description": "Body of the dashboard empty state"
+  },
+  "dashboardTreatmentSubtitle": "{date} at {time} • {amount} {unit}",
+  "@dashboardTreatmentSubtitle": {
+    "description": "Subtitle of an upcoming treatment card, combining date, time, dose and unit",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "9/15"
+      },
+      "time": {
+        "type": "String",
+        "example": "8:00 AM"
+      },
+      "amount": {
+        "type": "String",
+        "example": "10.0"
+      },
+      "unit": {
+        "type": "String",
+        "example": "ml"
+      }
+    }
+  },
+  "dashboardOrphanRemoved": "Orphaned appointment removed",
+  "@dashboardOrphanRemoved": {
+    "description": "Snackbar after deleting an appointment whose medication no longer exists"
+  },
+  "dashboardUnknownMedication": "Unknown medication",
+  "@dashboardUnknownMedication": {
+    "description": "Title of the card for an appointment whose medication is missing"
+  },
+  "dashboardOrphanSubtitle": "Planned {date} • medication not found",
+  "@dashboardOrphanSubtitle": {
+    "description": "Subtitle explaining that the appointment's medication was not found",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "9/15, 8:00 AM"
+      }
+    }
+  },
+  "quantityValue": "Quantity: {amount} {unit}",
+  "@quantityValue": {
+    "description": "Displays a quantity with its unit",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "12"
+      },
+      "unit": {
+        "type": "String",
+        "example": "ml"
+      }
+    }
+  },
+  "today": "Today",
+  "@today": {
+    "description": "The word for the current day, used in place of a date"
+  },
+  "actionNo": "No",
+  "@actionNo": {
+    "description": "Negative dialog button"
+  },
+  "actionRemove": "Remove",
+  "@actionRemove": {
+    "description": "Button that removes a stray or invalid entry"
+  },
+  "inventorySectionMedications": "MEDICATIONS",
+  "@inventorySectionMedications": {
+    "description": "Section header above the medication list; all caps"
+  },
+  "inventorySectionStandaloneSupplies": "STANDALONE SUPPLIES",
+  "@inventorySectionStandaloneSupplies": {
+    "description": "Section header for supplies that are not linked to any medication; all caps"
+  },
+  "inventoryNoMedications": "No medications added",
+  "@inventoryNoMedications": {
+    "description": "Empty state when no medications have been added"
+  },
+  "inventoryNextTreatment": "Next: {date}",
+  "@inventoryNextTreatment": {
+    "description": "Shows when the next treatment for this medication is due",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "9/15, 8:00 AM"
+      }
+    }
+  },
+  "inventoryLastsUntil": "Lasts until: {date}",
+  "@inventoryLastsUntil": {
+    "description": "Shows how long the current stock will last",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "10/12/2026"
+      }
+    }
+  },
+  "inventoryLowStock": "Low stock!",
+  "@inventoryLowStock": {
+    "description": "Warning shown on a medication whose stock is below the threshold"
+  },
+  "inventoryOrderOnTheWay": "Order on the way",
+  "@inventoryOrderOnTheWay": {
+    "description": "Shown instead of a low-stock warning when an order is already placed"
+  },
+  "inventoryPzn": "PZN: {pzn}",
+  "@inventoryPzn": {
+    "description": "Shows the German pharmaceutical central number (PZN) of a medication",
+    "placeholders": {
+      "pzn": {
+        "type": "String",
+        "example": "12345678"
+      }
+    }
+  },
+  "stockValue": "Stock: {amount} {unit}",
+  "@stockValue": {
+    "description": "Displays the current stock with its unit",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "24"
+      },
+      "unit": {
+        "type": "String",
+        "example": "pcs"
+      }
+    }
+  },
+  "accessoryEditTitle": "Edit supply item",
+  "@accessoryEditTitle": {
+    "description": "Title of the dialog for editing a consumable supply item"
+  },
+  "accessoryDeleteTitle": "Delete supply item?",
+  "@accessoryDeleteTitle": {
+    "description": "Title of the dialog for deleting a consumable supply item"
+  },
+  "confirmDeleteNamed": "Really delete \"{name}\"?",
+  "@confirmDeleteNamed": {
+    "description": "Generic delete confirmation naming the item",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Needles"
+      }
+    }
+  },
+  "fieldName": "Name",
+  "@fieldName": {
+    "description": "Generic input label for an item's name"
+  },
+  "fieldUnit": "Unit",
+  "@fieldUnit": {
+    "description": "Input label for the unit an item is measured in (ml, pieces, …)"
+  },
+  "fieldCurrentStock": "Current stock",
+  "@fieldCurrentStock": {
+    "description": "Input label for how much of an item is currently on hand"
+  },
+  "fieldPackageSize": "Package size (for ordering)",
+  "@fieldPackageSize": {
+    "description": "Input label for how many units one package contains, used when ordering"
+  },
+  "fieldMinStock": "Warning threshold (stock)",
+  "@fieldMinStock": {
+    "description": "Input label for the stock level below which a warning is shown"
+  },
+  "addItemTitle": "Add new item",
+  "@addItemTitle": {
+    "description": "App bar title of the page for adding a medication or supply"
+  },
+  "fieldCategory": "Category",
+  "@fieldCategory": {
+    "description": "Dropdown label for choosing between medication and supply"
+  },
+  "categoryMedication": "Medication",
+  "@categoryMedication": {
+    "description": "Category option: the item is a medication"
+  },
+  "categorySupply": "Supply item",
+  "@categorySupply": {
+    "description": "Category option: the item is a consumable supply (needles, wipes, …)"
+  },
+  "fieldDosageForm": "Dosage form",
+  "@fieldDosageForm": {
+    "description": "Dropdown label for the medication's form"
+  },
+  "dosageFormInfusion": "Infusion",
+  "@dosageFormInfusion": {
+    "description": "Dosage form option: an infusion"
+  },
+  "dosageFormPill": "Tablet / pill",
+  "@dosageFormPill": {
+    "description": "Dosage form option: a tablet or pill"
+  },
+  "fieldMedicationName": "Medication name",
+  "@fieldMedicationName": {
+    "description": "Input label for the item's name"
+  },
+  "fieldMedicationNameHint": "e.g. Hizentra",
+  "@fieldMedicationNameHint": {
+    "description": "Placeholder showing an example medication name"
+  },
+  "fieldStrength": "Dose / strength",
+  "@fieldStrength": {
+    "description": "Input label for the medication's dose or concentration"
+  },
+  "fieldStrengthHint": "e.g. 20% or 10ml",
+  "@fieldStrengthHint": {
+    "description": "Placeholder showing example strengths"
+  },
+  "fieldPznOptional": "PZN (optional)",
+  "@fieldPznOptional": {
+    "description": "Input label for the optional German pharmaceutical number"
+  },
+  "fieldPznHint": "Pharmaceutical central number",
+  "@fieldPznHint": {
+    "description": "Placeholder spelling out what a PZN is"
+  },
+  "fieldInitialStock": "Initial stock",
+  "@fieldInitialStock": {
+    "description": "Input label for how much is on hand when the item is created"
+  },
+  "fieldDefaultReorderAmount": "Default reorder amount",
+  "@fieldDefaultReorderAmount": {
+    "description": "Input label for the amount suggested when reordering"
+  },
+  "fieldDefaultReorderAmountHint": "e.g. 10 bottles",
+  "@fieldDefaultReorderAmountHint": {
+    "description": "Placeholder showing an example reorder amount"
+  },
+  "fieldMinStockDays": "Warning threshold (in days)",
+  "@fieldMinStockDays": {
+    "description": "Input label: warn when the supply lasts fewer than this many days"
+  },
+  "fieldMinStockDaysHint": "Warn when the supply lasts fewer than x days",
+  "@fieldMinStockDaysHint": {
+    "description": "Explains the day-based warning threshold"
+  },
+  "fieldMinStockHint": "Warn when stock drops below this value",
+  "@fieldMinStockHint": {
+    "description": "Explains the quantity-based warning threshold"
+  },
+  "unitBottle": "Bottle",
+  "@unitBottle": {
+    "description": "Default unit for an infusion medication: one bottle/vial"
+  },
+  "unitPieces": "pcs",
+  "@unitPieces": {
+    "description": "Default unit for pills and supplies: pieces; keep it short, it sits in tight rows"
+  },
+  "validationRequired": "Required",
+  "@validationRequired": {
+    "description": "Validation error for an empty required text field"
+  },
+  "shoppingWizardTitle": "Shopping assistant",
+  "@shoppingWizardTitle": {
+    "description": "Title of the shopping wizard dialog"
+  },
+  "shoppingWizardEditTitle": "Edit order",
+  "@shoppingWizardEditTitle": {
+    "description": "Title of the shopping wizard when editing an existing order"
+  },
+  "shoppingWizardIntro": "Work out how many supplies you need based on the medication order you are planning.",
+  "@shoppingWizardIntro": {
+    "description": "Explains what the shopping wizard does"
+  },
+  "shoppingWizardEditIntro": "Adjust your order and the matching supplies.",
+  "@shoppingWizardEditIntro": {
+    "description": "Intro text when editing an existing order"
+  },
+  "shoppingWizardSuppliesOnly": "Order supplies only (no medication)",
+  "@shoppingWizardSuppliesOnly": {
+    "description": "Dropdown option for ordering supplies without any medication"
+  },
+  "shoppingWizardOrderQuantity": "Order quantity ({unit})",
+  "@shoppingWizardOrderQuantity": {
+    "description": "Input label for how much of the medication to order",
+    "placeholders": {
+      "unit": {
+        "type": "String",
+        "example": "bottles"
+      }
+    }
+  },
+  "shoppingWizardDeliveryDate": "Delivery date (optional)",
+  "@shoppingWizardDeliveryDate": {
+    "description": "Label for the optional expected delivery date"
+  },
+  "shoppingWizardImmediately": "Right after confirmation",
+  "@shoppingWizardImmediately": {
+    "description": "Shown when no delivery date is set, meaning stock is added on confirmation"
+  },
+  "shoppingWizardSuggestion": "Suggested supplies:",
+  "@shoppingWizardSuggestion": {
+    "description": "Heading above the suggested supplies list"
+  },
+  "shoppingWizardRequired": "Required for this order:",
+  "@shoppingWizardRequired": {
+    "description": "Sub-heading for supplies the app considers necessary for this order"
+  },
+  "shoppingWizardOptional": "Other supplies (optional):",
+  "@shoppingWizardOptional": {
+    "description": "Sub-heading for supplies the user may add optionally"
+  },
+  "shoppingWizardNoSuggestions": "No supplies suggested automatically.",
+  "@shoppingWizardNoSuggestions": {
+    "description": "Shown when the wizard could not derive any supply suggestions"
+  },
+  "shoppingWizardAddOther": "Add another supply item",
+  "@shoppingWizardAddOther": {
+    "description": "Button that opens a picker to add another supply item manually"
+  },
+  "shoppingWizardSaveOrder": "Save order",
+  "@shoppingWizardSaveOrder": {
+    "description": "Button that saves the assembled order"
+  },
+  "shoppingWizardPickSupply": "Select supply item",
+  "@shoppingWizardPickSupply": {
+    "description": "Title of the dialog listing supplies to pick from"
+  },
+  "shoppingWizardAlreadyInList": "Already in the list!",
+  "@shoppingWizardAlreadyInList": {
+    "description": "Snackbar shown when the picked supply is already on the order"
+  },
+  "shoppingWizardRecommendedAmount": "Recommended amount",
+  "@shoppingWizardRecommendedAmount": {
+    "description": "Badge on a supply row the app calculated the amount for"
+  },
+  "shoppingWizardAdditionallySelected": "Added by you",
+  "@shoppingWizardAdditionallySelected": {
+    "description": "Badge on a supply row the user added themselves"
+  },
+  "medDetailsDiscontinue": "Discontinue",
+  "@medDetailsDiscontinue": {
+    "description": "Action that stops an active medication without deleting its history"
+  },
+  "medDetailsDiscontinueMedication": "Discontinue medication",
+  "@medDetailsDiscontinueMedication": {
+    "description": "Button that discontinues the medication"
+  },
+  "medDetailsReenroll": "Prescribe again",
+  "@medDetailsReenroll": {
+    "description": "Action that puts a discontinued medication back into active use"
+  },
+  "medDetailsDeleteCompletely": "Delete completely",
+  "@medDetailsDeleteCompletely": {
+    "description": "Tooltip for permanently deleting the medication"
+  },
+  "medDetailsDeleteFromDatabase": "Delete completely from database",
+  "@medDetailsDeleteFromDatabase": {
+    "description": "Button that permanently removes the medication and its data"
+  },
+  "medDetailsDiscontinuedSince": "This medication has been discontinued since {date}",
+  "@medDetailsDiscontinuedSince": {
+    "description": "Banner shown on a discontinued medication",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "9/14/2026"
+      }
+    }
+  },
+  "medDetailsSectionStock": "Stock & warnings",
+  "@medDetailsSectionStock": {
+    "description": "Section header for stock level and warning threshold"
+  },
+  "medDetailsSectionSupplies": "Linked supplies",
+  "@medDetailsSectionSupplies": {
+    "description": "Section header for supplies linked to this medication"
+  },
+  "medDetailsSuppliesHint": "These supplies are deducted from stock automatically with every dose.",
+  "@medDetailsSuppliesHint": {
+    "description": "Explains that linked supplies are deducted automatically"
+  },
+  "medDetailsNoSuppliesLinked": "No supplies linked yet",
+  "@medDetailsNoSuppliesLinked": {
+    "description": "Empty state when no supplies are linked yet"
+  },
+  "medDetailsLink": "Link",
+  "@medDetailsLink": {
+    "description": "Button that links an existing supply item to this medication"
+  },
+  "medDetailsCreateAndLink": "New & link",
+  "@medDetailsCreateAndLink": {
+    "description": "Button that creates a new supply item and links it right away"
+  },
+  "medDetailsSectionWorkflow": "Logging workflow",
+  "@medDetailsSectionWorkflow": {
+    "description": "Section header for what is asked when logging a dose"
+  },
+  "medDetailsWorkflowHint": "Choose which fields appear when you log a dose.",
+  "@medDetailsWorkflowHint": {
+    "description": "Explains the workflow toggles below it"
+  },
+  "medDetailsSchedulesHint": "Set the rhythm in which you take this medication.",
+  "@medDetailsSchedulesHint": {
+    "description": "Explains the schedules section"
+  },
+  "medDetailsCreateSchedule": "Create schedule",
+  "@medDetailsCreateSchedule": {
+    "description": "Button that opens the form for a recurring schedule"
+  },
+  "medDetailsPlanOneOff": "Plan one-off appointment",
+  "@medDetailsPlanOneOff": {
+    "description": "Button that opens the dialog for a single appointment"
+  },
+  "medDetailsSectionSystemActions": "System actions",
+  "@medDetailsSectionSystemActions": {
+    "description": "Section header for destructive/administrative actions"
+  },
+  "medDetailsRequirement": "Required: {amount} {unit}",
+  "@medDetailsRequirement": {
+    "description": "How much of a supply one dose consumes",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "2"
+      },
+      "unit": {
+        "type": "String",
+        "example": "pcs"
+      }
+    }
+  },
+  "medDetailsMustBeOrdered": "Must always be ordered",
+  "@medDetailsMustBeOrdered": {
+    "description": "Tooltip on the star marking a supply that must always be ordered along"
+  },
+  "medDetailsNeedSuppliesFirst": "Create supply items first!",
+  "@medDetailsNeedSuppliesFirst": {
+    "description": "Snackbar shown when linking is attempted with no supplies defined"
+  },
+  "medDetailsLinkSupplyTitle": "Link supply item",
+  "@medDetailsLinkSupplyTitle": {
+    "description": "Title of the dialog for linking an existing supply item"
+  },
+  "medDetailsPickSupply": "Select supply item",
+  "@medDetailsPickSupply": {
+    "description": "Dropdown label for choosing which supply item to link"
+  },
+  "medDetailsCreateSupplyTitle": "Create new supply item",
+  "@medDetailsCreateSupplyTitle": {
+    "description": "Title of the dialog for creating a new supply item"
+  },
+  "medDetailsAlwaysOrder": "Always order along",
+  "@medDetailsAlwaysOrder": {
+    "description": "Toggle: always include this supply when ordering"
+  },
+  "medDetailsAlwaysOrderHint": "Highlighted in the shopping assistant",
+  "@medDetailsAlwaysOrderHint": {
+    "description": "Explains what the always-order toggle does"
+  },
+  "medDetailsEditMedication": "Edit medication",
+  "@medDetailsEditMedication": {
+    "description": "Title of the dialog for editing the medication's master data"
+  },
+  "medDetailsDeleteTitle": "Delete medication?",
+  "@medDetailsDeleteTitle": {
+    "description": "Title of the permanent-delete confirmation dialog"
+  },
+  "medDetailsDeleteBody": "Permanently delete \"{name}\" from the app? This cannot be undone and should only be used to correct mistakes. To end a therapy, use \"Discontinue\" instead.",
+  "@medDetailsDeleteBody": {
+    "description": "Warns that deletion is irreversible and points to discontinuing instead",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Hyqvia"
+      }
+    }
+  },
+  "medDetailsDiscontinueTitle": "Discontinue medication?",
+  "@medDetailsDiscontinueTitle": {
+    "description": "Title of the discontinue confirmation dialog"
+  },
+  "medDetailsDiscontinueBody": "Discontinue \"{name}\"? It leaves the active list but stays in your history. Future appointments will be deleted.",
+  "@medDetailsDiscontinueBody": {
+    "description": "Explains what discontinuing does: hidden from the active list, history kept",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Hyqvia"
+      }
+    }
+  },
+  "medDetailsTimes": "Times: {times}",
+  "@medDetailsTimes": {
+    "description": "Shows a schedule's intake times",
+    "placeholders": {
+      "times": {
+        "type": "String",
+        "example": "08:00,20:00"
+      }
+    }
+  },
+  "medDetailsTrackBatch": "Record batch number",
+  "@medDetailsTrackBatch": {
+    "description": "Toggle: ask for a batch number when logging a dose"
+  },
+  "medDetailsTrackBatchHint": "Scan a barcode or type it in",
+  "@medDetailsTrackBatchHint": {
+    "description": "Explains the batch-number toggle"
+  },
+  "medDetailsTrackWeight": "Record body weight",
+  "@medDetailsTrackWeight": {
+    "description": "Toggle: ask for body weight when logging a dose"
+  },
+  "medDetailsTrackWeightHint": "Log your weight with each dose",
+  "@medDetailsTrackWeightHint": {
+    "description": "Explains the body-weight toggle"
+  },
+  "medDetailsUseTimer": "Use dosing timer",
+  "@medDetailsUseTimer": {
+    "description": "Toggle: show the premedication timer when logging a dose"
+  },
+  "medDetailsUseTimerHint": "Premedication timer before the dose",
+  "@medDetailsUseTimerHint": {
+    "description": "Explains the dosing-timer toggle"
+  },
+  "medDetailsConfigureNamed": "Configure {name}",
+  "@medDetailsConfigureNamed": {
+    "description": "Title of the dialog configuring one linked supply item",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Needles"
+      }
+    }
+  },
+  "medDetailsEditSupplyGlobally": "Edit supply item globally (name, unit)",
+  "@medDetailsEditSupplyGlobally": {
+    "description": "Link that opens the supply item's global settings"
+  },
+  "medDetailsStockUpdated": "Stock level updated",
+  "@medDetailsStockUpdated": {
+    "description": "Snackbar confirming the stock level was saved"
+  },
+  "medDetailsSaveStock": "Save stock level",
+  "@medDetailsSaveStock": {
+    "description": "Button that saves the stock level and threshold"
+  },
+  "fieldPerInfusionRequirement": "Required per infusion",
+  "@fieldPerInfusionRequirement": {
+    "description": "Input label: how much of a supply one infusion needs"
+  },
+  "fieldPerInfusionRequirementWithUnit": "Required per infusion ({unit})",
+  "@fieldPerInfusionRequirementWithUnit": {
+    "description": "Same as fieldPerInfusionRequirement with the unit appended",
+    "placeholders": {
+      "unit": {
+        "type": "String",
+        "example": "pcs"
+      }
+    }
+  },
+  "fieldSupplyName": "Supply item name",
+  "@fieldSupplyName": {
+    "description": "Input label for a new supply item's name"
+  },
+  "fieldUnitWithExample": "Unit (e.g. pcs, set)",
+  "@fieldUnitWithExample": {
+    "description": "Input label for the unit, with examples for supplies"
+  },
+  "fieldUnitWithBottleExample": "Unit (e.g. bottle)",
+  "@fieldUnitWithBottleExample": {
+    "description": "Input label for the unit, with a medication example"
+  },
+  "fieldStrengthWithExample": "Dose / strength (e.g. 10g)",
+  "@fieldStrengthWithExample": {
+    "description": "Input label for the medication's strength, with an example"
+  },
+  "fieldPzn": "PZN",
+  "@fieldPzn": {
+    "description": "Input label for the German pharmaceutical central number"
+  },
+  "fieldCurrentStockShort": "Current stock",
+  "@fieldCurrentStockShort": {
+    "description": "Short input label for the current stock level"
+  },
+  "fieldPlannedDoseWithUnit": "Planned dose ({unit})",
+  "@fieldPlannedDoseWithUnit": {
+    "description": "Input label for a planned dose, with the unit appended",
+    "placeholders": {
+      "unit": {
+        "type": "String",
+        "example": "ml"
+      }
+    }
+  },
+  "actionCreate": "Create",
+  "@actionCreate": {
+    "description": "Button that creates a new record"
+  },
+  "channelBackgroundService": "Background service",
+  "@channelBackgroundService": {
+    "description": "Android notification channel name for the silent background service"
+  },
+  "channelBackgroundServiceDesc": "Used for the timer and background tasks",
+  "@channelBackgroundServiceDesc": {
+    "description": "Description of the background service channel"
+  },
+  "channelStockWarnings": "Stock warnings",
+  "@channelStockWarnings": {
+    "description": "Android notification channel name for low-stock warnings"
+  },
+  "channelStockWarningsDesc": "Tells you when medications or supplies are running low",
+  "@channelStockWarningsDesc": {
+    "description": "Description of the stock warning channel"
+  },
+  "channelMissedIntakes": "Missed intakes",
+  "@channelMissedIntakes": {
+    "description": "Android channel name and notification title for missed intakes"
+  },
+  "channelMissedIntakesDesc": "Notices about unconfirmed or missed intakes",
+  "@channelMissedIntakesDesc": {
+    "description": "Description of the missed-intakes channel"
+  },
+  "channelBackupFailures": "Backup failures",
+  "@channelBackupFailures": {
+    "description": "Android notification channel name for backup errors"
+  },
+  "channelBackupFailuresDesc": "Notifications about problems with the automatic backup",
+  "@channelBackupFailuresDesc": {
+    "description": "Description of the backup failure channel"
+  },
+  "channelBackupWarnings": "Backup warnings",
+  "@channelBackupWarnings": {
+    "description": "Android notification channel name for backup setup reminders"
+  },
+  "channelBackupWarningsDesc": "Notices about setting up your backup",
+  "@channelBackupWarningsDesc": {
+    "description": "Description of the backup warning channel"
+  },
+  "channelMedReminders": "Medication reminders",
+  "@channelMedReminders": {
+    "description": "Android notification channel name for treatment reminders"
+  },
+  "channelMedRemindersDesc": "Reminders for planned intakes and infusions",
+  "@channelMedRemindersDesc": {
+    "description": "Description of the medication reminder channel"
+  },
+  "channelPremedTimerDesc": "Running timer for premedication",
+  "@channelPremedTimerDesc": {
+    "description": "Description of the premedication timer channel"
+  },
+  "reminderDueTitle": "Reminder: medication due",
+  "@reminderDueTitle": {
+    "description": "Notification title when a dose becomes due"
+  },
+  "reminderDueBody": "It's time for your dose of {medication}.",
+  "@reminderDueBody": {
+    "description": "Notification body naming the medication that is due",
+    "placeholders": {
+      "medication": {
+        "type": "String",
+        "example": "your medication"
+      }
+    }
+  },
+  "reminderGenericMedication": "your medication",
+  "@reminderGenericMedication": {
+    "description": "Stand-in used in reminderDueBody when the medication name is not available; must fit the sentence grammatically"
+  },
+  "reminderSnoozeTitle": "Reminder (repeat)",
+  "@reminderSnoozeTitle": {
+    "description": "Title of the repeated reminder shown a few minutes later"
+  },
+  "reminderSnoozeBody": "You haven't marked your dose as done yet.",
+  "@reminderSnoozeBody": {
+    "description": "Body of the repeated reminder"
+  },
+  "reminderHourlyTitle": "Reminder (hourly)",
+  "@reminderHourlyTitle": {
+    "description": "Title of the hourly follow-up reminder"
+  },
+  "reminderHourlyBody": "Please don't forget your dose.",
+  "@reminderHourlyBody": {
+    "description": "Body of the hourly follow-up reminder"
+  },
+  "notificationCompletedNote": "Completed via notification",
+  "@notificationCompletedNote": {
+    "description": "Note stored on a dose confirmed from a notification action"
+  },
+  "notificationSkippedNote": "[Skipped via notification]",
+  "@notificationSkippedNote": {
+    "description": "Note appended when an appointment is skipped from a notification action"
+  },
+  "timerFinishedTitle": "Premedication complete",
+  "@timerFinishedTitle": {
+    "description": "Notification title when the premedication countdown ends"
+  },
+  "timerFinishedBody": "The timer has run out — the infusion can begin.",
+  "@timerFinishedBody": {
+    "description": "Notification body when the premedication countdown ends"
+  },
+  "missedIntakesSummary": "{count} intakes not confirmed",
+  "@missedIntakesSummary": {
+    "description": "Summary line when several intakes are unconfirmed",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "missedIntakesOpenCount": "{count} open",
+  "@missedIntakesOpenCount": {
+    "description": "Android summary text showing how many intakes are still open",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupReminderTitle": "Set up your backup",
+  "@backupReminderTitle": {
+    "description": "Daily notification title nudging the user to set up backups"
+  },
+  "backupReminderBody": "Your data isn't backed up automatically yet. Tap here to set it up.",
+  "@backupReminderBody": {
+    "description": "Body of the backup setup reminder"
+  },
+  "backupFailedTitle": "Backup failed",
+  "@backupFailedTitle": {
+    "description": "Notification title when an automatic backup failed"
+  },
+  "backupFailedBody": "The automatic backup could not be created: {error}",
+  "@backupFailedBody": {
+    "description": "Notification body with the backup error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "permission denied"
+      }
+    }
+  },
+  "backupDestinationAppFolder": "App folder (Files app → CIDP Buddy → Backups)",
+  "@backupDestinationAppFolder": {
+    "description": "Name of the app-internal backup folder; the arrows describe where to find it in the iOS Files app"
+  },
+  "backupDestinationSafFolder": "Cloud / SAF folder",
+  "@backupDestinationSafFolder": {
+    "description": "Fallback name for an Android SAF folder with no display name"
+  },
+  "backupFolderUnreadable": "Folder not readable: {path}\n({error})",
+  "@backupFolderUnreadable": {
+    "description": "Error when the backup folder cannot be read",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "/storage/Backups"
+      },
+      "error": {
+        "type": "String",
+        "example": "Permission denied"
+      }
+    }
+  },
+  "backupFolderMissing": "Folder no longer exists: {path}",
+  "@backupFolderMissing": {
+    "description": "Error when the backup folder no longer exists",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "/storage/Backups"
+      }
+    }
+  },
+  "backupFolderNotWritable": "Write access denied: {path}\n({error})",
+  "@backupFolderNotWritable": {
+    "description": "Error when the backup folder cannot be written to",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "/storage/Backups"
+      },
+      "error": {
+        "type": "String",
+        "example": "Read-only file system"
+      }
+    }
+  },
+  "backupFolderMissingShort": "Folder does not exist.",
+  "@backupFolderMissingShort": {
+    "description": "Diagnostic line: the folder does not exist"
+  },
+  "backupFolderEmpty": "Folder is empty.",
+  "@backupFolderEmpty": {
+    "description": "Diagnostic line: the folder contains nothing"
+  },
+  "backupSafFolderEmpty": "SAF folder is empty.",
+  "@backupSafFolderEmpty": {
+    "description": "Diagnostic line: the Android SAF folder contains nothing"
+  },
+  "backupFolderContents": "Found ({count}): {names}",
+  "@backupFolderContents": {
+    "description": "Diagnostic line listing what the folder actually holds",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String",
+        "example": "a.zip, b.zip …"
+      }
+    }
+  },
+  "backupFolderListFailed": "Folder could not be listed: {error}",
+  "@backupFolderListFailed": {
+    "description": "Diagnostic line when the folder could not be listed",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "I/O error"
+      }
+    }
+  },
+  "backupSafListFailed": "SAF folder could not be listed: {error}",
+  "@backupSafListFailed": {
+    "description": "Diagnostic line when the SAF folder could not be listed",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "I/O error"
+      }
+    }
+  },
+  "backupSafPermissionLost": "Permission for the cloud folder was lost. Please pick the folder again.",
+  "@backupSafPermissionLost": {
+    "description": "Error when Android revoked the persisted folder permission"
+  },
+  "backupNoDestination": "No backup destination selected.",
+  "@backupNoDestination": {
+    "description": "Error when no backup destination has been chosen"
+  },
+  "backupAutoDisabled": "Automatic backup is disabled.",
+  "@backupAutoDisabled": {
+    "description": "Reason a scheduled backup did not run: the feature is off"
+  },
+  "backupSkippedRecent": "Skipped: a recent backup already exists.",
+  "@backupSkippedRecent": {
+    "description": "Reason a scheduled backup did not run: a recent one already exists"
+  },
+  "backupWriteError": "Write error: {error}",
+  "@backupWriteError": {
+    "description": "Error when writing the backup archive failed",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "disk full"
+      }
+    }
+  },
+  "settingsSectionAppearance": "Appearance",
+  "@settingsSectionAppearance": {
+    "description": "Settings section header for theme and language"
+  },
+  "settingsDarkMode": "Dark theme",
+  "@settingsDarkMode": {
+    "description": "Toggle for the dark colour scheme"
+  },
+  "settingsDarkModeHint": "Switch between light and dark mode",
+  "@settingsDarkModeHint": {
+    "description": "Explains the dark theme toggle"
+  },
+  "settingsLanguage": "Language",
+  "@settingsLanguage": {
+    "description": "Settings row and picker title for the app language"
+  },
+  "settingsLanguageSystem": "System language",
+  "@settingsLanguageSystem": {
+    "description": "Language option that follows the device setting"
+  },
+  "languageEnglish": "English",
+  "@languageEnglish": {
+    "description": "Name of the English language, shown in its own language"
+  },
+  "languageGerman": "Deutsch",
+  "@languageGerman": {
+    "description": "Name of the German language, shown in its own language"
+  },
+  "languageFrench": "Français",
+  "@languageFrench": {
+    "description": "Name of the French language, shown in its own language"
+  },
+  "languageItalian": "Italiano",
+  "@languageItalian": {
+    "description": "Name of the Italian language, shown in its own language"
+  },
+  "languageSpanish": "Español",
+  "@languageSpanish": {
+    "description": "Name of the Spanish language, shown in its own language"
+  },
+  "settingsSectionAutoBackup": "Automatic backup",
+  "@settingsSectionAutoBackup": {
+    "description": "Settings section header for the automatic backup"
+  },
+  "settingsEnableAutoBackup": "Enable automatic backup",
+  "@settingsEnableAutoBackup": {
+    "description": "Toggle that turns automatic backups on"
+  },
+  "settingsEnableAutoBackupHint": "Backs your data up regularly to the chosen folder",
+  "@settingsEnableAutoBackupHint": {
+    "description": "Explains the automatic backup toggle"
+  },
+  "settingsBackupNotPossible": "Backup not possible",
+  "@settingsBackupNotPossible": {
+    "description": "Error card title when backups cannot run"
+  },
+  "settingsUnknownError": "Unknown error",
+  "@settingsUnknownError": {
+    "description": "Placeholder when no specific error message is available"
+  },
+  "settingsPickFolderAgain": "Pick folder again",
+  "@settingsPickFolderAgain": {
+    "description": "Button that re-opens the folder picker to restore access"
+  },
+  "settingsBackupsInsideAppTitle": "Backups live inside the app",
+  "@settingsBackupsInsideAppTitle": {
+    "description": "Warning title: backups live inside the app sandbox"
+  },
+  "settingsBackupsInsideAppBody": "They are deleted along with the app. Export a copy to iCloud Drive regularly — via \"Export backup\" or the Files app.",
+  "@settingsBackupsInsideAppBody": {
+    "description": "Warns that app-internal backups are erased with the app and points to the export action"
+  },
+  "settingsBackupDestination": "Backup destination",
+  "@settingsBackupDestination": {
+    "description": "Row and dialog title for where backups are written"
+  },
+  "settingsPickDestination": "Choose destination…",
+  "@settingsPickDestination": {
+    "description": "Placeholder when no backup destination is chosen yet"
+  },
+  "settingsRunBackupNow": "Run backup now",
+  "@settingsRunBackupNow": {
+    "description": "Row that triggers a backup immediately"
+  },
+  "settingsBackupSucceeded": "Backup successful!",
+  "@settingsBackupSucceeded": {
+    "description": "Snackbar after a successful manual backup"
+  },
+  "settingsBackupFailed": "Backup failed: {error}",
+  "@settingsBackupFailed": {
+    "description": "Snackbar after a failed manual backup",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "disk full"
+      }
+    }
+  },
+  "settingsExportBackup": "Export backup",
+  "@settingsExportBackup": {
+    "description": "Row that shares the latest backup out of the app"
+  },
+  "settingsExportBackupHint": "Save the latest backup to Files or iCloud Drive, for example",
+  "@settingsExportBackupHint": {
+    "description": "Explains where an exported backup can go"
+  },
+  "settingsNoBackupToExport": "No backup found to export. Run a backup first.",
+  "@settingsNoBackupToExport": {
+    "description": "Snackbar when export is tapped but no backup exists"
+  },
+  "settingsLastSuccess": "Last successful",
+  "@settingsLastSuccess": {
+    "description": "Row showing when the last backup succeeded"
+  },
+  "settingsLastAttempt": "Last attempt",
+  "@settingsLastAttempt": {
+    "description": "Row showing when a backup was last attempted"
+  },
+  "settingsRestoreBackup": "Restore backup",
+  "@settingsRestoreBackup": {
+    "description": "Row that opens the restore flow"
+  },
+  "settingsRestoreBackupHint": "Pick an automatic backup to restore",
+  "@settingsRestoreBackupHint": {
+    "description": "Explains the restore row"
+  },
+  "settingsIosStorageInfo": "On iOS automatic backups are stored inside the app, because Apple does not allow lasting write access to freely chosen folders.\n\nUse \"Export backup\" to save a copy to the Files app, iCloud Drive or via AirDrop.",
+  "@settingsIosStorageInfo": {
+    "description": "Explains why iOS backups are stored inside the app instead of a user-picked folder"
+  },
+  "settingsDestinationConnectFailed": "Could not connect the destination. Please pick a different one.",
+  "@settingsDestinationConnectFailed": {
+    "description": "Snackbar when the chosen folder could not be connected"
+  },
+  "settingsDestinationConnected": "Backup destination connected.",
+  "@settingsDestinationConnected": {
+    "description": "Snackbar after successfully connecting a backup folder"
+  },
+  "settingsSectionReminders": "Reminders",
+  "@settingsSectionReminders": {
+    "description": "Settings section header for reminder behaviour"
+  },
+  "settingsSnooze": "Snooze",
+  "@settingsSnooze": {
+    "description": "Toggle for repeating a reminder after a delay"
+  },
+  "settingsSnoozeHint": "Remind again every {minutes} minutes (3×)",
+  "@settingsSnoozeHint": {
+    "description": "Explains the snooze toggle; repeats three times",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSnoozeInterval": "Snooze interval",
+  "@settingsSnoozeInterval": {
+    "description": "Row and picker title for the snooze interval"
+  },
+  "settingsSnoozeIntervalCurrent": "Currently: every {minutes} minutes",
+  "@settingsSnoozeIntervalCurrent": {
+    "description": "Shows the configured snooze interval",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsEveryNMinutes": "Every {minutes} minutes",
+  "@settingsEveryNMinutes": {
+    "description": "Snooze interval option",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsHourlyReminder": "Hourly reminder",
+  "@settingsHourlyReminder": {
+    "description": "Toggle for hourly follow-up reminders"
+  },
+  "settingsHourlyReminderHint": "Remind on the hour",
+  "@settingsHourlyReminderHint": {
+    "description": "Explains the hourly reminder toggle"
+  },
+  "settingsQuietHours": "Quiet hours",
+  "@settingsQuietHours": {
+    "description": "Row for the time window in which no reminders fire"
+  },
+  "settingsQuietHoursTitle": "Set quiet hours",
+  "@settingsQuietHoursTitle": {
+    "description": "Title of the quiet hours picker"
+  },
+  "settingsQuietHoursHint": "No reminders from {start} to {end}",
+  "@settingsQuietHoursHint": {
+    "description": "Shows the configured quiet window",
+    "placeholders": {
+      "start": {
+        "type": "String",
+        "example": "22:00"
+      },
+      "end": {
+        "type": "String",
+        "example": "6:00"
+      }
+    }
+  },
+  "settingsQuietHoursStart": "Start",
+  "@settingsQuietHoursStart": {
+    "description": "Label for when the quiet window begins"
+  },
+  "settingsQuietHoursEnd": "End",
+  "@settingsQuietHoursEnd": {
+    "description": "Label for when the quiet window ends"
+  },
+  "settingsSectionSystem": "System & reliability",
+  "@settingsSectionSystem": {
+    "description": "Settings section header for system and reliability checks"
+  },
+  "settingsSectionHyqviaTimer": "Hyqvia timer",
+  "@settingsSectionHyqviaTimer": {
+    "description": "Settings section header for the Hyqvia premedication timer; Hyqvia is a product name and stays untranslated"
+  },
+  "settingsSuggestTimer": "Suggest timer automatically",
+  "@settingsSuggestTimer": {
+    "description": "Toggle that offers the timer automatically"
+  },
+  "settingsSuggestTimerHint": "Offer the premedication timer for Hyqvia infusions",
+  "@settingsSuggestTimerHint": {
+    "description": "Explains when the timer is offered"
+  },
+  "settingsPremedDuration": "Premedication duration",
+  "@settingsPremedDuration": {
+    "description": "Row for the default premedication duration"
+  },
+  "settingsCurrentMinutes": "Currently: {minutes} minutes",
+  "@settingsCurrentMinutes": {
+    "description": "Shows a currently configured duration",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSetDefaultDuration": "Set default duration",
+  "@settingsSetDefaultDuration": {
+    "description": "Title of the default duration picker"
+  },
+  "settingsSectionLegal": "Legal",
+  "@settingsSectionLegal": {
+    "description": "Settings section header for legal notices"
+  },
+  "settingsSectionAbout": "About CIDP Buddy",
+  "@settingsSectionAbout": {
+    "description": "Settings section header for version info; CIDP Buddy is the app name"
+  },
+  "settingsVersion": "Version",
+  "@settingsVersion": {
+    "description": "Label for the app version number"
+  },
+  "settingsBuildTimestamp": "Build timestamp",
+  "@settingsBuildTimestamp": {
+    "description": "Label for when this build was produced"
+  },
+  "settingsPrivacy": "Privacy",
+  "@settingsPrivacy": {
+    "description": "Row title stating where data is stored"
+  },
+  "settingsPrivacyHint": "All data is stored locally on this device.",
+  "@settingsPrivacyHint": {
+    "description": "States that all data stays on the device"
+  },
+  "settingsPickBackup": "Select backup",
+  "@settingsPickBackup": {
+    "description": "Title of the sheet listing available backups"
+  },
+  "settingsPickZip": "Pick ZIP",
+  "@settingsPickZip": {
+    "description": "Button that lets the user pick a backup ZIP file directly"
+  },
+  "restoreNoFolderTitle": "No backup folder connected",
+  "@restoreNoFolderTitle": {
+    "description": "Empty state title: no backup folder is connected"
+  },
+  "restoreNoFolderBody": "Pick the folder your backups live in — for example the cloud folder from an earlier install.",
+  "@restoreNoFolderBody": {
+    "description": "Empty state body asking the user to pick the folder holding their backups"
+  },
+  "restorePickFolder": "Choose backup folder",
+  "@restorePickFolder": {
+    "description": "Button that opens the folder picker for restoring"
+  },
+  "restorePickOtherFolder": "Choose a different folder",
+  "@restorePickOtherFolder": {
+    "description": "Button that opens the folder picker to try a different folder"
+  },
+  "restoreCurrentFolder": "Current folder:\n{label}",
+  "@restoreCurrentFolder": {
+    "description": "Shows which folder is currently connected",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "/storage/Backups"
+      }
+    }
+  },
+  "restoreAccessLostTitle": "Lost access to the backup folder",
+  "@restoreAccessLostTitle": {
+    "description": "Empty state title: the app lost access to the backup folder"
+  },
+  "restoreAccessLostBody": "Pick the folder again to restore permission. Your existing backups are untouched.",
+  "@restoreAccessLostBody": {
+    "description": "Tells the user re-picking the folder restores permission without data loss"
+  },
+  "restoreNoBackupsTitle": "No backups found",
+  "@restoreNoBackupsTitle": {
+    "description": "Empty state title: the connected folder holds no backups"
+  },
+  "restoreNoBackupsBody": "The connected folder holds no backups (files named \"cidpbuddy_backup_…zip\" or \"igkeeper_backup_…zip\").",
+  "@restoreNoBackupsBody": {
+    "description": "Explains which filenames the app looks for; the two patterns are literal filename prefixes"
+  },
+  "restoreNoBackupsHint": "If your backups are in a different folder, choose it here.",
+  "@restoreNoBackupsHint": {
+    "description": "Suggests picking another folder if the backups live elsewhere"
+  },
+  "restoreReadFailed": "Backups could not be read: {error}",
+  "@restoreReadFailed": {
+    "description": "Error when the backup list could not be read",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "I/O error"
+      }
+    }
+  },
+  "restoreFolderConnectFailed": "Folder could not be connected.",
+  "@restoreFolderConnectFailed": {
+    "description": "Snackbar when the picked restore folder could not be connected"
+  },
+  "restoreConfirmTitle": "Restore backup?",
+  "@restoreConfirmTitle": {
+    "description": "Title of the restore confirmation dialog"
+  },
+  "restoreConfirmFile": "Really restore the file \"{name}\"?",
+  "@restoreConfirmFile": {
+    "description": "Asks the user to confirm restoring a specific file",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "cidpbuddy_backup_20260914.zip"
+      }
+    }
+  },
+  "restoreConfirmDated": "Really restore the backup from {date}?",
+  "@restoreConfirmDated": {
+    "description": "Asks the user to confirm restoring the backup from a given date",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "9/14/2026, 2:30 PM"
+      }
+    }
+  },
+  "restoreOverwriteWarning": "WARNING: all current data will be overwritten irreversibly!",
+  "@restoreOverwriteWarning": {
+    "description": "All-caps warning that restoring destroys current data"
+  },
+  "restoreFailed": "Restore failed.",
+  "@restoreFailed": {
+    "description": "Snackbar when a restore did not complete"
+  },
+  "restoreSucceeded": "Data restored successfully. Restarting the app…",
+  "@restoreSucceeded": {
+    "description": "Snackbar after a successful restore; the app restarts right after"
+  },
+  "restoreRestartManually": "Please restart the app manually.",
+  "@restoreRestartManually": {
+    "description": "Fallback when the app could not restart itself"
+  },
+  "legalLiabilityTitle": "Disclaimer",
+  "@legalLiabilityTitle": {
+    "description": "Title of the liability disclaimer"
+  },
+  "legalLiabilitySubtitle": "Not a medical device, not medical advice",
+  "@legalLiabilitySubtitle": {
+    "description": "One-line summary of the disclaimer"
+  },
+  "legalBatchDocumentationTitle": "Batch documentation",
+  "@legalBatchDocumentationTitle": {
+    "description": "Title of the batch documentation notice"
+  },
+  "legalBatchDocumentationSubtitle": "Does not replace the legally required documentation",
+  "@legalBatchDocumentationSubtitle": {
+    "description": "One-line summary of the batch documentation notice"
+  },
+  "legalImprint": "Legal notice",
+  "@legalImprint": {
+    "description": "Link to the legal notice / imprint page"
+  },
+  "legalPrivacyPolicy": "Privacy policy",
+  "@legalPrivacyPolicy": {
+    "description": "Link to the privacy policy"
+  },
+  "actionOk": "OK",
+  "@actionOk": {
+    "description": "Neutral dialog dismiss button"
+  },
+  "actionUnderstood": "Got it",
+  "@actionUnderstood": {
+    "description": "Button acknowledging an informational dialog"
+  },
+  "actionRestore": "Restore",
+  "@actionRestore": {
+    "description": "Button that starts restoring a backup"
+  },
+  "genericError": "Error: {error}",
+  "@genericError": {
+    "description": "Generic inline error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "timeout"
+      }
+    }
+  },
+  "reliabilityTitle": "Reliability check",
+  "@reliabilityTitle": {
+    "description": "Title of the reliability check page"
+  },
+  "reliabilitySubtitle": "Check permissions & battery settings",
+  "@reliabilitySubtitle": {
+    "description": "Settings row subtitle describing the reliability check"
+  },
+  "reliabilityNotifications": "Notifications",
+  "@reliabilityNotifications": {
+    "description": "Check item: notification permission"
+  },
+  "reliabilityNotificationsDesc": "Needed for medication reminders and timer completion.",
+  "@reliabilityNotificationsDesc": {
+    "description": "Why the notification permission matters"
+  },
+  "reliabilityExactAlarms": "Exact alarms",
+  "@reliabilityExactAlarms": {
+    "description": "Check item: Android exact alarm permission"
+  },
+  "reliabilityExactAlarmsDesc": "Lets the app fire reminders to the second.",
+  "@reliabilityExactAlarmsDesc": {
+    "description": "Why the exact alarm permission matters"
+  },
+  "reliabilityBatteryOptimization": "Battery optimization",
+  "@reliabilityBatteryOptimization": {
+    "description": "Check item: Android battery optimization exemption"
+  },
+  "reliabilityBatteryOptimizationDesc": "Stops Android from killing the app in the background.",
+  "@reliabilityBatteryOptimizationDesc": {
+    "description": "Why the battery optimization exemption matters"
+  },
+  "reliabilityBackupDesc": "Backs your data up regularly, to the cloud or locally.",
+  "@reliabilityBackupDesc": {
+    "description": "Why automatic backup matters"
+  },
+  "reliabilityBackupStatus": "Backup status",
+  "@reliabilityBackupStatus": {
+    "description": "Check item: state of the most recent backup"
+  },
+  "reliabilityBackupUpToDate": "Your last backup is up to date.",
+  "@reliabilityBackupUpToDate": {
+    "description": "Shown when the last backup is recent"
+  },
+  "reliabilityBackupStale": "Your last backup is outdated or failed.",
+  "@reliabilityBackupStale": {
+    "description": "Shown when the last backup is old or failed"
+  },
+  "reliabilityAllGood": "All good!",
+  "@reliabilityAllGood": {
+    "description": "Headline when every reliability check passes"
+  },
+  "reliabilityAllGoodBody": "Your settings are ideal for maximum reliability.",
+  "@reliabilityAllGoodBody": {
+    "description": "Body when every reliability check passes"
+  },
+  "reliabilityActionNeeded": "Action needed",
+  "@reliabilityActionNeeded": {
+    "description": "Headline when at least one reliability check fails"
+  },
+  "reliabilityActionNeededBody": "Some settings limit how reliably reminders can fire.",
+  "@reliabilityActionNeededBody": {
+    "description": "Body when at least one reliability check fails"
+  },
+  "reliabilityFix": "Fix this setting",
+  "@reliabilityFix": {
+    "description": "Button that opens the system setting for a failing check"
+  },
+  "reliabilityFooterHint": "Note: the checks refresh automatically when you come back from the system settings.",
+  "@reliabilityFooterHint": {
+    "description": "Explains that the page refreshes itself on return from system settings"
+  },
+  "reliabilityRefresh": "Refresh status now",
+  "@reliabilityRefresh": {
+    "description": "Button that re-runs all reliability checks"
+  },
+  "legalBatchDocumentationLong": "CIDP Buddy stores batch numbers, photos and notes solely as a personal memory aid on your device.\n\nThese records do not replace the batch documentation required by law under the German Transfusion Act (TFG) or the national rules that apply to you. That duty remains with your doctor or your treating facility.\n\nSo keep the required documentation exactly as before — even when you also record the details in this app.",
+  "@legalBatchDocumentationLong": {
+    "description": "Full batch documentation notice; TFG is the German Transfusion Act and stays untranslated as a named law"
+  },
+  "legalLiabilityBody": "CIDP Buddy is a private organisational tool and not a medical device. The app exists solely to make managing your appointments, stock and notes easier.\n\nThe app is not medical advice and replaces neither diagnosis nor treatment nor any recommendation from healthcare professionals. Never make decisions about your therapy, dosage or medication based on this app alone. If you have health concerns, contact your doctor; in an emergency, call the emergency services.\n\nAll calculations (stock coverage, low-stock warnings, planned appointments and so on) are based on the data you entered and may be wrong. Reminders and notifications may be delayed, duplicated or missed entirely because of power-saving features, system settings or operating-system bugs. Do not rely on the app alone.\n\nAll data lives only on your device. Backing it up is your responsibility; no liability is accepted for data loss.\n\nUse is at your own risk. Liability for damages arising from use or unavailability of the app is excluded to the extent permitted by law.",
+  "@legalLiabilityBody": {
+    "description": "Full liability disclaimer shown in the legal section"
+  },
+  "shareBackupSubject": "CIDP Buddy backup",
+  "@shareBackupSubject": {
+    "description": "Subject line when sharing the database file out of the app"
+  },
+  "shareBackupText": "Backup of the CIDP Buddy database from {date}",
+  "@shareBackupText": {
+    "description": "Message body when sharing the database file",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "9/14/2026"
+      }
+    }
+  }
+}

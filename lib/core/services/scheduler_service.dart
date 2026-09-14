@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:drift/drift.dart';
-import 'package:intl/intl.dart';
 import '../database/database.dart';
 import '../../features/reminders/services/notification_service.dart';
+import '../l10n/l10n_ext.dart';
+import '../l10n/locale_provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class SchedulerService {
   final AppDatabase db;
@@ -195,9 +197,14 @@ class SchedulerService {
         .get();
     final medNames = {for (final m in meds) m.id: m.name};
 
-    final dateFmt = DateFormat('dd.MM. HH:mm');
+    // No BuildContext in reach — this also runs from the periodic background
+    // sync — so the locale is resolved the same way the UI resolves it.
+    final locale = await LocaleProvider.resolveForBackground();
+    final l10n = lookupAppLocalizations(locale);
     final items = missed
-        .map((t) => '${dateFmt.format(t.date)} – ${medNames[t.medicationId] ?? 'Medikament'}')
+        .map((t) =>
+            '${AppDateFormat.dayMonthTimeIn(locale.toLanguageTag(), t.date)} – '
+            '${medNames[t.medicationId] ?? l10n.medicationFallbackName}')
         .toList();
 
     await NotificationService().showMissedTreatmentsNotification(items);

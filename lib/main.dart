@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cidpbuddy/core/database/database.dart';
 import 'package:cidpbuddy/features/inventory/providers/inventory_provider.dart';
 import 'package:cidpbuddy/features/diary/providers/diary_provider.dart';
@@ -13,17 +12,30 @@ import 'package:cidpbuddy/core/services/medication_service.dart';
 import 'package:cidpbuddy/core/services/background_service.dart';
 import 'package:cidpbuddy/features/settings/services/backup_service.dart';
 import 'package:cidpbuddy/features/settings/services/backup_worker.dart';
+import 'package:cidpbuddy/core/l10n/locale_provider.dart';
+import 'package:cidpbuddy/l10n/generated/app_localizations.dart';
 import 'package:cidpbuddy/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:disable_battery_optimization/disable_battery_optimization.dart';
 import 'dart:async';
 import 'dart:io';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Force Flutter to build & expose the semantics tree so UI-test tools
   // (Maestro) can find widgets by text/id without a screen reader running.
   SemanticsBinding.instance.ensureSemantics();
+
+  // Month and weekday names for every language we ship. Loaded before the
+  // first frame so `DateFormat` never falls back to en_US mid-render, and so
+  // background isolates spawned from here inherit the data.
+  await initializeDateFormatting();
+
+  // Read the stored language before `runApp`, otherwise the first frame
+  // renders in the system language and then visibly switches.
+  final localeProvider = LocaleProvider();
+  await localeProvider.load();
 
   try {
     final db = AppDatabase();
@@ -37,6 +49,7 @@ void main() async {
           Provider.value(value: db),
           Provider(create: (_) => MedicationService(db)),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider.value(value: localeProvider),
           ChangeNotifierProxyProvider<AppDatabase, InventoryProvider>(
             create: (context) => InventoryProvider(db),
             update: (context, database, previous) => InventoryProvider(database),
@@ -58,13 +71,21 @@ void main() async {
   } catch (e, stack) {
     debugPrint('Initialization error: $e');
     debugPrint('Stack trace: $stack');
-    // Fallback to minimal app to show error if possible
+    // Fallback to minimal app to show error if possible. The widget tree that
+    // would normally provide translations never got built, so the message is
+    // looked up directly against the resolved locale.
+    String message;
+    try {
+      message = (await LocaleProvider.l10nForBackground()).startupFailed('$e');
+    } catch (_) {
+      message = 'The app could not be initialized:\n$e';
+    }
     runApp(MaterialApp(
       home: Scaffold(
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Text('App konnte nicht initialisiert werden:\n$e'),
+            child: Text(message),
           ),
         ),
       ),
@@ -135,22 +156,31 @@ class CIDPBuddyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
 
     return MaterialApp(
-      title: 'CIDP Buddy',
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeProvider.themeMode,
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('de', 'DE'),
-      ],
-      locale: const Locale('de', 'DE'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      // null means "follow the device", which hands resolution to the callback
+      // below.
+      locale: localeProvider.locale,
+      // Flutter's default resolution falls back to `supportedLocales.first`,
+      // and gen-l10n orders that list alphabetically — so a device set to,
+      // say, Japanese would land on German. English is the documented
+      // fallback, so pick it explicitly.
+      localeListResolutionCallback: (deviceLocales, supported) {
+        for (final device in deviceLocales ?? const <Locale>[]) {
+          for (final candidate in supported) {
+            if (candidate.languageCode == device.languageCode) return candidate;
+          }
+        }
+        return const Locale('en');
+      },
       home: const MainScreen(),
     );
   }

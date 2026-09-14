@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import '../../../core/database/database.dart';
 import '../../../core/services/scheduler_service.dart';
 import 'package:drift/drift.dart' show Value;
+import '../../../core/l10n/locale_provider.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -20,15 +22,23 @@ class NotificationService {
   // request, unlike Android where actions are inlined per-notification.
   static const String treatmentReminderCategoryId = 'treatment_reminder_actions';
 
+  /// Translations for whichever isolate is calling.
+  ///
+  /// Notifications are posted from the UI isolate, the background service and
+  /// the WorkManager worker alike, and only the first of those has a widget
+  /// tree — so the locale is resolved from storage rather than from context.
+  Future<AppLocalizations> get _l10n => LocaleProvider.l10nForBackground();
+
   Future<void> init({bool isBackground = false}) async {
+    final l10n = await _l10n;
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
     final DarwinInitializationSettings darwinSettings = DarwinInitializationSettings(
       notificationCategories: [
         DarwinNotificationCategory(
           treatmentReminderCategoryId,
           actions: [
-            DarwinNotificationAction.plain('complete_infusion', 'Erledigt'),
-            DarwinNotificationAction.plain('skip_infusion', 'Überspringen'),
+            DarwinNotificationAction.plain('complete_infusion', l10n.actionDone),
+            DarwinNotificationAction.plain('skip_infusion', l10n.actionSkip),
           ],
         ),
       ],
@@ -47,54 +57,57 @@ class NotificationService {
     );
     tz.initializeTimeZones();
     
-    // Create the background service channel
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    // Channel names and descriptions show up in Android's system settings, so
+    // they are translated too. Re-creating a channel with an existing id
+    // updates its name and description, which means a language change lands on
+    // the next app start (importance, however, is fixed after creation).
+    final AndroidNotificationChannel channel = AndroidNotificationChannel(
       'background_service',
-      'Hintergrunddienst',
-      description: 'Wird für den Timer und Hintergrund-Tasks verwendet',
+      l10n.channelBackgroundService,
+      description: l10n.channelBackgroundServiceDesc,
       importance: Importance.min,
     );
-    
-    const AndroidNotificationChannel stockChannel = AndroidNotificationChannel(
+
+    final AndroidNotificationChannel stockChannel = AndroidNotificationChannel(
       'stock_warnings',
-      'Bestands-Warnungen',
-      description: 'Benachrichtigt dich, wenn Medikamente oder Zubehör zur Neige gehen',
+      l10n.channelStockWarnings,
+      description: l10n.channelStockWarningsDesc,
       importance: Importance.high,
     );
 
-    const AndroidNotificationChannel missedChannel = AndroidNotificationChannel(
+    final AndroidNotificationChannel missedChannel = AndroidNotificationChannel(
       'missed_treatments',
-      'Verpasste Einnahmen',
-      description: 'Hinweise auf nicht bestätigte oder verpasste Einnahmen',
+      l10n.channelMissedIntakes,
+      description: l10n.channelMissedIntakesDesc,
       importance: Importance.high,
     );
 
-    const AndroidNotificationChannel backupFailureChannel = AndroidNotificationChannel(
+    final AndroidNotificationChannel backupFailureChannel = AndroidNotificationChannel(
       'backup_failures',
-      'Backup-Fehler',
-      description: 'Benachrichtigungen bei Problemen mit der automatischen Datensicherung',
+      l10n.channelBackupFailures,
+      description: l10n.channelBackupFailuresDesc,
       importance: Importance.high,
     );
-    const AndroidNotificationChannel backupWarningChannel = AndroidNotificationChannel(
+    final AndroidNotificationChannel backupWarningChannel = AndroidNotificationChannel(
       'backup_warnings',
-      'Backup-Warnungen',
-      description: 'Hinweise zur Einrichtung der Datensicherung',
+      l10n.channelBackupWarnings,
+      description: l10n.channelBackupWarningsDesc,
       importance: Importance.defaultImportance,
     );
 
-    const AndroidNotificationChannel medRemindersChannel = AndroidNotificationChannel(
+    final AndroidNotificationChannel medRemindersChannel = AndroidNotificationChannel(
       'med_reminders',
-      'Medikamenten Erinnerungen',
-      description: 'Erinnerungen für geplante Einnahmen und Infusionen',
+      l10n.channelMedReminders,
+      description: l10n.channelMedRemindersDesc,
       importance: Importance.max,
       enableVibration: true,
       playSound: true,
     );
 
-    const AndroidNotificationChannel premedTimerChannel = AndroidNotificationChannel(
+    final AndroidNotificationChannel premedTimerChannel = AndroidNotificationChannel(
       'premed_timer',
-      'Vormedikation Timer',
-      description: 'Laufender Timer für die Vormedikation',
+      l10n.timerTitle,
+      description: l10n.channelPremedTimerDesc,
       importance: Importance.high,
     );
 
@@ -174,18 +187,19 @@ class NotificationService {
     bool showAction = true,
   }) async {
     try {
+      final l10n = await _l10n;
       final scheduleMode = await _getScheduleMode();
-      
+
       final List<AndroidNotificationAction>? actions = showAction ? [
-        const AndroidNotificationAction(
+        AndroidNotificationAction(
           'complete_infusion',
-          'Erledigt',
+          l10n.actionDone,
           showsUserInterface: false,
           cancelNotification: true,
         ),
-        const AndroidNotificationAction(
+        AndroidNotificationAction(
           'skip_infusion',
-          'Überspringen',
+          l10n.actionSkip,
           showsUserInterface: false,
           cancelNotification: true,
         ),
@@ -199,7 +213,7 @@ class NotificationService {
         NotificationDetails(
           android: AndroidNotificationDetails(
             'med_reminders',
-            'Medikamenten Erinnerungen',
+            l10n.channelMedReminders,
             importance: Importance.max,
             priority: Priority.high,
             visibility: NotificationVisibility.public,
@@ -246,6 +260,7 @@ class NotificationService {
 
   static Future<void> _handleCompleteInfusion(int treatmentId) async {
     try {
+      final l10n = await LocaleProvider.l10nForBackground();
       await NotificationService()._notificationsPlugin.cancel(treatmentId * 100);
       final db = AppDatabase();
       // 1. Mark as completed
@@ -278,12 +293,12 @@ class NotificationService {
             date: treatment.date,
             medicationId: med.id,
             dosage: treatment.dosage,
-            notes: const Value('Via Benachrichtigung erledigt'),
+            notes: Value(l10n.notificationCompletedNote),
           ));
         });
       }
       
-      // Cancel other reminders for this treatment and refresh the "verpasst"
+      // Cancel other reminders for this treatment and refresh the missed-intake
       // summary so it does not keep listing a treatment that is now done.
       await NotificationService().cancelTreatmentReminders(treatmentId);
       await SchedulerService(db).checkMissedTreatments();
@@ -295,13 +310,14 @@ class NotificationService {
 
   static Future<void> _handleSkipInfusion(int treatmentId) async {
     try {
+      final l10n = await LocaleProvider.l10nForBackground();
       await NotificationService()._notificationsPlugin.cancel(treatmentId * 100);
       final db = AppDatabase();
       // Mark as completed but with a note that it was skipped
       final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
       await db.updatePlannedInfusion(treatment.copyWith(
         isCompleted: true,
-        notes: Value('${treatment.notes ?? ''} [Übersprungen via Benachrichtigung]'.trim()),
+        notes: Value('${treatment.notes ?? ''} ${l10n.notificationSkippedNote}'.trim()),
       ));
       
       // Cancel other reminders
@@ -315,6 +331,7 @@ class NotificationService {
 
   Future<void> scheduleTreatmentReminders(PlannedInfusion treatment) async {
     final now = DateTime.now();
+    final l10n = await _l10n;
 
     final prefs = await SharedPreferences.getInstance();
     final quietStart = prefs.getInt('quiet_hours_start') ?? 22;
@@ -341,8 +358,8 @@ class NotificationService {
     if (treatment.date.isAfter(now) && !isQuiet(treatment.date)) {
       await scheduleNotification(
         id: baseId,
-        title: 'Erinnerung: Medikament fällig',
-        body: 'Es ist Zeit für deine Einnahme von ${_getMedName(treatment)}.',
+        title: l10n.reminderDueTitle,
+        body: l10n.reminderDueBody(l10n.reminderGenericMedication),
         scheduledTime: treatment.date,
         payload: treatment.id.toString(),
       );
@@ -360,8 +377,8 @@ class NotificationService {
         if (time.isAfter(now) && !isQuiet(time)) {
           await scheduleNotification(
             id: baseId + i,
-            title: 'Erinnerung (Wiederholung)',
-            body: 'Du hast deine Einnahme noch nicht als erledigt markiert.',
+            title: l10n.reminderSnoozeTitle,
+            body: l10n.reminderSnoozeBody,
             scheduledTime: time,
             payload: treatment.id.toString(),
           );
@@ -376,8 +393,8 @@ class NotificationService {
         if (time.isAfter(now) && !isQuiet(time)) {
           await scheduleNotification(
             id: baseId + 10 + i,
-            title: 'Erinnerung (Stündlich)',
-            body: 'Bitte vergiss deine Einnahme nicht.',
+            title: l10n.reminderHourlyTitle,
+            body: l10n.reminderHourlyBody,
             scheduledTime: time,
             payload: treatment.id.toString(),
           );
@@ -452,25 +469,26 @@ class NotificationService {
   Future<void> scheduleTimerCompletionNotification(DateTime endTime) async {
     await cancelTimerCompletionNotification();
     try {
+      final l10n = await _l10n;
       final scheduleMode = await _getScheduleMode();
       await _notificationsPlugin.zonedSchedule(
         _timerCompletionId,
-        'Vormedikation abgeschlossen',
-        'Der Timer ist abgelaufen — Infusion kann beginnen.',
+        l10n.timerFinishedTitle,
+        l10n.timerFinishedBody,
         // Use UTC explicitly: the background isolate sets tz.local = UTC,
         // so fromMillisecondsSinceEpoch with tz.UTC is always correct
         tz.TZDateTime.fromMillisecondsSinceEpoch(
           tz.UTC,
           endTime.millisecondsSinceEpoch,
         ),
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'premed_timer',
-            'Vormedikation Timer',
+            l10n.timerTitle,
             importance: Importance.high,
             priority: Priority.high,
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation:
@@ -497,24 +515,26 @@ class NotificationService {
   }
 
   Future<void> showTimerProgress(int minutes, int seconds) async {
-    final title = 'Vormedikation Timer';
-    final content = 'Verbleibend: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    
+    final l10n = await _l10n;
+    final title = l10n.timerTitle;
+    final content = l10n.timerNotificationRemaining(
+        '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}');
+
     await _notificationsPlugin.show(
       9999, // Specific ID for timer progress
       title,
       content,
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'premed_timer',
-          'Vormedikation Timer',
+          l10n.timerTitle,
           importance: Importance.high,
           priority: Priority.high,
           ongoing: true,
           showWhen: false,
           onlyAlertOnce: true,
         ),
-        iOS: DarwinNotificationDetails(),
+        iOS: const DarwinNotificationDetails(),
       ),
     );
   }
@@ -544,27 +564,28 @@ class NotificationService {
       return;
     }
 
+    final l10n = await _l10n;
     final summary = items.length == 1
         ? items.first
-        : '${items.length} Einnahmen nicht bestätigt';
+        : l10n.missedIntakesSummary(items.length);
     final body = items.join('\n');
 
     await _notificationsPlugin.show(
       missedId,
-      'Verpasste Einnahmen',
+      l10n.channelMissedIntakes,
       summary,
       NotificationDetails(
         android: AndroidNotificationDetails(
           'missed_treatments',
-          'Verpasste Einnahmen',
-          channelDescription: 'Hinweise auf nicht bestätigte oder verpasste Einnahmen',
+          l10n.channelMissedIntakes,
+          channelDescription: l10n.channelMissedIntakesDesc,
           importance: Importance.high,
           priority: Priority.high,
           visibility: NotificationVisibility.public,
           styleInformation: BigTextStyleInformation(
             body,
-            contentTitle: 'Verpasste Einnahmen',
-            summaryText: '${items.length} offen',
+            contentTitle: l10n.channelMissedIntakes,
+            summaryText: l10n.missedIntakesOpenCount(items.length),
           ),
         ),
         iOS: const DarwinNotificationDetails(
@@ -589,21 +610,22 @@ class NotificationService {
   Future<void> showStockWarningNotification(List<String> lowItems) async {
     if (lowItems.isEmpty) return;
     
+    final l10n = await _l10n;
     final itemsText = lowItems.join(", ");
-    
+
     await _notificationsPlugin.show(
       8888, // Constant ID for stock warning to overwrite previous ones
-      'Bestellung empfohlen',
-      'Niedriger Bestand: $itemsText',
-      const NotificationDetails(
+      l10n.dashboardOrderRecommended,
+      l10n.dashboardLowStockNames(itemsText),
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'stock_warnings',
-          'Bestands-Warnungen',
+          l10n.channelStockWarnings,
           importance: Importance.high,
           priority: Priority.high,
-          styleInformation: BigTextStyleInformation(''),
+          styleInformation: const BigTextStyleInformation(''),
         ),
-        iOS: DarwinNotificationDetails(
+        iOS: const DarwinNotificationDetails(
           presentAlert: true,
           presentSound: true,
         ),
@@ -611,14 +633,10 @@ class NotificationService {
     );
   }
 
-  String _getMedName(PlannedInfusion treatment) {
-    // Return a generic name if med details aren't passed
-    return 'deines Medikaments';
-  }
-
   Future<void> scheduleBackupReminder() async {
     const int backupReminderId = 7777;
     
+    final l10n = await _l10n;
     // Schedule for 10:00 AM every day
     final now = tz.TZDateTime.now(tz.local);
     var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 10, 0);
@@ -628,17 +646,17 @@ class NotificationService {
 
     await _notificationsPlugin.zonedSchedule(
       backupReminderId,
-      'Datensicherung einrichten',
-      'Deine Daten sind noch nicht automatisch gesichert. Tippe hier, um das Backup zu konfigurieren.',
+      l10n.backupReminderTitle,
+      l10n.backupReminderBody,
       scheduledDate,
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'backup_warnings',
-          'Backup-Warnungen',
+          l10n.channelBackupWarnings,
           importance: Importance.high,
           priority: Priority.high,
         ),
-        iOS: DarwinNotificationDetails(),
+        iOS: const DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
@@ -653,19 +671,20 @@ class NotificationService {
   }
 
   Future<void> showBackupFailureNotification(String error) async {
+    final l10n = await _l10n;
     await _notificationsPlugin.show(
       6666, // Constant ID for backup failure
-      'Backup fehlgeschlagen',
-      'Das automatische Backup konnte nicht erstellt werden: $error',
-      const NotificationDetails(
+      l10n.backupFailedTitle,
+      l10n.backupFailedBody(error),
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'backup_failures',
-          'Backup-Fehler',
+          l10n.channelBackupFailures,
           importance: Importance.high,
           priority: Priority.high,
           color: Colors.red,
         ),
-        iOS: DarwinNotificationDetails(),
+        iOS: const DarwinNotificationDetails(),
       ),
       payload: 'open_backup_settings',
     );
@@ -732,6 +751,7 @@ Future<void> _cancelTreatmentBlock(
 @pragma('vm:entry-point')
 Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
   try {
+    final l10n = await LocaleProvider.l10nForBackground();
     final notifPlugin = FlutterLocalNotificationsPlugin();
     await _initBackgroundPlugin(notifPlugin);
     await _cancelTreatmentBlock(notifPlugin, treatmentId);
@@ -739,7 +759,7 @@ Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
     final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
     await db.updatePlannedInfusion(treatment.copyWith(
       isCompleted: true,
-      notes: Value('${treatment.notes ?? ''} [Übersprungen via Benachrichtigung]'.trim()),
+      notes: Value('${treatment.notes ?? ''} ${l10n.notificationSkippedNote}'.trim()),
     ));
     await SchedulerService(db).checkMissedTreatments();
 
@@ -752,6 +772,7 @@ Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
 @pragma('vm:entry-point')
 Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
   try {
+    final l10n = await LocaleProvider.l10nForBackground();
     final notifPlugin = FlutterLocalNotificationsPlugin();
     await _initBackgroundPlugin(notifPlugin);
     await _cancelTreatmentBlock(notifPlugin, treatmentId);
@@ -781,7 +802,7 @@ Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
           date: treatment.date,
           medicationId: med.id,
           dosage: treatment.dosage,
-          notes: const Value('Via Benachrichtigung erledigt'),
+          notes: Value(l10n.notificationCompletedNote),
         ));
       });
     }

@@ -2,12 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../providers/diary_provider.dart';
 import '../../../core/database/database.dart';
 import 'add_infusion_page.dart';
 import 'add_diary_entry_page.dart';
 import 'statistics_page.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class DiaryPage extends StatelessWidget {
   const DiaryPage({super.key});
@@ -26,7 +26,7 @@ class DiaryPage extends StatelessWidget {
           return CustomScrollView(
             slivers: [
               SliverAppBar.large(
-                title: const Text('Mein Tagebuch'),
+                title: Text(context.l10n.diaryTitle),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.bar_chart_rounded),
@@ -81,7 +81,7 @@ class DiaryPage extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const AddDiaryEntryPage()),
               ),
               icon: const Icon(Icons.analytics_outlined),
-              label: const Text('Vitalwerte & Symptome'),
+              label: Text(context.l10n.diaryEntryTitleNew),
               backgroundColor: Theme.of(context).cardColor.withValues(alpha: 0.9),
               foregroundColor: Theme.of(context).colorScheme.primary,
             ),
@@ -93,7 +93,7 @@ class DiaryPage extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const AddInfusionPage()),
               ),
               icon: const Icon(Icons.medication_rounded),
-              label: const Text('Infusion erfassen'),
+              label: Text(context.l10n.addInfusionTitle),
             ),
           ],
         ),
@@ -102,8 +102,8 @@ class DiaryPage extends StatelessWidget {
   }
 
   Widget _buildDiaryEntryCard(BuildContext context, DiaryEntry entry) {
-    final dateStr = DateFormat('dd. MMMM yyyy').format(entry.date);
-    final timeStr = DateFormat('HH:mm').format(entry.date);
+    final dateStr = AppDateFormat.longDate(context, entry.date);
+    final timeStr = AppDateFormat.time(context, entry.date);
 
     return Column(
       children: [
@@ -136,8 +136,8 @@ class DiaryPage extends StatelessWidget {
                         runSpacing: 8,
                         children: [
                           if (entry.systolicBP != null) _buildSmallChip(context, '${entry.systolicBP?.toInt()}/${entry.diastolicBP?.toInt()}', Icons.favorite),
-                          if (entry.heartRate != null) _buildSmallChip(context, '${entry.heartRate} bpm', Icons.monitor_heart),
-                          if (entry.weight != null) _buildSmallChip(context, '${entry.weight} kg', Icons.monitor_weight),
+                          if (entry.heartRate != null) _buildSmallChip(context, context.l10n.bpmValue('${entry.heartRate}'), Icons.monitor_heart),
+                          if (entry.weight != null) _buildSmallChip(context, context.l10n.kilogramsValue('${entry.weight}'), Icons.monitor_weight),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -188,7 +188,7 @@ class DiaryPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('VITALWERTE & SYMPTOME:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: Theme.of(context).colorScheme.primary)),
+        Text(context.l10n.diaryVitalsAndSymptomsLabel, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: Theme.of(context).colorScheme.primary)),
         const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -240,14 +240,14 @@ class DiaryPage extends StatelessWidget {
               fit: BoxFit.contain,
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Dein Tagebuch ist noch leer',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              context.l10n.diaryEmptyTitle,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Erfasse deine erste Infusion, um den Überblick über deine Behandlung zu behalten.',
+              context.l10n.diaryEmptyBody,
               textAlign: TextAlign.center,
               style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
@@ -258,8 +258,8 @@ class DiaryPage extends StatelessWidget {
   }
 
   Widget _buildLogCard(BuildContext context, InfusionLogData log) {
-    final dateStr = DateFormat('dd. MMMM yyyy').format(log.date);
-    final timeStr = DateFormat('HH:mm').format(log.date);
+    final dateStr = AppDateFormat.longDate(context, log.date);
+    final timeStr = AppDateFormat.time(context, log.date);
 
     return Column(
       children: [
@@ -293,7 +293,7 @@ class DiaryPage extends StatelessWidget {
                     if (log.batchNumber != null && log.batchNumber!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
-                        child: Text('Charge: ${log.batchNumber}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                        child: Text(context.l10n.batchValue(log.batchNumber!), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
                       ),
                     if (log.notes != null && log.notes!.isNotEmpty)
                       Padding(
@@ -307,7 +307,7 @@ class DiaryPage extends StatelessWidget {
                           children: [
                             Icon(Icons.monitor_weight_rounded, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                             const SizedBox(width: 4),
-                            Text('${log.bodyWeight} kg', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                            Text(context.l10n.kilogramsValue('${log.bodyWeight}'), style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ],
                         ),
                       ),
@@ -384,14 +384,14 @@ class DiaryPage extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Eintrag bearbeiten'),
+          title: Text(context.l10n.diaryEntryTitleEdit),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                title: const Text('Datum & Uhrzeit'),
-                subtitle: Text(DateFormat('dd.MM.yyyy HH:mm').format(selectedDate)),
+                title: Text(context.l10n.sectionDateTime),
+                subtitle: Text(AppDateFormat.dateTime(context, selectedDate)),
                 trailing: const Icon(Icons.edit_calendar_rounded),
                 onTap: () async {
                   final date = await showDatePicker(
@@ -416,24 +416,24 @@ class DiaryPage extends StatelessWidget {
               const SizedBox(height: 12),
               TextField(
                 controller: batchController,
-                decoration: const InputDecoration(labelText: 'Chargennummer', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: context.l10n.fieldBatchNumberShort, border: const OutlineInputBorder()),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: weightController,
-                decoration: const InputDecoration(labelText: 'Körpergewicht (kg)', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: context.l10n.fieldBodyWeight, border: const OutlineInputBorder()),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: notesController,
-                decoration: const InputDecoration(labelText: 'Notizen', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: context.l10n.fieldNotes, border: const OutlineInputBorder()),
                 maxLines: 3,
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
             ElevatedButton(
               onPressed: () async {
                 await db.updateInfusionLog(log.copyWith(
@@ -444,7 +444,7 @@ class DiaryPage extends StatelessWidget {
                 ));
                 if (context.mounted) Navigator.pop(context);
               },
-              child: const Text('Speichern'),
+              child: Text(context.l10n.actionSave),
             ),
           ],
         ),
@@ -456,10 +456,10 @@ class DiaryPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eintrag löschen?'),
-        content: const Text('Möchtest du diesen Eintrag wirklich löschen? Der Bestand wird automatisch zurückgebucht.'),
+        title: Text(context.l10n.diaryDeleteEntryTitle),
+        content: Text(context.l10n.diaryDeleteEntryBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           TextButton(
             onPressed: () async {
               await db.transaction(() async {
@@ -480,7 +480,7 @@ class DiaryPage extends StatelessWidget {
 
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+            child: Text(context.l10n.actionDelete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -489,7 +489,7 @@ class DiaryPage extends StatelessWidget {
 
   Widget _buildOrderHistoryCard(BuildContext context, PendingOrder order) {
     final db = Provider.of<AppDatabase>(context, listen: false);
-    final dateStr = DateFormat('dd. MMMM yyyy').format(order.deliveryDate ?? DateTime.now());
+    final dateStr = AppDateFormat.longDate(context, order.deliveryDate ?? DateTime.now());
 
     return FutureBuilder<List<PendingOrderItem>>(
       future: db.getPendingOrderItems(order.id),
@@ -508,7 +508,7 @@ class DiaryPage extends StatelessWidget {
             ),
             child: Icon(Icons.local_shipping_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
           ),
-          title: const Text('Bestellung erhalten', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(context.l10n.diaryOrderReceived, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(dateStr, style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
         ),
         if (items.isNotEmpty)
@@ -547,7 +547,7 @@ class DiaryPage extends StatelessWidget {
   }
 
   Widget _buildMedicationEventCard(BuildContext context, MedicationEvent event) {
-    final dateStr = DateFormat('dd. MMMM yyyy').format(event.date);
+    final dateStr = AppDateFormat.longDate(context, event.date);
     final isDiscontinued = event.type == MedicationEventType.discontinued;
 
     return Column(
@@ -562,7 +562,9 @@ class DiaryPage extends StatelessWidget {
             ),
           ),
           title: Text(
-            isDiscontinued ? 'Abgesetzt: ${event.medication.name}' : 'Neu verordnet: ${event.medication.name}',
+            isDiscontinued
+                ? context.l10n.diaryEventDiscontinued(event.medication.name)
+                : context.l10n.diaryEventPrescribed(event.medication.name),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           subtitle: Text(dateStr),

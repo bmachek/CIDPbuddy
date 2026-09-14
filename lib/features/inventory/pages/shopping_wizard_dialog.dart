@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' hide Column, Table;
 import 'package:cidpbuddy/core/services/medication_service.dart';
 import 'package:cidpbuddy/core/database/database.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class ShoppingWizardDialog extends StatefulWidget {
   final Medication? initialMedication;
@@ -55,7 +55,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             color: Theme.of(context).colorScheme.primary
           ),
           const SizedBox(width: 12),
-          Text(widget.orderToEdit == null ? 'Einkaufs-Assistent' : 'Bestellung bearbeiten'),
+          Text(widget.orderToEdit == null
+              ? context.l10n.shoppingWizardTitle
+              : context.l10n.shoppingWizardEditTitle),
         ],
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
@@ -67,9 +69,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.orderToEdit == null 
-                  ? 'Berechne den Bedarf an Verbrauchsmaterial basierend auf deiner geplanten Medikamenten-Bestellung.'
-                  : 'Passe deine Bestellung und den Bedarf an Verbrauchsmaterial an.',
+                widget.orderToEdit == null
+                    ? context.l10n.shoppingWizardIntro
+                    : context.l10n.shoppingWizardEditIntro,
                 style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
@@ -78,9 +80,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 builder: (context, snapshot) {
                   final meds = snapshot.data ?? [];
                   final items = [
-                    const DropdownMenuItem<int?>(
-                      value: null, 
-                      child: Text('Nur Verbrauchsmaterial bestellen (Kein Medikament)')
+                    DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text(context.l10n.shoppingWizardSuppliesOnly),
                     ),
                     ...meds.map((m) => DropdownMenuItem<int?>(value: m.id, child: Text(m.name))),
                   ];
@@ -112,7 +114,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       _calculateBOM(db);
                     },
                     decoration: InputDecoration(
-                      labelText: 'Medikament',
+                      labelText: context.l10n.medicationFallbackName,
                       prefixIcon: const Icon(Icons.medication_rounded),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                       filled: true,
@@ -126,7 +128,8 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 TextField(
                   controller: _qtyController,
                   decoration: InputDecoration(
-                    labelText: 'Bestellmenge (${_selectedMed?.unit ?? 'Flaschen'})',
+                    labelText: context.l10n.shoppingWizardOrderQuantity(
+                        _selectedMed?.unit ?? context.l10n.unitBottle),
                     prefixIcon: const Icon(Icons.shopping_basket_rounded),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                     filled: true,
@@ -143,8 +146,10 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 tileColor: Theme.of(context).colorScheme.surface,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.withValues(alpha: 0.1))),
                 leading: const Icon(Icons.event_rounded),
-                title: const Text('Lieferdatum (Optional)', style: TextStyle(fontSize: 14)),
-                subtitle: Text(_deliveryDate == null ? 'Gleich nach Bestätigung' : DateFormat('dd.MM.yyyy').format(_deliveryDate!)),
+                title: Text(context.l10n.shoppingWizardDeliveryDate, style: const TextStyle(fontSize: 14)),
+                subtitle: Text(_deliveryDate == null
+                    ? context.l10n.shoppingWizardImmediately
+                    : AppDateFormat.date(context, _deliveryDate!)),
                 onTap: () async {
                   final date = await showDatePicker(
                     context: context,
@@ -160,13 +165,13 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               if (_results != null) ...[
                 const Divider(),
                 const SizedBox(height: 12),
-                const Text('Verbrauchsmaterial-Vorschlag:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(context.l10n.shoppingWizardSuggestion, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 12),
                 
                 if (_results!.any((it) => it.isSystemRecommended)) ...[
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Text('Notwendig für diese Bestellung:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    child: Text(context.l10n.shoppingWizardRequired, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ),
                   ..._results!.where((it) => it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
                   const SizedBox(height: 16),
@@ -175,7 +180,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 if (_results!.any((it) => !it.isSystemRecommended)) ...[
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Text('Weiteres Verbrauchsmaterial (Optional):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    child: Text(context.l10n.shoppingWizardOptional, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ),
                   ..._results!.where((it) => !it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
                 ],
@@ -189,7 +194,8 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      'Kein Verbrauchsmaterial automatisch vorgeschlagen.', 
+                      context.l10n.shoppingWizardNoSuggestions,
+                      
                       style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                       textAlign: TextAlign.center,
                     ),
@@ -200,7 +206,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   child: OutlinedButton.icon(
                     onPressed: () => _addManualAccessory(db),
                     icon: const Icon(Icons.add_shopping_cart_rounded),
-                    label: const Text('Anderes Verbrauchsmaterial hinzufügen'),
+                    label: Text(context.l10n.shoppingWizardAddOther),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
@@ -215,7 +221,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Abbrechen'),
+          child: Text(context.l10n.actionCancel),
         ),
         ElevatedButton(
           onPressed: (_selectedMed == null && (_results == null || !_results!.any((it) => it.isActuallySelected))) ? null : () => _saveOrder(db),
@@ -225,7 +231,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-          child: Text(widget.orderToEdit == null ? 'Bestellung speichern' : 'Änderungen speichern'),
+          child: Text(widget.orderToEdit == null
+              ? context.l10n.shoppingWizardSaveOrder
+              : context.l10n.actionSaveChanges),
         ),
       ],
     );
@@ -238,7 +246,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
     final Accessory? selected = await showDialog<Accessory>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Verbrauchsmaterial auswählen'),
+        title: Text(context.l10n.shoppingWizardPickSupply),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -248,7 +256,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               final acc = allAcc[index];
               return ListTile(
                 title: Text(acc.name),
-                subtitle: Text('Bestand: ${acc.stock} ${acc.unit}'),
+                subtitle: Text(context.l10n.stockValue('${acc.stock}', acc.unit)),
                 onTap: () => Navigator.pop(context, acc),
               );
             },
@@ -262,7 +270,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
         _results ??= [];
         // Check if already in list
         if (_results!.any((it) => it.id == selected.id)) {
-           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bereits in der Liste!')));
+           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.shoppingWizardAlreadyInList)));
            return;
         }
 
@@ -338,9 +346,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       )
                     ),
                     if (item.isSystemRecommended)
-                      Text('Empfohlene Menge', style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                      Text(context.l10n.shoppingWizardRecommendedAmount, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
                     if (item.isUserAddition)
-                      Text('Zusätzlich ausgewählt', style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.bold)),
+                      Text(context.l10n.shoppingWizardAdditionallySelected, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -391,7 +399,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 const Icon(Icons.date_range_rounded, size: 14, color: Color(0xFF00BFA6)), // Emerald accent
                 const SizedBox(width: 6),
                 Text(
-                  'Reicht bis: ${DateFormat('dd.MM.yyyy').format(item.reachDate!)}',
+                  context.l10n.inventoryLastsUntil(AppDateFormat.date(context, item.reachDate!)),
                   style: const TextStyle(fontSize: 11, color: Color(0xFF00BFA6), fontWeight: FontWeight.bold),
                 ),
               ],
@@ -404,7 +412,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
 
   String _getMedReachText() {
     if (_selectedMed == null || _medReachDate == null) return '';
-    return 'Reicht bis: ${DateFormat('dd.MM.yyyy').format(_medReachDate!)}';
+    return context.l10n.inventoryLastsUntil(AppDateFormat.date(context, _medReachDate!));
   }
 
   void _calculateBOM(AppDatabase db) async {

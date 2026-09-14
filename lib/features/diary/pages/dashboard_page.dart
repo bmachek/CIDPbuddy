@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:cidpbuddy/core/database/database.dart';
 import '../providers/diary_provider.dart';
 import 'add_infusion_page.dart';
@@ -11,6 +10,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:cidpbuddy/core/services/medication_service.dart';
 import 'package:cidpbuddy/core/services/scheduler_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -48,7 +48,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text('Deine Übersicht', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(context.l10n.dashboardTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             actions: [
@@ -139,7 +139,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           if (futureTreatments.isNotEmpty)
                             _buildExpansionSection(
                               context: context,
-                              title: 'SPÄTER GEPLANT (${futureTreatments.length})',
+                              title: context.l10n.dashboardSectionLater(futureTreatments.length),
                               icon: Icons.event_repeat_rounded,
                               isExpanded: _showFuture,
                               onToggle: (val) => setState(() => _showFuture = val),
@@ -149,7 +149,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           if (pastTreatments.isNotEmpty)
                             _buildExpansionSection(
                               context: context,
-                              title: 'VERGANGENE TERMINE (${pastTreatments.length})',
+                              title: context.l10n.dashboardSectionPast(pastTreatments.length),
                               icon: Icons.history_rounded,
                               isExpanded: _showPast,
                               onToggle: (val) => setState(() => _showPast = val),
@@ -175,7 +175,7 @@ class _DashboardPageState extends State<DashboardPage> {
         child: FloatingActionButton.extended(
           onPressed: () => _showAddAppointmentDialog(context, db),
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Termin planen'),
+          label: Text(context.l10n.planningScheduleAppointmentTitle),
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
         ),
@@ -265,12 +265,12 @@ class _DashboardPageState extends State<DashboardPage> {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            const Text(
-                                              'Kein Backup aktiviert',
-                                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 13),
+                                            Text(
+                                              context.l10n.dashboardNoBackupTitle,
+                                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 13),
                                             ),
                                             Text(
-                                              'Richte die automatische Sicherung ein, um Datenverlust zu vermeiden.',
+                                              context.l10n.dashboardNoBackupBody,
                                               style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                             ),
                                           ],
@@ -304,11 +304,12 @@ class _DashboardPageState extends State<DashboardPage> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                'Bestellung empfohlen',
+                                                context.l10n.dashboardOrderRecommended,
                                                 style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, fontSize: 13),
                                               ),
                                               Text(
-                                                'Niedriger Bestand: ${[...filteredLowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(", ")}',
+                                                context.l10n.dashboardLowStockNames(
+                                                    [...filteredLowMeds.map((m) => m.name), ...lowAccs.map((a) => a.name)].join(', ')),
                                                 style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -331,7 +332,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        'Bestellungen sind unterwegs.',
+                                        context.l10n.dashboardOrdersOnTheWay,
                                         style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.w500),
                                       ),
                                     ),
@@ -366,7 +367,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                'AUSSTEHENDE LIEFERUNGEN',
+                context.l10n.dashboardPendingDeliveries,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -402,10 +403,10 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Menge: ${order.medicationQty.toStringAsFixed(0)} ${med.unit}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  Text(context.l10n.quantityValue(order.medicationQty.toStringAsFixed(0), med.unit), style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   if (order.deliveryDate != null)
                     Text(
-                      'Lieferdatum: ${DateFormat('dd.MM.yyyy').format(order.deliveryDate!)}',
+                      context.l10n.dashboardDeliveryDate(AppDateFormat.date(context, order.deliveryDate!)),
                       style: TextStyle(
                         fontSize: 13,
                         color: isOverdue ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onSurfaceVariant,
@@ -413,7 +414,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                       ),
                     )
                   else
-                    Text('Noch kein Datum festgelegt', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
+                    Text(context.l10n.dashboardNoDeliveryDate, style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7))),
                 ],
               ),
               trailing: Row(
@@ -434,14 +435,14 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                       final confirmed = await showDialog<bool>(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('Bestellung löschen?'),
-                          content: const Text('Möchtest du diese ausstehende Bestellung wirklich entfernen?'),
+                          title: Text(context.l10n.dashboardDeleteOrderTitle),
+                          content: Text(context.l10n.dashboardDeleteOrderBody),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+                            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.actionCancel)),
                             TextButton(
                               onPressed: () => Navigator.pop(context, true), 
                               style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-                              child: const Text('Löschen')
+                              child: Text(context.l10n.actionDelete)
                             ),
                           ],
                         ),
@@ -463,23 +464,23 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                       final confirmed = await showDialog<bool>(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('Lieferung bestätigt?'),
-                          content: const Text('Möchtest du den Empfang dieser Lieferung bestätigen? Der Bestand wird automatisch aktualisiert.'),
+                          title: Text(context.l10n.dashboardConfirmDeliveryTitle),
+                          content: Text(context.l10n.dashboardConfirmDeliveryBody),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Nein')),
-                            ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Ja, erhalten')),
+                            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.actionNo)),
+                            ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text(context.l10n.dashboardConfirmDeliveryYes)),
                           ],
                         ),
                       );
                       if (confirmed == true) {
                         await db.confirmOrder(order.id);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bestand wurde aktualisiert!')));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.dashboardStockUpdated)));
                         }
                       }
                     },
                     icon: const Icon(Icons.check_circle_outline_rounded, size: 14),
-                    label: const Text('Erhalten', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    label: Text(context.l10n.dashboardReceived, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   ),
                 ],
               ),
@@ -505,14 +506,15 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     // Status text
     String statusText;
     if (isPill) {
-      if (isMissed) {
-        statusText = 'Verpasst (geplant ${DateFormat('HH:mm').format(medDate)} Uhr)';
-      } else {
-        statusText = 'Heute um ${DateFormat('HH:mm').format(medDate)} Uhr';
-      }
+      final time = AppDateFormat.time(context, medDate);
+      statusText = isMissed
+          ? context.l10n.dashboardMissedAt(time)
+          : context.l10n.dashboardTodayAt(time);
     } else {
       // Infusion Forecast
-      statusText = isMissed ? 'Verpasste Infusion (geplant für heute)' : 'Heute geplant (${treatment.dosage} ${med.unit})';
+      statusText = isMissed
+          ? context.l10n.dashboardMissedInfusion
+          : context.l10n.dashboardPlannedToday('${treatment.dosage}', med.unit);
     }
 
     Future<void> onAction() async {
@@ -528,7 +530,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${med.name} erledigt!'),
+              content: Text(context.l10n.dashboardMarkedDone(med.name)),
               backgroundColor: Theme.of(context).colorScheme.tertiary,
               behavior: SnackBarBehavior.floating,
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
@@ -587,7 +589,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             side: BorderSide(color: accentColor.withValues(alpha: 0.1)),
           ),
-          child: Text(isPill ? 'Erledigt' : 'Jetzt Infusion erfassen', style: const TextStyle(fontWeight: FontWeight.bold)),
+          child: Text(isPill ? context.l10n.actionDone : context.l10n.dashboardLogInfusionNow, style: const TextStyle(fontWeight: FontWeight.bold)),
         ),
         ),
         const Divider(),
@@ -610,7 +612,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               child: Icon(Icons.auto_awesome_rounded, size: 48, color: Theme.of(context).colorScheme.tertiary),
             ),
             const SizedBox(height: 20),
-            Text('Alles erledigt!', 
+            Text(context.l10n.dashboardAllDoneTitle, 
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -618,7 +620,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               )
             ),
             const SizedBox(height: 4),
-            Text('Keine anstehenden Aufgaben.', 
+            Text(context.l10n.dashboardAllDoneBody, 
               style: TextStyle(
                 fontSize: 14,
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)
@@ -647,8 +649,8 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         final medDate = treatment.date;
         final now = DateTime.now();
         final isToday = medDate.year == now.year && medDate.month == now.month && medDate.day == now.day;
-        final dateStr = isToday ? 'Heute' : DateFormat('dd.MM.').format(medDate);
-        final timeStr = DateFormat('HH:mm').format(medDate);
+        final dateStr = isToday ? context.l10n.today : AppDateFormat.dayMonth(context, medDate);
+        final timeStr = AppDateFormat.time(context, medDate);
         final isPill = med.type == MedicationType.pill;
 
         Future<void> onAction() async {
@@ -668,7 +670,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                     children: [
                       const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
                       const SizedBox(width: 12),
-                      Expanded(child: Text('${med.name} erledigt!')),
+                      Expanded(child: Text(context.l10n.dashboardMarkedDone(med.name))),
                     ],
                   ),
                   backgroundColor: Theme.of(context).colorScheme.tertiary,
@@ -716,7 +718,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                 ),
               ),
               title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              subtitle: Text('$dateStr um $timeStr Uhr • ${treatment.dosage} ${med.unit}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              subtitle: Text(context.l10n.dashboardTreatmentSubtitle(dateStr, timeStr, '${treatment.dosage}', med.unit), style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
               trailing: ElevatedButton(
                 onPressed: onAction,
                 style: ElevatedButton.styleFrom(
@@ -727,7 +729,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
                 ),
-                child: Text(isPill ? 'Erledigt' : 'Jetzt Infusion erfassen', style: const TextStyle(fontWeight: FontWeight.bold)),
+                child: Text(isPill ? context.l10n.actionDone : context.l10n.dashboardLogInfusionNow, style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
             const Divider(),
@@ -741,7 +743,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
   /// Since there is nothing to log, the only sensible action is to remove the
   /// stray entry.
   Widget _buildOrphanedTreatmentCard(BuildContext context, AppDatabase db, PlannedInfusion treatment) {
-    final dateStr = DateFormat('dd.MM. HH:mm').format(treatment.date);
+    final dateStr = AppDateFormat.dayMonthTime(context, treatment.date);
 
     Future<void> onDelete() async {
       await db.deletePlannedInfusion(treatment.id);
@@ -749,7 +751,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Verwaisten Termin entfernt'),
+            content: Text(context.l10n.dashboardOrphanRemoved),
             backgroundColor: Theme.of(context).colorScheme.tertiary,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -776,9 +778,9 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               size: 24,
             ),
           ),
-          title: const Text('Unbekanntes Medikament', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          title: Text(context.l10n.dashboardUnknownMedication, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           subtitle: Text(
-            'Geplant $dateStr Uhr • Medikament nicht gefunden',
+            context.l10n.dashboardOrphanSubtitle(dateStr),
             style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           trailing: ElevatedButton(
@@ -791,7 +793,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               side: BorderSide(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1)),
             ),
-            child: const Text('Entfernen', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(context.l10n.actionRemove, style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
         const Divider(),
@@ -803,7 +805,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
     final meds = await db.getAllMedications();
     if (meds.isEmpty) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Zuerst Medikamente anlegen!')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.planningNeedMedicationsFirst)));
       }
       return;
     }
@@ -819,7 +821,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
 
         return StatefulBuilder(
           builder: (context, setState) => AlertDialog(
-            title: const Text('Termin planen'),
+            title: Text(context.l10n.planningScheduleAppointmentTitle),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -827,12 +829,12 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                 DropdownButtonFormField<Medication>(
                   items: meds.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
                   onChanged: (val) => setState(() => selectedMed = val),
-                  decoration: const InputDecoration(labelText: 'Medikament', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.medicationFallbackName, border: const OutlineInputBorder()),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
-                  title: const Text('Datum'),
-                  subtitle: Text(DateFormat('dd.MM.yyyy').format(selectedDate)),
+                  title: Text(context.l10n.fieldDate),
+                  subtitle: Text(AppDateFormat.date(context, selectedDate)),
                   trailing: const Icon(Icons.calendar_today_rounded),
                   onTap: () async {
                     final date = await showDatePicker(
@@ -847,13 +849,13 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                 const SizedBox(height: 16),
                 TextField(
                   controller: dosageController,
-                  decoration: const InputDecoration(labelText: 'Geplante Dosis', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.fieldPlannedDose, border: const OutlineInputBorder()),
                   keyboardType: TextInputType.number,
                 ),
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
               ElevatedButton(
                 onPressed: () async {
                   if (selectedMed != null) {
@@ -866,7 +868,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
                     if (context.mounted) Navigator.pop(context);
                   }
                 },
-                child: const Text('Speichern'),
+                child: Text(context.l10n.actionSave),
               ),
             ],
           ),
@@ -923,7 +925,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         list.add(Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
-            DateFormat('EEEE, d. MMMM').format(date).toUpperCase(),
+            AppDateFormat.weekdayLongDate(context, date).toUpperCase(),
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ));
@@ -942,7 +944,7 @@ Widget _buildPendingOrdersSection(AppDatabase db) {
         Padding(
           padding: const EdgeInsets.only(left: 16, top: 4),
           child: Text(
-            DateFormat('dd.MM. HH:mm').format(treatment.date),
+            AppDateFormat.dayMonthTime(context, treatment.date),
             style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ),

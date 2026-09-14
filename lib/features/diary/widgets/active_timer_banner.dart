@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 
 import 'premedication_timer_modal.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 /// Re-entry point for a running or paused Vormedikation timer.
 ///
@@ -101,13 +102,13 @@ class _ActiveTimerBannerState extends State<ActiveTimerBanner>
                     children: [
                       Text(
                         _isRunning
-                            ? 'Vormedikation Timer läuft'
-                            : 'Vormedikation Timer pausiert',
+                            ? context.l10n.timerBannerRunning
+                            : context.l10n.timerBannerPaused,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '$timeText verbleibend • Tippen zum Öffnen',
+                        context.l10n.timerBannerRemaining(timeText),
                         style: TextStyle(
                           fontSize: 13,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,

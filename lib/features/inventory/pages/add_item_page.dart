@@ -3,6 +3,12 @@ import 'package:provider/provider.dart';
 import '../providers/inventory_provider.dart';
 import '../../../core/database/database.dart';
 import '../../diary/pages/add_schedule_page.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
+
+/// What the user is creating. Previously a German string literal that was both
+/// the dropdown label and the branch key — splitting the two lets the label be
+/// translated without the `if` conditions changing meaning.
+enum _ItemKind { medication, supply }
 
 class AddItemPage extends StatefulWidget {
   const AddItemPage({super.key});
@@ -13,65 +19,78 @@ class AddItemPage extends StatefulWidget {
 
 class _AddItemPageState extends State<AddItemPage> {
   final _formKey = GlobalKey<FormState>();
-  String _type = 'Medikament';
+  _ItemKind _type = _ItemKind.medication;
   final _nameController = TextEditingController();
   final _dosageController = TextEditingController();
   final _pznController = TextEditingController();
   final _stockController = TextEditingController(text: '0');
-  final _unitController = TextEditingController(text: 'Flasche');
+  final _unitController = TextEditingController();
   final _packageSizeController = TextEditingController(text: '1');
   final _minStockController = TextEditingController(text: '5');
   MedicationType _medType = MedicationType.infusion;
+  bool _didSeedUnit = false;
 
   @override
   Widget build(BuildContext context) {
+    // The default unit is a translated word, so it cannot be seeded in the
+    // field initializer above — no localizations exist before the first build.
+    if (!_didSeedUnit) {
+      _didSeedUnit = true;
+      _unitController.text = context.l10n.unitBottle;
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Neues Element hinzufügen')),
+      appBar: AppBar(title: Text(context.l10n.addItemTitle)),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            DropdownButtonFormField<String>(
+            DropdownButtonFormField<_ItemKind>(
               initialValue: _type,
               decoration: InputDecoration(
-                labelText: 'Kategorie',
+                labelText: context.l10n.fieldCategory,
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2))),
               ),
-              items: ['Medikament', 'Verbrauchsmaterial']
-                  .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                  .toList(),
+              items: [
+                DropdownMenuItem(
+                    value: _ItemKind.medication, child: Text(context.l10n.categoryMedication)),
+                DropdownMenuItem(
+                    value: _ItemKind.supply, child: Text(context.l10n.categorySupply)),
+              ],
               onChanged: (val) {
                 setState(() {
                   _type = val!;
-                  _unitController.text = _type == 'Medikament' ? 'Flasche' : 'Stk';
+                  _unitController.text = _type == _ItemKind.medication
+                      ? context.l10n.unitBottle
+                      : context.l10n.unitPieces;
                 });
               },
             ),
             const SizedBox(height: 16),
-            if (_type == 'Medikament') ...[
+            if (_type == _ItemKind.medication) ...[
               DropdownButtonFormField<MedicationType>(
                 initialValue: _medType,
                 decoration: InputDecoration(
-                  labelText: 'Darreichungsform',
+                  labelText: context.l10n.fieldDosageForm,
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1))),
                 ),
                 items: [
-                  const DropdownMenuItem(value: MedicationType.infusion, child: Text('Infusion')),
-                  const DropdownMenuItem(value: MedicationType.pill, child: Text('Tablette / Pille')),
+                  DropdownMenuItem(
+                      value: MedicationType.infusion, child: Text(context.l10n.dosageFormInfusion)),
+                  DropdownMenuItem(
+                      value: MedicationType.pill, child: Text(context.l10n.dosageFormPill)),
                 ],
                 onChanged: (val) {
                   setState(() {
                     _medType = val!;
-                    if (_medType == MedicationType.pill) {
-                      _unitController.text = 'Stk';
-                    } else {
-                      _unitController.text = 'Flasche';
-                    }
+                    _unitController.text = _medType == MedicationType.pill
+                        ? context.l10n.unitPieces
+                        : context.l10n.unitBottle;
                   });
                 },
               ),
@@ -80,34 +99,34 @@ class _AddItemPageState extends State<AddItemPage> {
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: 'Medikamentenname', 
-                hintText: 'z.B. Hizentra',
+                labelText: context.l10n.fieldMedicationName,
+                hintText: context.l10n.fieldMedicationNameHint,
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2))),
               ),
-              validator: (val) => val == null || val.isEmpty ? 'Pflichtfeld' : null,
+              validator: (val) => val == null || val.isEmpty ? context.l10n.validationRequired : null,
             ),
-            if (_type == 'Medikament') ...[
+            if (_type == _ItemKind.medication) ...[
               const SizedBox(height: 16),
               TextFormField(
                 controller: _dosageController,
                 decoration: InputDecoration(
-                  labelText: 'Dosis / Stärke', 
-                  hintText: 'z.B. 20% oder 10ml',
+                  labelText: context.l10n.fieldStrength,
+                  hintText: context.l10n.fieldStrengthHint,
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1))),
                 ),
               ),
             ],
-            if (_type == 'Medikament') ...[
+            if (_type == _ItemKind.medication) ...[
               const SizedBox(height: 16),
               TextFormField(
                 controller: _pznController,
                 decoration: InputDecoration(
-                  labelText: 'PZN (Optional)', 
-                  hintText: 'Pharmazentralnummer',
+                  labelText: context.l10n.fieldPznOptional,
+                  hintText: context.l10n.fieldPznHint,
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1))),
@@ -121,7 +140,7 @@ class _AddItemPageState extends State<AddItemPage> {
                   child: TextFormField(
                     controller: _stockController,
                     decoration: InputDecoration(
-                      labelText: 'Anfangsbestand',
+                      labelText: context.l10n.fieldInitialStock,
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.surface,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2))),
@@ -134,8 +153,8 @@ class _AddItemPageState extends State<AddItemPage> {
             TextFormField(
               controller: _packageSizeController,
               decoration: InputDecoration(
-                labelText: 'Standard-Nachbestellmenge',
-                hintText: 'z.B. 10 Flaschen',
+                labelText: context.l10n.fieldDefaultReorderAmount,
+                hintText: context.l10n.fieldDefaultReorderAmountHint,
                 prefixIcon: const Icon(Icons.inventory_2_rounded),
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
@@ -147,10 +166,12 @@ class _AddItemPageState extends State<AddItemPage> {
             TextFormField(
               controller: _minStockController,
               decoration: InputDecoration(
-                labelText: _type == 'Medikament' ? 'Warnschwelle (in Tagen)' : 'Warnschwelle (Bestand)',
-                hintText: _type == 'Medikament' 
-                  ? 'Warnung wenn Vorrat weniger als x Tage reicht'
-                  : 'Warnung wenn Bestand unter diesen Wert fällt',
+                labelText: _type == _ItemKind.medication
+                    ? context.l10n.fieldMinStockDays
+                    : context.l10n.fieldMinStock,
+                hintText: _type == _ItemKind.medication
+                    ? context.l10n.fieldMinStockDaysHint
+                    : context.l10n.fieldMinStockHint,
                 prefixIcon: const Icon(Icons.notification_important_rounded),
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
@@ -167,7 +188,7 @@ class _AddItemPageState extends State<AddItemPage> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               onPressed: _save,
-              child: const Text('Speichern'),
+              child: Text(context.l10n.actionSave),
             ),
           ],
         ),
@@ -181,7 +202,7 @@ class _AddItemPageState extends State<AddItemPage> {
       final stock = double.tryParse(_stockController.text) ?? 0;
       final packageSize = double.tryParse(_packageSizeController.text) ?? 1.0;
       
-      if (_type == 'Medikament') {
+      if (_type == _ItemKind.medication) {
         final id = await provider.addMedication(
           name: _nameController.text,
           dosage: _dosageController.text,

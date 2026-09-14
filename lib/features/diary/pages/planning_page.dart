@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../../core/database/database.dart';
 import 'add_infusion_page.dart';
 import 'add_schedule_page.dart';
 import '../../reminders/services/notification_service.dart';
 import '../../../core/services/scheduler_service.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class PlanningPage extends StatelessWidget {
   const PlanningPage({super.key});
@@ -21,7 +21,7 @@ class PlanningPage extends StatelessWidget {
         body: NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
             SliverAppBar.large(
-              title: const Text('Termine & Pläne'),
+              title: Text(context.l10n.planningTitle),
               pinned: true,
               floating: true,
               bottom: TabBar(
@@ -35,7 +35,7 @@ class PlanningPage extends StatelessWidget {
                       children: [
                         const Icon(Icons.upcoming_rounded, size: 18),
                         const SizedBox(width: 8),
-                        const Text('Anstehend'),
+                        Text(context.l10n.planningTabUpcoming),
                       ],
                     ),
                   ),
@@ -45,7 +45,7 @@ class PlanningPage extends StatelessWidget {
                       children: [
                         const Icon(Icons.repeat_rounded, size: 18),
                         const SizedBox(width: 8),
-                        const Text('Zeitpläne'),
+                        Text(context.l10n.planningTabSchedules),
                       ],
                     ),
                   ),
@@ -64,7 +64,7 @@ class PlanningPage extends StatelessWidget {
           heroTag: 'planning_fab',
           onPressed: () => _showAddOptions(context, db),
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Hinzufügen'),
+          label: Text(context.l10n.actionAdd),
         ),
       ),
     );
@@ -77,7 +77,7 @@ class PlanningPage extends StatelessWidget {
         final appointments = snapshot.data ?? [];
         
         if (appointments.isEmpty) {
-          return _buildEmptyState('Keine zukünftigen Termine', Icons.calendar_today_rounded);
+          return _buildEmptyState(context.l10n.planningNoUpcoming, Icons.calendar_today_rounded);
         }
 
         final now = DateTime.now();
@@ -93,14 +93,14 @@ class PlanningPage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Überfällig',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red),
+                  Text(
+                    context.l10n.planningOverdue,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red),
                   ),
                   TextButton.icon(
                     onPressed: () => _confirmBulkDelete(context, db),
                     icon: const Icon(Icons.delete_sweep_rounded, size: 18, color: Colors.red),
-                    label: const Text('Alle löschen', style: TextStyle(color: Colors.red, fontSize: 13)),
+                    label: Text(context.l10n.actionDeleteAll, style: const TextStyle(color: Colors.red, fontSize: 13)),
                     style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
                   ),
                 ],
@@ -110,9 +110,9 @@ class PlanningPage extends StatelessWidget {
               const SizedBox(height: 24),
             ],
             if (upcoming.isNotEmpty) ...[
-              const Text(
-                'Anstehend',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
+              Text(
+                context.l10n.planningTabUpcoming,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
               ),
               const SizedBox(height: 12),
               ...upcoming.map((appt) => _buildAppointmentCard(context, db, appt, isOverdue: false)),
@@ -127,12 +127,10 @@ class PlanningPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Vergangene Termine löschen?'),
-        content: const Text(
-          'Möchtest du alle geplanten Termine aus der Vergangenheit unwiderruflich löschen? \n\nDies erstellt keine Einträge im Tagebuch.',
-        ),
+        title: Text(context.l10n.planningDeletePastTitle),
+        content: Text(context.l10n.planningDeletePastBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           TextButton(
             onPressed: () async {
               final now = DateTime.now();
@@ -144,7 +142,7 @@ class PlanningPage extends StatelessWidget {
               await db.deleteIncompletePlannedInfusionsBefore(today);
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+            child: Text(context.l10n.actionDelete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -158,7 +156,7 @@ class PlanningPage extends StatelessWidget {
         final schedules = snapshot.data ?? [];
 
         if (schedules.isEmpty) {
-          return _buildEmptyState('Keine aktiven Zeitpläne', Icons.repeat_on_rounded);
+          return _buildEmptyState(context.l10n.planningNoSchedules, Icons.repeat_on_rounded);
         }
 
         return ListView.builder(
@@ -200,7 +198,7 @@ class PlanningPage extends StatelessWidget {
   }
 
   Widget _buildAppointmentCard(BuildContext context, AppDatabase db, PlannedInfusion appt, {bool isOverdue = false}) {
-    final dateStr = DateFormat('dd. MMMM yyyy').format(appt.date);
+    final dateStr = AppDateFormat.longDate(context, appt.date);
     
     return FutureBuilder<Medication>(
       future: (db.select(db.medications)..where((t) => t.id.equals(appt.medicationId))).getSingle(),
@@ -234,7 +232,7 @@ class PlanningPage extends StatelessWidget {
                 ),
                 title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(
-                  'Geplant für den $dateStr',
+                  context.l10n.planningScheduledFor(dateStr),
                   style: isOverdue ? const TextStyle(color: Colors.red, fontWeight: FontWeight.bold) : null,
                 ),
                 trailing: Row(
@@ -257,7 +255,7 @@ class PlanningPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Dosis: ${appt.dosage} ${med.unit}',
+                      context.l10n.doseValue('${appt.dosage}', med.unit),
                       style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
                     ),
                     Row(
@@ -268,7 +266,7 @@ class PlanningPage extends StatelessWidget {
                             foregroundColor: Colors.grey,
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                           ),
-                          child: const Text('Überspringen'),
+                          child: Text(context.l10n.actionSkip),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton.icon(
@@ -289,7 +287,7 @@ class PlanningPage extends StatelessWidget {
                             });
                           },
                           icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                          label: const Text('Erledigt'),
+                          label: Text(context.l10n.actionDone),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             elevation: 0,
@@ -310,16 +308,20 @@ class PlanningPage extends StatelessWidget {
   }
 
   void _confirmSkipAppointment(BuildContext context, AppDatabase db, PlannedInfusion appt) async {
+    // Read the translations up front. The note below is written after an await,
+    // and gating the write on `context.mounted` would silently drop the skip if
+    // the page went away while the dialog was open.
+    final skippedNote = context.l10n.planningSkippedNote;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Termin überspringen?'),
-        content: const Text('Möchtest du diesen Termin überspringen? Er wird als erledigt markiert, aber nicht im Tagebuch protokolliert.'),
+        title: Text(context.l10n.planningSkipTitle),
+        content: Text(context.l10n.planningSkipBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.actionCancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Überspringen', style: TextStyle(color: Colors.orange)),
+            child: Text(context.l10n.actionSkip, style: const TextStyle(color: Colors.orange)),
           ),
         ],
       ),
@@ -328,7 +330,7 @@ class PlanningPage extends StatelessWidget {
     if (confirm == true) {
       await db.updatePlannedInfusion(appt.copyWith(
         isCompleted: true,
-        notes: drift.Value('${appt.notes ?? ''} [Übersprungen via App]'.trim()),
+        notes: drift.Value('${appt.notes ?? ''} $skippedNote'.trim()),
       ));
       await NotificationService().cancelTreatmentReminders(appt.id);
     }
@@ -338,17 +340,17 @@ class PlanningPage extends StatelessWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Termin löschen?'),
-        content: const Text('Möchtest du diesen spezifischen Termin aus deiner Planung entfernen?'),
+        title: Text(context.l10n.planningDeleteAppointmentTitle),
+        content: Text(context.l10n.planningDeleteAppointmentBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.actionCancel)),
           TextButton(
             onPressed: () async {
               await db.deletePlannedInfusion(appt.id);
               await NotificationService().cancelTreatmentReminders(appt.id);
               if (context.mounted) Navigator.pop(context, true);
             },
-            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+            child: Text(context.l10n.actionDelete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -367,7 +369,7 @@ class PlanningPage extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Termin bearbeiten'),
+          title: Text(context.l10n.planningEditAppointmentTitle),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -375,8 +377,8 @@ class PlanningPage extends StatelessWidget {
               Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               const SizedBox(height: 16),
               ListTile(
-                title: const Text('Datum'),
-                subtitle: Text(DateFormat('dd.MM.yyyy').format(selectedDate)),
+                title: Text(context.l10n.fieldDate),
+                subtitle: Text(AppDateFormat.date(context, selectedDate)),
                 trailing: const Icon(Icons.edit_calendar_rounded),
                 onTap: () async {
                   final date = await showDatePicker(
@@ -393,19 +395,19 @@ class PlanningPage extends StatelessWidget {
               const SizedBox(height: 12),
               TextField(
                 controller: dosageController,
-                decoration: InputDecoration(labelText: 'Dosis (${med.unit})', border: const OutlineInputBorder()),
+                decoration: InputDecoration(labelText: context.l10n.fieldDoseWithUnit(med.unit), border: const OutlineInputBorder()),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: notesController,
-                decoration: const InputDecoration(labelText: 'Notizen', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: context.l10n.fieldNotes, border: const OutlineInputBorder()),
                 maxLines: 2,
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
             ElevatedButton(
               onPressed: () async {
                 await db.updatePlannedInfusion(appt.copyWith(
@@ -415,7 +417,7 @@ class PlanningPage extends StatelessWidget {
                 ));
                 if (context.mounted) Navigator.pop(context);
               },
-              child: const Text('Speichern'),
+              child: Text(context.l10n.actionSave),
             ),
           ],
         ),
@@ -432,10 +434,10 @@ class PlanningPage extends StatelessWidget {
 
         String freqLabel = '';
         switch (schedule.frequencyType) {
-          case 'daily': freqLabel = 'Täglich'; break;
-          case 'weekly': freqLabel = schedule.intervalValue == 2 ? 'Alle 2 Wochen' : 'Wöchentlich'; break;
-          case 'interval': freqLabel = 'Alle ${schedule.intervalValue} Tage'; break;
-          case 'weekdays': freqLabel = 'Wochentage'; break;
+          case 'daily': freqLabel = context.l10n.frequencyDaily; break;
+          case 'weekly': freqLabel = schedule.intervalValue == 2 ? context.l10n.frequencyBiweekly : context.l10n.frequencyWeekly; break;
+          case 'interval': freqLabel = context.l10n.frequencyEveryNDays(schedule.intervalValue ?? 0); break;
+          case 'weekdays': freqLabel = context.l10n.frequencyWeekdaysShort; break;
         }
 
         return Container(
@@ -469,7 +471,7 @@ class PlanningPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text('Dosis: ${schedule.dosage} ${med.unit}'),
+                Text(context.l10n.doseValue('${schedule.dosage}', med.unit)),
               ],
             ),
             trailing: Row(
@@ -498,10 +500,10 @@ class PlanningPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Zeitplan löschen?'),
-        content: const Text('Alle zukünftigen (nicht erledigten) Termine dieses Plans werden ebenfalls gelöscht.'),
+        title: Text(context.l10n.planningDeleteScheduleTitle),
+        content: Text(context.l10n.planningDeleteScheduleBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           TextButton(
             onPressed: () async {
               final futureAppts = await (db.select(db.plannedInfusions)..where((t) => t.scheduleId.equals(schedule.id) & t.isCompleted.equals(false))).get();
@@ -512,7 +514,7 @@ class PlanningPage extends StatelessWidget {
               await db.deleteSchedule(schedule.id);
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+            child: Text(context.l10n.actionDelete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -535,8 +537,8 @@ class PlanningPage extends StatelessWidget {
                   decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: Icon(Icons.event_rounded, color: Theme.of(context).colorScheme.primary),
                 ),
-                title: const Text('Einmaliger Termin', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Einen einzelnen Termin hinzufügen'),
+                title: Text(context.l10n.planningOneOffTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(context.l10n.planningOneOffSubtitle),
                 onTap: () {
                   Navigator.pop(context);
                   _showAddAppointmentDialog(context, db);
@@ -549,8 +551,8 @@ class PlanningPage extends StatelessWidget {
                   decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: const Icon(Icons.repeat_rounded, color: Colors.blue),
                 ),
-                title: const Text('Wiederkehrender Plan', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Einen automatischen Infusions-Rhythmus erstellen'),
+                title: Text(context.l10n.planningRecurringTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(context.l10n.planningRecurringSubtitle),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const AddSchedulePage()));
@@ -567,7 +569,7 @@ class PlanningPage extends StatelessWidget {
     final meds = await db.getAllMedications();
     if (meds.isEmpty) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Zuerst Medikamente im Inventar anlegen!')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.planningNeedMedicationsFirst)));
       }
       return;
     }
@@ -582,7 +584,7 @@ class PlanningPage extends StatelessWidget {
         final dosageController = TextEditingController(text: '1.0');
 
         return AlertDialog(
-          title: const Text('Termin planen'),
+          title: Text(context.l10n.planningScheduleAppointmentTitle),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -590,7 +592,7 @@ class PlanningPage extends StatelessWidget {
               DropdownButtonFormField<Medication>(
                 items: meds.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
                 onChanged: (val) => selectedMed = val,
-                decoration: const InputDecoration(labelText: 'Medikament', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: context.l10n.medicationFallbackName, border: const OutlineInputBorder()),
               ),
               const SizedBox(height: 16),
               InputDatePickerFormField(
@@ -602,13 +604,13 @@ class PlanningPage extends StatelessWidget {
               const SizedBox(height: 8),
               TextField(
                 controller: dosageController,
-                decoration: const InputDecoration(labelText: 'Geplante Dosis', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: context.l10n.fieldPlannedDose, border: const OutlineInputBorder()),
                 keyboardType: TextInputType.number,
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
             ElevatedButton(
               onPressed: () async {
                 if (selectedMed != null) {
@@ -621,7 +623,7 @@ class PlanningPage extends StatelessWidget {
                   if (context.mounted) Navigator.pop(context);
                 }
               },
-              child: const Text('Speichern'),
+              child: Text(context.l10n.actionSave),
             ),
           ],
         );

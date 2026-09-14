@@ -11,6 +11,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../reminders/services/notification_service.dart';
 import 'backup_destination.dart';
+import '../../../core/l10n/locale_provider.dart';
+import '../../../core/l10n/l10n_ext.dart';
 
 export 'backup_destination.dart'
     show BackupFile, BackupDestination, DestinationKind, LocalDestination, SafDestination;
@@ -196,16 +198,19 @@ class BackupService {
   /// Always updates state; surfaces a failure notification once
   /// [_failureNotifyThreshold] consecutive failures are reached.
   Future<BackupResult> runBackup({bool manual = false}) async {
+    // Runs from the settings screen, the periodic sync and the WorkManager
+    // worker alike, so the locale comes from storage rather than a context.
+    final l10n = await LocaleProvider.l10nForBackground();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kLastAttempt, DateTime.now().toIso8601String());
 
     final dest = await BackupDestination.load();
     if (dest == null) {
-      return _recordFailure(prefs, 'Kein Backup-Ziel ausgewählt.');
+      return _recordFailure(prefs, l10n.backupNoDestination);
     }
 
     if (!manual && !(prefs.getBool(kAutoBackupEnabled) ?? false)) {
-      return BackupResult.fail('Automatisches Backup ist deaktiviert.');
+      return BackupResult.fail(l10n.backupAutoDisabled);
     }
 
     // Skip if a recent success exists, but only for automatic runs.
@@ -213,7 +218,7 @@ class BackupService {
       final lastSuccess = _readDate(prefs, kLastBackupTime);
       if (lastSuccess != null &&
           DateTime.now().difference(lastSuccess) < _autoMinInterval) {
-        return BackupResult.fail('Übersprungen: aktuelles Backup vorhanden.');
+        return BackupResult.fail(l10n.backupSkippedRecent);
       }
     }
 
@@ -236,7 +241,7 @@ class BackupService {
       await NotificationService().cancelBackupFailureNotification();
       return BackupResult.ok(fileName);
     } catch (e) {
-      return _recordFailure(prefs, 'Schreibfehler: $e');
+      return _recordFailure(prefs, l10n.backupWriteError('$e'));
     }
   }
 
@@ -269,7 +274,7 @@ class BackupService {
     final dbFolder = await getApplicationDocumentsDirectory();
     final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
     if (!await dbFile.exists()) {
-      throw StateError('Quelldatenbank nicht gefunden.');
+      throw StateError('Source database not found.');
     }
 
     final tempDir = await getTemporaryDirectory();
@@ -404,11 +409,13 @@ class BackupService {
     final backupPath = p.join(tempDir.path, 'igkeeper_backup.sqlite');
     final tempFile = await dbFile.copy(backupPath);
 
+    final l10n = await LocaleProvider.l10nForBackground();
+    final locale = await LocaleProvider.resolveForBackground();
     await Share.shareXFiles(
       [XFile(tempFile.path)],
-      subject: 'CIDP Buddy Backup',
-      text:
-          'Sicherung der CIDP-Buddy-Datenbank vom ${DateTime.now().toLocal()}',
+      subject: l10n.shareBackupSubject,
+      text: l10n.shareBackupText(
+          AppDateFormat.dateIn(locale.toLanguageTag(), DateTime.now())),
     );
   }
 

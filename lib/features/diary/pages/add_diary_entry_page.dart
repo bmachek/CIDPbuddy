@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../../core/database/database.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class AddDiaryEntryPage extends StatefulWidget {
   final DiaryEntry? initialEntry;
@@ -53,7 +53,9 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialEntry == null ? 'Vitalwerte & Symptome' : 'Eintrag bearbeiten'),
+        title: Text(widget.initialEntry == null
+            ? context.l10n.diaryEntryTitleNew
+            : context.l10n.diaryEntryTitleEdit),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -61,7 +63,7 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader('Datum & Uhrzeit'),
+            _buildSectionHeader(context.l10n.sectionDateTime),
             const SizedBox(height: 12),
             InkWell(
               onTap: () async {
@@ -90,47 +92,47 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(DateFormat('dd.MM.yyyy HH:mm').format(_selectedDate), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                    Text(AppDateFormat.dateTime(context, _selectedDate), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
                     const Icon(Icons.calendar_today_rounded, size: 20),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 32),
-            _buildSectionHeader('Vitalparameter (Optional)'),
+            _buildSectionHeader(context.l10n.sectionVitals),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildTextField(_systolicController, 'Syst. (mmHg)', Icons.favorite_border_rounded)),
+                Expanded(child: _buildTextField(_systolicController, context.l10n.fieldSystolic, Icons.favorite_border_rounded)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildTextField(_diastolicController, 'Diast. (mmHg)', Icons.favorite_border_rounded)),
+                Expanded(child: _buildTextField(_diastolicController, context.l10n.fieldDiastolic, Icons.favorite_border_rounded)),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _buildTextField(_heartRateController, 'Puls (bpm)', Icons.monitor_heart_rounded)),
+                Expanded(child: _buildTextField(_heartRateController, context.l10n.fieldHeartRate, Icons.monitor_heart_rounded)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildTextField(_tempController, 'Temp. (°C)', Icons.thermostat_rounded)),
+                Expanded(child: _buildTextField(_tempController, context.l10n.fieldTemperature, Icons.thermostat_rounded)),
               ],
             ),
             const SizedBox(height: 12),
-            _buildTextField(_weightController, 'Gewicht (kg)', Icons.monitor_weight_rounded),
+            _buildTextField(_weightController, context.l10n.fieldWeight, Icons.monitor_weight_rounded),
             const SizedBox(height: 32),
-            _buildSectionHeader('CIDP-Symptome (1-10)'),
+            _buildSectionHeader(context.l10n.sectionSymptoms),
             const SizedBox(height: 8),
-            _buildSymptomSlider('Kraft / Stärke', _strength, (val) => setState(() => _strength = val), Theme.of(context).colorScheme.primary),
-            _buildSymptomSlider('Gefühl / Sensorik', _sensory, (val) => setState(() => _sensory = val), Theme.of(context).colorScheme.tertiary),
-            _buildSymptomSlider('Erschöpfung / Fatigue', _fatigue, (val) => setState(() => _fatigue = val), const Color(0xFFFFB300)),
-            _buildSymptomSlider('Schmerzen', _pain, (val) => setState(() => _pain = val), Theme.of(context).colorScheme.error),
-            _buildSymptomSlider('Gleichgewicht', _balance, (val) => setState(() => _balance = val), Theme.of(context).colorScheme.secondary),
+            _buildSymptomSlider(context.l10n.symptomStrength, _strength, (val) => setState(() => _strength = val), Theme.of(context).colorScheme.primary),
+            _buildSymptomSlider(context.l10n.symptomSensory, _sensory, (val) => setState(() => _sensory = val), Theme.of(context).colorScheme.tertiary),
+            _buildSymptomSlider(context.l10n.symptomFatigue, _fatigue, (val) => setState(() => _fatigue = val), const Color(0xFFFFB300)),
+            _buildSymptomSlider(context.l10n.symptomPain, _pain, (val) => setState(() => _pain = val), Theme.of(context).colorScheme.error),
+            _buildSymptomSlider(context.l10n.symptomBalance, _balance, (val) => setState(() => _balance = val), Theme.of(context).colorScheme.secondary),
             const SizedBox(height: 32),
-            _buildSectionHeader('Zusätzliche Notizen'),
+            _buildSectionHeader(context.l10n.sectionNotes),
             const SizedBox(height: 12),
             TextField(
               controller: _notesController,
               decoration: InputDecoration(
-                hintText: 'Wie fühlst du dich heute?',
+                hintText: context.l10n.diaryNotesHint,
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
                 border: OutlineInputBorder(
@@ -150,7 +152,7 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                 elevation: 0,
               ),
-              child: const Text('Eintrag speichern', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(context.l10n.diaryEntrySave, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 40),
           ],
