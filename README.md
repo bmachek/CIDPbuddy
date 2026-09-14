@@ -58,7 +58,7 @@ CIDP Buddy is a comprehensive medication and symptom management application spec
 - **State Management**: [Provider](https://pub.dev/packages/provider)
 - **Notifications**: [Flutter Local Notifications](https://pub.dev/packages/flutter_local_notifications)
 - **Charts**: [FL Chart](https://pub.dev/packages/fl_chart) for health data visualization.
-- **Localization**: German only (`de_DE`) — all UI strings are in German.
+- **Localization**: English, German, French, Italian and Spanish, via `flutter_localizations` + ARB files.
 
 ## 🚀 Getting Started
 
@@ -99,7 +99,11 @@ CIDP Buddy is a comprehensive medication and symptom management application spec
 
 ## 🛡 License
 
-Licensed under the **GNU General Public License v3.0** — see [LICENSE](LICENSE).
+Licensed under the **Apache License 2.0** — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+Apache-2.0 is permissive and compatible with distribution through both the Apple App Store
+and Google Play. (The project was previously GPL-3.0; the App Store's terms of service are
+incompatible with that license.)
 
 ---
 *Developed with care for the CIDP community.*

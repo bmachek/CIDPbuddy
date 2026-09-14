@@ -2,134 +2,137 @@
 
 ## Dashboard (`lib/features/diary/pages/dashboard_page.dart`)
 
-Das Dashboard ist der Einstiegspunkt der App und zeigt auf einen Blick:
+The dashboard is the app's entry point and shows at a glance:
 
-- **Nächste Behandlungen** — Termine der nächsten Tage aus dem 90-Tage-Plan
-- **Vormedikations-Timer** — Startet einen Countdown mit Audio-Alarmen; Foreground-Notification mit Live-Anzeige
-- **Mindestbestand-Warnungen** — Farbcodierte Liste aller Medikamente und Zubehör unter Schwellenwert
-- **Kurzstatistiken** — Letzte Infusion, nächste geplante Infusion, aktuelle Lagerreichweite
+- **Upcoming treatments** — appointments over the next few days, from the 90-day plan
+- **Premedication timer** — starts a countdown with audio alarms; foreground notification with a live display
+- **Low-stock warnings** — colour-coded list of every medication and supply below its threshold
+- **Quick statistics** — last infusion, next planned infusion, current stock coverage
 
-### Vormedikations-Timer
+### Premedication timer
 
-Der Timer (`premedication_timer_modal.dart`) läuft über den `BackgroundService` und übersteht App-Minimierungen:
+The timer (`premedication_timer_modal.dart`) runs through `BackgroundService` and survives the app being minimised:
 
-- Jede Minute: 3 × `bell.mp3`
-- Bei Ablauf: `ping.mp3`
-- Foreground-Notification zeigt verbleibende Zeit in Echtzeit
-
----
-
-## Tagebuch (`lib/features/diary/pages/diary_page.dart`)
-
-Chronologische Timeline der bereits eingetretenen Ereignisse:
-
-- Abgeschlossene Infusionen (aus `InfusionLog`)
-- Tagebucheinträge (aus `DiaryEntries`)
-- Gelieferte Bestellungen (aus `PendingOrders`, gefiltert auf `isConfirmed`)
-- Verordnungen und Absetzungen (`MedicationEvent`, abgeleitet aus `Medications.createdAt` / `discontinuedAt`)
-
-Die vier Streams werden in `DiaryProvider.combinedEntriesStream` via `Rx.combineLatest4`
-zusammengeführt und absteigend nach Datum sortiert.
-
-> Geplante Termine (`PlannedInfusions`) und noch offene Bestellungen erscheinen **nicht**
-> im Tagebuch — sie stehen auf dem Dashboard bzw. in der Planungsseite.
-
-### Infusion erfassen (`add_infusion_page.dart`)
-
-- Datum und Uhrzeit
-- Dosis (vorbelegt aus Plan)
-- Optional: Chargennummer, Körpergewicht, Foto, Notizen
-- Beim Speichern: Bestand und verknüpftes Zubehör werden automatisch abgezogen (transaktional)
-
-### Tagebucheintrag (`add_diary_entry_page.dart`)
-
-Erfasst:
-- Vitalwerte: Blutdruck (systolisch/diastolisch), Herzfrequenz, Temperatur, Gewicht
-- CIDP-Symptomscores (je 0–10): Muskelkraft, Sensibilität, Fatigue, Schmerz, Balance
-- Freitext-Notizen
-
-### Behandlungsplan (`add_schedule_page.dart`, `planning_page.dart`)
-
-Pläne können erstellt werden mit:
-
-| Frequenztyp | Beschreibung |
-|-------------|--------------|
-| `daily` | Täglich |
-| `interval` | Alle N Tage |
-| `weekly` | Bestimmte Wochentage |
-| `weekdays` | Mo–Fr |
-
-Optional mehrere Einnahmezeiten pro Tag. Der `SchedulerService` generiert daraus 90 Tage in die Zukunft.
-
-### Statistiken (`statistics_page.dart`)
-
-Verlaufscharts für Vitalwerte und Symptomscores über Zeit, gebaut mit `fl_chart`.
+- Every minute: 3 × `bell.mp3`
+- On expiry: `ping.mp3`
+- A foreground notification shows the remaining time in real time
 
 ---
 
-## Inventar (`lib/features/inventory/`)
+## Diary (`lib/features/diary/pages/diary_page.dart`)
 
-### Inventarübersicht (`inventory_page.dart`)
+A chronological timeline of events that have already happened:
 
-- Liste aller aktiven Medikamente und Zubehör
-- Farbcodierte Lagerampel: grün (ausreichend) → gelb (knapp) → rot (unter Mindestbestand)
-- QR-Code-Scan zum Schnelleintrag neuer Artikel
-- OCR (Google ML Kit) zum Einlesen von Etikettentext
+- Completed infusions (from `InfusionLog`)
+- Diary entries (from `DiaryEntries`)
+- Delivered orders (from `PendingOrders`, filtered on `isConfirmed`)
+- Prescriptions and discontinuations (`MedicationEvent`, derived from `Medications.createdAt` / `discontinuedAt`)
 
-### Medikament-Details (`medication_details_page.dart`)
+The four streams are merged in `DiaryProvider.combinedEntriesStream` via `Rx.combineLatest4` and sorted by date, newest first.
 
-Vollständiger Editor für ein Medikament:
+> Planned appointments (`PlannedInfusions`) and still-open orders do **not** appear in the
+> diary — they live on the dashboard and the planning page.
 
-- Grunddaten: Name, Dosis, PZN, Einheit, Packungsgröße
-- Optionen: Chargennummern tracken, Körpergewicht tracken, Timer verwenden
-- Verbrauchsmaterial-BOM: Welches Zubehör und in welcher Menge pro Infusion?
-- Preisinfo, Notizen
-- Verlauf aller Infusionen mit diesem Medikament
+### Log an infusion (`add_infusion_page.dart`)
 
-### Einkaufsassistent (`shopping_wizard_dialog.dart`)
+- Date and time
+- Dose (pre-filled from the plan)
+- Optional: batch number, body weight, photo, notes
+- On save: stock and linked supplies are deducted automatically (transactionally)
 
-Der Assistent analysiert:
-1. Aktuellen Bestand aller Medikamente und Zubehör
-2. Verbrauch aus dem 90-Tage-Plan
-3. Bestehende ausstehende Bestellungen
+### Diary entry (`add_diary_entry_page.dart`)
 
-Und berechnet: **Genaue Bestellmengen** (in ganzen Packungen) für alle Artikel, die vor Ende des Plans oder unter Mindestbestand fallen würden.
+Records:
+- Vital signs: blood pressure (systolic/diastolic), heart rate, temperature, weight
+- CIDP symptom scores (0–10 each): muscle strength, sensation, fatigue, pain, balance
+- Free-text notes
 
-Das Ergebnis wird als `PendingOrder` mit Einzelpositionen gespeichert.
+### Treatment schedule (`add_schedule_page.dart`, `planning_page.dart`)
+
+Schedules can be created with:
+
+| Frequency type | Description |
+|----------------|-------------|
+| `daily` | Every day |
+| `interval` | Every N days |
+| `weekly` | Specific weekdays |
+| `weekdays` | Mon–Fri |
+
+Optionally several intake times per day. `SchedulerService` expands these into 90 days ahead.
+
+Weekday chips take their abbreviations from `intl`, so they follow the active language rather than a hard-coded list.
+
+### Statistics (`statistics_page.dart`)
+
+Trend charts for vital signs and symptom scores over time, built with `fl_chart`.
 
 ---
 
-## Erinnerungen (`lib/features/reminders/`)
+## Inventory (`lib/features/inventory/`)
+
+### Inventory overview (`inventory_page.dart`)
+
+- List of all active medications and supplies
+- Colour-coded stock indicator: green (plenty) → amber (running low) → red (below minimum)
+- QR code scanning for quickly adding new items
+- OCR (Google ML Kit) for reading label text
+
+### Medication details (`medication_details_page.dart`)
+
+A full editor for one medication:
+
+- Master data: name, dose, PZN, unit, package size
+- Options: track batch numbers, track body weight, use timer
+- Supply bill of materials: which supplies, and how many per infusion?
+- Price info, notes
+- History of every infusion of this medication
+
+### Shopping assistant (`shopping_wizard_dialog.dart`)
+
+The assistant analyses:
+1. Current stock of every medication and supply
+2. Consumption implied by the 90-day plan
+3. Existing outstanding orders
+
+and works out **exact order quantities** (in whole packages) for every item that would run out before the end of the plan or fall below its minimum.
+
+The result is stored as a `PendingOrder` with individual line items.
+
+---
+
+## Reminders (`lib/features/reminders/`)
 
 ### NotificationService
 
-Verwaltet alle lokalen Benachrichtigungen via `flutter_local_notifications`:
+Manages all local notifications via `flutter_local_notifications`:
 
-| Typ | Trigger |
-|-----|---------|
-| Behandlungserinnerung | Geplante Infusion (7-Tage-Vorschau, gesetzt vom `SchedulerService`) |
-| Vormedikation | Vom BackgroundService |
-| Mindestbestand | `MedicationService.getLowStockItemsSummary()` |
-| Verpasste Behandlung | `SchedulerService.checkMissedTreatments()` |
+| Type | Trigger |
+|------|---------|
+| Treatment reminder | Planned infusion (7-day look-ahead, set by `SchedulerService`) |
+| Premedication | From BackgroundService |
+| Low stock | `MedicationService.getLowStockItemsSummary()` |
+| Missed treatment | `SchedulerService.checkMissedTreatments()` |
 
-**7-Tage-Fenster**: Der `SchedulerService` plant zwar 90 Tage an Terminen, registriert aber
-nur für die nächsten 7 Tage Benachrichtigungen (`notificationLookAhead` in
-`scheduler_service.dart`). Das hält die Zahl gleichzeitig registrierter Alarme klein — Android
-begrenzt exakte Alarme pro App. Der 24h-Sync des `BackgroundService` schiebt das Fenster
-täglich weiter.
+**7-day window**: `SchedulerService` plans 90 days of appointments but only registers
+notifications for the next 7 days (`notificationLookAhead` in `scheduler_service.dart`). That
+keeps the number of concurrently registered alarms small — Android caps exact alarms per app.
+The `BackgroundService` 24 h sync advances the window daily.
 
-Android 13+ Berechtigungen: `POST_NOTIFICATIONS` + `SCHEDULE_EXACT_ALARM` werden zur Laufzeit angefordert.
+Notification text is localized without a `BuildContext`: the service resolves the stored language through `LocaleProvider.l10nForBackground()`, so alarms fired from a background isolate use the same language as the UI. Android notification *channel* names are translated too; because a channel's name can only be updated by re-creating it with the same ID, a language change takes effect on the next app start.
+
+Android 13+ permissions: `POST_NOTIFICATIONS` and `SCHEDULE_EXACT_ALARM` are requested at runtime.
 
 ---
 
-## Einstellungen & Backup (`lib/features/settings/`)
+## Settings & backup (`lib/features/settings/`)
 
-Siehe [Backup & Wiederherstellung](Backup-and-Restore) für Details zur Backup-Logik.
+See [Backup & restore](Backup-and-Restore) for the backup logic in detail.
 
-Die Einstellungsseite ermöglicht:
-- Erscheinungsbild umschalten (helles/dunkles Design)
-- Backup-Ziel wählen oder entfernen (lokaler Ordner oder SAF-Ordner; es ist immer genau eines aktiv)
-- Auto-Backup aktivieren/deaktivieren
-- Manuellen Backup-Test durchführen
-- Backups auflisten und Wiederherstellung starten
-- Zuverlässigkeitscheck: letzter Erfolg, letzte Fehler, Fehlerzähler
+The settings page lets you:
+- Switch appearance (light/dark theme)
+- Pick the app language (system, English, German, French, Italian, Spanish) — see [Localization](Localization)
+- Choose or clear the backup destination (a local folder or a SAF folder; exactly one is active at a time)
+- Enable or disable auto-backup
+- Run a manual backup test
+- List backups and start a restore
+- Run the reliability check: last success, last errors, failure counter

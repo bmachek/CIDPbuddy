@@ -15,6 +15,9 @@ flutter pub get
 # Regenerate Drift database code (required after schema changes)
 dart run build_runner build --delete-conflicting-outputs
 
+# Regenerate localizations (required after editing lib/l10n/*.arb)
+flutter gen-l10n
+
 # Lint (must pass before finishing any task)
 /opt/homebrew/bin/flutter analyze
 
@@ -25,7 +28,7 @@ flutter run
 flutter build apk --release --build-name=X.X.X --build-number=N
 ```
 
-There is a basic smoke test at `test/widget_test.dart` — no meaningful test suite exists yet.
+`test/widget_test.dart` covers the localization setup (locale coverage, lookup per language, placeholder substitution, widget rendering). Beyond that, no meaningful test suite exists yet.
 
 ## Architecture
 
@@ -57,7 +60,11 @@ There is a basic smoke test at `test/widget_test.dart` — no meaningful test su
 ### Theme & Localization
 - Material3 with custom colors: Blue `#0066FF`, Emerald `#00BFA6`, Gold `#FFB300`
 - Light and dark themes (`AppTheme.lightTheme` / `darkTheme`) via `ThemeProvider`; defaults to `ThemeMode.system` and is not persisted
-- **German only** (`Locale('de', 'DE')`) — all UI strings must be in German
+- **Five languages** — English, German, French, Italian, Spanish. Generated from ARB files (`lib/l10n/*.arb`) by `flutter gen-l10n`; generated code is committed
+- **No user-visible string literals in Dart** — everything goes through `context.l10n` (`lib/core/l10n/l10n_ext.dart`)
+- Follows the device language, falls back to English; explicit picker in Settings, persisted by `LocaleProvider`
+- Dates/numbers are locale-aware via `AppDateFormat` — never hard-code patterns like `dd.MM.yyyy`
+- Background isolates (notifications, backup, scheduler) use `LocaleProvider.l10nForBackground()` since they have no `BuildContext`
 - Premium gradient backgrounds; glassmorphic bottom nav (`BackdropFilter`)
 
 ### Platform IDs
@@ -70,4 +77,5 @@ Android `applicationId` and iOS bundle ID are both `de.fokuspunk.cidpbuddy`.
 3. **Use `color.withValues(alpha: 0.5)`** instead of deprecated `color.withOpacity(0.5)`
 4. **Pass `BuildContext context`** as first argument to `StatelessWidget` helper methods
 5. **Check `mounted`** before using `context` after any `async` gap in `StatefulWidget`
-6. All UI text in **German**
+6. **No hard-coded UI text** — add a key to `lib/l10n/app_en.arb` (with a `description`), translate it in the other four ARB files, then use `context.l10n.<key>`
+7. **Run `flutter gen-l10n`** after touching any ARB file

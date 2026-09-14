@@ -1,63 +1,70 @@
 # CIDPbuddy
 
-CIDPbuddy ist eine Flutter-App zur Verwaltung von Infusionstherapien für Patienten mit **Chronisch Inflammatorischer Demyelinisierender Polyneuropathie (CIDP)**. Die App läuft auf Android, iOS, macOS, Windows, Linux und Web.
+CIDPbuddy is a Flutter app for managing infusion therapy for patients with **chronic inflammatory demyelinating polyneuropathy (CIDP)**. It runs on Android, iOS, macOS, Windows, Linux and web.
 
-## Funktionen
+## Features
 
-- **Dashboard & Tagebuch** — Übersicht über anstehende Behandlungen, Symptomerfassung, Vitalwerte und Verlaufsstatistiken
-- **Infusions-Timer** — Vormedikations-Timer mit Audio-Signalen (Glocke und Ping)
-- **Behandlungsplanung** — Automatische 90-Tage-Planung aus wiederkehrenden Schedules (täglich, intervallbasiert, wöchentlich, Wochentage)
-- **Inventar & Bestandsverwaltung** — Medikamente und Zubehör mit Mindestbestand-Warnungen, QR-Scan und OCR
-- **Einkaufsassistent** — Berechnet automatisch den genauen Bestellbedarf auf Basis des Plans und des aktuellen Lagerbestands
-- **Erinnerungen & Benachrichtigungen** — Lokale Alarme für Behandlungen, Vormedikation und Mindestbestand
-- **Datensicherung** — ZIP-basiertes Backup in einen lokalen Ordner oder einen per Android SAF gewählten Ordner (automatisch, frühestens alle 6 Stunden)
+- **Dashboard & diary** — overview of upcoming treatments, symptom logging, vital signs and trend statistics
+- **Infusion timer** — premedication timer with audio cues (bell and ping)
+- **Treatment planning** — automatic 90-day planning from recurring schedules (daily, interval-based, weekly, specific weekdays)
+- **Inventory & stock management** — medications and supplies with low-stock warnings, QR scanning and OCR
+- **Shopping assistant** — works out exactly what to order from the plan and the current stock level
+- **Reminders & notifications** — local alarms for treatments, premedication and low stock
+- **Backup** — ZIP-based backup to a local folder or a folder picked through Android's Storage Access Framework (automatic, at most once every 6 hours)
 
-## Schnellstart
+## Quick start
 
-| Befehl | Zweck |
-|--------|-------|
-| `flutter pub get` | Abhängigkeiten installieren |
-| `dart run build_runner build --delete-conflicting-outputs` | Drift-Datenbankcode neu generieren |
-| `/opt/homebrew/bin/flutter analyze` | Lint prüfen (muss fehlerfrei sein) |
-| `flutter run` | App starten |
-| `flutter build apk --release --build-name=X.X.X --build-number=N` | Release-APK bauen |
+| Command | Purpose |
+|---------|---------|
+| `flutter pub get` | Install dependencies |
+| `dart run build_runner build --delete-conflicting-outputs` | Regenerate the Drift database code |
+| `flutter gen-l10n` | Regenerate the localizations from the ARB files |
+| `/opt/homebrew/bin/flutter analyze` | Lint (must be error-free) |
+| `flutter run` | Run the app |
+| `flutter build apk --release --build-name=X.X.X --build-number=N` | Build a release APK |
 
-## Wiki-Inhalte
+## Wiki contents
 
-- [Screenshots & Rundgang](Screenshots) — Geführter Bildschirm-Rundgang durch die App
-- [Architektur](Architecture) — State Management, Hintergrundservices, Navigation, Theme
-- [Datenbankschema](Database-Schema) — Alle Tabellen, Felder und Migrationen
-- [Features](Features) — Detailbeschreibung der Feature-Module
-- [Backup & Wiederherstellung](Backup-and-Restore) — Backup-System, Ziele, Auto-Backup-Logik
-- [Bauen & Veröffentlichen](Building-and-Releasing) — Build-Befehle, Release-Prozess
+- [Screenshots & tour](Screenshots) — a guided walkthrough of the app's screens
+- [Architecture](Architecture) — state management, background services, navigation, theme
+- [Database schema](Database-Schema) — every table, field and migration
+- [Features](Features) — detailed description of the feature modules
+- [Localization](Localization) — supported languages, the ARB workflow, how to add a language
+- [Backup & restore](Backup-and-Restore) — the backup system, destinations, auto-backup logic
+- [Building & releasing](Building-and-Releasing) — build commands, release process
 
-## Technischer Stack
+## Technical stack
 
 - **Flutter** / Dart SDK ^3.11.4, Material 3
-- **Drift ORM** (SQLite, reaktive Streams)
-- **Provider** (State Management)
-- **RxDart** (Stream-Komposition)
-- **saf_util + saf_stream** (Android Storage Access Framework als Backup-Ziel)
-- **archive** (ZIP-Erzeugung für Backups)
-- **WorkManager** (periodische Hintergrundaufgaben, Android)
-- **flutter_background_service** (Vormedikations-Timer)
-- **flutter_local_notifications** (Alarme)
-- **audioplayers** (Timer-Audio)
-- **fl_chart** (Verlaufscharts)
-- **mobile_scanner + google_mlkit_text_recognition** (QR-Scan, OCR)
+- **Drift ORM** (SQLite, reactive streams)
+- **Provider** (state management)
+- **RxDart** (stream composition)
+- **flutter_localizations + intl** (localization, ARB-based code generation)
+- **saf_util + saf_stream** (Android Storage Access Framework as a backup destination)
+- **archive** (ZIP creation for backups)
+- **WorkManager** (periodic background tasks, Android)
+- **flutter_background_service** (premedication timer)
+- **flutter_local_notifications** (alarms)
+- **audioplayers** (timer audio)
+- **fl_chart** (trend charts)
+- **mobile_scanner + google_mlkit_text_recognition** (QR scanning, OCR)
 
-## App-Identifikation
+## App identifiers
 
-| Plattform | ID |
-|-----------|-----|
-| Android Package | `de.fokuspunk.cidpbuddy` |
-| iOS Bundle ID | `de.fokuspunk.cidpbuddy` |
-| Version | `0.99.0-dev+17` (siehe `pubspec.yaml`; CI-Releases setzen Name/Nummer aus dem Git-Tag) |
+| Platform | ID |
+|----------|-----|
+| Android package | `de.fokuspunk.cidpbuddy` |
+| iOS bundle ID | `de.fokuspunk.cidpbuddy` |
+| Version | `0.99.0-dev+17` (see `pubspec.yaml`; CI releases take name and number from the git tag) |
 
-## Lokalisierung & Theme
+## Localization & theme
 
-Die App ist **ausschließlich auf Deutsch** (`Locale('de', 'DE')`). Alle UI-Texte müssen auf Deutsch sein.
+The app ships in **English, German, French, Italian and Spanish**. It follows the device language and falls back to English; the settings screen has an explicit language picker. See [Localization](Localization) for the full workflow.
 
-Primärfarben: Blau `#0066FF`, Smaragd `#00BFA6`, Gold `#FFB300`
+Primary colours: blue `#0066FF`, emerald `#00BFA6`, gold `#FFB300`.
 
-Es gibt ein helles und ein dunkles Design (`AppTheme.lightTheme` / `AppTheme.darkTheme`). Die Umschaltung liegt in den Einstellungen unter „Erscheinungsbild".
+There is a light and a dark theme (`AppTheme.lightTheme` / `AppTheme.darkTheme`), toggled in the settings under "Appearance".
+
+## Licence
+
+Apache License 2.0 — see [LICENSE](../LICENSE) and [NOTICE](../NOTICE).

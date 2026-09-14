@@ -1,77 +1,77 @@
-# Backup & Wiederherstellung
+# Backup & restore
 
-## Überblick
+## Overview
 
-CIDPbuddy sichert die gesamte SQLite-Datenbank als ZIP-Datei. Backups werden automatisch nach Datenbankänderungen und periodisch im Hintergrund erstellt.
+CIDPbuddy backs up the entire SQLite database as a ZIP file. Backups are created automatically after database changes and periodically in the background.
 
-## Backup-Ziele
+## Backup destinations
 
-Es ist immer **genau ein** Ziel aktiv; es wird in `SharedPreferences` hinterlegt und beim
-Backup über `BackupDestination.load()` geladen.
+Exactly **one** destination is active at any time. It is stored in `SharedPreferences` and loaded for each backup via `BackupDestination.load()`.
 
-| Ziel | `DestinationKind` | Plattform | Beschreibung |
-|------|-------------------|-----------|--------------|
-| Ordner | `local` | Alle | Ein Verzeichnis im Dateisystem. Auf iOS immer der app-interne `Documents/Backups`-Ordner (kein Ordner-Picker verfügbar) |
-| SAF-Ordner | `saf` | Android | Ein per Storage Access Framework gewählter Ordner, z. B. auf der SD-Karte oder in einem Cloud-Provider |
+| Destination | `DestinationKind` | Platform | Description |
+|-------------|-------------------|----------|-------------|
+| Folder | `local` | All | A directory in the file system. On iOS always the app-internal `Documents/Backups` folder (no folder picker is available) |
+| SAF folder | `saf` | Android | A folder picked through the Storage Access Framework, e.g. on the SD card or inside a cloud provider |
 
-> Ein Cloud-Backup direkt in Google Drive oder iCloud gibt es **nicht**. Wer in die Cloud
-> sichern will, wählt unter Android per SAF einen Ordner, den ein Cloud-Client synchronisiert.
+> There is **no** direct cloud backup to Google Drive or iCloud. To back up to the cloud, pick
+> a SAF folder on Android that a cloud client keeps in sync.
 
-**iOS-Hinweis:** Das app-interne Ziel überlebt die App nicht (`isDurable == false`) — iOS
-löscht den Container mit der App. Außerdem vergibt iOS die Container-UUID bei *jedem*
-App-Update neu, weshalb statt eines absoluten Pfads der portable Marker
-`app-documents:Backups` persistiert und bei jedem Laden gegen den aktuellen Container
-aufgelöst wird.
+**iOS note:** the app-internal destination does not outlive the app (`isDurable == false`) — iOS
+deletes the container along with the app. iOS also reassigns the container UUID on *every* app
+update, which is why the portable marker `app-documents:Backups` is persisted instead of an
+absolute path and resolved against the current container on each load.
 
-## Backup-Ablauf
+## Backup flow
 
-### Auto-Backup
+### Auto-backup
 
 ```
-DB-Änderung
+DB change
   → debounce(30s)
-  → Auto-Backup deaktiviert? → abbrechen
-  → letzte erfolgreiche Sicherung < 6 Stunden? → überspringen
-  → verifyAccess() auf dem Ziel (Token-Datei schreiben/lesen/löschen)
-  → ZIP der SQLite-Datei erstellen
-  → ins konfigurierte Ziel schreiben
-  → 5 neueste behalten, ältere löschen
+  → auto-backup disabled? → abort
+  → last successful backup < 6 hours ago? → skip
+  → verifyAccess() on the destination (write/read/delete a token file)
+  → build a ZIP of the SQLite file
+  → write it to the configured destination
+  → keep the 5 newest, delete older ones
 ```
 
-### Dateiname
+### File name
 
 ```
 cidpbuddy_backup_YYYYMMDD_HHmmss.zip
 ```
 
-> Hinweis: Beim Auflisten/Wiederherstellen wird zusätzlich das alte Präfix `igkeeper_backup_` als Fallback erkannt.
+> Note: when listing and restoring, the older `igkeeper_backup_` prefix is also recognised as a fallback.
 
-### Hintergrund-Backup (Android)
+### Background backup (Android)
 
-WorkManager führt periodisch `BackupWorker` aus. Der Worker übersteht Geräteneustarts (wird bei Boot neu registriert).
+WorkManager runs `BackupWorker` periodically. The worker survives device reboots (it is re-registered at boot).
 
-## Fehlerverwaltung
+## Error handling
 
-| Einstellung | Wert |
-|-------------|------|
-| Fehlerschwelle | 2 aufeinanderfolgende Fehler |
-| Fehlerspeicherung | SharedPreferences: `backup_last_error`, `backup_consecutive_failures` |
-| Benachrichtigung | Nach Erreichen der Fehlerschwelle |
+| Setting | Value |
+|---------|-------|
+| Failure threshold | 2 consecutive failures |
+| Failure storage | SharedPreferences: `backup_last_error`, `backup_consecutive_failures` |
+| Notification | Once the failure threshold is reached |
 
-Die Seite **Zuverlässigkeitscheck** (`reliability_check_page.dart`) zeigt:
-- Backup-Status (aktiviert/deaktiviert)
-- Letzter erfolgreicher Zeitpunkt
-- Letzte Fehlermeldung
-- Anzahl aufeinanderfolgender Fehler
+The **reliability check** page (`reliability_check_page.dart`) shows:
+- Backup status (enabled/disabled)
+- Time of the last success
+- Last error message
+- Number of consecutive failures
 
-## Wiederherstellung
+Backup error messages are localized: `BackupService` and the `BackupDestination` implementations resolve the stored language through `LocaleProvider.l10nForBackground()`, because they run from background isolates that have no `BuildContext`. `BackupDestination.displayLabel` is the exception — it takes `AppLocalizations` as a parameter, since its only callers are widgets that already have it.
 
-1. Einstellungen → Backup-Ziel auswählen → Backups anzeigen
-2. Backup aus der Liste auswählen → Wiederherstellen
-3. ZIP wird gelesen und entpackt
-4. Lokale DB-Datei (`igkeeper.sqlite`) wird ersetzt — inklusive der WAL-/SHM-Seitendateien, falls im Archiv enthalten
-5. `AppDatabase`-Singleton wird neu aufgebaut
-6. App zeigt wiederhergestellte Daten
+## Restore
 
-> **Wichtig:** Da `AppDatabase` ein Singleton ist, muss die Verbindung beim Restore kontrolliert neu aufgebaut werden, um Verbindungslecks zu vermeiden.
+1. Settings → pick a backup destination → show backups
+2. Select a backup from the list → restore
+3. The ZIP is read and unpacked
+4. The local DB file (`igkeeper.sqlite`) is replaced — including the WAL/SHM side files, if the archive contains them
+5. The `AppDatabase` singleton is rebuilt
+6. The app shows the restored data
 
+> **Important:** because `AppDatabase` is a singleton, the connection must be rebuilt in a
+> controlled way during restore to avoid leaking connections.
