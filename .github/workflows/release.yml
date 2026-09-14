@@ -189,7 +189,7 @@ jobs:
               <false/>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>de.gbs-cidp.cidpbuddy</key>
+                  <key>de.fokuspunk.cidpbuddy</key>
                   <string>${PROFILE_NAME}</string>
               </dict>
           </dict>
