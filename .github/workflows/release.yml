@@ -33,7 +33,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Extract version from tag
         id: get_version
@@ -51,7 +51,7 @@ jobs:
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version: '21'
@@ -96,7 +96,7 @@ jobs:
           echo "apk_path=build/app/outputs/flutter-apk/$APK_NAME" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ steps.rename_apk.outputs.apk_path }}
           tag_name: ${{ github.ref_name }}
@@ -118,7 +118,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Extract version from tag
         id: get_version
@@ -252,7 +252,7 @@ jobs:
           echo "ipa_path=build/ios/ipa/$IPA_NAME" >> $GITHUB_OUTPUT
 
       - name: Attach IPA to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ steps.rename_ipa.outputs.ipa_path }}
           tag_name: ${{ github.ref_name }}
