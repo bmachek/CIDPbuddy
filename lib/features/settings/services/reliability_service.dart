@@ -9,7 +9,8 @@ class ReliabilityService {
   factory ReliabilityService() => _instance;
   ReliabilityService._internal();
 
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   Future<bool> isNotificationPermissionGranted() async {
     return await Permission.notification.isGranted;
@@ -17,14 +18,18 @@ class ReliabilityService {
 
   Future<bool> isExactAlarmPermissionGranted() async {
     if (!Platform.isAndroid) return true;
-    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin == null) return true;
     return await androidPlugin.canScheduleExactNotifications() ?? false;
   }
 
   Future<bool> isBatteryOptimizationDisabled() async {
     if (!Platform.isAndroid) return true;
-    return await DisableBatteryOptimization.isBatteryOptimizationDisabled ?? false;
+    return await DisableBatteryOptimization.isBatteryOptimizationDisabled ??
+        false;
   }
 
   Future<void> requestNotificationPermission() async {
@@ -44,7 +49,10 @@ class ReliabilityService {
 
   Future<void> requestExactAlarmPermission() async {
     if (!Platform.isAndroid) return;
-    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin != null) {
       // This will take the user to the system settings page for exact alarms
       await androidPlugin.requestExactAlarmsPermission();

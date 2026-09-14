@@ -135,7 +135,9 @@ abstract class BackupDestination {
         case 'saf':
           final path = prefs.getString(_kPath);
           final name = prefs.getString(_kSafDisplayName);
-          if (path != null && Platform.isAndroid) return SafDestination(path, displayName: name);
+          if (path != null && Platform.isAndroid) {
+            return SafDestination(path, displayName: name);
+          }
           return null;
         case 'local':
           final path = prefs.getString(_kPath);
@@ -231,19 +233,25 @@ class LocalDestination extends BackupDestination {
       throw FileSystemException('Backup folder does not exist', dirPath);
     }
     final entries = await dir.list().toList();
-    final files = entries.whereType<File>().where((f) {
-      final name = p.basename(f.path);
-      return (name.startsWith('cidpbuddy_backup_') || name.startsWith('igkeeper_backup_')) && name.endsWith('.zip');
-    }).map((f) {
-      final stat = f.statSync();
-      return BackupFile(
-        name: p.basename(f.path),
-        date: stat.modified,
-        size: stat.size,
-        pathOrUri: f.path,
-        isSaf: false,
-      );
-    }).toList();
+    final files = entries
+        .whereType<File>()
+        .where((f) {
+          final name = p.basename(f.path);
+          return (name.startsWith('cidpbuddy_backup_') ||
+                  name.startsWith('igkeeper_backup_')) &&
+              name.endsWith('.zip');
+        })
+        .map((f) {
+          final stat = f.statSync();
+          return BackupFile(
+            name: p.basename(f.path),
+            date: stat.modified,
+            size: stat.size,
+            pathOrUri: f.path,
+            isSaf: false,
+          );
+        })
+        .toList();
     files.sort((a, b) => b.date.compareTo(a.date));
     return files;
   }
@@ -263,8 +271,10 @@ class LocalDestination extends BackupDestination {
           .where((n) => !n.startsWith('.'))
           .take(8)
           .toList();
-      return l10n.backupFolderContents(entries.length,
-          names.join(', ') + (entries.length > names.length ? ' …' : ''));
+      return l10n.backupFolderContents(
+        entries.length,
+        names.join(', ') + (entries.length > names.length ? ' …' : ''),
+      );
     } catch (e) {
       return l10n.backupFolderListFailed('$e');
     }
@@ -317,8 +327,9 @@ class SafDestination extends BackupDestination {
   String get pathOrUri => treeUri;
 
   @override
-  String displayLabel(AppLocalizations l10n) =>
-      displayName != null ? '$displayName (SAF)' : l10n.backupDestinationSafFolder;
+  String displayLabel(AppLocalizations l10n) => displayName != null
+      ? '$displayName (SAF)'
+      : l10n.backupDestinationSafFolder;
 
   @override
   Future<void> persist() async {
@@ -362,12 +373,7 @@ class SafDestination extends BackupDestination {
   @override
   Future<void> writeBackup(String fileName, Uint8List bytes) async {
     final stream = SafStream();
-    await stream.writeFileBytes(
-      treeUri,
-      fileName,
-      'application/zip',
-      bytes,
-    );
+    await stream.writeFileBytes(treeUri, fileName, 'application/zip', bytes);
   }
 
   @override
@@ -375,15 +381,21 @@ class SafDestination extends BackupDestination {
     final util = SafUtil();
     final files = await util.list(treeUri);
     final result = files
-        .where((f) =>
-            (f.name.startsWith('cidpbuddy_backup_') || f.name.startsWith('igkeeper_backup_')) && f.name.endsWith('.zip'))
-        .map((f) => BackupFile(
-              name: f.name,
-              date: DateTime.fromMillisecondsSinceEpoch(f.lastModified),
-              size: f.length,
-              pathOrUri: f.uri,
-              isSaf: true,
-            ))
+        .where(
+          (f) =>
+              (f.name.startsWith('cidpbuddy_backup_') ||
+                  f.name.startsWith('igkeeper_backup_')) &&
+              f.name.endsWith('.zip'),
+        )
+        .map(
+          (f) => BackupFile(
+            name: f.name,
+            date: DateTime.fromMillisecondsSinceEpoch(f.lastModified),
+            size: f.length,
+            pathOrUri: f.uri,
+            isSaf: true,
+          ),
+        )
         .toList();
     result.sort((a, b) => b.date.compareTo(a.date));
     return result;
@@ -414,8 +426,10 @@ class SafDestination extends BackupDestination {
           .map((f) => f.isDir ? '[${f.name}/]' : f.name)
           .take(8)
           .toList();
-      return l10n.backupFolderContents(entries.length,
-          names.join(', ') + (entries.length > names.length ? ' …' : ''));
+      return l10n.backupFolderContents(
+        entries.length,
+        names.join(', ') + (entries.length > names.length ? ' …' : ''),
+      );
     } catch (e) {
       return l10n.backupSafListFailed('$e');
     }

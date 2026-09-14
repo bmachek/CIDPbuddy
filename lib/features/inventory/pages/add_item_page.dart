@@ -52,13 +52,24 @@ class _AddItemPageState extends State<AddItemPage> {
                 labelText: context.l10n.fieldCategory,
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2))),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
               ),
               items: [
                 DropdownMenuItem(
-                    value: _ItemKind.medication, child: Text(context.l10n.categoryMedication)),
+                  value: _ItemKind.medication,
+                  child: Text(context.l10n.categoryMedication),
+                ),
                 DropdownMenuItem(
-                    value: _ItemKind.supply, child: Text(context.l10n.categorySupply)),
+                  value: _ItemKind.supply,
+                  child: Text(context.l10n.categorySupply),
+                ),
               ],
               onChanged: (val) {
                 setState(() {
@@ -76,14 +87,27 @@ class _AddItemPageState extends State<AddItemPage> {
                 decoration: InputDecoration(
                   labelText: context.l10n.fieldDosageForm,
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1))),
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.04),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
                 ),
                 items: [
                   DropdownMenuItem(
-                      value: MedicationType.infusion, child: Text(context.l10n.dosageFormInfusion)),
+                    value: MedicationType.infusion,
+                    child: Text(context.l10n.dosageFormInfusion),
+                  ),
                   DropdownMenuItem(
-                      value: MedicationType.pill, child: Text(context.l10n.dosageFormPill)),
+                    value: MedicationType.pill,
+                    child: Text(context.l10n.dosageFormPill),
+                  ),
                 ],
                 onChanged: (val) {
                   setState(() {
@@ -103,9 +127,18 @@ class _AddItemPageState extends State<AddItemPage> {
                 hintText: context.l10n.fieldMedicationNameHint,
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2))),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
               ),
-              validator: (val) => val == null || val.isEmpty ? context.l10n.validationRequired : null,
+              validator: (val) => val == null || val.isEmpty
+                  ? context.l10n.validationRequired
+                  : null,
             ),
             if (_type == _ItemKind.medication) ...[
               const SizedBox(height: 16),
@@ -115,8 +148,17 @@ class _AddItemPageState extends State<AddItemPage> {
                   labelText: context.l10n.fieldStrength,
                   hintText: context.l10n.fieldStrengthHint,
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1))),
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.04),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -128,8 +170,17 @@ class _AddItemPageState extends State<AddItemPage> {
                   labelText: context.l10n.fieldPznOptional,
                   hintText: context.l10n.fieldPznHint,
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1))),
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.04),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -143,7 +194,14 @@ class _AddItemPageState extends State<AddItemPage> {
                       labelText: context.l10n.fieldInitialStock,
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.surface,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2))),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.2),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -158,7 +216,14 @@ class _AddItemPageState extends State<AddItemPage> {
                 prefixIcon: const Icon(Icons.inventory_2_rounded),
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2))),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
               ),
               keyboardType: TextInputType.number,
             ),
@@ -175,7 +240,14 @@ class _AddItemPageState extends State<AddItemPage> {
                 prefixIcon: const Icon(Icons.notification_important_rounded),
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2))),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
               ),
               keyboardType: TextInputType.number,
             ),
@@ -185,7 +257,9 @@ class _AddItemPageState extends State<AddItemPage> {
                 minimumSize: const Size.fromHeight(50),
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               onPressed: _save,
               child: Text(context.l10n.actionSave),
@@ -201,7 +275,7 @@ class _AddItemPageState extends State<AddItemPage> {
       final provider = Provider.of<InventoryProvider>(context, listen: false);
       final stock = double.tryParse(_stockController.text) ?? 0;
       final packageSize = double.tryParse(_packageSizeController.text) ?? 1.0;
-      
+
       if (_type == _ItemKind.medication) {
         final id = await provider.addMedication(
           name: _nameController.text,
@@ -213,7 +287,7 @@ class _AddItemPageState extends State<AddItemPage> {
           packageSize: packageSize,
           minStock: double.tryParse(_minStockController.text) ?? 5.0,
         );
-        
+
         if (mounted) {
           // Instead of just closing, we now immediately ask for the schedule
           Navigator.pushReplacement(

@@ -13,10 +13,22 @@ void main() {
     });
 
     test('lookup returns the right language for each locale', () {
-      expect(lookupAppLocalizations(const Locale('en')).navSettings, 'Settings');
-      expect(lookupAppLocalizations(const Locale('de')).navSettings, 'Einstellungen');
-      expect(lookupAppLocalizations(const Locale('fr')).navSettings, 'Réglages');
-      expect(lookupAppLocalizations(const Locale('it')).navSettings, 'Impostazioni');
+      expect(
+        lookupAppLocalizations(const Locale('en')).navSettings,
+        'Settings',
+      );
+      expect(
+        lookupAppLocalizations(const Locale('de')).navSettings,
+        'Einstellungen',
+      );
+      expect(
+        lookupAppLocalizations(const Locale('fr')).navSettings,
+        'Réglages',
+      );
+      expect(
+        lookupAppLocalizations(const Locale('it')).navSettings,
+        'Impostazioni',
+      );
       expect(lookupAppLocalizations(const Locale('es')).navSettings, 'Ajustes');
     });
 
@@ -27,8 +39,9 @@ void main() {
       expect(l10n.doseValue('10.0', 'ml'), contains('10.0 ml'));
     });
 
-    testWidgets('widgets render in the locale MaterialApp is given',
-        (WidgetTester tester) async {
+    testWidgets('widgets render in the locale MaterialApp is given', (
+      WidgetTester tester,
+    ) async {
       for (final entry in {
         'en': 'Settings',
         'de': 'Einstellungen',
@@ -36,16 +49,22 @@ void main() {
         'it': 'Impostazioni',
         'es': 'Ajustes',
       }.entries) {
-        await tester.pumpWidget(MaterialApp(
-          locale: Locale(entry.key),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => Text(AppLocalizations.of(context).navSettings),
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: Locale(entry.key),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) =>
+                  Text(AppLocalizations.of(context).navSettings),
+            ),
           ),
-        ));
-        expect(find.text(entry.value), findsOneWidget,
-            reason: 'locale ${entry.key} should render "${entry.value}"');
+        );
+        expect(
+          find.text(entry.value),
+          findsOneWidget,
+          reason: 'locale ${entry.key} should render "${entry.value}"',
+        );
       }
     });
   });

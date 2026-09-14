@@ -92,7 +92,9 @@ class _ActiveTimerBannerState extends State<ActiveTimerBanner>
             child: Row(
               children: [
                 Icon(
-                  _isRunning ? Icons.av_timer_rounded : Icons.pause_circle_outline_rounded,
+                  _isRunning
+                      ? Icons.av_timer_rounded
+                      : Icons.pause_circle_outline_rounded,
                   color: accent,
                 ),
                 const SizedBox(width: 12),
@@ -104,7 +106,10 @@ class _ActiveTimerBannerState extends State<ActiveTimerBanner>
                         _isRunning
                             ? context.l10n.timerBannerRunning
                             : context.l10n.timerBannerPaused,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(

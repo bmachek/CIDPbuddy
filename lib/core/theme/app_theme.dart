@@ -7,10 +7,10 @@ class AppTheme {
   static const Color primaryLight = Color(0xFFE3F2FD);
   static const Color accentEmerald = Color(0xFF00BFA6);
   static const Color warningGold = Color(0xFFFFB300);
-  
+
   static const Color surfaceLight = Color(0xFFF8F9FD);
   static const Color surfaceDark = Color(0xFF0A0C16);
-  
+
   static const Color cardLight = Colors.white;
   static const Color cardDark = Color(0xFF16182D);
 
@@ -35,7 +35,10 @@ class AppTheme {
     textTheme: GoogleFonts.outfitTextTheme().copyWith(
       bodyLarge: GoogleFonts.outfit(color: const Color(0xFF1A1A1A)),
       bodyMedium: GoogleFonts.outfit(color: const Color(0xFF1A1A1A)),
-      titleLarge: GoogleFonts.outfit(color: const Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
+      titleLarge: GoogleFonts.outfit(
+        color: const Color(0xFF1A1A1A),
+        fontWeight: FontWeight.bold,
+      ),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
@@ -66,12 +69,22 @@ class AppTheme {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.transparent,
       indicatorColor: primaryBase.withValues(alpha: 0.1),
-      indicatorShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      indicatorShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: primaryBase);
+          return GoogleFonts.outfit(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: primaryBase,
+          );
         }
-        return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF5A5A5A));
+        return GoogleFonts.outfit(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF5A5A5A),
+        );
       }),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
@@ -107,7 +120,10 @@ class AppTheme {
     textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
       bodyLarge: GoogleFonts.outfit(color: Colors.white),
       bodyMedium: GoogleFonts.outfit(color: Colors.white),
-      titleLarge: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+      titleLarge: GoogleFonts.outfit(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
@@ -138,12 +154,22 @@ class AppTheme {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.transparent,
       indicatorColor: primaryBase.withValues(alpha: 0.2),
-      indicatorShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      indicatorShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white);
+          return GoogleFonts.outfit(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          );
         }
-        return GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFFB0B0B0));
+        return GoogleFonts.outfit(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFFB0B0B0),
+        );
       }),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
@@ -158,4 +184,3 @@ class AppTheme {
     ),
   );
 }
-

@@ -52,7 +52,8 @@ void main() async {
           ChangeNotifierProvider.value(value: localeProvider),
           ChangeNotifierProxyProvider<AppDatabase, InventoryProvider>(
             create: (context) => InventoryProvider(db),
-            update: (context, database, previous) => InventoryProvider(database),
+            update: (context, database, previous) =>
+                InventoryProvider(database),
           ),
           ChangeNotifierProxyProvider<AppDatabase, DiaryProvider>(
             create: (context) => DiaryProvider(db),
@@ -80,16 +81,18 @@ void main() async {
     } catch (_) {
       message = 'The app could not be initialized:\n$e';
     }
-    runApp(MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(message),
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(message),
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -108,7 +111,10 @@ Future<void> _initDeferred(AppDatabase db) async {
   await step('BackgroundService', BackgroundService.initialize);
   await step('BackupScheduler.init', BackupScheduler.init);
   await step('BackupScheduler.syncFromPrefs', BackupScheduler.syncFromPrefs);
-  await step('BackupScheduler.enableMissedCheck', BackupScheduler.enableMissedCheck);
+  await step(
+    'BackupScheduler.enableMissedCheck',
+    BackupScheduler.enableMissedCheck,
+  );
 
   // Self-heal orphaned schedules and planned infusions (e.g. left behind by a
   // restore whose backup referenced a medication absent from the restored
@@ -119,8 +125,10 @@ Future<void> _initDeferred(AppDatabase db) async {
     final removedSchedules = await db.deleteOrphanedSchedules();
     final removedPlanned = await db.deleteOrphanedPlannedInfusions();
     if (removedSchedules > 0 || removedPlanned > 0) {
-      debugPrint('Removed $removedSchedules orphaned schedule(s) and '
-          '$removedPlanned orphaned planned infusion(s) on startup.');
+      debugPrint(
+        'Removed $removedSchedules orphaned schedule(s) and '
+        '$removedPlanned orphaned planned infusion(s) on startup.',
+      );
     }
   });
 
@@ -131,7 +139,8 @@ Future<void> _initDeferred(AppDatabase db) async {
   if (Platform.isAndroid) {
     await step('batteryOptimization', () async {
       final disabled =
-          await DisableBatteryOptimization.isBatteryOptimizationDisabled ?? false;
+          await DisableBatteryOptimization.isBatteryOptimizationDisabled ??
+          false;
       if (!disabled) {
         await DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
       }

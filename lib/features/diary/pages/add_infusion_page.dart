@@ -48,7 +48,6 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
     _selectedDate = widget.initialDate ?? DateTime.now();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final invProvider = Provider.of<InventoryProvider>(context);
@@ -66,7 +65,11 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
           children: [
             Text(
               context.l10n.addInfusionDetailsHeading,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 16),
             StreamBuilder<List<Medication>>(
@@ -74,20 +77,39 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               builder: (context, snapshot) {
                 final allMeds = snapshot.data ?? [];
                 // Filter to only show infusions
-                final meds = allMeds.where((m) => m.type == MedicationType.infusion).toList();
-                
+                final meds = allMeds
+                    .where((m) => m.type == MedicationType.infusion)
+                    .toList();
+
                 // Set initial medication if provided and not yet set
-                if (_selectedMed == null && widget.initialMedicationId != null && allMeds.isNotEmpty) {
+                if (_selectedMed == null &&
+                    widget.initialMedicationId != null &&
+                    allMeds.isNotEmpty) {
                   try {
-                    _selectedMed = allMeds.firstWhere((m) => m.id == widget.initialMedicationId);
+                    _selectedMed = allMeds.firstWhere(
+                      (m) => m.id == widget.initialMedicationId,
+                    );
                   } catch (_) {}
                 }
 
-                final items = meds.map((m) => DropdownMenuItem<Medication>(value: m, child: Text(m.name))).toList();
-                
+                final items = meds
+                    .map(
+                      (m) => DropdownMenuItem<Medication>(
+                        value: m,
+                        child: Text(m.name),
+                      ),
+                    )
+                    .toList();
+
                 // Safety check: Ensure current selection is in the items list to prevent Flutter's assertion error
-                if (_selectedMed != null && !meds.any((m) => m.id == _selectedMed!.id)) {
-                  items.add(DropdownMenuItem<Medication>(value: _selectedMed!, child: Text(_selectedMed!.name)));
+                if (_selectedMed != null &&
+                    !meds.any((m) => m.id == _selectedMed!.id)) {
+                  items.add(
+                    DropdownMenuItem<Medication>(
+                      value: _selectedMed!,
+                      child: Text(_selectedMed!.name),
+                    ),
+                  );
                 }
 
                 return DropdownButtonFormField<Medication>(
@@ -97,14 +119,21 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                     prefixIcon: const Icon(Icons.medication_rounded),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+                      borderSide: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.1),
+                      ),
                     ),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.04),
                   ),
                   items: items,
                   onChanged: (val) => setState(() => _selectedMed = val),
-                  validator: (val) => val == null ? context.l10n.validationPickOne : null,
+                  validator: (val) =>
+                      val == null ? context.l10n.validationPickOne : null,
                 );
               },
             ),
@@ -113,24 +142,49 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               onTap: _selectDate,
               borderRadius: BorderRadius.circular(16),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.08),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(context.l10n.addInfusionWhen, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          Text(
+                            context.l10n.addInfusionWhen,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                           Text(
                             AppDateFormat.dateTime(context, _selectedDate),
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                         ],
                       ),
@@ -153,10 +207,16 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                         prefixIcon: const Icon(Icons.qr_code_rounded),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+                          borderSide: BorderSide(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.1),
+                          ),
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
+                        fillColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.04),
                       ),
                     ),
                   ),
@@ -181,13 +241,24 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   borderRadius: BorderRadius.circular(16),
                   child: Stack(
                     children: [
-                      Image.file(File(_capturedPhotoPath!), height: 120, width: double.infinity, fit: BoxFit.cover),
+                      Image.file(
+                        File(_capturedPhotoPath!),
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                       Positioned(
-                        right: 8, top: 8,
+                        right: 8,
+                        top: 8,
                         child: IconButton.filled(
-                          onPressed: () => setState(() => _capturedPhotoPath = null),
+                          onPressed: () =>
+                              setState(() => _capturedPhotoPath = null),
                           icon: const Icon(Icons.close_rounded, size: 20),
-                          style: IconButton.styleFrom(backgroundColor: Colors.black.withValues(alpha: 0.5)),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.black.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -205,12 +276,20 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 prefixIcon: const Icon(Icons.scale_rounded),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+                  borderSide: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
+                  ),
                 ),
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
+                fillColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.04),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
             if (_selectedMed?.trackWeight ?? true) ...[
               const SizedBox(height: 20),
@@ -222,12 +301,20 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   suffixText: 'kg',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+                    borderSide: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
+                    ),
                   ),
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.04),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
               ),
             ],
             const SizedBox(height: 20),
@@ -238,10 +325,16 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 prefixIcon: const Icon(Icons.note_alt_rounded),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+                  borderSide: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
+                  ),
                 ),
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
+                fillColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.04),
               ),
               maxLines: 4,
             ),
@@ -252,7 +345,9 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 minimumSize: const Size.fromHeight(60),
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
                 elevation: 0,
               ),
               onPressed: () => _save(diaryProvider),
@@ -267,7 +362,10 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                       _shouldShowTimer
                           ? context.l10n.addInfusionSaveAndStartTimer
                           : context.l10n.addInfusionSaveAndDeductStock,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -306,7 +404,12 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
     );
   }
 
-  Widget _buildActionButton({required VoidCallback onTap, required IconData icon, required String tooltip, bool isLoading = false}) {
+  Widget _buildActionButton({
+    required VoidCallback onTap,
+    required IconData icon,
+    required String tooltip,
+    bool isLoading = false,
+  }) {
     return InkWell(
       onTap: isLoading ? null : onTap,
       borderRadius: BorderRadius.circular(16),
@@ -316,11 +419,16 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+          ),
         ),
-        child: isLoading 
-          ? const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(strokeWidth: 2))
-          : Icon(icon, color: Theme.of(context).colorScheme.primary),
+        child: isLoading
+            ? const Padding(
+                padding: EdgeInsets.all(16),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(icon, color: Theme.of(context).colorScheme.primary),
       ),
     );
   }
@@ -329,21 +437,37 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
     final result = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) => SizedBox(
         height: MediaQuery.of(context).size.height * 0.7,
         child: Column(
           children: [
             const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(context.l10n.actionScanBarcode,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(
+                context.l10n.actionScanBarcode,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
                 child: MobileScanner(
                   onDetect: (capture) {
                     final List<Barcode> barcodes = capture.barcodes;
@@ -382,7 +506,13 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
     );
     if (time == null || !mounted) return;
     setState(() {
-      _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _selectedDate = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
     });
   }
 
@@ -390,14 +520,17 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
     if (_formKey.currentState!.validate() && _selectedMed != null) {
       await provider.logInfusion(
         medicationId: _selectedMed!.id,
-        dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
+        dosage:
+            double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
         batchNumber: _batchController.text,
         notes: _notesController.text,
-        bodyWeight: double.tryParse(_weightController.text.replaceAll(',', '.')),
+        bodyWeight: double.tryParse(
+          _weightController.text.replaceAll(',', '.'),
+        ),
         date: _selectedDate,
         photoPath: _capturedPhotoPath,
       );
-      
+
       if (mounted) {
         if (_shouldShowTimer) {
           // Show the timer modal if enabled for this medication
@@ -422,12 +555,18 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
 
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
+    );
     if (!mounted || image == null) return;
 
     // Save permanently to app directory
     final directory = await getApplicationDocumentsDirectory();
-    final path = p.join(directory.path, 'charge_${DateTime.now().millisecondsSinceEpoch}.jpg');
+    final path = p.join(
+      directory.path,
+      'charge_${DateTime.now().millisecondsSinceEpoch}.jpg',
+    );
     await File(image.path).copy(path);
     if (!mounted) return;
 
@@ -439,8 +578,12 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
     // Perform OCR
     try {
       final inputImage = InputImage.fromFilePath(path);
-      final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-      final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+      final textRecognizer = TextRecognizer(
+        script: TextRecognitionScript.latin,
+      );
+      final RecognizedText recognizedText = await textRecognizer.processImage(
+        inputImage,
+      );
 
       // Simple logic for batch number: first sequence of uppercase letters/numbers
       String? foundBatch;
@@ -448,7 +591,9 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
         RegExp(r'LOT\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
         RegExp(r'CH.-B\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
         RegExp(r'Batch\s*[:\-\s]\s*([A-Z0-9]+)', caseSensitive: false),
-        RegExp(r'([A-Z0-9]{6,12})'), // Alphanumeric candidates (common for Takeda/CSL)
+        RegExp(
+          r'([A-Z0-9]{6,12})',
+        ), // Alphanumeric candidates (common for Takeda/CSL)
       ];
 
       for (final block in recognizedText.blocks) {
@@ -456,7 +601,9 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
           for (final pattern in patterns) {
             final match = pattern.firstMatch(line.text);
             if (match != null) {
-              foundBatch = match.groupCount >= 1 ? match.group(1) : match.group(0);
+              foundBatch = match.groupCount >= 1
+                  ? match.group(1)
+                  : match.group(0);
               break;
             }
           }

@@ -8,7 +8,11 @@ import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 class ShoppingWizardDialog extends StatefulWidget {
   final Medication? initialMedication;
   final PendingOrder? orderToEdit;
-  const ShoppingWizardDialog({super.key, this.initialMedication, this.orderToEdit});
+  const ShoppingWizardDialog({
+    super.key,
+    this.initialMedication,
+    this.orderToEdit,
+  });
 
   @override
   State<ShoppingWizardDialog> createState() => _ShoppingWizardDialogState();
@@ -27,7 +31,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
     super.initState();
     if (widget.orderToEdit != null) {
       _deliveryDate = widget.orderToEdit!.deliveryDate;
-      _qtyController.text = widget.orderToEdit!.medicationQty.toStringAsFixed(0);
+      _qtyController.text = widget.orderToEdit!.medicationQty.toStringAsFixed(
+        0,
+      );
     } else {
       _selectedMed = widget.initialMedication;
       if (_selectedMed != null) {
@@ -51,13 +57,17 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       title: Row(
         children: [
           Icon(
-            widget.orderToEdit == null ? Icons.auto_awesome_rounded : Icons.edit_note_rounded, 
-            color: Theme.of(context).colorScheme.primary
+            widget.orderToEdit == null
+                ? Icons.auto_awesome_rounded
+                : Icons.edit_note_rounded,
+            color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 12),
-          Text(widget.orderToEdit == null
-              ? context.l10n.shoppingWizardTitle
-              : context.l10n.shoppingWizardEditTitle),
+          Text(
+            widget.orderToEdit == null
+                ? context.l10n.shoppingWizardTitle
+                : context.l10n.shoppingWizardEditTitle,
+          ),
         ],
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
@@ -72,7 +82,10 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                 widget.orderToEdit == null
                     ? context.l10n.shoppingWizardIntro
                     : context.l10n.shoppingWizardEditIntro,
-                style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 24),
               FutureBuilder<List<Medication>>(
@@ -84,15 +97,23 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       value: null,
                       child: Text(context.l10n.shoppingWizardSuppliesOnly),
                     ),
-                    ...meds.map((m) => DropdownMenuItem<int?>(value: m.id, child: Text(m.name))),
+                    ...meds.map(
+                      (m) => DropdownMenuItem<int?>(
+                        value: m.id,
+                        child: Text(m.name),
+                      ),
+                    ),
                   ];
 
                   // Safety: Ensure _selectedMed.id is in items to prevent Flutter crash if still loading
-                  if (_selectedMed != null && !items.any((it) => it.value == _selectedMed!.id)) {
-                    items.add(DropdownMenuItem<int?>(
-                      value: _selectedMed!.id, 
-                      child: Text(_selectedMed!.name)
-                    ));
+                  if (_selectedMed != null &&
+                      !items.any((it) => it.value == _selectedMed!.id)) {
+                    items.add(
+                      DropdownMenuItem<int?>(
+                        value: _selectedMed!.id,
+                        child: Text(_selectedMed!.name),
+                      ),
+                    );
                   }
 
                   return DropdownButtonFormField<int?>(
@@ -105,9 +126,12 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                           _qtyController.text = '0';
                         } else {
                           // Find in recently loaded meds or keep current
-                          _selectedMed = meds.where((m) => m.id == val).firstOrNull ?? _selectedMed;
+                          _selectedMed =
+                              meds.where((m) => m.id == val).firstOrNull ??
+                              _selectedMed;
                           if (_selectedMed != null) {
-                            _qtyController.text = _selectedMed!.packageSize.toStringAsFixed(0);
+                            _qtyController.text = _selectedMed!.packageSize
+                                .toStringAsFixed(0);
                           }
                         }
                       });
@@ -116,7 +140,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     decoration: InputDecoration(
                       labelText: context.l10n.medicationFallbackName,
                       prefixIcon: const Icon(Icons.medication_rounded),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.surface,
                     ),
@@ -129,13 +155,19 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   controller: _qtyController,
                   decoration: InputDecoration(
                     labelText: context.l10n.shoppingWizardOrderQuantity(
-                        _selectedMed?.unit ?? context.l10n.unitBottle),
+                      _selectedMed?.unit ?? context.l10n.unitBottle,
+                    ),
                     prefixIcon: const Icon(Icons.shopping_basket_rounded),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     filled: true,
                     fillColor: Theme.of(context).colorScheme.surface,
                     helperText: _getMedReachText(),
-                    helperStyle: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.bold),
+                    helperStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.tertiary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   keyboardType: TextInputType.number,
                   onChanged: (_) => _calculateBOM(db),
@@ -144,45 +176,84 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               const SizedBox(height: 16),
               ListTile(
                 tileColor: Theme.of(context).colorScheme.surface,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.withValues(alpha: 0.1))),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
+                ),
                 leading: const Icon(Icons.event_rounded),
-                title: Text(context.l10n.shoppingWizardDeliveryDate, style: const TextStyle(fontSize: 14)),
-                subtitle: Text(_deliveryDate == null
-                    ? context.l10n.shoppingWizardImmediately
-                    : AppDateFormat.date(context, _deliveryDate!)),
+                title: Text(
+                  context.l10n.shoppingWizardDeliveryDate,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                subtitle: Text(
+                  _deliveryDate == null
+                      ? context.l10n.shoppingWizardImmediately
+                      : AppDateFormat.date(context, _deliveryDate!),
+                ),
                 onTap: () async {
                   final date = await showDatePicker(
                     context: context,
                     initialDate: _deliveryDate ?? DateTime.now(),
-                    firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                    firstDate: DateTime.now().subtract(
+                      const Duration(days: 30),
+                    ),
                     lastDate: DateTime.now().add(const Duration(days: 365)),
                   );
                   setState(() => _deliveryDate = date);
                 },
-                trailing: _deliveryDate != null ? IconButton(icon: const Icon(Icons.clear), onPressed: () => setState(() => _deliveryDate = null)) : null,
+                trailing: _deliveryDate != null
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => setState(() => _deliveryDate = null),
+                      )
+                    : null,
               ),
               const SizedBox(height: 12),
               if (_results != null) ...[
                 const Divider(),
                 const SizedBox(height: 12),
-                Text(context.l10n.shoppingWizardSuggestion, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  context.l10n.shoppingWizardSuggestion,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 12),
-                
+
                 if (_results!.any((it) => it.isSystemRecommended)) ...[
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(context.l10n.shoppingWizardRequired, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    child: Text(
+                      context.l10n.shoppingWizardRequired,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                  ..._results!.where((it) => it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
+                  ..._results!
+                      .where((it) => it.isSystemRecommended)
+                      .map((item) => _buildAccessoryRow(item)),
                   const SizedBox(height: 16),
                 ],
 
                 if (_results!.any((it) => !it.isSystemRecommended)) ...[
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(context.l10n.shoppingWizardOptional, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    child: Text(
+                      context.l10n.shoppingWizardOptional,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                  ..._results!.where((it) => !it.isSystemRecommended).map((item) => _buildAccessoryRow(item)),
+                  ..._results!
+                      .where((it) => !it.isSystemRecommended)
+                      .map((item) => _buildAccessoryRow(item)),
                 ],
 
                 if (_results!.isEmpty)
@@ -190,17 +261,22 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     padding: const EdgeInsets.all(16),
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       context.l10n.shoppingWizardNoSuggestions,
-                      
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
+
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
-                
+
                 const SizedBox(height: 20),
                 Center(
                   child: OutlinedButton.icon(
@@ -208,7 +284,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     icon: const Icon(Icons.add_shopping_cart_rounded),
                     label: Text(context.l10n.shoppingWizardAddOther),
                     style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ),
@@ -224,16 +302,25 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
           child: Text(context.l10n.actionCancel),
         ),
         ElevatedButton(
-          onPressed: (_selectedMed == null && (_results == null || !_results!.any((it) => it.isActuallySelected))) ? null : () => _saveOrder(db),
+          onPressed:
+              (_selectedMed == null &&
+                  (_results == null ||
+                      !_results!.any((it) => it.isActuallySelected)))
+              ? null
+              : () => _saveOrder(db),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.tertiary,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-          child: Text(widget.orderToEdit == null
-              ? context.l10n.shoppingWizardSaveOrder
-              : context.l10n.actionSaveChanges),
+          child: Text(
+            widget.orderToEdit == null
+                ? context.l10n.shoppingWizardSaveOrder
+                : context.l10n.actionSaveChanges,
+          ),
         ),
       ],
     );
@@ -256,7 +343,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               final acc = allAcc[index];
               return ListTile(
                 title: Text(acc.name),
-                subtitle: Text(context.l10n.stockValue('${acc.stock}', acc.unit)),
+                subtitle: Text(
+                  context.l10n.stockValue('${acc.stock}', acc.unit),
+                ),
                 onTap: () => Navigator.pop(context, acc),
               );
             },
@@ -270,29 +359,36 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
         _results ??= [];
         // Check if already in list
         if (_results!.any((it) => it.id == selected.id)) {
-           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.shoppingWizardAlreadyInList)));
-           return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.shoppingWizardAlreadyInList)),
+          );
+          return;
         }
 
-        _results!.add(_ShoppingItem(
-          selected.id, 
-          selected.name, 
-          selected.packageSize, 
-          selected.unit, 
-          selected.stock, 
-          false, 
-          false, 
-          selected.packageSize, 
-          0,
-          true
-        ));
+        _results!.add(
+          _ShoppingItem(
+            selected.id,
+            selected.name,
+            selected.packageSize,
+            selected.unit,
+            selected.stock,
+            false,
+            false,
+            selected.packageSize,
+            0,
+            true,
+          ),
+        );
       });
     }
   }
 
   void _calculateInitialData(AppDatabase db) async {
     if (widget.orderToEdit != null) {
-      final med = await (db.select(db.medications)..where((t) => t.id.equals(widget.orderToEdit!.medicationId))).getSingle();
+      final med =
+          await (db.select(db.medications)
+                ..where((t) => t.id.equals(widget.orderToEdit!.medicationId)))
+              .getSingle();
       setState(() {
         _selectedMed = med;
       });
@@ -306,13 +402,13 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: item.isSystemRecommended || item.isUserAddition
-          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
-          : Theme.of(context).colorScheme.surface,
+            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+            : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: item.isSystemRecommended || item.isUserAddition
-            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3) 
-            : Colors.grey.withValues(alpha: 0.1),
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
+              : Colors.grey.withValues(alpha: 0.1),
           width: item.isSystemRecommended || item.isUserAddition ? 2 : 1,
         ),
       ),
@@ -323,14 +419,22 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: item.isSystemRecommended ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1) : Theme.of(context).colorScheme.surface, 
-                  shape: BoxShape.circle, 
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.1))
+                  color: item.isSystemRecommended
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.1)
+                      : Theme.of(context).colorScheme.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                 ),
                 child: Icon(
-                  item.isSystemRecommended ? Icons.star_rounded : Icons.add_circle_outline_rounded, 
-                  size: 20, 
-                  color: item.isSystemRecommended ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant
+                  item.isSystemRecommended
+                      ? Icons.star_rounded
+                      : Icons.add_circle_outline_rounded,
+                  size: 20,
+                  color: item.isSystemRecommended
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(width: 12),
@@ -339,16 +443,34 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.name, 
+                      item.name,
                       style: TextStyle(
-                        fontWeight: item.isSystemRecommended ? FontWeight.bold : FontWeight.w500,
-                        color: item.isSystemRecommended ? Theme.of(context).colorScheme.primary : null,
-                      )
+                        fontWeight: item.isSystemRecommended
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                        color: item.isSystemRecommended
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                      ),
                     ),
                     if (item.isSystemRecommended)
-                      Text(context.l10n.shoppingWizardRecommendedAmount, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                      Text(
+                        context.l10n.shoppingWizardRecommendedAmount,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     if (item.isUserAddition)
-                      Text(context.l10n.shoppingWizardAdditionallySelected, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.bold)),
+                      Text(
+                        context.l10n.shoppingWizardAdditionallySelected,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Theme.of(context).colorScheme.tertiary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -368,8 +490,10 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                         controller: item.controller,
                         textAlign: TextAlign.right,
                         style: TextStyle(
-                          fontWeight: FontWeight.w900, 
-                          color: item.isActuallySelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant
+                          fontWeight: FontWeight.w900,
+                          color: item.isActuallySelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         decoration: const InputDecoration(
                           isDense: true,
@@ -386,7 +510,13 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Text(item.unit, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    Text(
+                      item.unit,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -396,11 +526,21 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.date_range_rounded, size: 14, color: Color(0xFF00BFA6)), // Emerald accent
+                const Icon(
+                  Icons.date_range_rounded,
+                  size: 14,
+                  color: Color(0xFF00BFA6),
+                ), // Emerald accent
                 const SizedBox(width: 6),
                 Text(
-                  context.l10n.inventoryLastsUntil(AppDateFormat.date(context, item.reachDate!)),
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF00BFA6), fontWeight: FontWeight.bold),
+                  context.l10n.inventoryLastsUntil(
+                    AppDateFormat.date(context, item.reachDate!),
+                  ),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF00BFA6),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -412,27 +552,33 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
 
   String _getMedReachText() {
     if (_selectedMed == null || _medReachDate == null) return '';
-    return context.l10n.inventoryLastsUntil(AppDateFormat.date(context, _medReachDate!));
+    return context.l10n.inventoryLastsUntil(
+      AppDateFormat.date(context, _medReachDate!),
+    );
   }
 
   void _calculateBOM(AppDatabase db) async {
     // Keep manual additions if they exist
-    final manualAdditions = _results?.where((it) => it.isManualAddition).toList() ?? [];
-    
+    final manualAdditions =
+        _results?.where((it) => it.isManualAddition).toList() ?? [];
+
     if (_selectedMed == null) {
       setState(() {
         _results = manualAdditions;
       });
       return;
     }
-    
+
     final orderQty = double.tryParse(_qtyController.text) ?? 0.0;
     final medService = Provider.of<MedicationService>(context, listen: false);
-    
+
     final dailyReq = await medService.getDailyRequirement(_selectedMed!.id);
 
     // Med reach date
-    _medReachDate = await medService.calculateReachDate(_selectedMed!, additionalStock: orderQty);
+    _medReachDate = await medService.calculateReachDate(
+      _selectedMed!,
+      additionalStock: orderQty,
+    );
 
     // If editing, load existing order items to set initial counts
     List<PendingOrderItem> existingItems = [];
@@ -442,23 +588,27 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
 
     final links = await db.getAccessoriesForMedication(_selectedMed!.id);
     List<_ShoppingItem> items = [];
-    
+
     for (var link in links) {
-      final acc = await (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).getSingle();
-      
+      final acc = await (db.select(
+        db.accessories,
+      )..where((t) => t.id.equals(link.accessoryId))).getSingle();
+
       // Calculate how much accessory is "reserved" for current med stock
       final reservedForExisting = _selectedMed!.stock * link.defaultQuantity;
       final availableStock = acc.stock - reservedForExisting;
-      
+
       final neededForOrder = orderQty * link.defaultQuantity;
       final shortfall = neededForOrder - availableStock;
-      
+
       double plannedQty = 0;
       bool isSystemRecommended = false;
-      
+
       // Check if we already have this in the existing order (if editing)
-      final existingItem = existingItems.where((it) => it.accessoryId == acc.id).firstOrNull;
-      
+      final existingItem = existingItems
+          .where((it) => it.accessoryId == acc.id)
+          .firstOrNull;
+
       if (existingItem != null) {
         plannedQty = existingItem.quantity;
         // Logic for recommendation still applies for visual styling
@@ -475,26 +625,33 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
           }
         } else if (link.isMandatory) {
           if (orderQty > 0) {
-             isSystemRecommended = true;
-             plannedQty = acc.packageSize > 0 ? acc.packageSize : 1.0;
+            isSystemRecommended = true;
+            plannedQty = acc.packageSize > 0 ? acc.packageSize : 1.0;
           }
         }
       }
-      
+
       final accDailyReq = dailyReq * link.defaultQuantity;
       final item = _ShoppingItem(
-        acc.id, acc.name, plannedQty, acc.unit, acc.stock, 
-        link.isMandatory, isSystemRecommended, acc.packageSize, accDailyReq
+        acc.id,
+        acc.name,
+        plannedQty,
+        acc.unit,
+        acc.stock,
+        link.isMandatory,
+        isSystemRecommended,
+        acc.packageSize,
+        accDailyReq,
       );
-      
+
       if (accDailyReq > 0) {
         final days = (acc.stock + plannedQty) / accDailyReq;
         item.reachDate = DateTime.now().add(Duration(days: days.floor()));
       }
-      
+
       items.add(item);
     }
-    
+
     // Add manual additions that were not part of the medication links
     for (var manual in manualAdditions) {
       if (!items.any((it) => it.id == manual.id)) {
@@ -511,45 +668,55 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
 
   void _saveOrder(AppDatabase db) async {
     final orderQty = double.tryParse(_qtyController.text) ?? 1.0;
-    
+
     await db.transaction(() async {
       int orderId;
       if (widget.orderToEdit != null) {
         orderId = widget.orderToEdit!.id;
-        await db.updatePendingOrder(widget.orderToEdit!.copyWith(
-          medicationId: _selectedMed!.id,
-          medicationQty: orderQty,
-          deliveryDate: Value(_deliveryDate),
-        ));
+        await db.updatePendingOrder(
+          widget.orderToEdit!.copyWith(
+            medicationId: _selectedMed!.id,
+            medicationQty: orderQty,
+            deliveryDate: Value(_deliveryDate),
+          ),
+        );
         // Clear existing items to re-add them (simplest way to update)
-        await (db.delete(db.pendingOrderItems)..where((t) => t.orderId.equals(orderId))).go();
+        await (db.delete(
+          db.pendingOrderItems,
+        )..where((t) => t.orderId.equals(orderId))).go();
       } else {
-        orderId = await db.insertPendingOrder(PendingOrdersCompanion.insert(
-          medicationId: _selectedMed!.id,
-          medicationQty: orderQty,
-          deliveryDate: Value(_deliveryDate),
-        ));
+        orderId = await db.insertPendingOrder(
+          PendingOrdersCompanion.insert(
+            medicationId: _selectedMed!.id,
+            medicationQty: orderQty,
+            deliveryDate: Value(_deliveryDate),
+          ),
+        );
       }
 
-        // Add medication as order item (if selected)
-        if (_selectedMed != null) {
-          await db.insertPendingOrderItem(PendingOrderItemsCompanion.insert(
+      // Add medication as order item (if selected)
+      if (_selectedMed != null) {
+        await db.insertPendingOrderItem(
+          PendingOrderItemsCompanion.insert(
             orderId: orderId,
             medicationId: Value(_selectedMed!.id),
             quantity: orderQty,
-          ));
-        }
+          ),
+        );
+      }
 
       // Add accessories as order items
       if (_results != null) {
         for (var item in _results!) {
           final qty = double.tryParse(item.controller.text) ?? item.neededCount;
           if (qty > 0) {
-            await db.insertPendingOrderItem(PendingOrderItemsCompanion.insert(
-              orderId: orderId,
-              accessoryId: Value(item.id),
-              quantity: qty,
-            ));
+            await db.insertPendingOrderItem(
+              PendingOrderItemsCompanion.insert(
+                orderId: orderId,
+                accessoryId: Value(item.id),
+                quantity: qty,
+              ),
+            );
           }
         }
       }
@@ -573,22 +740,31 @@ class _ShoppingItem {
   final TextEditingController controller;
   DateTime? reachDate;
 
-  _ShoppingItem(this.id, this.name, this.neededCount, this.unit, this.currentStock, this.isMandatoryInDb, this.isSystemRecommended, this.packageSize, this.dailyUsage, [this.isManualAddition = false]) 
-    : controller = TextEditingController(text: neededCount.toStringAsFixed(0));
+  _ShoppingItem(
+    this.id,
+    this.name,
+    this.neededCount,
+    this.unit,
+    this.currentStock,
+    this.isMandatoryInDb,
+    this.isSystemRecommended,
+    this.packageSize,
+    this.dailyUsage, [
+    this.isManualAddition = false,
+  ]) : controller = TextEditingController(text: neededCount.toStringAsFixed(0));
 
   bool get isActuallySelected {
     final val = double.tryParse(controller.text) ?? 0;
     return val > 0;
   }
 
-  bool get isUserAddition => (isActuallySelected && !isSystemRecommended) || isManualAddition;
+  bool get isUserAddition =>
+      (isActuallySelected && !isSystemRecommended) || isManualAddition;
 
   void updateReach(double usage, double newQty) {
     if (usage > 0) {
-       final days = (currentStock + newQty) / usage;
-       reachDate = DateTime.now().add(Duration(days: days.floor()));
+      final days = (currentStock + newQty) / usage;
+      reachDate = DateTime.now().add(Duration(days: days.floor()));
     }
   }
 }
-
-

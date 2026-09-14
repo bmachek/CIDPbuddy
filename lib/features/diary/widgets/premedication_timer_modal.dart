@@ -9,7 +9,8 @@ class PremedicationTimerModal extends StatefulWidget {
   const PremedicationTimerModal({super.key});
 
   @override
-  State<PremedicationTimerModal> createState() => _PremedicationTimerModalState();
+  State<PremedicationTimerModal> createState() =>
+      _PremedicationTimerModalState();
 }
 
 class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
@@ -68,7 +69,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
     FlutterBackgroundService().invoke('startTimer', {
       'seconds': _secondsRemaining,
     });
-    
+
     setState(() => _isRunning = true);
     WakelockPlus.enable();
   }
@@ -101,7 +102,8 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
   Widget build(BuildContext context) {
     final minutes = _secondsRemaining ~/ 60;
     final seconds = _secondsRemaining % 60;
-    final progress = 1 - (_secondsRemaining / (_totalSeconds > 0 ? _totalSeconds : 1));
+    final progress =
+        1 - (_secondsRemaining / (_totalSeconds > 0 ? _totalSeconds : 1));
     final totalMl = (_totalSeconds ~/ 60) + 1;
     final remainingMl = (minutes + 1);
 
@@ -130,10 +132,12 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
           const SizedBox(height: 8),
           Text(
             context.l10n.timerSubtitle(_totalSeconds),
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 40),
-          
+
           // Circular Timer with Volume Display
           Stack(
             alignment: Alignment.center,
@@ -144,7 +148,9 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                 child: CircularProgressIndicator(
                   value: progress,
                   strokeWidth: 8,
-                  backgroundColor: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.tertiary.withValues(alpha: 0.1),
                   color: Theme.of(context).colorScheme.tertiary,
                   strokeCap: StrokeCap.round,
                 ),
@@ -160,18 +166,33 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                       fontFamily: 'monospace',
                     ),
                   ),
-                  Text(context.l10n.timerRemainingLabel, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
+                  Text(
+                    context.l10n.timerRemainingLabel,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.tertiary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.vaccines_rounded, size: 16, color: Theme.of(context).colorScheme.tertiary),
+                        Icon(
+                          Icons.vaccines_rounded,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.tertiary,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           '${(remainingMl).toStringAsFixed(0)} ml',
@@ -188,9 +209,9 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Syringe Progress Bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -200,9 +221,20 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(context.l10n.timerSyringeProgress, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                    Text('$remainingMl / $totalMl ml', 
-                         style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    Text(
+                      context.l10n.timerSyringeProgress,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      '$remainingMl / $totalMl ml',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -217,18 +249,29 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                   child: Stack(
                     children: [
                       FractionallySizedBox(
-                        widthFactor: 1 - progress, // Inverting because progress is time passed, we want time remaining
+                        widthFactor:
+                            1 -
+                            progress, // Inverting because progress is time passed, we want time remaining
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.7), Theme.of(context).colorScheme.tertiary],
+                              colors: [
+                                Theme.of(
+                                  context,
+                                ).colorScheme.tertiary.withValues(alpha: 0.7),
+                                Theme.of(context).colorScheme.tertiary,
+                              ],
                             ),
                             borderRadius: BorderRadius.circular(11),
                           ),
                         ),
                       ),
                       const Center(
-                        child: Icon(Icons.keyboard_double_arrow_right_rounded, color: Colors.white, size: 14),
+                        child: Icon(
+                          Icons.keyboard_double_arrow_right_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -236,9 +279,9 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 40),
-          
+
           // Controls
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -251,7 +294,9 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
               ),
               const SizedBox(width: 24),
               _buildControlButton(
-                icon: _isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                icon: _isRunning
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
                 onPressed: _isRunning ? _stopTimer : _startTimer,
                 color: Theme.of(context).colorScheme.tertiary,
                 iconColor: Colors.white,
@@ -315,28 +360,36 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(context.l10n.timerVolumePickerTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              context.l10n.timerVolumePickerTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 20),
             Wrap(
               spacing: 12,
-              children: [5, 10, 15, 20, 30].map((m) => ChoiceChip(
-                label: Text('$m ml'),
-                selected: ((_totalSeconds ~/ 60) + 1) == m,
-                onSelected: (selected) {
-                  if (selected) {
-                    setState(() {
-                      _totalSeconds = (m - 1) * 60;
-                      _secondsRemaining = _totalSeconds;
-                    });
-                    // Discard any paused session so the service does not push
-                    // the old remaining time back onto the new duration.
-                    FlutterBackgroundService()
-                        .invoke('resetTimer', {'seconds': _totalSeconds});
-                    _saveSettings(m);
-                    Navigator.pop(context);
-                  }
-                },
-              )).toList(),
+              children: [5, 10, 15, 20, 30]
+                  .map(
+                    (m) => ChoiceChip(
+                      label: Text('$m ml'),
+                      selected: ((_totalSeconds ~/ 60) + 1) == m,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() {
+                            _totalSeconds = (m - 1) * 60;
+                            _secondsRemaining = _totalSeconds;
+                          });
+                          // Discard any paused session so the service does not push
+                          // the old remaining time back onto the new duration.
+                          FlutterBackgroundService().invoke('resetTimer', {
+                            'seconds': _totalSeconds,
+                          });
+                          _saveSettings(m);
+                          Navigator.pop(context);
+                        }
+                      },
+                    ),
+                  )
+                  .toList(),
             ),
             const SizedBox(height: 20),
           ],
