@@ -46,6 +46,11 @@ CIDP Buddy is a comprehensive medication and symptom management application spec
 - **Automated Calculations**: Calculates exactly what you need to order based on current stock and upcoming requirements.
 - **Delivery Tracking**: Manage pending orders and confirm deliveries to update inventory automatically.
 
+### 💾 Backup & Restore
+- **ZIP Snapshots**: The full SQLite database is archived automatically after changes (at most once every 6 hours), keeping the 5 most recent backups.
+- **Destinations**: A local folder, or — on Android — any folder picked through the Storage Access Framework.
+- **Reliability Check**: A dedicated settings page shows the last success, the last error, and the consecutive-failure count.
+
 ## 🛠 Tech Stack
 
 - **Framework**: [Flutter](https://flutter.dev/)
@@ -53,6 +58,7 @@ CIDP Buddy is a comprehensive medication and symptom management application spec
 - **State Management**: [Provider](https://pub.dev/packages/provider)
 - **Notifications**: [Flutter Local Notifications](https://pub.dev/packages/flutter_local_notifications)
 - **Charts**: [FL Chart](https://pub.dev/packages/fl_chart) for health data visualization.
+- **Localization**: German only (`de_DE`) — all UI strings are in German.
 
 ## 🚀 Getting Started
 
@@ -88,11 +94,12 @@ CIDP Buddy is a comprehensive medication and symptom management application spec
 
 - **Code Generation**: Always run `build_runner` after modifying database schemas or `part` files.
 - **Linting**: Ensure code adheres to the rules defined in `analysis_options.yaml`.
-- **Formatting**: Use `flutter format .` before committing.
+- **Formatting**: Use `dart format .` before committing.
+- **Documentation**: The detailed wiki lives in [`docs/`](docs/Home.md).
 
 ## 🛡 License
 
-This project is private and for personal use.
+Licensed under the **GNU General Public License v3.0** — see [LICENSE](LICENSE).
 
 ---
 *Developed with care for the CIDP community.*

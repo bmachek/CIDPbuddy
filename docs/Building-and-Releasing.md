@@ -2,7 +2,7 @@
 
 ## Voraussetzungen
 
-- Flutter SDK ^3.11.4 installiert und im PATH
+- Flutter SDK mit Dart ^3.11.4 installiert und im PATH
 - Android Studio / Xcode (je nach Zielplattform)
 - Java 17 (für Android-Builds)
 - macOS: Homebrew-Flutter unter `/opt/homebrew/bin/flutter`
@@ -53,6 +53,9 @@ flutter build apk --release \
 
 Die APK liegt anschließend unter `build/app/outputs/flutter-apk/app-release.apk`.
 
+> Ohne `--build-name`/`--build-number` greift die Version aus `pubspec.yaml` — die trägt
+> bewusst das Suffix `-dev`, damit lokale Builds von CI-Releases unterscheidbar sind.
+
 ### Signing konfigurieren
 
 #### Lokaler Entwicklungsbuild
@@ -75,37 +78,44 @@ keyAlias=cidpbuddy
 storeFile=../cidpbuddy-release.jks
 ```
 
-Und `android/app/build.gradle.kts` anpassen — **Signing-Konfiguration hinzufügen** (aktuell fehlt das noch):
+Mehr ist nicht nötig: `android/app/build.gradle.kts` liest `key.properties` bereits ein und
+wählt die Signatur automatisch:
 
 ```kotlin
-// Vor dem android { … }-Block:
-val keystorePropertiesFile = rootProject.file("key.properties")
-val keystoreProperties = java.util.Properties().also {
-    if (keystorePropertiesFile.exists()) it.load(keystorePropertiesFile.inputStream())
-}
-
-android {
-    // …
-    signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String?
-            keyPassword = keystoreProperties["keyPassword"] as String?
-            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
-            storePassword = keystoreProperties["storePassword"] as String?
+// android/app/build.gradle.kts
+signingConfigs {
+    create("release") {
+        if (keystorePropertiesFile.exists()) {
+            keyAlias = keystoreProperties["keyAlias"] as String
+            // … keyPassword, storeFile, storePassword
         }
     }
-    buildTypes {
-        release {
-            signingConfig = signingConfigs.getByName("release")
-            // … isMinifyEnabled, proguardFiles bleiben wie gehabt
-        }
+}
+
+buildTypes {
+    release {
+        signingConfig = if (keystorePropertiesFile.exists())
+            signingConfigs.getByName("release")
+        else
+            signingConfigs.getByName("debug")
+        // …
     }
 }
 ```
 
+**Fehlt `key.properties`, fällt der Release-Build stillschweigend auf den Debug-Key zurück.**
+Ein so signiertes APK lässt sich nicht in den Play Store laden und nicht über ein zuvor mit
+dem Release-Key signiertes Update installieren. Im Zweifel prüfen:
+
+```bash
+keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk
+```
+
 #### CI/CD-Signing via GitHub Actions Secrets
 
-Der Release-Workflow (`release.yml`) baut aktuell mit Debug-Keys — das muss für einen produktionsfähigen Build auf echte Keystore-Secrets umgestellt werden.
+Der `android-build`-Job in `.github/workflows/release.yml` legt **keine** `key.properties` an und
+baut damit nach der Fallback-Regel oben mit Debug-Keys. Für einen produktionsfähigen Build
+muss er auf echte Keystore-Secrets umgestellt werden.
 
 **Schritt 1 — Keystore als Base64-Secret hinterlegen:**
 
@@ -151,22 +161,6 @@ Den Build-APK-Step in `.github/workflows/release.yml` ersetzen durch:
 ```
 
 **Wichtig:** Den dekodierten Keystore und `key.properties` nicht cachen oder als Artefakt hochladen.
-
-#### SHA-1-Fingerprint für Google Sign-In ermitteln
-
-Google Sign-In auf Android funktioniert über Package-Name + SHA-1 des Signing-Zertifikats. Der Fingerprint des Release-Keystores muss in der **Google Cloud Console** unter dem Android-OAuth-Client registriert werden.
-
-```bash
-# SHA-1 des Release-Keystores ausgeben:
-keytool -list -v \
-  -keystore android/cidpbuddy-release.jks \
-  -alias cidpbuddy \
-  | grep "SHA1:"
-```
-
-Den ausgegebenen SHA-1 unter **Google Cloud Console → APIs & Dienste → Anmeldedaten → Android-OAuth-Client** eintragen. Solange nur Debug-Keys verwendet werden, funktioniert Google Sign-In im Release-APK nicht.
-
-Siehe auch: [`docs/Google-Drive-Setup.md`](Google-Drive-Setup.md)
 
 ### ProGuard / R8
 
@@ -226,7 +220,7 @@ Sind die drei `APP_STORE_CONNECT_*`-Secrets nicht gesetzt, wird der TestFlight-U
    ```
 
 **Provisioning Profile herunterladen:**
-1. [developer.apple.com](https://developer.apple.com/account) → Profiles → App Store-Profil für `de.gbs-cidp.cidpbuddy` erstellen/herunterladen
+1. [developer.apple.com](https://developer.apple.com/account) → Profiles → App Store-Profil für `de.fokuspunk.cidpbuddy` erstellen/herunterladen
 2. Als Base64 enkodieren:
    ```bash
    base64 -i profile.mobileprovision | pbcopy
@@ -255,8 +249,8 @@ Oder in Xcode: Runner-Target → Signing & Capabilities → Team.
 
 Bei DB-Schemaänderungen:
 
-1. Neue Tabellenfelder/-tabellen in `lib/core/database/database.dart` definieren
-2. Schemaversion in `@DriftDatabase` erhöhen
+1. Neue Tabellenfelder/-tabellen in `lib/core/database/database.dart` definieren (neue Tabellen zusätzlich in die `@DriftDatabase(tables: [...])`-Liste eintragen)
+2. `schemaVersion`-Getter in `AppDatabase` erhöhen (aktuell **14**)
 3. `onUpgrade`-Schritt in `lib/core/database/database.dart` hinzufügen
 4. Code neu generieren:
    ```bash
@@ -278,11 +272,15 @@ dart run build_runner build --delete-conflicting-outputs
 Version und Build-Nummer werden in `pubspec.yaml` gepflegt:
 
 ```yaml
-version: 1.0.0+1
-#        ↑       ↑
-#        |       Build-Nummer (versionCode auf Android)
+version: 0.99.0-dev+17
+#        ↑           ↑
+#        |           Build-Nummer (versionCode auf Android)
 #        Semantic version (versionName auf Android)
 ```
+
+Das `-dev`-Suffix ist Absicht: Lokale/manuelle Builds sollen sichtbar von CI-Release-Builds
+unterscheidbar sein. Der Release-Workflow überschreibt beides ohnehin mit Werten aus dem
+`v*`-Git-Tag.
 
 Beim Build-Befehl können sie überschrieben werden:
 
@@ -296,7 +294,7 @@ flutter build apk --build-name=1.2.3 --build-number=42
 |-------|--------|
 | `android/app/build.gradle.kts` | App-ID, Min-SDK, Java-Version, Desugaring |
 | `android/app/src/main/AndroidManifest.xml` | Berechtigungen, Intent-Filter, Background-Service |
-| `ios/Runner/Info.plist` | Bundle-ID, Background-Modes, URL-Schemes (OAuth) |
+| `ios/Runner/Info.plist` | Bundle-ID, Background-Modes (`fetch`), Kamera-Berechtigungstext |
 | `pubspec.yaml` | Version, Abhängigkeiten, Assets |
 
 ## Assets

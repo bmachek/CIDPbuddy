@@ -1,6 +1,6 @@
 # Datenbankschema
 
-CIDPbuddy verwendet **Drift ORM** mit SQLite. Die aktuelle Schemaversion ist **13**. Alle Migrationen sind explizit in `lib/core/database/database.dart` mit `onUpgrade`-Schritten hinterlegt.
+CIDPbuddy verwendet **Drift ORM** mit SQLite. Die aktuelle Schemaversion ist **14**. Alle Migrationen sind explizit in `lib/core/database/database.dart` mit `onUpgrade`-Schritten hinterlegt.
 
 ## Tabellenübersicht
 
@@ -12,12 +12,12 @@ Medikamente und Infusionslösungen.
 |------|-----|--------------|
 | `id` | INTEGER PK | Auto-increment |
 | `name` | TEXT | Handelsname des Medikaments |
-| `dosage` | REAL | Standarddosis (in `unit`) |
+| `dosage` | TEXT | Standarddosis als Freitext (Default `''`) |
 | `pzn` | TEXT? | Pharmazentralnummer |
 | `stock` | REAL | Aktueller Bestand |
 | `minStock` | REAL | Mindestbestand (Alarm-Schwelle) |
 | `unit` | TEXT | Einheit (z.B. „g", „ml", „Stk.") |
-| `type` | TEXT | `infusion` oder `pill` |
+| `type` | INTEGER | `MedicationType`-Enum-Index: `0` = `infusion`, `1` = `pill` |
 | `packageSize` | REAL | Inhalt pro Packung |
 | `trackBatchNumber` | BOOLEAN | Chargennummer bei Infusionslog erfassen? |
 | `trackWeight` | BOOLEAN | Körpergewicht bei Infusionslog erfassen? |
@@ -77,9 +77,9 @@ Wiederkehrende Behandlungspläne (Soll-Daten).
 | `medicationId` | INTEGER FK → Medications | Zugeordnetes Medikament |
 | `dosage` | REAL | Geplante Dosis |
 | `frequencyType` | TEXT | `daily`, `interval`, `weekly`, `weekdays` |
-| `intervalValue` | INTEGER? | Für `interval`: Tage zwischen Infusionen |
+| `intervalValue` | INTEGER? | Für `interval`: Tage zwischen Infusionen; für `weekly`: Wochen-Abstand (z. B. 2 = jede zweite Woche) |
 | `selectedWeekdays` | TEXT? | Für `weekly`: kommagetrennte Wochentage (`'1,3,5'` = Mo/Mi/Fr) |
-| `startDate` | DATE | Beginn des Plans |
+| `startDate` | DATETIME | Beginn des Plans |
 | `isActive` | BOOLEAN | Plan aktiv? |
 | `intakeTimes` | TEXT? | Kommagetrennte Uhrzeiten (`'08:00,20:00'`) |
 
@@ -109,8 +109,13 @@ Bestellungen in Bearbeitung.
 | `id` | INTEGER PK | Auto-increment |
 | `medicationId` | INTEGER FK → Medications | Bestelltes Medikament |
 | `medicationQty` | REAL | Bestellmenge (Medikament) |
-| `deliveryDate` | DATE? | Erwartetes Lieferdatum |
-| `isConfirmed` | BOOLEAN | Bestellung bestätigt? |
+| `deliveryDate` | DATETIME? | Erwartetes Lieferdatum (optional — der Assistent erlaubt „Gleich nach Bestätigung") |
+| `isConfirmed` | BOOLEAN | Bestellung als geliefert bestätigt? |
+| `confirmedAt` | DATETIME? | Zeitpunkt der Bestätigung (seit Schema 14) |
+
+Das Tagebuch sortiert eine gelieferte Bestellung nach `deliveryDate ?? confirmedAt`. Ohne
+`confirmedAt` hatte eine Bestellung ohne Lieferdatum gar kein Datum und wurde dauerhaft an
+den Anfang der Timeline gepinnt.
 
 ### `PendingOrderItems`
 
@@ -146,11 +151,18 @@ Gesundheitstagebuch: Vitalwerte und CIDP-Symptomscores.
 
 ## Migrationen
 
-Explizite `onUpgrade`-Schritte von Version 1 bis 13 gewährleisten Rückwärtskompatibilität. Jeder Schritt fügt nur das hinzu, was die neue Version benötigt (neue Spalten, neue Tabellen, Datenmigration).
+Explizite `onUpgrade`-Schritte führen bis Version **14** und gewährleisten Rückwärtskompatibilität.
+Jeder Schritt fügt nur das hinzu, was die neue Version benötigt (neue Spalten, neue Tabellen,
+Datenmigration). Für Version **8** existiert kein Schritt — die Nummer wurde übersprungen.
+
+Die letzte Migration (13 → 14) ist die einzige mit echter Datenmigration: Sie legt
+`pending_orders.confirmed_at` an, übernimmt für bereits bestätigte Bestellungen das
+`delivery_date`, und schätzt für Bestellungen ohne Lieferdatum das späteste Lieferdatum
+einer älteren Bestellung als untere Schranke.
 
 Wann immer das Schema geändert wird:
 
-1. Schemaversion in `@DriftDatabase(tables: [...])` erhöhen
+1. `schemaVersion`-Getter in `AppDatabase` erhöhen (neue Tabellen zusätzlich in `@DriftDatabase(tables: [...])` eintragen)
 2. `onUpgrade`-Schritt hinzufügen
 3. Code neu generieren:
    ```bash

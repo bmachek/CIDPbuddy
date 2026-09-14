@@ -41,7 +41,7 @@ Sobald Medikament und Plan vorhanden sind, füllt sich das Dashboard:
 |---|---|
 | ![Tagebuch](../screenshots/09_tagebuch.png) | ![Tagebuch gescrollt](../screenshots/10_tagebuch_scrolled.png) |
 
-Das Tagebuch ist eine chronologische Timeline aller Ereignisse (Verordnungen, erfasste Infusionen, Tagebucheinträge, geplante Termine, Bestellungen). Über die Schnellaktionen lassen sich **Vitalwerte & Symptome** sowie eine **Infusion erfassen**.
+Das Tagebuch ist eine chronologische Timeline der bereits eingetretenen Ereignisse (Verordnungen und Absetzungen, erfasste Infusionen, Tagebucheinträge, gelieferte Bestellungen — geplante Termine stehen auf dem Dashboard). Über die Schnellaktionen lassen sich **Vitalwerte & Symptome** sowie eine **Infusion erfassen**.
 
 ## 5. Vitalwerte & Symptome erfassen
 

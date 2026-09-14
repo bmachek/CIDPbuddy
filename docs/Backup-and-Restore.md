@@ -6,9 +6,22 @@ CIDPbuddy sichert die gesamte SQLite-Datenbank als ZIP-Datei. Backups werden aut
 
 ## Backup-Ziele
 
-| Ziel | Plattform | Beschreibung |
-|------|-----------|--------------|
-| Lokal | Alle | App-interner Speicher (privates App-Verzeichnis) |
+Es ist immer **genau ein** Ziel aktiv; es wird in `SharedPreferences` hinterlegt und beim
+Backup über `BackupDestination.load()` geladen.
+
+| Ziel | `DestinationKind` | Plattform | Beschreibung |
+|------|-------------------|-----------|--------------|
+| Ordner | `local` | Alle | Ein Verzeichnis im Dateisystem. Auf iOS immer der app-interne `Documents/Backups`-Ordner (kein Ordner-Picker verfügbar) |
+| SAF-Ordner | `saf` | Android | Ein per Storage Access Framework gewählter Ordner, z. B. auf der SD-Karte oder in einem Cloud-Provider |
+
+> Ein Cloud-Backup direkt in Google Drive oder iCloud gibt es **nicht**. Wer in die Cloud
+> sichern will, wählt unter Android per SAF einen Ordner, den ein Cloud-Client synchronisiert.
+
+**iOS-Hinweis:** Das app-interne Ziel überlebt die App nicht (`isDurable == false`) — iOS
+löscht den Container mit der App. Außerdem vergibt iOS die Container-UUID bei *jedem*
+App-Update neu, weshalb statt eines absoluten Pfads der portable Marker
+`app-documents:Backups` persistiert und bei jedem Laden gegen den aktuellen Container
+aufgelöst wird.
 
 ## Backup-Ablauf
 
@@ -17,9 +30,11 @@ CIDPbuddy sichert die gesamte SQLite-Datenbank als ZIP-Datei. Backups werden aut
 ```
 DB-Änderung
   → debounce(30s)
+  → Auto-Backup deaktiviert? → abbrechen
   → letzte erfolgreiche Sicherung < 6 Stunden? → überspringen
+  → verifyAccess() auf dem Ziel (Token-Datei schreiben/lesen/löschen)
   → ZIP der SQLite-Datei erstellen
-  → an alle konfigurierten Ziele schreiben
+  → ins konfigurierte Ziel schreiben
   → 5 neueste behalten, ältere löschen
 ```
 
@@ -53,8 +68,8 @@ Die Seite **Zuverlässigkeitscheck** (`reliability_check_page.dart`) zeigt:
 
 1. Einstellungen → Backup-Ziel auswählen → Backups anzeigen
 2. Backup aus der Liste auswählen → Wiederherstellen
-3. ZIP wird heruntergeladen und entpackt
-4. Lokale DB-Datei wird ersetzt
+3. ZIP wird gelesen und entpackt
+4. Lokale DB-Datei (`igkeeper.sqlite`) wird ersetzt — inklusive der WAL-/SHM-Seitendateien, falls im Archiv enthalten
 5. `AppDatabase`-Singleton wird neu aufgebaut
 6. App zeigt wiederhergestellte Daten
 

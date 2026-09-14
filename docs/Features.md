@@ -21,14 +21,18 @@ Der Timer (`premedication_timer_modal.dart`) läuft über den `BackgroundService
 
 ## Tagebuch (`lib/features/diary/pages/diary_page.dart`)
 
-Chronologische Timeline aller Ereignisse:
+Chronologische Timeline der bereits eingetretenen Ereignisse:
 
 - Abgeschlossene Infusionen (aus `InfusionLog`)
 - Tagebucheinträge (aus `DiaryEntries`)
-- Geplante Termine (aus `PlannedInfusions`)
-- Ausstehende Bestellungen (aus `PendingOrders`)
+- Gelieferte Bestellungen (aus `PendingOrders`, gefiltert auf `isConfirmed`)
+- Verordnungen und Absetzungen (`MedicationEvent`, abgeleitet aus `Medications.createdAt` / `discontinuedAt`)
 
-Die kombinierten Stream werden via `RxDart.combineLatest4` zusammengeführt und nach Datum sortiert.
+Die vier Streams werden in `DiaryProvider.combinedEntriesStream` via `Rx.combineLatest4`
+zusammengeführt und absteigend nach Datum sortiert.
+
+> Geplante Termine (`PlannedInfusions`) und noch offene Bestellungen erscheinen **nicht**
+> im Tagebuch — sie stehen auf dem Dashboard bzw. in der Planungsseite.
 
 ### Infusion erfassen (`add_infusion_page.dart`)
 
@@ -103,12 +107,16 @@ Verwaltet alle lokalen Benachrichtigungen via `flutter_local_notifications`:
 
 | Typ | Trigger |
 |-----|---------|
-| Behandlungserinnerung | Geplante Infusion (7 Tage Vorschau) |
+| Behandlungserinnerung | Geplante Infusion (7-Tage-Vorschau, gesetzt vom `SchedulerService`) |
 | Vormedikation | Vom BackgroundService |
 | Mindestbestand | `MedicationService.getLowStockItemsSummary()` |
 | Verpasste Behandlung | `SchedulerService.checkMissedTreatments()` |
 
-**7-Tage-Fenster**: Nur Benachrichtigungen der nächsten 7 Tage werden registriert, um das Android-500-Alarm-Limit nicht zu überschreiten. Täglich werden neue Alarme für den neu rollierenden Tag hinzugefügt.
+**7-Tage-Fenster**: Der `SchedulerService` plant zwar 90 Tage an Terminen, registriert aber
+nur für die nächsten 7 Tage Benachrichtigungen (`notificationLookAhead` in
+`scheduler_service.dart`). Das hält die Zahl gleichzeitig registrierter Alarme klein — Android
+begrenzt exakte Alarme pro App. Der 24h-Sync des `BackgroundService` schiebt das Fenster
+täglich weiter.
 
 Android 13+ Berechtigungen: `POST_NOTIFICATIONS` + `SCHEDULE_EXACT_ALARM` werden zur Laufzeit angefordert.
 
@@ -119,7 +127,8 @@ Android 13+ Berechtigungen: `POST_NOTIFICATIONS` + `SCHEDULE_EXACT_ALARM` werden
 Siehe [Backup & Wiederherstellung](Backup-and-Restore) für Details zur Backup-Logik.
 
 Die Einstellungsseite ermöglicht:
-- Backup-Ziele hinzufügen/entfernen (lokal, SAF)
+- Erscheinungsbild umschalten (helles/dunkles Design)
+- Backup-Ziel wählen oder entfernen (lokaler Ordner oder SAF-Ordner; es ist immer genau eines aktiv)
 - Auto-Backup aktivieren/deaktivieren
 - Manuellen Backup-Test durchführen
 - Backups auflisten und Wiederherstellung starten

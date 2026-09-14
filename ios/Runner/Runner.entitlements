@@ -2,17 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>com.apple.developer.icloud-container-identifiers</key>
-	<array>
-		<string>iCloud.de.gbs-cidp.cidpbuddy</string>
-	</array>
-	<key>com.apple.developer.ubiquity-container-identifiers</key>
-	<array>
-		<string>iCloud.de.gbs-cidp.cidpbuddy</string>
-	</array>
-	<key>com.apple.developer.icloud-services</key>
-	<array>
-		<string>CloudDocuments</string>
-	</array>
+	<!-- Intentionally empty. This file used to declare an iCloud container
+	     (iCloud.de.gbs-cidp.cidpbuddy) for programmatic iCloud Drive backups via
+	     the icloud_storage package. That backup destination no longer exists —
+	     BackupDestination only knows `local` and `saf` — and the container id
+	     still carried the old bundle-id prefix, which no longer matches
+	     de.fokuspunk.cidpbuddy. Users reach their backups through the Files app
+	     instead (UIFileSharingEnabled in Info.plist). -->
 </dict>
 </plist>
