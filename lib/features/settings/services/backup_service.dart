@@ -15,7 +15,12 @@ import '../../../core/l10n/locale_provider.dart';
 import '../../../core/l10n/l10n_ext.dart';
 
 export 'backup_destination.dart'
-    show BackupFile, BackupDestination, DestinationKind, LocalDestination, SafDestination;
+    show
+        BackupFile,
+        BackupDestination,
+        DestinationKind,
+        LocalDestination,
+        SafDestination;
 
 /// Result of a backup attempt — used by UI / WorkManager / reliability check.
 class BackupResult {
@@ -172,8 +177,9 @@ class BackupService {
       final latest = backups.first;
       final bytes = await dest.readBackup(latest);
       final tempDir = await getTemporaryDirectory();
-      final tempFile = await File(p.join(tempDir.path, latest.name))
-          .writeAsBytes(bytes, flush: true);
+      final tempFile = await File(
+        p.join(tempDir.path, latest.name),
+      ).writeAsBytes(bytes, flush: true);
       final result = await Share.shareXFiles(
         [XFile(tempFile.path)],
         subject: 'CIDP Buddy Backup',
@@ -246,7 +252,9 @@ class BackupService {
   }
 
   Future<BackupResult> _recordFailure(
-      SharedPreferences prefs, String error) async {
+    SharedPreferences prefs,
+    String error,
+  ) async {
     final failures = (prefs.getInt(_kConsecutiveFailures) ?? 0) + 1;
     await prefs.setInt(_kConsecutiveFailures, failures);
     await prefs.setString(_kLastError, error);
@@ -278,8 +286,10 @@ class BackupService {
     }
 
     final tempDir = await getTemporaryDirectory();
-    final tempZipPath =
-        p.join(tempDir.path, 'cidp_backup_${DateTime.now().microsecondsSinceEpoch}.zip');
+    final tempZipPath = p.join(
+      tempDir.path,
+      'cidp_backup_${DateTime.now().microsecondsSinceEpoch}.zip',
+    );
 
     final encoder = ZipFileEncoder();
     encoder.create(tempZipPath);
@@ -308,7 +318,9 @@ class BackupService {
     final bytes = await tempZip.readAsBytes();
     try {
       await tempZip.delete();
-    } catch (_) {/* best-effort */}
+    } catch (_) {
+      /* best-effort */
+    }
     return bytes;
   }
 
@@ -380,8 +392,10 @@ class BackupService {
         staged.add(tmp);
       }
       for (final tmp in staged) {
-        final finalPath =
-            tmp.path.substring(0, tmp.path.length - '.restore_tmp'.length);
+        final finalPath = tmp.path.substring(
+          0,
+          tmp.path.length - '.restore_tmp'.length,
+        );
         final finalFile = File(finalPath);
         if (await finalFile.exists()) await finalFile.delete();
         await tmp.rename(finalPath);
@@ -415,7 +429,8 @@ class BackupService {
       [XFile(tempFile.path)],
       subject: l10n.shareBackupSubject,
       text: l10n.shareBackupText(
-          AppDateFormat.dateIn(locale.toLanguageTag(), DateTime.now())),
+        AppDateFormat.dateIn(locale.toLanguageTag(), DateTime.now()),
+      ),
     );
   }
 

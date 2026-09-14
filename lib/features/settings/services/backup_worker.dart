@@ -98,9 +98,7 @@ class BackupScheduler {
       kMissedCheckTaskName,
       frequency: const Duration(hours: 2),
       existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
-      constraints: Constraints(
-        networkType: NetworkType.notRequired,
-      ),
+      constraints: Constraints(networkType: NetworkType.notRequired),
     );
   }
 }

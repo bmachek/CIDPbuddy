@@ -53,9 +53,11 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialEntry == null
-            ? context.l10n.diaryEntryTitleNew
-            : context.l10n.diaryEntryTitleEdit),
+        title: Text(
+          widget.initialEntry == null
+              ? context.l10n.diaryEntryTitleNew
+              : context.l10n.diaryEntryTitleEdit,
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -80,19 +82,36 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
                 );
                 if (time == null || !context.mounted) return;
                 setState(() {
-                  _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+                  _selectedDate = DateTime(
+                    date.year,
+                    date.month,
+                    date.day,
+                    time.hour,
+                    time.minute,
+                  );
                 });
               },
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.2),
+                  ),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(AppDateFormat.dateTime(context, _selectedDate), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                    Text(
+                      AppDateFormat.dateTime(context, _selectedDate),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
                     const Icon(Icons.calendar_today_rounded, size: 20),
                   ],
                 ),
@@ -103,29 +122,82 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildTextField(_systolicController, context.l10n.fieldSystolic, Icons.favorite_border_rounded)),
+                Expanded(
+                  child: _buildTextField(
+                    _systolicController,
+                    context.l10n.fieldSystolic,
+                    Icons.favorite_border_rounded,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _buildTextField(_diastolicController, context.l10n.fieldDiastolic, Icons.favorite_border_rounded)),
+                Expanded(
+                  child: _buildTextField(
+                    _diastolicController,
+                    context.l10n.fieldDiastolic,
+                    Icons.favorite_border_rounded,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _buildTextField(_heartRateController, context.l10n.fieldHeartRate, Icons.monitor_heart_rounded)),
+                Expanded(
+                  child: _buildTextField(
+                    _heartRateController,
+                    context.l10n.fieldHeartRate,
+                    Icons.monitor_heart_rounded,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _buildTextField(_tempController, context.l10n.fieldTemperature, Icons.thermostat_rounded)),
+                Expanded(
+                  child: _buildTextField(
+                    _tempController,
+                    context.l10n.fieldTemperature,
+                    Icons.thermostat_rounded,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            _buildTextField(_weightController, context.l10n.fieldWeight, Icons.monitor_weight_rounded),
+            _buildTextField(
+              _weightController,
+              context.l10n.fieldWeight,
+              Icons.monitor_weight_rounded,
+            ),
             const SizedBox(height: 32),
             _buildSectionHeader(context.l10n.sectionSymptoms),
             const SizedBox(height: 8),
-            _buildSymptomSlider(context.l10n.symptomStrength, _strength, (val) => setState(() => _strength = val), Theme.of(context).colorScheme.primary),
-            _buildSymptomSlider(context.l10n.symptomSensory, _sensory, (val) => setState(() => _sensory = val), Theme.of(context).colorScheme.tertiary),
-            _buildSymptomSlider(context.l10n.symptomFatigue, _fatigue, (val) => setState(() => _fatigue = val), const Color(0xFFFFB300)),
-            _buildSymptomSlider(context.l10n.symptomPain, _pain, (val) => setState(() => _pain = val), Theme.of(context).colorScheme.error),
-            _buildSymptomSlider(context.l10n.symptomBalance, _balance, (val) => setState(() => _balance = val), Theme.of(context).colorScheme.secondary),
+            _buildSymptomSlider(
+              context.l10n.symptomStrength,
+              _strength,
+              (val) => setState(() => _strength = val),
+              Theme.of(context).colorScheme.primary,
+            ),
+            _buildSymptomSlider(
+              context.l10n.symptomSensory,
+              _sensory,
+              (val) => setState(() => _sensory = val),
+              Theme.of(context).colorScheme.tertiary,
+            ),
+            _buildSymptomSlider(
+              context.l10n.symptomFatigue,
+              _fatigue,
+              (val) => setState(() => _fatigue = val),
+              const Color(0xFFFFB300),
+            ),
+            _buildSymptomSlider(
+              context.l10n.symptomPain,
+              _pain,
+              (val) => setState(() => _pain = val),
+              Theme.of(context).colorScheme.error,
+            ),
+            _buildSymptomSlider(
+              context.l10n.symptomBalance,
+              _balance,
+              (val) => setState(() => _balance = val),
+              Theme.of(context).colorScheme.secondary,
+            ),
             const SizedBox(height: 32),
             _buildSectionHeader(context.l10n.sectionNotes),
             const SizedBox(height: 12),
@@ -134,10 +206,16 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
               decoration: InputDecoration(
                 hintText: context.l10n.diaryNotesHint,
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
+                fillColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)),
+                  borderSide: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.08),
+                  ),
                 ),
               ),
               maxLines: 4,
@@ -149,10 +227,18 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
                 minimumSize: const Size.fromHeight(60),
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22),
+                ),
                 elevation: 0,
               ),
-              child: Text(context.l10n.diaryEntrySave, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(
+                context.l10n.diaryEntrySave,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             const SizedBox(height: 40),
           ],
@@ -164,25 +250,46 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title.toUpperCase(),
-      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Theme.of(context).colorScheme.primary),
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.2,
+        color: Theme.of(context).colorScheme.primary,
+      ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+  ) {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+        prefixIcon: Icon(
+          icon,
+          size: 20,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
+        fillColor: Theme.of(
+          context,
+        ).colorScheme.primary.withValues(alpha: 0.04),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05)),
+          borderSide: BorderSide(
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.05),
+          ),
         ),
         isDense: true,
       ),
@@ -190,7 +297,12 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
     );
   }
 
-  Widget _buildSymptomSlider(String label, double value, Function(double) onChanged, Color color) {
+  Widget _buildSymptomSlider(
+    String label,
+    double value,
+    Function(double) onChanged,
+    Color color,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -199,8 +311,17 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
-              Text(value.toStringAsFixed(0), style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              Text(
+                value.toStringAsFixed(0),
+                style: TextStyle(color: color, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
         ),
@@ -233,20 +354,22 @@ class _AddDiaryEntryPageState extends State<AddDiaryEntryPage> {
     );
 
     if (widget.initialEntry != null) {
-      await db.updateDiaryEntry(widget.initialEntry!.copyWith(
-        date: _selectedDate,
-        systolicBP: entry.systolicBP,
-        diastolicBP: entry.diastolicBP,
-        heartRate: entry.heartRate,
-        temperature: entry.temperature,
-        weight: entry.weight,
-        notes: entry.notes,
-        strengthScore: entry.strengthScore,
-        sensoryScore: entry.sensoryScore,
-        fatigueScore: entry.fatigueScore,
-        painScore: entry.painScore,
-        balanceScore: entry.balanceScore,
-      ));
+      await db.updateDiaryEntry(
+        widget.initialEntry!.copyWith(
+          date: _selectedDate,
+          systolicBP: entry.systolicBP,
+          diastolicBP: entry.diastolicBP,
+          heartRate: entry.heartRate,
+          temperature: entry.temperature,
+          weight: entry.weight,
+          notes: entry.notes,
+          strengthScore: entry.strengthScore,
+          sensoryScore: entry.sensoryScore,
+          fatigueScore: entry.fatigueScore,
+          painScore: entry.painScore,
+          balanceScore: entry.balanceScore,
+        ),
+      );
     } else {
       await db.insertDiaryEntry(entry);
     }

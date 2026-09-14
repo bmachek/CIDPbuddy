@@ -1,0 +1,50 @@
+name: OSV-Scanner
+
+# CodeQL has no Dart support, so the dependency side is where vulnerabilities
+# in this app are actually detectable.
+#
+# Only pubspec.lock is scanned: OSV-Scanner has no extractor for CocoaPods
+# Podfile.lock (it supports SwiftPM Package.resolved instead) and exits 127 on
+# a file it cannot parse, which fails the whole scan rather than skipping it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Tuesdays 06:23 UTC — a day after Dependabot, so a fresh advisory that
+    # Dependabot already has a fix PR for does not arrive as a surprise.
+    - cron: '23 6 * * 2'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  # Full scan — every finding lands in Security → Code scanning.
+  scan:
+    if: github.event_name != 'pull_request'
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.6.0
+    with:
+      scan-args: |-
+        --lockfile=./pubspec.lock
+      # Report rather than fail: an advisory in a transitive package is not a
+      # reason for main to go red, and the alerts are mailed out anyway.
+      fail-on-vuln: false
+
+  # PR scan — compares against the base branch and only reports what this PR
+  # newly introduces. That is worth blocking on.
+  scan-pr:
+    if: github.event_name == 'pull_request'
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.6.0
+    with:
+      scan-args: |-
+        --lockfile=./pubspec.lock

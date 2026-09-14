@@ -14,10 +14,14 @@ class Medications extends Table {
   TextColumn get pzn => text().nullable()();
   RealColumn get stock => real().withDefault(const Constant(0.0))();
   RealColumn get minStock => real().withDefault(const Constant(0.0))();
-  TextColumn get unit => text().withLength(min: 1, max: 20)(); // e.g., "Flasche", "ml", "Stk"
-  IntColumn get type => intEnum<MedicationType>().withDefault(const Constant(0))(); // default infusion
+  TextColumn get unit =>
+      text().withLength(min: 1, max: 20)(); // e.g., "Flasche", "ml", "Stk"
+  IntColumn get type => intEnum<MedicationType>().withDefault(
+    const Constant(0),
+  )(); // default infusion
   RealColumn get packageSize => real().withDefault(const Constant(1.0))();
-  BoolColumn get trackBatchNumber => boolean().withDefault(const Constant(true))();
+  BoolColumn get trackBatchNumber =>
+      boolean().withDefault(const Constant(true))();
   BoolColumn get trackWeight => boolean().withDefault(const Constant(true))();
   BoolColumn get useTimer => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -29,7 +33,8 @@ class Accessories extends Table {
   TextColumn get name => text().withLength(min: 1, max: 100)();
   RealColumn get stock => real().withDefault(const Constant(0.0))();
   RealColumn get minStock => real().withDefault(const Constant(0.0))();
-  TextColumn get unit => text().withLength(min: 1, max: 20)(); // e.g., "Stk", "Pack"
+  TextColumn get unit =>
+      text().withLength(min: 1, max: 20)(); // e.g., "Stk", "Pack"
   RealColumn get packageSize => real().withDefault(const Constant(1.0))();
 }
 
@@ -59,7 +64,8 @@ class PlannedInfusions extends Table {
   RealColumn get dosage => real()();
   TextColumn get notes => text().nullable()();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
-  IntColumn get scheduleId => integer().nullable().references(InfusionSchedules, #id)();
+  IntColumn get scheduleId =>
+      integer().nullable().references(InfusionSchedules, #id)();
   RealColumn get bodyWeight => real().nullable()();
 }
 
@@ -67,12 +73,16 @@ class InfusionSchedules extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get medicationId => integer().references(Medications, #id)();
   RealColumn get dosage => real()();
-  TextColumn get frequencyType => text()(); // 'daily', 'interval', 'weekly', 'weekdays'
-  IntColumn get intervalValue => integer().nullable()(); // for 'interval' and 'weekly' (e.g., every 2 weeks)
-  TextColumn get selectedWeekdays => text().nullable()(); // comma separated: '1,3,5'
+  TextColumn get frequencyType =>
+      text()(); // 'daily', 'interval', 'weekly', 'weekdays'
+  IntColumn get intervalValue => integer()
+      .nullable()(); // for 'interval' and 'weekly' (e.g., every 2 weeks)
+  TextColumn get selectedWeekdays =>
+      text().nullable()(); // comma separated: '1,3,5'
   DateTimeColumn get startDate => dateTime()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
-  TextColumn get intakeTimes => text().nullable()(); // comma separated: '08:00,20:00'
+  TextColumn get intakeTimes =>
+      text().nullable()(); // comma separated: '08:00,20:00'
 }
 
 class PendingOrders extends Table {
@@ -81,6 +91,7 @@ class PendingOrders extends Table {
   RealColumn get medicationQty => real()();
   DateTimeColumn get deliveryDate => dateTime().nullable()();
   BoolColumn get isConfirmed => boolean().withDefault(const Constant(false))();
+
   /// When the order was confirmed as delivered. The delivery date is optional
   /// ("Gleich nach Bestätigung" in the wizard), and without this the diary had
   /// no date at all to place such an order by.
@@ -90,33 +101,47 @@ class PendingOrders extends Table {
 class PendingOrderItems extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get orderId => integer().references(PendingOrders, #id)();
-  IntColumn get medicationId => integer().nullable().references(Medications, #id)();
-  IntColumn get accessoryId => integer().nullable().references(Accessories, #id)();
+  IntColumn get medicationId =>
+      integer().nullable().references(Medications, #id)();
+  IntColumn get accessoryId =>
+      integer().nullable().references(Accessories, #id)();
   RealColumn get quantity => real()();
 }
 
 class DiaryEntries extends Table {
   IntColumn get id => integer().autoIncrement()();
   DateTimeColumn get date => dateTime()();
-  
+
   // Vitals
   RealColumn get systolicBP => real().nullable()();
   RealColumn get diastolicBP => real().nullable()();
   IntColumn get heartRate => integer().nullable()();
   RealColumn get temperature => real().nullable()();
   RealColumn get weight => real().nullable()();
-  
+
   // CIDP Symptoms
   IntColumn get strengthScore => integer().nullable()(); // Kraft
-  IntColumn get sensoryScore => integer().nullable()();  // Gefühl
-  IntColumn get fatigueScore => integer().nullable()();  // Erschöpfung
-  IntColumn get painScore => integer().nullable()();     // Schmerzen
-  IntColumn get balanceScore => integer().nullable()();  // Gleichgewicht
-  
+  IntColumn get sensoryScore => integer().nullable()(); // Gefühl
+  IntColumn get fatigueScore => integer().nullable()(); // Erschöpfung
+  IntColumn get painScore => integer().nullable()(); // Schmerzen
+  IntColumn get balanceScore => integer().nullable()(); // Gleichgewicht
+
   TextColumn get notes => text().nullable()();
 }
 
-@DriftDatabase(tables: [Medications, Accessories, InfusionLog, MedicationAccessories, PlannedInfusions, InfusionSchedules, PendingOrders, PendingOrderItems, DiaryEntries])
+@DriftDatabase(
+  tables: [
+    Medications,
+    Accessories,
+    InfusionLog,
+    MedicationAccessories,
+    PlannedInfusions,
+    InfusionSchedules,
+    PendingOrders,
+    PendingOrderItems,
+    DiaryEntries,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   static final AppDatabase _instance = AppDatabase._internal();
 
@@ -169,13 +194,18 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(medications, medications.useTimer);
       }
       if (to >= 10 && from < 10) {
-        await m.addColumn(medicationAccessories, medicationAccessories.isMandatory);
+        await m.addColumn(
+          medicationAccessories,
+          medicationAccessories.isMandatory,
+        );
       }
       if (to >= 11 && from < 11) {
         // SQLite doesn't allow adding a NOT NULL column with a non-constant default (like CURRENT_TIMESTAMP)
         // via ALTER TABLE. We'll add it with a constant timestamp (current time) instead.
         final nowTs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-        await customStatement('ALTER TABLE medications ADD COLUMN created_at INTEGER NOT NULL DEFAULT $nowTs');
+        await customStatement(
+          'ALTER TABLE medications ADD COLUMN created_at INTEGER NOT NULL DEFAULT $nowTs',
+        );
         await m.addColumn(medications, medications.discontinuedAt);
       }
       if (to >= 12 && from < 12) {
@@ -208,9 +238,12 @@ class AppDatabase extends _$AppDatabase {
   );
 
   // Medications
-  Future<List<Medication>> getAllActiveMedications() => (select(medications)..where((t) => t.discontinuedAt.isNull())).get();
-  Stream<List<Medication>> watchActiveMedications() => (select(medications)..where((t) => t.discontinuedAt.isNull())).watch();
-  Stream<List<Medication>> watchDiscontinuedMedications() => (select(medications)..where((t) => t.discontinuedAt.isNotNull())).watch();
+  Future<List<Medication>> getAllActiveMedications() =>
+      (select(medications)..where((t) => t.discontinuedAt.isNull())).get();
+  Stream<List<Medication>> watchActiveMedications() =>
+      (select(medications)..where((t) => t.discontinuedAt.isNull())).watch();
+  Stream<List<Medication>> watchDiscontinuedMedications() =>
+      (select(medications)..where((t) => t.discontinuedAt.isNotNull())).watch();
   Future<List<Medication>> getAllMedications() => select(medications).get();
   Stream<List<Medication>> watchAllMedications() => select(medications).watch();
   Future<int> insertMedication(MedicationsCompanion med) =>
@@ -221,8 +254,12 @@ class AppDatabase extends _$AppDatabase {
     // leave orphaned schedules and planned infusions behind. Clean them up too,
     // otherwise their already-scheduled OS reminders keep firing forever.
     await transaction(() async {
-      await (delete(plannedInfusions)..where((t) => t.medicationId.equals(med.id))).go();
-      await (delete(infusionSchedules)..where((t) => t.medicationId.equals(med.id))).go();
+      await (delete(
+        plannedInfusions,
+      )..where((t) => t.medicationId.equals(med.id))).go();
+      await (delete(
+        infusionSchedules,
+      )..where((t) => t.medicationId.equals(med.id))).go();
       await delete(medications).delete(med);
     });
   }
@@ -230,7 +267,9 @@ class AppDatabase extends _$AppDatabase {
   /// All planned infusions for a medication (used to cancel their reminders
   /// before the rows are removed on discontinue/delete).
   Future<List<PlannedInfusion>> getPlannedInfusionsForMedication(int medId) =>
-      (select(plannedInfusions)..where((t) => t.medicationId.equals(medId))).get();
+      (select(
+        plannedInfusions,
+      )..where((t) => t.medicationId.equals(medId))).get();
 
   // Accessories
   Future<List<Accessory>> getAllAccessories() => select(accessories).get();
@@ -242,7 +281,10 @@ class AppDatabase extends _$AppDatabase {
 
   // Infusions
   Stream<List<InfusionLogData>> watchInfusionLogs() =>
-      (select(infusionLog)..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)])).watch();
+      (select(infusionLog)..orderBy([
+            (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc),
+          ]))
+          .watch();
   Future<int> insertInfusionLog(InfusionLogCompanion log) =>
       into(infusionLog).insert(log);
   Future deleteInfusionLog(int id) =>
@@ -252,74 +294,117 @@ class AppDatabase extends _$AppDatabase {
 
   // Medication - Accessory Link (BOM)
   Future<List<MedicationAccessory>> getAccessoriesForMedication(int medId) =>
-      (select(medicationAccessories)..where((t) => t.medicationId.equals(medId))).get();
+      (select(
+        medicationAccessories,
+      )..where((t) => t.medicationId.equals(medId))).get();
   Stream<List<MedicationAccessory>> watchAccessoriesForMedication(int medId) =>
-      (select(medicationAccessories)..where((t) => t.medicationId.equals(medId))).watch();
+      (select(
+        medicationAccessories,
+      )..where((t) => t.medicationId.equals(medId))).watch();
   Future<int> insertMedicationAccessory(MedicationAccessoriesCompanion entry) =>
       into(medicationAccessories).insert(entry);
-  Future<List<MedicationAccessory>> getAllMedicationAccessories() => select(medicationAccessories).get();
-  Stream<List<MedicationAccessory>> watchAllMedicationAccessories() => select(medicationAccessories).watch();
+  Future<List<MedicationAccessory>> getAllMedicationAccessories() =>
+      select(medicationAccessories).get();
+  Stream<List<MedicationAccessory>> watchAllMedicationAccessories() =>
+      select(medicationAccessories).watch();
   Future updateMedicationAccessory(MedicationAccessory entry) =>
       update(medicationAccessories).replace(entry);
 
   // Planned Infusions / Treatments
   Stream<List<PlannedInfusion>> watchPlannedInfusions() =>
-      (select(plannedInfusions)..where((t) => t.isCompleted.equals(false))..orderBy([(t) => OrderingTerm(expression: t.date)])).watch();
-  
-  Stream<List<PlannedInfusion>> watchTodayPlannedTreatments() => watchUpcomingPlannedTreatments(24);
-  
-  Stream<List<PlannedInfusion>> watchPlannedTreatmentsRange({required int daysBack, required int daysForward}) {
+      (select(plannedInfusions)
+            ..where((t) => t.isCompleted.equals(false))
+            ..orderBy([(t) => OrderingTerm(expression: t.date)]))
+          .watch();
+
+  Stream<List<PlannedInfusion>> watchTodayPlannedTreatments() =>
+      watchUpcomingPlannedTreatments(24);
+
+  Stream<List<PlannedInfusion>> watchPlannedTreatmentsRange({
+    required int daysBack,
+    required int daysForward,
+  }) {
     final now = DateTime.now();
-    final startRange = DateTime(now.year, now.month, now.day).subtract(Duration(days: daysBack));
-    final endRange = DateTime(now.year, now.month, now.day).add(Duration(days: daysForward + 1));
-    
+    final startRange = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: daysBack));
+    final endRange = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(Duration(days: daysForward + 1));
+
     return (select(plannedInfusions)
-      ..where((t) => t.date.isBetweenValues(startRange, endRange) & t.isCompleted.equals(false))
-      ..orderBy([(t) => OrderingTerm(expression: t.date)]))
-      .watch();
+          ..where(
+            (t) =>
+                t.date.isBetweenValues(startRange, endRange) &
+                t.isCompleted.equals(false),
+          )
+          ..orderBy([(t) => OrderingTerm(expression: t.date)]))
+        .watch();
   }
 
   Stream<List<PlannedInfusion>> watchUpcomingPlannedTreatments(int hours) {
     final now = DateTime.now();
     final endRange = now.add(Duration(hours: hours));
-    
+
     return (select(plannedInfusions)
-      ..where((t) => t.date.isBetweenValues(now.subtract(const Duration(hours: 12)), endRange) & t.isCompleted.equals(false))
-      ..orderBy([(t) => OrderingTerm(expression: t.date)]))
-      .watch()
-      .map((list) {
-        // Filter: for each scheduleId, only keep the first occurrence (next one)
-        // items without scheduleId (manual appointments) are always included
-        final Map<int, PlannedInfusion> nextPerSchedule = {};
-        final List<PlannedInfusion> results = [];
-        
-        for (var item in list) {
-          if (item.scheduleId == null) {
-            results.add(item);
-          } else {
-            if (!nextPerSchedule.containsKey(item.scheduleId)) {
-              nextPerSchedule[item.scheduleId!] = item;
+          ..where(
+            (t) =>
+                t.date.isBetweenValues(
+                  now.subtract(const Duration(hours: 12)),
+                  endRange,
+                ) &
+                t.isCompleted.equals(false),
+          )
+          ..orderBy([(t) => OrderingTerm(expression: t.date)]))
+        .watch()
+        .map((list) {
+          // Filter: for each scheduleId, only keep the first occurrence (next one)
+          // items without scheduleId (manual appointments) are always included
+          final Map<int, PlannedInfusion> nextPerSchedule = {};
+          final List<PlannedInfusion> results = [];
+
+          for (var item in list) {
+            if (item.scheduleId == null) {
               results.add(item);
+            } else {
+              if (!nextPerSchedule.containsKey(item.scheduleId)) {
+                nextPerSchedule[item.scheduleId!] = item;
+                results.add(item);
+              }
             }
           }
-        }
-        return results;
-      });
+          return results;
+        });
   }
 
   Future<int> insertPlannedInfusion(PlannedInfusionsCompanion entry) =>
       into(plannedInfusions).insert(entry);
   Future completePlannedInfusion(int id) =>
-      (update(plannedInfusions)..where((t) => t.id.equals(id))).write(const PlannedInfusionsCompanion(isCompleted: Value(true)));
+      (update(plannedInfusions)..where((t) => t.id.equals(id))).write(
+        const PlannedInfusionsCompanion(isCompleted: Value(true)),
+      );
   Future deletePlannedInfusionsForSchedule(int scheduleId) =>
-      (delete(plannedInfusions)..where((t) => t.scheduleId.equals(scheduleId) & t.isCompleted.equals(false))).go();
+      (delete(plannedInfusions)..where(
+            (t) =>
+                t.scheduleId.equals(scheduleId) & t.isCompleted.equals(false),
+          ))
+          .go();
   Future deletePlannedInfusion(int id) =>
       (delete(plannedInfusions)..where((t) => t.id.equals(id))).go();
   Future updatePlannedInfusion(PlannedInfusion entry) =>
       update(plannedInfusions).replace(entry);
 
   Future deleteIncompletePlannedInfusionsBefore(DateTime date) =>
-      (delete(plannedInfusions)..where((t) => t.date.isSmallerThan(Constant(date)) & t.isCompleted.equals(false))).go();
+      (delete(plannedInfusions)..where(
+            (t) =>
+                t.date.isSmallerThan(Constant(date)) &
+                t.isCompleted.equals(false),
+          ))
+          .go();
 
   /// Removes planned infusions that reference a medication which no longer
   /// exists. These orphans can appear after a restore where the backup
@@ -333,7 +418,9 @@ class AppDatabase extends _$AppDatabase {
       // No medications at all -> every planned infusion is orphaned.
       return delete(plannedInfusions).go();
     }
-    return (delete(plannedInfusions)..where((t) => t.medicationId.isNotIn(medIds))).go();
+    return (delete(
+      plannedInfusions,
+    )..where((t) => t.medicationId.isNotIn(medIds))).go();
   }
 
   /// Removes schedules whose medication no longer exists (e.g. after a restore
@@ -347,15 +434,22 @@ class AppDatabase extends _$AppDatabase {
       // No medications at all -> every schedule is orphaned.
       return delete(infusionSchedules).go();
     }
-    return (delete(infusionSchedules)..where((t) => t.medicationId.isNotIn(medIds))).go();
+    return (delete(
+      infusionSchedules,
+    )..where((t) => t.medicationId.isNotIn(medIds))).go();
   }
 
   // Schedules
-  Stream<List<InfusionSchedule>> watchSchedules() => select(infusionSchedules).watch();
-  Future<List<InfusionSchedule>> getAllActiveSchedules() => (select(infusionSchedules)..where((t) => t.isActive.equals(true))).get();
-  Future<int> insertSchedule(InfusionSchedulesCompanion entry) => into(infusionSchedules).insert(entry);
-  Future deleteSchedule(int id) => (delete(infusionSchedules)..where((t) => t.id.equals(id))).go();
-  Future updateSchedule(InfusionSchedule schedule) => update(infusionSchedules).replace(schedule);
+  Stream<List<InfusionSchedule>> watchSchedules() =>
+      select(infusionSchedules).watch();
+  Future<List<InfusionSchedule>> getAllActiveSchedules() =>
+      (select(infusionSchedules)..where((t) => t.isActive.equals(true))).get();
+  Future<int> insertSchedule(InfusionSchedulesCompanion entry) =>
+      into(infusionSchedules).insert(entry);
+  Future deleteSchedule(int id) =>
+      (delete(infusionSchedules)..where((t) => t.id.equals(id))).go();
+  Future updateSchedule(InfusionSchedule schedule) =>
+      update(infusionSchedules).replace(schedule);
 
   /// Removes exact-duplicate active schedules left behind by the old
   /// double-tap-on-"Zeitplan aktivieren" bug, keeping the lowest id of each
@@ -393,14 +487,18 @@ class AppDatabase extends _$AppDatabase {
 
     if (removedScheduleIds.isEmpty) return const [];
 
-    final planned = await (select(plannedInfusions)
-          ..where((t) => t.scheduleId.isIn(removedScheduleIds)))
-        .get();
+    final planned = await (select(
+      plannedInfusions,
+    )..where((t) => t.scheduleId.isIn(removedScheduleIds))).get();
     final reminderIds = planned.map((p) => p.id).toList();
 
     await transaction(() async {
-      await (delete(plannedInfusions)..where((t) => t.scheduleId.isIn(removedScheduleIds))).go();
-      await (delete(infusionSchedules)..where((t) => t.id.isIn(removedScheduleIds))).go();
+      await (delete(
+        plannedInfusions,
+      )..where((t) => t.scheduleId.isIn(removedScheduleIds))).go();
+      await (delete(
+        infusionSchedules,
+      )..where((t) => t.id.isIn(removedScheduleIds))).go();
     });
 
     return reminderIds;
@@ -408,65 +506,106 @@ class AppDatabase extends _$AppDatabase {
 
   // Pending Orders
   Stream<List<PendingOrder>> watchPendingOrders() =>
-      (select(pendingOrders)..where((t) => t.isConfirmed.equals(false))..orderBy([(t) => OrderingTerm(expression: t.deliveryDate)])).watch();
+      (select(pendingOrders)
+            ..where((t) => t.isConfirmed.equals(false))
+            ..orderBy([(t) => OrderingTerm(expression: t.deliveryDate)]))
+          .watch();
   Stream<List<PendingOrder>> watchConfirmedOrders() =>
-      (select(pendingOrders)..where((t) => t.isConfirmed.equals(true))..orderBy([(t) => OrderingTerm(expression: t.deliveryDate, mode: OrderingMode.desc)])).watch();
-  Future<int> insertPendingOrder(PendingOrdersCompanion entry) => into(pendingOrders).insert(entry);
-  Future deletePendingOrder(int id) => (delete(pendingOrders)..where((t) => t.id.equals(id))).go();
-  Future updatePendingOrder(PendingOrder entry) => update(pendingOrders).replace(entry);
+      (select(pendingOrders)
+            ..where((t) => t.isConfirmed.equals(true))
+            ..orderBy([
+              (t) => OrderingTerm(
+                expression: t.deliveryDate,
+                mode: OrderingMode.desc,
+              ),
+            ]))
+          .watch();
+  Future<int> insertPendingOrder(PendingOrdersCompanion entry) =>
+      into(pendingOrders).insert(entry);
+  Future deletePendingOrder(int id) =>
+      (delete(pendingOrders)..where((t) => t.id.equals(id))).go();
+  Future updatePendingOrder(PendingOrder entry) =>
+      update(pendingOrders).replace(entry);
 
-  Future<int> insertPendingOrderItem(PendingOrderItemsCompanion entry) => into(pendingOrderItems).insert(entry);
-  Future<List<PendingOrderItem>> getPendingOrderItems(int orderId) => (select(pendingOrderItems)..where((t) => t.orderId.equals(orderId))).get();
+  Future<int> insertPendingOrderItem(PendingOrderItemsCompanion entry) =>
+      into(pendingOrderItems).insert(entry);
+  Future<List<PendingOrderItem>> getPendingOrderItems(int orderId) => (select(
+    pendingOrderItems,
+  )..where((t) => t.orderId.equals(orderId))).get();
   Stream<List<PendingOrderItem>> watchAllPendingOrderItems() {
     return (select(pendingOrderItems).join([
-      innerJoin(pendingOrders, pendingOrders.id.equalsExp(pendingOrderItems.orderId)),
-    ])..where(pendingOrders.isConfirmed.equals(false)))
-    .watch()
-    .map((rows) => rows.map((row) => row.readTable(pendingOrderItems)).toList());
+      innerJoin(
+        pendingOrders,
+        pendingOrders.id.equalsExp(pendingOrderItems.orderId),
+      ),
+    ])..where(pendingOrders.isConfirmed.equals(false))).watch().map(
+      (rows) => rows.map((row) => row.readTable(pendingOrderItems)).toList(),
+    );
   }
 
   Future confirmOrder(int orderId) async {
     final items = await getPendingOrderItems(orderId);
-    
+
     await transaction(() async {
       for (var item in items) {
         if (item.medicationId != null) {
-          final med = await (select(medications)..where((t) => t.id.equals(item.medicationId!))).getSingle();
-          await update(medications).replace(med.copyWith(stock: med.stock + item.quantity));
+          final med = await (select(
+            medications,
+          )..where((t) => t.id.equals(item.medicationId!))).getSingle();
+          await update(
+            medications,
+          ).replace(med.copyWith(stock: med.stock + item.quantity));
         } else if (item.accessoryId != null) {
-          final acc = await (select(accessories)..where((t) => t.id.equals(item.accessoryId!))).getSingle();
-          await update(accessories).replace(acc.copyWith(stock: acc.stock + item.quantity));
+          final acc = await (select(
+            accessories,
+          )..where((t) => t.id.equals(item.accessoryId!))).getSingle();
+          await update(
+            accessories,
+          ).replace(acc.copyWith(stock: acc.stock + item.quantity));
         }
       }
       await (update(pendingOrders)..where((t) => t.id.equals(orderId))).write(
-          PendingOrdersCompanion(
-        isConfirmed: const Value(true),
-        confirmedAt: Value(DateTime.now()),
-      ));
+        PendingOrdersCompanion(
+          isConfirmed: const Value(true),
+          confirmedAt: Value(DateTime.now()),
+        ),
+      );
     });
   }
 
   // Diary Entries
-  Stream<List<DiaryEntry>> watchDiaryEntries() => (select(diaryEntries)..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)])).watch();
-  Future<int> insertDiaryEntry(DiaryEntriesCompanion entry) => into(diaryEntries).insert(entry);
-  Future updateDiaryEntry(DiaryEntry entry) => update(diaryEntries).replace(entry);
-  Future deleteDiaryEntry(int id) => (delete(diaryEntries)..where((t) => t.id.equals(id))).go();
+  Stream<List<DiaryEntry>> watchDiaryEntries() =>
+      (select(diaryEntries)..orderBy([
+            (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc),
+          ]))
+          .watch();
+  Future<int> insertDiaryEntry(DiaryEntriesCompanion entry) =>
+      into(diaryEntries).insert(entry);
+  Future updateDiaryEntry(DiaryEntry entry) =>
+      update(diaryEntries).replace(entry);
+  Future deleteDiaryEntry(int id) =>
+      (delete(diaryEntries)..where((t) => t.id.equals(id))).go();
 
   Future discontinueMedication(int id) async {
     await transaction(() async {
-      await (update(medications)..where((t) => t.id.equals(id)))
-          .write(MedicationsCompanion(discontinuedAt: Value(DateTime.now())));
+      await (update(medications)..where((t) => t.id.equals(id))).write(
+        MedicationsCompanion(discontinuedAt: Value(DateTime.now())),
+      );
       // Also deactivate all schedules for this medication
       await (update(infusionSchedules)..where((t) => t.medicationId.equals(id)))
           .write(const InfusionSchedulesCompanion(isActive: Value(false)));
       // Delete upcoming planned infusions
-      await (delete(plannedInfusions)..where((t) => t.medicationId.equals(id) & t.isCompleted.equals(false))).go();
+      await (delete(plannedInfusions)..where(
+            (t) => t.medicationId.equals(id) & t.isCompleted.equals(false),
+          ))
+          .go();
     });
   }
 
   Future reenrollMedication(int id) async {
-    await (update(medications)..where((t) => t.id.equals(id)))
-        .write(const MedicationsCompanion(discontinuedAt: Value.absent()));
+    await (update(medications)..where((t) => t.id.equals(id))).write(
+      const MedicationsCompanion(discontinuedAt: Value.absent()),
+    );
   }
 
   Future<List<InfusionLogData>> getConfirmedBestellungenHistory() async {

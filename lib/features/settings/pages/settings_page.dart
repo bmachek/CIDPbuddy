@@ -54,9 +54,11 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             leading: const Icon(Icons.translate_rounded),
             title: Text(l10n.settingsLanguage),
-            subtitle: Text(localeProvider.followsSystem
-                ? l10n.settingsLanguageSystem
-                : _languageName(l10n, localeProvider.locale!.languageCode)),
+            subtitle: Text(
+              localeProvider.followsSystem
+                  ? l10n.settingsLanguageSystem
+                  : _languageName(l10n, localeProvider.locale!.languageCode),
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showLanguagePicker(context, localeProvider),
           ),
@@ -67,7 +69,8 @@ class _SettingsPageState extends State<SettingsPage> {
             builder: (context, snapshot) {
               final status = snapshot.data;
               final dest = status?.destination;
-              final hasError = (status?.lastError != null) ||
+              final hasError =
+                  (status?.lastError != null) ||
                   ((status?.consecutiveFailures ?? 0) > 0);
 
               return Column(
@@ -85,12 +88,17 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   if (hasError && dest != null)
                     Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -102,11 +110,14 @@ class _SettingsPageState extends State<SettingsPage> {
                               children: [
                                 Text(
                                   l10n.settingsBackupNotPossible,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  status?.lastError ?? l10n.settingsUnknownError,
+                                  status?.lastError ??
+                                      l10n.settingsUnknownError,
                                   style: const TextStyle(fontSize: 12),
                                 ),
                                 const SizedBox(height: 8),
@@ -126,16 +137,24 @@ class _SettingsPageState extends State<SettingsPage> {
                   // green check and letting the user assume they are covered.
                   if (dest != null && !dest.isDurable && !hasError)
                     Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.orange.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: Colors.orange.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                          const Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.orange,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -143,7 +162,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               children: [
                                 Text(
                                   l10n.settingsBackupsInsideAppTitle,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -157,16 +178,21 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                   ListTile(
-                    leading: Icon(dest != null
-                        ? Icons.folder
-                        : Icons.folder_open_outlined),
+                    leading: Icon(
+                      dest != null ? Icons.folder : Icons.folder_open_outlined,
+                    ),
                     title: Text(l10n.settingsBackupDestination),
                     subtitle: Text(
-                      dest == null ? l10n.settingsPickDestination : dest.displayLabel(l10n),
+                      dest == null
+                          ? l10n.settingsPickDestination
+                          : dest.displayLabel(l10n),
                     ),
                     trailing: dest != null
-                        ? const Icon(Icons.check_circle,
-                            color: Colors.green, size: 16)
+                        ? const Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                            size: 16,
+                          )
                         : null,
                     onTap: Platform.isIOS
                         ? () => _showIosStorageInfo(context)
@@ -177,16 +203,22 @@ class _SettingsPageState extends State<SettingsPage> {
                       leading: const Icon(Icons.play_circle_outline),
                       title: Text(l10n.settingsRunBackupNow),
                       onTap: () async {
-                        final result =
-                            await backupService.runBackup(manual: true);
+                        final result = await backupService.runBackup(
+                          manual: true,
+                        );
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(result.success
-                                ? l10n.settingsBackupSucceeded
-                                : l10n.settingsBackupFailed('${result.error}')),
-                            backgroundColor:
-                                result.success ? Colors.green : Colors.red,
+                            content: Text(
+                              result.success
+                                  ? l10n.settingsBackupSucceeded
+                                  : l10n.settingsBackupFailed(
+                                      '${result.error}',
+                                    ),
+                            ),
+                            backgroundColor: result.success
+                                ? Colors.green
+                                : Colors.red,
                           ),
                         );
                         if (mounted) setState(() {});
@@ -224,8 +256,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   if (status?.lastAttempt != null &&
                       (status?.lastSuccess == null ||
-                          status!.lastAttempt!
-                              .isAfter(status.lastSuccess!)))
+                          status!.lastAttempt!.isAfter(status.lastSuccess!)))
                     ListTile(
                       leading: const Icon(Icons.access_time),
                       title: Text(l10n.settingsLastAttempt),
@@ -248,7 +279,15 @@ class _SettingsPageState extends State<SettingsPage> {
           FutureBuilder<Map<String, dynamic>>(
             future: _getReminderSettings(),
             builder: (context, snapshot) {
-              final settings = snapshot.data ?? {'snooze': true, 'hourly': true, 'snooze_interval': 15, 'quiet_start': 22, 'quiet_end': 6};
+              final settings =
+                  snapshot.data ??
+                  {
+                    'snooze': true,
+                    'hourly': true,
+                    'snooze_interval': 15,
+                    'quiet_start': 22,
+                    'quiet_end': 6,
+                  };
               final snoozeInterval = settings['snooze_interval'] as int;
               return Column(
                 children: [
@@ -263,8 +302,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     ListTile(
                       leading: const Icon(Icons.timelapse_rounded),
                       title: Text(l10n.settingsSnoozeInterval),
-                      subtitle: Text(l10n.settingsSnoozeIntervalCurrent(snoozeInterval)),
-                      onTap: () => _showSnoozeIntervalPicker(context, snoozeInterval),
+                      subtitle: Text(
+                        l10n.settingsSnoozeIntervalCurrent(snoozeInterval),
+                      ),
+                      onTap: () =>
+                          _showSnoozeIntervalPicker(context, snoozeInterval),
                     ),
                   SwitchListTile(
                     title: Text(l10n.settingsHourlyReminder),
@@ -276,9 +318,17 @@ class _SettingsPageState extends State<SettingsPage> {
                   ListTile(
                     leading: const Icon(Icons.nightlight_round),
                     title: Text(l10n.settingsQuietHours),
-                    subtitle: Text(l10n.settingsQuietHoursHint(
-                        '${settings['quiet_start']}:00', '${settings['quiet_end']}:00')),
-                    onTap: () => _showQuietHoursPicker(context, settings['quiet_start'], settings['quiet_end']),
+                    subtitle: Text(
+                      l10n.settingsQuietHoursHint(
+                        '${settings['quiet_start']}:00',
+                        '${settings['quiet_end']}:00',
+                      ),
+                    ),
+                    onTap: () => _showQuietHoursPicker(
+                      context,
+                      settings['quiet_start'],
+                      settings['quiet_end'],
+                    ),
                   ),
                 ],
               );
@@ -292,14 +342,18 @@ class _SettingsPageState extends State<SettingsPage> {
             subtitle: Text(l10n.reliabilitySubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(
-              context, 
-              MaterialPageRoute(builder: (context) => const ReliabilityCheckPage())
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ReliabilityCheckPage(),
+              ),
             ),
           ),
           const Divider(),
           _buildSectionHeader(l10n.settingsSectionHyqviaTimer),
           FutureBuilder<bool>(
-            future: SharedPreferences.getInstance().then((p) => p.getBool('hyqvia_timer_enabled') ?? true),
+            future: SharedPreferences.getInstance().then(
+              (p) => p.getBool('hyqvia_timer_enabled') ?? true,
+            ),
             builder: (context, snapshot) {
               final enabled = snapshot.data ?? true;
               return SwitchListTile(
@@ -316,7 +370,9 @@ class _SettingsPageState extends State<SettingsPage> {
             },
           ),
           FutureBuilder<int>(
-            future: SharedPreferences.getInstance().then((p) => p.getInt('hyqvia_timer_duration') ?? 10),
+            future: SharedPreferences.getInstance().then(
+              (p) => p.getInt('hyqvia_timer_duration') ?? 10,
+            ),
             builder: (context, snapshot) {
               final duration = snapshot.data ?? 10;
               return ListTile(
@@ -351,7 +407,8 @@ class _SettingsPageState extends State<SettingsPage> {
               l10n.legalBatchDocumentationLong,
             ),
           ),
-          if (AppLinks.impressumUrl != null || AppLinks.datenschutzUrl != null) ...[
+          if (AppLinks.impressumUrl != null ||
+              AppLinks.datenschutzUrl != null) ...[
             if (AppLinks.impressumUrl != null)
               ListTile(
                 leading: const Icon(Icons.gavel_outlined),
@@ -380,27 +437,51 @@ class _SettingsPageState extends State<SettingsPage> {
             builder: (context, snapshot) {
               final version = snapshot.data?.version ?? '...';
               final buildNumber = snapshot.data?.buildNumber ?? '...';
-              
+
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Column(
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                          Icon(
+                            Icons.info_outline,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.settingsVersion, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              Text('$version ($buildNumber)', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                              Text(
+                                l10n.settingsVersion,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '$version ($buildNumber)',
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -408,13 +489,28 @@ class _SettingsPageState extends State<SettingsPage> {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
+                          Icon(
+                            Icons.history,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.settingsBuildTimestamp, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              Text(BuildConfig.buildTimestamp, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                              Text(
+                                l10n.settingsBuildTimestamp,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                BuildConfig.buildTimestamp,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -459,7 +555,12 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.all(16.0),
       child: Text(
         title.toUpperCase(),
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, letterSpacing: 1.1),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+          letterSpacing: 1.1,
+        ),
       ),
     );
   }
@@ -468,11 +569,16 @@ class _SettingsPageState extends State<SettingsPage> {
   /// language the app currently renders in.
   String _languageName(AppLocalizations l10n, String code) {
     switch (code) {
-      case 'de': return l10n.languageGerman;
-      case 'fr': return l10n.languageFrench;
-      case 'it': return l10n.languageItalian;
-      case 'es': return l10n.languageSpanish;
-      default: return l10n.languageEnglish;
+      case 'de':
+        return l10n.languageGerman;
+      case 'fr':
+        return l10n.languageFrench;
+      case 'it':
+        return l10n.languageItalian;
+      case 'es':
+        return l10n.languageSpanish;
+      default:
+        return l10n.languageEnglish;
     }
   }
 
@@ -488,20 +594,29 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(l10n.settingsLanguage,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(
+                l10n.settingsLanguage,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             ...codes.map((code) {
               final selected = code == null
                   ? provider.followsSystem
                   : provider.locale?.languageCode == code;
               return ListTile(
-                title: Text(code == null
-                    ? l10n.settingsLanguageSystem
-                    : _languageName(l10n, code)),
+                title: Text(
+                  code == null
+                      ? l10n.settingsLanguageSystem
+                      : _languageName(l10n, code),
+                ),
                 trailing: selected
-                    ? Icon(Icons.check_rounded,
-                        color: Theme.of(context).colorScheme.primary)
+                    ? Icon(
+                        Icons.check_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                      )
                     : null,
                 onTap: () {
                   provider.setLocale(code == null ? null : Locale(code));
@@ -593,20 +708,29 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(context.l10n.settingsSnoozeInterval,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(
+                context.l10n.settingsSnoozeInterval,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-            ...options.map((min) => ListTile(
-                  title: Text(context.l10n.settingsEveryNMinutes(min)),
-                  trailing: min == current
-                      ? Icon(Icons.check_rounded,
-                          color: Theme.of(context).colorScheme.primary)
-                      : null,
-                  onTap: () {
-                    _updateReminderSetting('snooze_interval', min);
-                    Navigator.pop(ctx);
-                  },
-                )),
+            ...options.map(
+              (min) => ListTile(
+                title: Text(context.l10n.settingsEveryNMinutes(min)),
+                trailing: min == current
+                    ? Icon(
+                        Icons.check_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                      )
+                    : null,
+                onTap: () {
+                  _updateReminderSetting('snooze_interval', min);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -614,7 +738,11 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _showQuietHoursPicker(BuildContext context, int currentStart, int currentEnd) {
+  void _showQuietHoursPicker(
+    BuildContext context,
+    int currentStart,
+    int currentEnd,
+  ) {
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -622,16 +750,25 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(context.l10n.settingsQuietHoursTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              context.l10n.settingsQuietHoursTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildTimeColumn(context.l10n.settingsQuietHoursStart, currentStart,
-                    (val) => _updateReminderSetting('start', val)),
+                _buildTimeColumn(
+                  context.l10n.settingsQuietHoursStart,
+                  currentStart,
+                  (val) => _updateReminderSetting('start', val),
+                ),
                 const Icon(Icons.arrow_forward_rounded, color: Colors.grey),
-                _buildTimeColumn(context.l10n.settingsQuietHoursEnd, currentEnd,
-                    (val) => _updateReminderSetting('end', val)),
+                _buildTimeColumn(
+                  context.l10n.settingsQuietHoursEnd,
+                  currentEnd,
+                  (val) => _updateReminderSetting('end', val),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -648,7 +785,10 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 8),
         DropdownButton<int>(
           value: current,
-          items: List.generate(24, (i) => DropdownMenuItem(value: i, child: Text('$i:00'))),
+          items: List.generate(
+            24,
+            (i) => DropdownMenuItem(value: i, child: Text('$i:00')),
+          ),
           onChanged: (val) {
             if (val != null) {
               onSelected(val);
@@ -668,24 +808,31 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(context.l10n.settingsSetDefaultDuration, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              context.l10n.settingsSetDefaultDuration,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 20),
             Wrap(
               spacing: 12,
-              children: [5, 10, 15, 20, 30].map((m) => ChoiceChip(
-                label: Text('$m min'),
-                selected: current == m,
-                onSelected: (selected) async {
-                  if (selected) {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setInt('hyqvia_timer_duration', m);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      setState(() {});
-                    }
-                  }
-                },
-              )).toList(),
+              children: [5, 10, 15, 20, 30]
+                  .map(
+                    (m) => ChoiceChip(
+                      label: Text('$m min'),
+                      selected: current == m,
+                      onSelected: (selected) async {
+                        if (selected) {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setInt('hyqvia_timer_duration', m);
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            setState(() {});
+                          }
+                        }
+                      },
+                    ),
+                  )
+                  .toList(),
             ),
             const SizedBox(height: 20),
           ],
@@ -718,8 +865,13 @@ class _SettingsPageState extends State<SettingsPage> {
                     padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
                     child: Row(
                       children: [
-                        Text(context.l10n.settingsPickBackup,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text(
+                          context.l10n.settingsPickBackup,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const Spacer(),
                         TextButton.icon(
                           onPressed: () {
@@ -741,11 +893,18 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: FutureBuilder<_RestoreListState>(
                       future: _loadRestoreState(context.l10n),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
                         if (snapshot.hasError) {
-                          return Center(child: Text(context.l10n.genericError('${snapshot.error}')));
+                          return Center(
+                            child: Text(
+                              context.l10n.genericError('${snapshot.error}'),
+                            ),
+                          );
                         }
                         final state = snapshot.data!;
                         if (!state.hasDestination) {
@@ -764,7 +923,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           return _restoreEmptyState(
                             icon: Icons.lock_outline,
                             title: context.l10n.restoreAccessLostTitle,
-                            body: '${state.errorMessage}$pathHint\n\n'
+                            body:
+                                '${state.errorMessage}$pathHint\n\n'
                                 '${context.l10n.restoreAccessLostBody}',
                             buttonLabel: context.l10n.settingsPickFolderAgain,
                             onPressed: pickAndReload,
@@ -777,7 +937,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           return _restoreEmptyState(
                             icon: Icons.folder_open,
                             title: context.l10n.restoreNoBackupsTitle,
-                            body: '${context.l10n.restoreNoBackupsBody}$pathHint\n\n'
+                            body:
+                                '${context.l10n.restoreNoBackupsBody}$pathHint\n\n'
                                 '${context.l10n.restoreNoBackupsHint}',
                             buttonLabel: context.l10n.restorePickOtherFolder,
                             onPressed: pickAndReload,
@@ -792,7 +953,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               leading: const Icon(Icons.inventory_2_outlined),
                               title: Text(b.name),
                               subtitle: Text(
-                                  '${AppDateFormat.dateTime(context, b.date)}  •  ${(b.size / 1024 / 1024).toStringAsFixed(2)} MB'),
+                                '${AppDateFormat.dateTime(context, b.date)}  •  ${(b.size / 1024 / 1024).toStringAsFixed(2)} MB',
+                              ),
                               onTap: () {
                                 Navigator.pop(ctx);
                                 _confirmZippedRestore(b);
@@ -861,13 +1023,17 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           Icon(icon, size: 48, color: Colors.grey),
           const SizedBox(height: 16),
-          Text(title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              textAlign: TextAlign.center),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 8),
-          Text(body,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey)),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.grey),
+          ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: onPressed,
@@ -914,14 +1080,23 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 16),
             Text(
               context.l10n.restoreOverwriteWarning,
-              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.l10n.actionCancel),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: Text(context.l10n.actionRestore),
           ),
@@ -965,19 +1140,31 @@ class _SettingsPageState extends State<SettingsPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.l10n.restoreConfirmDated(
-                AppDateFormat.dateTime(context, backup.date))),
+            Text(
+              context.l10n.restoreConfirmDated(
+                AppDateFormat.dateTime(context, backup.date),
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
               context.l10n.restoreOverwriteWarning,
-              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.l10n.actionCancel),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: Text(context.l10n.actionRestore),
           ),
@@ -998,7 +1185,7 @@ class _SettingsPageState extends State<SettingsPage> {
       await AppDatabase().close();
 
       final success = await backupService.restoreFromZippedBackup(backup);
-      
+
       if (mounted) {
         Navigator.pop(context); // Close progress
 
@@ -1009,7 +1196,7 @@ class _SettingsPageState extends State<SettingsPage> {
             SnackBar(
               content: Text(context.l10n.restoreFailed),
               backgroundColor: Colors.red,
-            )
+            ),
           );
         }
       }
@@ -1046,7 +1233,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-
 class _RestoreListState {
   final bool hasDestination;
   final List<BackupFile> backups;
@@ -1059,4 +1245,3 @@ class _RestoreListState {
     this.destinationLabel,
   });
 }
-

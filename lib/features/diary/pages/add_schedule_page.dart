@@ -10,7 +10,11 @@ import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 class AddSchedulePage extends StatefulWidget {
   final InfusionSchedule? initialSchedule;
   final int? preselectedMedicationId;
-  const AddSchedulePage({super.key, this.initialSchedule, this.preselectedMedicationId});
+  const AddSchedulePage({
+    super.key,
+    this.initialSchedule,
+    this.preselectedMedicationId,
+  });
 
   @override
   State<AddSchedulePage> createState() => _AddSchedulePageState();
@@ -30,31 +34,40 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
   /// The stored `value` is a database enum and must stay untranslated; only
   /// the label follows the UI language, so this cannot be a field initializer.
   List<Map<String, String>> _frequencies(BuildContext context) => [
-        {'value': 'daily', 'label': context.l10n.frequencyDaily},
-        {'value': 'interval', 'label': context.l10n.frequencyInterval},
-        {'value': 'weekly', 'label': context.l10n.frequencyWeekly},
-        {'value': 'biweekly', 'label': context.l10n.frequencyBiweekly},
-        {'value': 'weekdays', 'label': context.l10n.frequencyWeekdays},
-      ];
+    {'value': 'daily', 'label': context.l10n.frequencyDaily},
+    {'value': 'interval', 'label': context.l10n.frequencyInterval},
+    {'value': 'weekly', 'label': context.l10n.frequencyWeekly},
+    {'value': 'biweekly', 'label': context.l10n.frequencyBiweekly},
+    {'value': 'weekdays', 'label': context.l10n.frequencyWeekdays},
+  ];
 
   @override
   void initState() {
     super.initState();
     final s = widget.initialSchedule;
-    _dosageController = TextEditingController(text: s?.dosage.toString() ?? '1.0');
-    _intervalController = TextEditingController(text: s?.intervalValue?.toString() ?? '2');
+    _dosageController = TextEditingController(
+      text: s?.dosage.toString() ?? '1.0',
+    );
+    _intervalController = TextEditingController(
+      text: s?.intervalValue?.toString() ?? '2',
+    );
     _startDate = (s?.startDate ?? DateTime.now());
     // Normalize to midnight local time
     _startDate = DateTime(_startDate.year, _startDate.month, _startDate.day);
     _frequencyType = s?.frequencyType ?? 'daily';
-    
+
     // Map back 'weekly' with interval 2 to 'biweekly' for the UI
     if (_frequencyType == 'weekly' && s?.intervalValue == 2) {
       _frequencyType = 'biweekly';
     }
 
     if (s?.selectedWeekdays != null && s!.selectedWeekdays!.isNotEmpty) {
-      _selectedWeekdays.addAll(s.selectedWeekdays!.split(',').where((e) => e.isNotEmpty).map(int.parse));
+      _selectedWeekdays.addAll(
+        s.selectedWeekdays!
+            .split(',')
+            .where((e) => e.isNotEmpty)
+            .map(int.parse),
+      );
     }
 
     if (s?.intakeTimes != null && s!.intakeTimes!.isNotEmpty) {
@@ -62,7 +75,9 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
       for (final tStr in s.intakeTimes!.split(',')) {
         final parts = tStr.split(':');
         if (parts.length == 2) {
-          _intakeTimes.add(TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1])));
+          _intakeTimes.add(
+            TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1])),
+          );
         }
       }
     }
@@ -81,26 +96,34 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialSchedule == null
-            ? context.l10n.scheduleTitleNew
-            : context.l10n.scheduleTitleEdit),
+        title: Text(
+          widget.initialSchedule == null
+              ? context.l10n.scheduleTitleNew
+              : context.l10n.scheduleTitleEdit,
+        ),
         centerTitle: true,
       ),
       body: FutureBuilder<List<Medication>>(
         future: db.getAllMedications(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
           final medications = snapshot.data!;
 
           // Initialize selected medication on first load
           if (_isFirstLoad) {
             if (widget.initialSchedule != null) {
               try {
-                _selectedMedication = medications.firstWhere((m) => m.id == widget.initialSchedule!.medicationId);
+                _selectedMedication = medications.firstWhere(
+                  (m) => m.id == widget.initialSchedule!.medicationId,
+                );
               } catch (_) {}
             } else if (widget.preselectedMedicationId != null) {
               try {
-                _selectedMedication = medications.firstWhere((m) => m.id == widget.preselectedMedicationId);
+                _selectedMedication = medications.firstWhere(
+                  (m) => m.id == widget.preselectedMedicationId,
+                );
               } catch (_) {}
             }
             _isFirstLoad = false;
@@ -108,228 +131,317 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
 
           return SafeArea(
             child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionHeader(context.l10n.sectionMedicationAndDose),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<Medication>(
-                  initialValue: _selectedMedication,
-                  items: medications.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
-                  onChanged: (val) => setState(() => _selectedMedication = val),
-                  decoration: InputDecoration(
-                    labelText: context.l10n.addInfusionPickMedication,
-                    prefixIcon: const Icon(Icons.medication_rounded),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionHeader(context.l10n.sectionMedicationAndDose),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<Medication>(
+                    initialValue: _selectedMedication,
+                    items: medications
+                        .map(
+                          (m) =>
+                              DropdownMenuItem(value: m, child: Text(m.name)),
+                        )
+                        .toList(),
+                    onChanged: (val) =>
+                        setState(() => _selectedMedication = val),
+                    decoration: InputDecoration(
+                      labelText: context.l10n.addInfusionPickMedication,
+                      prefixIcon: const Icon(Icons.medication_rounded),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _dosageController,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.fieldUnitsPerInfusion,
-                    prefixIcon: const Icon(Icons.scale_rounded),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                ),
-                const SizedBox(height: 32),
-                _buildSectionHeader(context.l10n.sectionFrequency),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: _frequencyType,
-                  items: _frequencies(context).map((f) => DropdownMenuItem(value: f['value'], child: Text(f['label']!))).toList(),
-                  onChanged: (val) => setState(() => _frequencyType = val!),
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.repeat_rounded),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                ),
-                if (_frequencyType == 'interval') ...[
                   const SizedBox(height: 16),
                   TextField(
-                    controller: _intervalController,
+                    controller: _dosageController,
                     decoration: InputDecoration(
-                      labelText: context.l10n.fieldNumberOfDays,
-                      hintText: context.l10n.fieldNumberOfDaysHint,
-                      prefixIcon: const Icon(Icons.today_rounded),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      labelText: context.l10n.fieldUnitsPerInfusion,
+                      prefixIcon: const Icon(Icons.scale_rounded),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                   ),
-                ],
-                if (_frequencyType == 'weekdays') ...[
+                  const SizedBox(height: 32),
+                  _buildSectionHeader(context.l10n.sectionFrequency),
                   const SizedBox(height: 16),
-                  Text(context.l10n.scheduleSelectDays, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 0,
-                    children: List.generate(7, (index) {
-                      final day = index + 1;
-                      // 2024-01-01 was a Monday, so adding `index` days walks
-                      // Mon–Sun and intl supplies the abbreviation per locale.
-                      final label = DateFormat.E(context.localeTag)
-                          .format(DateTime(2024, 1, 1).add(Duration(days: index)));
-                      final isSelected = _selectedWeekdays.contains(day);
-                      return ChoiceChip(
-                        label: Text(label),
-                        selected: isSelected,
-                        onSelected: (val) {
-                          setState(() {
-                            if (val) {
-                              _selectedWeekdays.add(day);
-                            } else {
-                              _selectedWeekdays.remove(day);
-                            }
-                          });
-                        },
-                        selectedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                        checkmarkColor: Theme.of(context).colorScheme.primary,
-                        labelStyle: TextStyle(
-                          color: isSelected ? Theme.of(context).colorScheme.primary : null,
-                          fontWeight: isSelected ? FontWeight.bold : null,
-                        ),
-                      );
-                    }),
+                  DropdownButtonFormField<String>(
+                    initialValue: _frequencyType,
+                    items: _frequencies(context)
+                        .map(
+                          (f) => DropdownMenuItem(
+                            value: f['value'],
+                            child: Text(f['label']!),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) => setState(() => _frequencyType = val!),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.repeat_rounded),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
                   ),
-                ],
-                const SizedBox(height: 32),
-                _buildSectionHeader(context.l10n.sectionPeriod),
-                const SizedBox(height: 16),
-                InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _startDate,
-                      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: Theme.of(context).colorScheme.copyWith(
-                              primary: Theme.of(context).colorScheme.primary,
+                  if (_frequencyType == 'interval') ...[
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _intervalController,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.fieldNumberOfDays,
+                        hintText: context.l10n.fieldNumberOfDaysHint,
+                        prefixIcon: const Icon(Icons.today_rounded),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                  if (_frequencyType == 'weekdays') ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      context.l10n.scheduleSelectDays,
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 0,
+                      children: List.generate(7, (index) {
+                        final day = index + 1;
+                        // 2024-01-01 was a Monday, so adding `index` days walks
+                        // Mon–Sun and intl supplies the abbreviation per locale.
+                        final label = DateFormat.E(context.localeTag).format(
+                          DateTime(2024, 1, 1).add(Duration(days: index)),
+                        );
+                        final isSelected = _selectedWeekdays.contains(day);
+                        return ChoiceChip(
+                          label: Text(label),
+                          selected: isSelected,
+                          onSelected: (val) {
+                            setState(() {
+                              if (val) {
+                                _selectedWeekdays.add(day);
+                              } else {
+                                _selectedWeekdays.remove(day);
+                              }
+                            });
+                          },
+                          selectedColor: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.2),
+                          checkmarkColor: Theme.of(context).colorScheme.primary,
+                          labelStyle: TextStyle(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                            fontWeight: isSelected ? FontWeight.bold : null,
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                  const SizedBox(height: 32),
+                  _buildSectionHeader(context.l10n.sectionPeriod),
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _startDate,
+                        firstDate: DateTime.now().subtract(
+                          const Duration(days: 30),
+                        ),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: Theme.of(context).colorScheme
+                                  .copyWith(
+                                    primary: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (picked != null) {
+                        setState(
+                          () => _startDate = DateTime(
+                            picked.year,
+                            picked.month,
+                            picked.day,
+                          ),
+                        );
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_today_rounded,
+                                size: 20,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    context.l10n.fieldStartDate,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  Text(
+                                    AppDateFormat.longDate(context, _startDate),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Icon(
+                            Icons.edit_rounded,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  _buildSectionHeader(context.l10n.sectionIntakeTimes),
+                  const SizedBox(height: 16),
+                  ...List.generate(
+                    _intakeTimes.length,
+                    (index) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final picked = await showTimePicker(
+                                  context: context,
+                                  initialTime: _intakeTimes[index],
+                                );
+                                if (picked != null) {
+                                  setState(() => _intakeTimes[index] = picked);
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.grey.shade400,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  _intakeTimes[index].format(context),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (picked != null) {
-                      setState(() => _startDate = DateTime(picked.year, picked.month, picked.day));
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade400),
-                      borderRadius: BorderRadius.circular(16),
+                          if (_intakeTimes.length > 1)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.remove_circle_outline_rounded,
+                                color: Colors.red,
+                              ),
+                              onPressed: () =>
+                                  setState(() => _intakeTimes.removeAt(index)),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => setState(
+                      () =>
+                          _intakeTimes.add(const TimeOfDay(hour: 8, minute: 0)),
+                    ),
+                    icon: const Icon(Icons.add_circle_outline_rounded),
+                    label: Text(context.l10n.scheduleAddTime),
+                  ),
+                  const SizedBox(height: 48),
+                  ElevatedButton(
+                    onPressed: (_selectedMedication == null || _isSaving)
+                        ? null
+                        : () => _saveSchedule(db),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(60),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      elevation: 0,
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_today_rounded, size: 20, color: Colors.grey),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(context.l10n.fieldStartDate, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                Text(
-                                  AppDateFormat.longDate(context, _startDate),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                ),
-                              ],
+                        if (_isSaving)
+                          const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
                             ),
-                          ],
+                          )
+                        else
+                          const Icon(Icons.save_rounded),
+                        const SizedBox(width: 12),
+                        Text(
+                          widget.initialSchedule == null
+                              ? context.l10n.scheduleActivate
+                              : context.l10n.actionSaveChanges,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        Icon(Icons.edit_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 32),
-                _buildSectionHeader(context.l10n.sectionIntakeTimes),
-                const SizedBox(height: 16),
-                ...List.generate(_intakeTimes.length, (index) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () async {
-                            final picked = await showTimePicker(
-                              context: context,
-                              initialTime: _intakeTimes[index],
-                            );
-                            if (picked != null) {
-                              setState(() => _intakeTimes[index] = picked);
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade400),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              _intakeTimes[index].format(context),
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_intakeTimes.length > 1)
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle_outline_rounded, color: Colors.red),
-                          onPressed: () => setState(() => _intakeTimes.removeAt(index)),
-                        ),
-                    ],
-                  ),
-                )),
-                TextButton.icon(
-                  onPressed: () => setState(() => _intakeTimes.add(const TimeOfDay(hour: 8, minute: 0))),
-                  icon: const Icon(Icons.add_circle_outline_rounded),
-                  label: Text(context.l10n.scheduleAddTime),
-                ),
-                const SizedBox(height: 48),
-                ElevatedButton(
-                  onPressed: (_selectedMedication == null || _isSaving) ? null : () => _saveSchedule(db),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(60),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_isSaving)
-                        const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      else
-                        const Icon(Icons.save_rounded),
-                      const SizedBox(width: 12),
-                      Text(
-                        widget.initialSchedule == null
-                            ? context.l10n.scheduleActivate
-                            : context.l10n.actionSaveChanges,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
-            ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           );
         },
@@ -340,7 +452,12 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Colors.grey),
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.2,
+        color: Colors.grey,
+      ),
     );
   }
 
@@ -362,34 +479,51 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
       interval = 1;
     }
 
-    final intakeTimesStr = _intakeTimes.map((t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}').join(',');
+    final intakeTimesStr = _intakeTimes
+        .map(
+          (t) =>
+              '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}',
+        )
+        .join(',');
 
     try {
       if (widget.initialSchedule != null) {
         // Update existing schedule
-        await db.updateSchedule(widget.initialSchedule!.copyWith(
-          medicationId: _selectedMedication!.id,
-          dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
-          frequencyType: finalFreq,
-          intervalValue: drift.Value(interval),
-          selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
-          startDate: _startDate,
-          intakeTimes: drift.Value(intakeTimesStr),
-        ));
+        await db.updateSchedule(
+          widget.initialSchedule!.copyWith(
+            medicationId: _selectedMedication!.id,
+            dosage:
+                double.tryParse(_dosageController.text.replaceAll(',', '.')) ??
+                1.0,
+            frequencyType: finalFreq,
+            intervalValue: drift.Value(interval),
+            selectedWeekdays: drift.Value(
+              _frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null,
+            ),
+            startDate: _startDate,
+            intakeTimes: drift.Value(intakeTimesStr),
+          ),
+        );
 
         // Clear out future entries to force regeneration
         await db.deletePlannedInfusionsForSchedule(widget.initialSchedule!.id);
       } else {
         // Insert new schedule
-        await db.insertSchedule(InfusionSchedulesCompanion.insert(
-          medicationId: _selectedMedication!.id,
-          dosage: double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
-          frequencyType: finalFreq,
-          intervalValue: drift.Value(interval),
-          selectedWeekdays: drift.Value(_frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null),
-          startDate: _startDate,
-          intakeTimes: drift.Value(intakeTimesStr),
-        ));
+        await db.insertSchedule(
+          InfusionSchedulesCompanion.insert(
+            medicationId: _selectedMedication!.id,
+            dosage:
+                double.tryParse(_dosageController.text.replaceAll(',', '.')) ??
+                1.0,
+            frequencyType: finalFreq,
+            intervalValue: drift.Value(interval),
+            selectedWeekdays: drift.Value(
+              _frequencyType == 'weekdays' ? _selectedWeekdays.join(',') : null,
+            ),
+            startDate: _startDate,
+            intakeTimes: drift.Value(intakeTimesStr),
+          ),
+        );
       }
 
       // The schedule row is now persisted. Close the page immediately and run
@@ -397,9 +531,11 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
       // medication with many schedules it issues thousands of platform calls
       // and must never block the dialog from closing.
       if (mounted) Navigator.pop(context);
-      unawaited(SchedulerService(db).syncPlannedInfusions().catchError(
-            (e) => debugPrint('AddSchedulePage: background sync failed: $e'),
-          ));
+      unawaited(
+        SchedulerService(db).syncPlannedInfusions().catchError(
+          (e) => debugPrint('AddSchedulePage: background sync failed: $e'),
+        ),
+      );
     } catch (e) {
       // Re-enable the button so the user can retry instead of being stuck.
       if (mounted) setState(() => _isSaving = false);

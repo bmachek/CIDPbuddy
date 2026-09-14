@@ -18,9 +18,15 @@ class MedicationDetailsPage extends StatelessWidget {
     final invProvider = Provider.of<InventoryProvider>(context);
 
     return StreamBuilder<Medication>(
-      stream: (db.select(db.medications)..where((t) => t.id.equals(medicationId))).watchSingle(),
+      stream: (db.select(
+        db.medications,
+      )..where((t) => t.id.equals(medicationId))).watchSingle(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
         final medication = snapshot.data!;
 
         return Scaffold(
@@ -33,14 +39,23 @@ class MedicationDetailsPage extends StatelessWidget {
                     if (medication.dosage.isNotEmpty) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          medication.dosage, 
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)
+                          medication.dosage,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                       ),
                     ],
@@ -50,23 +65,42 @@ class MedicationDetailsPage extends StatelessWidget {
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.edit_outlined),
-                    onPressed: () => _showEditMedicationDialog(context, db, medication),
+                    onPressed: () =>
+                        _showEditMedicationDialog(context, db, medication),
                   ),
                   if (medication.discontinuedAt == null)
                     IconButton(
-                      icon: Icon(Icons.heart_broken_outlined, color: Theme.of(context).colorScheme.primary),
-                      onPressed: () => _confirmDiscontinueMedication(context, invProvider, medication),
+                      icon: Icon(
+                        Icons.heart_broken_outlined,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      onPressed: () => _confirmDiscontinueMedication(
+                        context,
+                        invProvider,
+                        medication,
+                      ),
                       tooltip: context.l10n.medDetailsDiscontinue,
                     )
                   else
                     IconButton(
-                      icon: Icon(Icons.add_moderator_outlined, color: Theme.of(context).colorScheme.tertiary),
-                      onPressed: () => invProvider.reenrollMedication(medication.id),
+                      icon: Icon(
+                        Icons.add_moderator_outlined,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
+                      onPressed: () =>
+                          invProvider.reenrollMedication(medication.id),
                       tooltip: context.l10n.medDetailsReenroll,
                     ),
                   IconButton(
-                    icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error),
-                    onPressed: () => _confirmDeleteMedication(context, invProvider, medication),
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    onPressed: () => _confirmDeleteMedication(
+                      context,
+                      invProvider,
+                      medication,
+                    ),
                     tooltip: context.l10n.medDetailsDeleteCompletely,
                   ),
                   const SizedBox(width: 8),
@@ -75,203 +109,353 @@ class MedicationDetailsPage extends StatelessWidget {
               if (medication.discontinuedAt != null)
                 SliverToBoxAdapter(
                   child: Container(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 16,
+                    ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 16),
+                        Icon(
+                          Icons.info_outline_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 16,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           context.l10n.medDetailsDiscontinuedSince(
-                              AppDateFormat.date(context, medication.discontinuedAt!)),
-                          style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 13),
+                            AppDateFormat.date(
+                              context,
+                              medication.discontinuedAt!,
+                            ),
+                          ),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-          SliverPadding(
-            padding: const EdgeInsets.all(20),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _buildSectionHeader(context, context.l10n.medDetailsSectionStock),
-                const SizedBox(height: 12),
-                _StockManagementCard(medication: medication),
-                const SizedBox(height: 32),
-                _buildSectionHeader(context, context.l10n.medDetailsSectionSupplies),
-                Text(
-                  context.l10n.medDetailsSuppliesHint,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
-                ),
-                const SizedBox(height: 16),
-                StreamBuilder<List<MedicationAccessory>>(
-                  stream: db.watchAccessoriesForMedication(medication.id),
-                  builder: (context, snapshot) {
-                    final links = snapshot.data ?? [];
-                    if (links.isEmpty) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Center(
-                          child: Text(context.l10n.medDetailsNoSuppliesLinked, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                        ),
-                      );
-                    }
+              SliverPadding(
+                padding: const EdgeInsets.all(20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _buildSectionHeader(
+                      context,
+                      context.l10n.medDetailsSectionStock,
+                    ),
+                    const SizedBox(height: 12),
+                    _StockManagementCard(medication: medication),
+                    const SizedBox(height: 32),
+                    _buildSectionHeader(
+                      context,
+                      context.l10n.medDetailsSectionSupplies,
+                    ),
+                    Text(
+                      context.l10n.medDetailsSuppliesHint,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    StreamBuilder<List<MedicationAccessory>>(
+                      stream: db.watchAccessoriesForMedication(medication.id),
+                      builder: (context, snapshot) {
+                        final links = snapshot.data ?? [];
+                        if (links.isEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: Text(
+                                context.l10n.medDetailsNoSuppliesLinked,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
 
-                    return Column(
-                      children: links.map((link) => _buildAccessoryRow(context, db, link)).toList(),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showLinkAccessoryDialog(context, db, medication),
-                        icon: const Icon(Icons.link_rounded),
-                        label: Text(context.l10n.medDetailsLink),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        return Column(
+                          children: links
+                              .map(
+                                (link) => _buildAccessoryRow(context, db, link),
+                              )
+                              .toList(),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _showLinkAccessoryDialog(
+                              context,
+                              db,
+                              medication,
+                            ),
+                            icon: const Icon(Icons.link_rounded),
+                            label: Text(context.l10n.medDetailsLink),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _showCreateAccessoryDialog(
+                              context,
+                              db,
+                              medication,
+                            ),
+                            icon: const Icon(Icons.add_rounded),
+                            label: Text(context.l10n.medDetailsCreateAndLink),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onPrimary,
+                              elevation: 0,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 48),
+                    const SizedBox(height: 48),
+                    if (medication.type != MedicationType.pill) ...[
+                      _buildSectionHeader(
+                        context,
+                        context.l10n.medDetailsSectionWorkflow,
+                      ),
+                      Text(
+                        context.l10n.medDetailsWorkflowHint,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 13,
                         ),
                       ),
+                      _buildWorkflowConfig(
+                        context,
+                        db,
+                        invProvider,
+                        medication,
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                    _buildSectionHeader(
+                      context,
+                      context.l10n.planningTabSchedules,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showCreateAccessoryDialog(context, db, medication),
-                        icon: const Icon(Icons.add_rounded),
-                        label: Text(context.l10n.medDetailsCreateAndLink),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                          elevation: 0,
-                        ),
+                    Text(
+                      context.l10n.medDetailsSchedulesHint,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 13,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 48),
-                const SizedBox(height: 48),
-                if (medication.type != MedicationType.pill) ...[
-                  _buildSectionHeader(context, context.l10n.medDetailsSectionWorkflow),
-                  Text(
-                    context.l10n.medDetailsWorkflowHint,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
-                  ),
-                  _buildWorkflowConfig(context, db, invProvider, medication),
-                  const SizedBox(height: 32),
-                ],
-                _buildSectionHeader(context, context.l10n.planningTabSchedules),
-                Text(
-                  context.l10n.medDetailsSchedulesHint,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
-                ),
-                const SizedBox(height: 16),
-                StreamBuilder<List<InfusionSchedule>>(
-                  stream: (db.select(db.infusionSchedules)..where((t) => t.medicationId.equals(medication.id))).watch(),
-                  builder: (context, snapshot) {
-                    final schedules = snapshot.data ?? [];
-                    if (schedules.isEmpty) {
-                      return Padding(
+                    const SizedBox(height: 16),
+                    StreamBuilder<List<InfusionSchedule>>(
+                      stream:
+                          (db.select(db.infusionSchedules)..where(
+                                (t) => t.medicationId.equals(medication.id),
+                              ))
+                              .watch(),
+                      builder: (context, snapshot) {
+                        final schedules = snapshot.data ?? [];
+                        if (schedules.isEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: Text(
+                                context.l10n.planningNoSchedules,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        return Column(
+                          children: schedules
+                              .map(
+                                (s) => _buildScheduleCard(
+                                  context,
+                                  db,
+                                  s,
+                                  medication,
+                                ),
+                              )
+                              .toList(),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AddSchedulePage(
+                            preselectedMedicationId: medication.id,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.calendar_month_rounded),
+                      label: Text(context.l10n.medDetailsCreateSchedule),
+                      style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Center(
-                          child: Text(context.l10n.planningNoSchedules, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      );
-                    }
-                    return Column(
-                      children: schedules.map((s) => _buildScheduleCard(context, db, s, medication)).toList(),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => AddSchedulePage(preselectedMedicationId: medication.id)),
-                  ),
-                  icon: const Icon(Icons.calendar_month_rounded),
-                  label: Text(context.l10n.medDetailsCreateSchedule),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () => _showAddAppointmentDialog(context, db, medication),
-                  icon: const Icon(Icons.event_rounded),
-                  label: Text(context.l10n.medDetailsPlanOneOff),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                ),
-                const SizedBox(height: 48),
-                _buildSectionHeader(context, context.l10n.medDetailsSectionSystemActions),
-                const SizedBox(height: 12),
-                if (medication.discontinuedAt == null)
-                  ElevatedButton.icon(
-                    onPressed: () => _confirmDiscontinueMedication(context, invProvider, medication),
-                    icon: const Icon(Icons.heart_broken_outlined),
-                    label: Text(context.l10n.medDetailsDiscontinueMedication),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.surface,
-                      foregroundColor: Theme.of(context).colorScheme.primary,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+                      ),
                     ),
-                  )
-                else
-                  ElevatedButton.icon(
-                    onPressed: () => invProvider.reenrollMedication(medication.id),
-                    icon: const Icon(Icons.add_moderator_outlined),
-                    label: Text(context.l10n.medDetailsReenroll),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.surface,
-                      foregroundColor: Theme.of(context).colorScheme.tertiary,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      side: BorderSide(color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1)),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          _showAddAppointmentDialog(context, db, medication),
+                      icon: const Icon(Icons.event_rounded),
+                      label: Text(context.l10n.medDetailsPlanOneOff),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
                     ),
-                  ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () => _confirmDeleteMedication(context, invProvider, medication),
-                  icon: const Icon(Icons.delete_outline_rounded),
-                  label: Text(context.l10n.medDetailsDeleteFromDatabase),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    side: BorderSide(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2)),
-                  ),
+                    const SizedBox(height: 48),
+                    _buildSectionHeader(
+                      context,
+                      context.l10n.medDetailsSectionSystemActions,
+                    ),
+                    const SizedBox(height: 12),
+                    if (medication.discontinuedAt == null)
+                      ElevatedButton.icon(
+                        onPressed: () => _confirmDiscontinueMedication(
+                          context,
+                          invProvider,
+                          medication,
+                        ),
+                        icon: const Icon(Icons.heart_broken_outlined),
+                        label: Text(
+                          context.l10n.medDetailsDiscontinueMedication,
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          side: BorderSide(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.1),
+                          ),
+                        ),
+                      )
+                    else
+                      ElevatedButton.icon(
+                        onPressed: () =>
+                            invProvider.reenrollMedication(medication.id),
+                        icon: const Icon(Icons.add_moderator_outlined),
+                        label: Text(context.l10n.medDetailsReenroll),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.tertiary,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          side: BorderSide(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.tertiary.withValues(alpha: 0.1),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => _confirmDeleteMedication(
+                        context,
+                        invProvider,
+                        medication,
+                      ),
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      label: Text(context.l10n.medDetailsDeleteFromDatabase),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        side: BorderSide(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.error.withValues(alpha: 0.2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 100),
+                  ]),
                 ),
-                const SizedBox(height: 100),
-              ]),
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
-  },
-);
-}
+  }
 
   Widget _buildSectionHeader(BuildContext context, String title) {
     final colorScheme = Theme.of(context).colorScheme;
     return Text(
       title,
-      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: colorScheme.primary),
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.2,
+        color: colorScheme.primary,
+      ),
     );
   }
 
-  Widget _buildAccessoryRow(BuildContext context, AppDatabase db, MedicationAccessory link) {
+  Widget _buildAccessoryRow(
+    BuildContext context,
+    AppDatabase db,
+    MedicationAccessory link,
+  ) {
     return StreamBuilder<Accessory>(
-      stream: (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).watchSingle(),
+      stream: (db.select(
+        db.accessories,
+      )..where((t) => t.id.equals(link.accessoryId))).watchSingle(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox();
         final acc = snapshot.data!;
@@ -279,9 +463,23 @@ class MedicationDetailsPage extends StatelessWidget {
           children: [
             ListTile(
               contentPadding: const EdgeInsets.symmetric(vertical: 4),
-              leading: Icon(Icons.build_circle_rounded, color: Theme.of(context).colorScheme.tertiary),
-              title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(context.l10n.medDetailsRequirement(link.defaultQuantity.toStringAsFixed(0), acc.unit), style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              leading: Icon(
+                Icons.build_circle_rounded,
+                color: Theme.of(context).colorScheme.tertiary,
+              ),
+              title: Text(
+                acc.name,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                context.l10n.medDetailsRequirement(
+                  link.defaultQuantity.toStringAsFixed(0),
+                  acc.unit,
+                ),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -290,17 +488,30 @@ class MedicationDetailsPage extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 8.0),
                       child: Tooltip(
                         message: context.l10n.medDetailsMustBeOrdered,
-                        child: Icon(Icons.star_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
+                        child: Icon(
+                          Icons.star_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
                       ),
                     ),
                   IconButton(
-                    icon: Icon(Icons.settings_outlined, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                    onPressed: () => _showEditLinkDialog(context, db, link, acc),
+                    icon: Icon(
+                      Icons.settings_outlined,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: () =>
+                        _showEditLinkDialog(context, db, link, acc),
                   ),
                   IconButton(
-                    icon: Icon(Icons.link_off_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    icon: Icon(
+                      Icons.link_off_rounded,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     onPressed: () async {
-                      await (db.delete(db.medicationAccessories)..where((t) => t.id.equals(link.id))).go();
+                      await (db.delete(
+                        db.medicationAccessories,
+                      )..where((t) => t.id.equals(link.id))).go();
                     },
                   ),
                 ],
@@ -313,11 +524,19 @@ class MedicationDetailsPage extends StatelessWidget {
     );
   }
 
-  void _showEditAccessoryDialog(BuildContext context, AppDatabase db, Accessory acc) {
+  void _showEditAccessoryDialog(
+    BuildContext context,
+    AppDatabase db,
+    Accessory acc,
+  ) {
     final nameController = TextEditingController(text: acc.name);
     final unitController = TextEditingController(text: acc.unit);
-    final stockController = TextEditingController(text: acc.stock.toStringAsFixed(1));
-    final pkgSizeController = TextEditingController(text: acc.packageSize.toStringAsFixed(1));
+    final stockController = TextEditingController(
+      text: acc.stock.toStringAsFixed(1),
+    );
+    final pkgSizeController = TextEditingController(
+      text: acc.packageSize.toStringAsFixed(1),
+    );
 
     showDialog(
       context: context,
@@ -329,37 +548,54 @@ class MedicationDetailsPage extends StatelessWidget {
           children: [
             TextField(
               controller: nameController,
-              decoration: InputDecoration(labelText: context.l10n.fieldName, border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: context.l10n.fieldName,
+                border: const OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: unitController,
-              decoration: InputDecoration(labelText: context.l10n.fieldUnit, border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: context.l10n.fieldUnit,
+                border: const OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: stockController,
-              decoration: InputDecoration(labelText: context.l10n.fieldCurrentStock, border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: context.l10n.fieldCurrentStock,
+                border: const OutlineInputBorder(),
+              ),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: pkgSizeController,
-              decoration: InputDecoration(labelText: context.l10n.fieldPackageSize, border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: context.l10n.fieldPackageSize,
+                border: const OutlineInputBorder(),
+              ),
               keyboardType: TextInputType.number,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.actionCancel),
+          ),
           ElevatedButton(
             onPressed: () async {
-              await db.updateAccessory(acc.copyWith(
-                name: nameController.text,
-                unit: unitController.text,
-                stock: double.tryParse(stockController.text) ?? acc.stock,
-                packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
-              ));
+              await db.updateAccessory(
+                acc.copyWith(
+                  name: nameController.text,
+                  unit: unitController.text,
+                  stock: double.tryParse(stockController.text) ?? acc.stock,
+                  packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
+                ),
+              );
               if (context.mounted) Navigator.pop(context);
             },
             child: Text(context.l10n.actionSave),
@@ -371,12 +607,18 @@ class MedicationDetailsPage extends StatelessWidget {
     });
   }
 
-  void _showLinkAccessoryDialog(BuildContext context, AppDatabase db, Medication medication) async {
+  void _showLinkAccessoryDialog(
+    BuildContext context,
+    AppDatabase db,
+    Medication medication,
+  ) async {
     final allAcc = await db.getAllAccessories();
     if (!context.mounted) return;
 
     if (allAcc.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.medDetailsNeedSuppliesFirst)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.medDetailsNeedSuppliesFirst)),
+      );
       return;
     }
 
@@ -389,7 +631,9 @@ class MedicationDetailsPage extends StatelessWidget {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(context.l10n.medDetailsLinkSupplyTitle),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           content: Scrollbar(
             thumbVisibility: true,
             child: SingleChildScrollView(
@@ -398,20 +642,37 @@ class MedicationDetailsPage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<Accessory>(
-                    items: allAcc.map((a) => DropdownMenuItem(value: a, child: Text(a.name))).toList(),
+                    items: allAcc
+                        .map(
+                          (a) =>
+                              DropdownMenuItem(value: a, child: Text(a.name)),
+                        )
+                        .toList(),
                     onChanged: (val) => setDialogState(() => selected = val),
-                    decoration: InputDecoration(labelText: context.l10n.medDetailsPickSupply, border: const OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: context.l10n.medDetailsPickSupply,
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: qtyController,
-                    decoration: InputDecoration(labelText: context.l10n.fieldPerInfusionRequirement, border: const OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: context.l10n.fieldPerInfusionRequirement,
+                      border: const OutlineInputBorder(),
+                    ),
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile(
-                    title: Text(context.l10n.medDetailsAlwaysOrder, style: const TextStyle(fontSize: 14)),
-                    subtitle: Text(context.l10n.medDetailsAlwaysOrderHint, style: const TextStyle(fontSize: 12)),
+                    title: Text(
+                      context.l10n.medDetailsAlwaysOrder,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    subtitle: Text(
+                      context.l10n.medDetailsAlwaysOrderHint,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     value: isMandatory,
                     onChanged: (val) => setDialogState(() => isMandatory = val),
                     contentPadding: EdgeInsets.zero,
@@ -421,16 +682,23 @@ class MedicationDetailsPage extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.actionCancel),
+            ),
             ElevatedButton(
               onPressed: () async {
                 if (selected != null) {
-                  await db.insertMedicationAccessory(MedicationAccessoriesCompanion.insert(
-                    medicationId: medication.id,
-                    accessoryId: selected!.id,
-                    defaultQuantity: drift.Value(double.tryParse(qtyController.text) ?? 1.0),
-                    isMandatory: drift.Value(isMandatory),
-                  ));
+                  await db.insertMedicationAccessory(
+                    MedicationAccessoriesCompanion.insert(
+                      medicationId: medication.id,
+                      accessoryId: selected!.id,
+                      defaultQuantity: drift.Value(
+                        double.tryParse(qtyController.text) ?? 1.0,
+                      ),
+                      isMandatory: drift.Value(isMandatory),
+                    ),
+                  );
                   if (context.mounted) Navigator.pop(context);
                 }
               },
@@ -444,7 +712,11 @@ class MedicationDetailsPage extends StatelessWidget {
     });
   }
 
-  void _showCreateAccessoryDialog(BuildContext context, AppDatabase db, Medication medication) async {
+  void _showCreateAccessoryDialog(
+    BuildContext context,
+    AppDatabase db,
+    Medication medication,
+  ) async {
     if (!context.mounted) return;
 
     final nameController = TextEditingController();
@@ -459,73 +731,108 @@ class MedicationDetailsPage extends StatelessWidget {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(context.l10n.medDetailsCreateSupplyTitle),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           content: Scrollbar(
             thumbVisibility: true,
             child: SingleChildScrollView(
               primary: true,
               child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(labelText: context.l10n.fieldSupplyName, border: const OutlineInputBorder()),
-                  autofocus: true,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: unitController,
-                  decoration: InputDecoration(labelText: context.l10n.fieldUnitWithExample, border: const OutlineInputBorder()),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: stockController,
-                  decoration: InputDecoration(labelText: context.l10n.fieldCurrentStock, border: const OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: qtyController,
-                  decoration: InputDecoration(labelText: context.l10n.fieldPerInfusionRequirement, border: const OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: pkgSizeController,
-                  decoration: InputDecoration(labelText: context.l10n.fieldPackageSize, border: const OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 12),
-                SwitchListTile(
-                  title: Text(context.l10n.medDetailsAlwaysOrder, style: const TextStyle(fontSize: 14)),
-                  subtitle: Text(context.l10n.medDetailsAlwaysOrderHint, style: const TextStyle(fontSize: 12)),
-                  value: isMandatory,
-                  onChanged: (val) => setDialogState(() => isMandatory = val),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ],
-            ),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.fieldSupplyName,
+                      border: const OutlineInputBorder(),
+                    ),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: unitController,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.fieldUnitWithExample,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: stockController,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.fieldCurrentStock,
+                      border: const OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: qtyController,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.fieldPerInfusionRequirement,
+                      border: const OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: pkgSizeController,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.fieldPackageSize,
+                      border: const OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    title: Text(
+                      context.l10n.medDetailsAlwaysOrder,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    subtitle: Text(
+                      context.l10n.medDetailsAlwaysOrderHint,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    value: isMandatory,
+                    onChanged: (val) => setDialogState(() => isMandatory = val),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.actionCancel),
+            ),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isNotEmpty) {
-                  final pkgSize = double.tryParse(pkgSizeController.text) ?? 1.0;
-                  final accId = await db.insertAccessory(AccessoriesCompanion.insert(
-                    name: nameController.text,
-                    stock: drift.Value(double.tryParse(stockController.text) ?? 0.0),
-                    unit: unitController.text,
-                    packageSize: drift.Value(pkgSize),
-                  ));
+                  final pkgSize =
+                      double.tryParse(pkgSizeController.text) ?? 1.0;
+                  final accId = await db.insertAccessory(
+                    AccessoriesCompanion.insert(
+                      name: nameController.text,
+                      stock: drift.Value(
+                        double.tryParse(stockController.text) ?? 0.0,
+                      ),
+                      unit: unitController.text,
+                      packageSize: drift.Value(pkgSize),
+                    ),
+                  );
 
-                  await db.insertMedicationAccessory(MedicationAccessoriesCompanion.insert(
-                    medicationId: medication.id,
-                    accessoryId: accId,
-                    defaultQuantity: drift.Value(double.tryParse(qtyController.text) ?? 1.0),
-                    isMandatory: drift.Value(isMandatory),
-                  ));
+                  await db.insertMedicationAccessory(
+                    MedicationAccessoriesCompanion.insert(
+                      medicationId: medication.id,
+                      accessoryId: accId,
+                      defaultQuantity: drift.Value(
+                        double.tryParse(qtyController.text) ?? 1.0,
+                      ),
+                      isMandatory: drift.Value(isMandatory),
+                    ),
+                  );
 
                   if (context.mounted) Navigator.pop(context);
                 }
@@ -540,12 +847,18 @@ class MedicationDetailsPage extends StatelessWidget {
     });
   }
 
-  void _showEditMedicationDialog(BuildContext context, AppDatabase db, Medication med) {
+  void _showEditMedicationDialog(
+    BuildContext context,
+    AppDatabase db,
+    Medication med,
+  ) {
     final nameController = TextEditingController(text: med.name);
     final dosageController = TextEditingController(text: med.dosage);
     final pznController = TextEditingController(text: med.pzn ?? '');
     final unitController = TextEditingController(text: med.unit);
-    final pkgSizeController = TextEditingController(text: med.packageSize.toStringAsFixed(1));
+    final pkgSizeController = TextEditingController(
+      text: med.packageSize.toStringAsFixed(1),
+    );
 
     showDialog(
       context: context,
@@ -557,42 +870,62 @@ class MedicationDetailsPage extends StatelessWidget {
           children: [
             TextField(
               controller: nameController,
-              decoration: InputDecoration(labelText: context.l10n.fieldName, border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: context.l10n.fieldName,
+                border: const OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: dosageController,
-              decoration: InputDecoration(labelText: context.l10n.fieldStrengthWithExample, border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: context.l10n.fieldStrengthWithExample,
+                border: const OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: pznController,
-              decoration: InputDecoration(labelText: context.l10n.fieldPzn, border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: context.l10n.fieldPzn,
+                border: const OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: unitController,
-              decoration: InputDecoration(labelText: context.l10n.fieldUnitWithBottleExample, border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: context.l10n.fieldUnitWithBottleExample,
+                border: const OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: pkgSizeController,
-              decoration: InputDecoration(labelText: context.l10n.fieldPackageSize, border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: context.l10n.fieldPackageSize,
+                border: const OutlineInputBorder(),
+              ),
               keyboardType: TextInputType.number,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.actionCancel),
+          ),
           ElevatedButton(
             onPressed: () async {
-              await db.updateMedication(med.copyWith(
-                name: nameController.text,
-                dosage: dosageController.text,
-                pzn: drift.Value(pznController.text),
-                unit: unitController.text,
-                packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
-              ));
+              await db.updateMedication(
+                med.copyWith(
+                  name: nameController.text,
+                  dosage: dosageController.text,
+                  pzn: drift.Value(pznController.text),
+                  unit: unitController.text,
+                  packageSize: double.tryParse(pkgSizeController.text) ?? 1.0,
+                ),
+              );
               if (context.mounted) Navigator.pop(context);
             },
             child: Text(context.l10n.actionSave),
@@ -602,14 +935,21 @@ class MedicationDetailsPage extends StatelessWidget {
     );
   }
 
-  void _confirmDeleteMedication(BuildContext context, InventoryProvider provider, Medication med) {
+  void _confirmDeleteMedication(
+    BuildContext context,
+    InventoryProvider provider,
+    Medication med,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.medDetailsDeleteTitle),
         content: Text(context.l10n.medDetailsDeleteBody(med.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.actionCancel),
+          ),
           TextButton(
             onPressed: () async {
               await provider.deleteMedication(med);
@@ -618,21 +958,31 @@ class MedicationDetailsPage extends StatelessWidget {
                 Navigator.pop(context); // Go back to inventory
               }
             },
-            child: Text(context.l10n.actionDelete, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            child: Text(
+              context.l10n.actionDelete,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _confirmDiscontinueMedication(BuildContext context, InventoryProvider provider, Medication med) {
+  void _confirmDiscontinueMedication(
+    BuildContext context,
+    InventoryProvider provider,
+    Medication med,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.medDetailsDiscontinueTitle),
         content: Text(context.l10n.medDetailsDiscontinueBody(med.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.actionCancel),
+          ),
           ElevatedButton(
             onPressed: () async {
               await provider.discontinueMedication(med.id);
@@ -641,7 +991,10 @@ class MedicationDetailsPage extends StatelessWidget {
                 Navigator.pop(context); // Go back to inventory
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+            ),
             child: Text(context.l10n.medDetailsDiscontinue),
           ),
         ],
@@ -649,7 +1002,11 @@ class MedicationDetailsPage extends StatelessWidget {
     );
   }
 
-  void _showAddAppointmentDialog(BuildContext context, AppDatabase db, Medication med) async {
+  void _showAddAppointmentDialog(
+    BuildContext context,
+    AppDatabase db,
+    Medication med,
+  ) async {
     DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
     final dosageController = TextEditingController(text: '1.0');
 
@@ -659,11 +1016,16 @@ class MedicationDetailsPage extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setState) => AlertDialog(
             title: Text(context.l10n.planningScheduleAppointmentTitle),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  med.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 16),
                 ListTile(
                   title: Text(context.l10n.fieldDate),
@@ -682,21 +1044,29 @@ class MedicationDetailsPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 TextField(
                   controller: dosageController,
-                  decoration: InputDecoration(labelText: context.l10n.fieldPlannedDoseWithUnit(med.unit), border: const OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.fieldPlannedDoseWithUnit(med.unit),
+                    border: const OutlineInputBorder(),
+                  ),
                   keyboardType: TextInputType.number,
                 ),
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(context.l10n.actionCancel),
+              ),
               ElevatedButton(
                 onPressed: () async {
-                  await db.insertPlannedInfusion(PlannedInfusionsCompanion.insert(
-                    date: selectedDate,
-                    medicationId: med.id,
-                    dosage: double.tryParse(dosageController.text) ?? 1.0,
-                    isCompleted: const drift.Value(false),
-                  ));
+                  await db.insertPlannedInfusion(
+                    PlannedInfusionsCompanion.insert(
+                      date: selectedDate,
+                      medicationId: med.id,
+                      dosage: double.tryParse(dosageController.text) ?? 1.0,
+                      isCompleted: const drift.Value(false),
+                    ),
+                  );
                   if (context.mounted) Navigator.pop(context);
                 },
                 child: Text(context.l10n.actionSave),
@@ -708,13 +1078,30 @@ class MedicationDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildScheduleCard(BuildContext context, AppDatabase db, InfusionSchedule schedule, Medication med) {
+  Widget _buildScheduleCard(
+    BuildContext context,
+    AppDatabase db,
+    InfusionSchedule schedule,
+    Medication med,
+  ) {
     String freqLabel = '';
     switch (schedule.frequencyType) {
-      case 'daily': freqLabel = context.l10n.frequencyDaily; break;
-      case 'weekly': freqLabel = schedule.intervalValue == 2 ? context.l10n.frequencyBiweekly : context.l10n.frequencyWeekly; break;
-      case 'interval': freqLabel = context.l10n.frequencyEveryNDays(schedule.intervalValue ?? 0); break;
-      case 'weekdays': freqLabel = context.l10n.frequencyWeekdaysShort; break;
+      case 'daily':
+        freqLabel = context.l10n.frequencyDaily;
+        break;
+      case 'weekly':
+        freqLabel = schedule.intervalValue == 2
+            ? context.l10n.frequencyBiweekly
+            : context.l10n.frequencyWeekly;
+        break;
+      case 'interval':
+        freqLabel = context.l10n.frequencyEveryNDays(
+          schedule.intervalValue ?? 0,
+        );
+        break;
+      case 'weekdays':
+        freqLabel = context.l10n.frequencyWeekdaysShort;
+        break;
     }
 
     return Column(
@@ -728,16 +1115,33 @@ class MedicationDetailsPage extends StatelessWidget {
               color: Colors.blue.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.repeat_rounded, color: Theme.of(context).colorScheme.primary),
+            child: Icon(
+              Icons.repeat_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
-          title: Text(freqLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(
+            freqLabel,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 4),
-              Text(context.l10n.doseValue('${schedule.dosage}', med.unit), style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              if (schedule.intakeTimes != null && schedule.intakeTimes!.isNotEmpty)
-                Text(context.l10n.medDetailsTimes('${schedule.intakeTimes}'), style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              Text(
+                context.l10n.doseValue('${schedule.dosage}', med.unit),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (schedule.intakeTimes != null &&
+                  schedule.intakeTimes!.isNotEmpty)
+                Text(
+                  context.l10n.medDetailsTimes('${schedule.intakeTimes}'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
             ],
           ),
           trailing: Row(
@@ -747,11 +1151,16 @@ class MedicationDetailsPage extends StatelessWidget {
                 icon: const Icon(Icons.edit_outlined),
                 onPressed: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => AddSchedulePage(initialSchedule: schedule)),
+                  MaterialPageRoute(
+                    builder: (_) => AddSchedulePage(initialSchedule: schedule),
+                  ),
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.red,
+                ),
                 onPressed: () => _confirmDeleteSchedule(context, db, schedule),
               ),
             ],
@@ -762,17 +1171,30 @@ class MedicationDetailsPage extends StatelessWidget {
     );
   }
 
-  void _confirmDeleteSchedule(BuildContext context, AppDatabase db, InfusionSchedule schedule) {
+  void _confirmDeleteSchedule(
+    BuildContext context,
+    AppDatabase db,
+    InfusionSchedule schedule,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.planningDeleteScheduleTitle),
         content: Text(context.l10n.planningDeleteScheduleBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.actionCancel),
+          ),
           TextButton(
             onPressed: () async {
-              final futureAppts = await (db.select(db.plannedInfusions)..where((t) => t.scheduleId.equals(schedule.id) & t.isCompleted.equals(false))).get();
+              final futureAppts =
+                  await (db.select(db.plannedInfusions)..where(
+                        (t) =>
+                            t.scheduleId.equals(schedule.id) &
+                            t.isCompleted.equals(false),
+                      ))
+                      .get();
               for (final appt in futureAppts) {
                 await NotificationService().cancelTreatmentReminders(appt.id);
               }
@@ -780,19 +1202,29 @@ class MedicationDetailsPage extends StatelessWidget {
               await db.deleteSchedule(schedule.id);
               if (context.mounted) Navigator.pop(context);
             },
-            child: Text(context.l10n.actionDelete, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            child: Text(
+              context.l10n.actionDelete,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildWorkflowConfig(BuildContext context, AppDatabase db, InventoryProvider provider, Medication medication) {
+  Widget _buildWorkflowConfig(
+    BuildContext context,
+    AppDatabase db,
+    InventoryProvider provider,
+    Medication medication,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.05)),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.05),
+        ),
       ),
       child: Column(
         children: [
@@ -800,8 +1232,13 @@ class MedicationDetailsPage extends StatelessWidget {
             title: Text(context.l10n.medDetailsTrackBatch),
             subtitle: Text(context.l10n.medDetailsTrackBatchHint),
             value: medication.trackBatchNumber,
-            onChanged: (val) => provider.updateMedication(medication.copyWith(trackBatchNumber: val)),
-            secondary: Icon(Icons.qr_code_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            onChanged: (val) => provider.updateMedication(
+              medication.copyWith(trackBatchNumber: val),
+            ),
+            secondary: Icon(
+              Icons.qr_code_rounded,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           if (medication.trackBatchNumber)
             Padding(
@@ -820,52 +1257,85 @@ class MedicationDetailsPage extends StatelessWidget {
             title: Text(context.l10n.medDetailsTrackWeight),
             subtitle: Text(context.l10n.medDetailsTrackWeightHint),
             value: medication.trackWeight,
-            onChanged: (val) => provider.updateMedication(medication.copyWith(trackWeight: val)),
-            secondary: Icon(Icons.monitor_weight_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            onChanged: (val) => provider.updateMedication(
+              medication.copyWith(trackWeight: val),
+            ),
+            secondary: Icon(
+              Icons.monitor_weight_rounded,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const Divider(height: 1),
           SwitchListTile(
             title: Text(context.l10n.medDetailsUseTimer),
             subtitle: Text(context.l10n.medDetailsUseTimerHint),
             value: medication.useTimer,
-            onChanged: (val) => provider.updateMedication(medication.copyWith(useTimer: val)),
-            secondary: Icon(Icons.av_timer_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            onChanged: (val) =>
+                provider.updateMedication(medication.copyWith(useTimer: val)),
+            secondary: Icon(
+              Icons.av_timer_rounded,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
     );
   }
 
-
-  void _showEditLinkDialog(BuildContext context, AppDatabase db, MedicationAccessory link, Accessory acc) {
-    final qtyController = TextEditingController(text: link.defaultQuantity.toStringAsFixed(1));
+  void _showEditLinkDialog(
+    BuildContext context,
+    AppDatabase db,
+    MedicationAccessory link,
+    Accessory acc,
+  ) {
+    final qtyController = TextEditingController(
+      text: link.defaultQuantity.toStringAsFixed(1),
+    );
     bool isMandatory = link.isMandatory;
-    final pkgSizeController = TextEditingController(text: acc.packageSize.toStringAsFixed(1));
+    final pkgSizeController = TextEditingController(
+      text: acc.packageSize.toStringAsFixed(1),
+    );
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: Text(context.l10n.medDetailsConfigureNamed(acc.name)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: qtyController,
-                decoration: InputDecoration(labelText: context.l10n.fieldPerInfusionRequirementWithUnit(acc.unit), border: const OutlineInputBorder()),
+                decoration: InputDecoration(
+                  labelText: context.l10n.fieldPerInfusionRequirementWithUnit(
+                    acc.unit,
+                  ),
+                  border: const OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: pkgSizeController,
-                decoration: InputDecoration(labelText: context.l10n.fieldPackageSize, border: const OutlineInputBorder()),
+                decoration: InputDecoration(
+                  labelText: context.l10n.fieldPackageSize,
+                  border: const OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
               SwitchListTile(
-                title: Text(context.l10n.medDetailsAlwaysOrder, style: const TextStyle(fontSize: 14)),
-                subtitle: Text(context.l10n.medDetailsAlwaysOrderHint, style: const TextStyle(fontSize: 12)),
+                title: Text(
+                  context.l10n.medDetailsAlwaysOrder,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                subtitle: Text(
+                  context.l10n.medDetailsAlwaysOrderHint,
+                  style: const TextStyle(fontSize: 12),
+                ),
                 value: isMandatory,
                 onChanged: (val) => setState(() => isMandatory = val),
                 contentPadding: EdgeInsets.zero,
@@ -875,24 +1345,32 @@ class MedicationDetailsPage extends StatelessWidget {
                 icon: const Icon(Icons.edit_outlined, size: 18),
                 label: Text(context.l10n.medDetailsEditSupplyGlobally),
                 onPressed: () {
-                   Navigator.pop(context);
-                   _showEditAccessoryDialog(context, db, acc);
+                  Navigator.pop(context);
+                  _showEditAccessoryDialog(context, db, acc);
                 },
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.actionCancel),
+            ),
             ElevatedButton(
               onPressed: () async {
-                await db.updateMedicationAccessory(link.copyWith(
-                  defaultQuantity: double.tryParse(qtyController.text) ?? 1.0,
-                  isMandatory: isMandatory,
-                ));
+                await db.updateMedicationAccessory(
+                  link.copyWith(
+                    defaultQuantity: double.tryParse(qtyController.text) ?? 1.0,
+                    isMandatory: isMandatory,
+                  ),
+                );
                 // Also update accessory package size if changed
-                final newPkgSize = double.tryParse(pkgSizeController.text) ?? 1.0;
+                final newPkgSize =
+                    double.tryParse(pkgSizeController.text) ?? 1.0;
                 if (newPkgSize != acc.packageSize) {
-                  await db.updateAccessory(acc.copyWith(packageSize: newPkgSize));
+                  await db.updateAccessory(
+                    acc.copyWith(packageSize: newPkgSize),
+                  );
                 }
                 if (context.mounted) Navigator.pop(context);
               },
@@ -924,8 +1402,12 @@ class _StockManagementCardState extends State<_StockManagementCard> {
   @override
   void initState() {
     super.initState();
-    _stockController = TextEditingController(text: widget.medication.stock.toStringAsFixed(0));
-    _minStockController = TextEditingController(text: widget.medication.minStock.toStringAsFixed(0));
+    _stockController = TextEditingController(
+      text: widget.medication.stock.toStringAsFixed(0),
+    );
+    _minStockController = TextEditingController(
+      text: widget.medication.minStock.toStringAsFixed(0),
+    );
   }
 
   @override
@@ -934,7 +1416,8 @@ class _StockManagementCardState extends State<_StockManagementCard> {
     if (oldWidget.medication.stock != widget.medication.stock && !_isSaving) {
       _stockController.text = widget.medication.stock.toStringAsFixed(0);
     }
-    if (oldWidget.medication.minStock != widget.medication.minStock && !_isSaving) {
+    if (oldWidget.medication.minStock != widget.medication.minStock &&
+        !_isSaving) {
       _minStockController.text = widget.medication.minStock.toStringAsFixed(0);
     }
   }
@@ -949,14 +1432,15 @@ class _StockManagementCardState extends State<_StockManagementCard> {
   Future<void> _saveChanges() async {
     setState(() => _isSaving = true);
     final db = Provider.of<AppDatabase>(context, listen: false);
-    
-    final newStock = double.tryParse(_stockController.text) ?? widget.medication.stock;
-    final newMinStock = double.tryParse(_minStockController.text) ?? widget.medication.minStock;
 
-    await db.updateMedication(widget.medication.copyWith(
-      stock: newStock,
-      minStock: newMinStock,
-    ));
+    final newStock =
+        double.tryParse(_stockController.text) ?? widget.medication.stock;
+    final newMinStock =
+        double.tryParse(_minStockController.text) ?? widget.medication.minStock;
+
+    await db.updateMedication(
+      widget.medication.copyWith(stock: newStock, minStock: newMinStock),
+    );
 
     if (mounted) {
       setState(() => _isSaving = false);
@@ -982,11 +1466,17 @@ class _StockManagementCardState extends State<_StockManagementCard> {
                 decoration: InputDecoration(
                   labelText: context.l10n.fieldCurrentStockShort,
                   suffixText: widget.medication.unit,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.05),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
               ),
             ),
           ],
@@ -1000,11 +1490,17 @@ class _StockManagementCardState extends State<_StockManagementCard> {
                 decoration: InputDecoration(
                   labelText: context.l10n.fieldMinStockDays,
                   hintText: context.l10n.fieldMinStockDaysHint,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.05),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
               ),
             ),
           ],
@@ -1012,11 +1508,19 @@ class _StockManagementCardState extends State<_StockManagementCard> {
         const SizedBox(height: 16),
         ElevatedButton.icon(
           onPressed: _isSaving ? null : _saveChanges,
-          icon: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save_rounded),
+          icon: _isSaving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.save_rounded),
           label: Text(context.l10n.medDetailsSaveStock),
           style: ElevatedButton.styleFrom(
             minimumSize: const Size.fromHeight(56),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         ),
       ],

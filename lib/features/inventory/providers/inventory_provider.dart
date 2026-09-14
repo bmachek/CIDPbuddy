@@ -9,8 +9,10 @@ class InventoryProvider extends ChangeNotifier {
 
   InventoryProvider(this._db);
 
-  Stream<List<Medication>> get medicationsStream => _db.watchActiveMedications();
-  Stream<List<Medication>> get discontinuedMedicationsStream => _db.watchDiscontinuedMedications();
+  Stream<List<Medication>> get medicationsStream =>
+      _db.watchActiveMedications();
+  Stream<List<Medication>> get discontinuedMedicationsStream =>
+      _db.watchDiscontinuedMedications();
   Stream<List<Accessory>> get accessoriesStream => _db.watchAllAccessories();
 
   Future<void> discontinueMedication(int id) async {
@@ -37,7 +39,9 @@ class InventoryProvider extends ChangeNotifier {
       final planned = await _db.getPlannedInfusionsForMedication(medId);
       return planned.map((p) => p.id).toList();
     } catch (e) {
-      debugPrint('InventoryProvider: could not load planned infusions for $medId: $e');
+      debugPrint(
+        'InventoryProvider: could not load planned infusions for $medId: $e',
+      );
       return const [];
     }
   }
@@ -73,19 +77,23 @@ class InventoryProvider extends ChangeNotifier {
     bool trackWeight = true,
     bool useTimer = false,
   }) async {
-    final id = await _db.insertMedication(MedicationsCompanion.insert(
-      name: name,
-      dosage: Value(dosage),
-      pzn: Value(pzn),
-      stock: Value(stock),
-      unit: unit,
-      type: Value(type),
-      packageSize: Value(packageSize),
-      minStock: Value(minStock),
-      trackBatchNumber: Value(type == MedicationType.pill ? false : trackBatchNumber),
-      trackWeight: Value(type == MedicationType.pill ? false : trackWeight),
-      useTimer: Value(type == MedicationType.pill ? false : useTimer),
-    ));
+    final id = await _db.insertMedication(
+      MedicationsCompanion.insert(
+        name: name,
+        dosage: Value(dosage),
+        pzn: Value(pzn),
+        stock: Value(stock),
+        unit: unit,
+        type: Value(type),
+        packageSize: Value(packageSize),
+        minStock: Value(minStock),
+        trackBatchNumber: Value(
+          type == MedicationType.pill ? false : trackBatchNumber,
+        ),
+        trackWeight: Value(type == MedicationType.pill ? false : trackWeight),
+        useTimer: Value(type == MedicationType.pill ? false : useTimer),
+      ),
+    );
     notifyListeners();
     return id;
   }
@@ -102,13 +110,15 @@ class InventoryProvider extends ChangeNotifier {
     double packageSize = 1.0,
     double minStock = 0.0,
   }) async {
-    await _db.insertAccessory(AccessoriesCompanion.insert(
-      name: name,
-      stock: Value(stock),
-      unit: unit,
-      packageSize: Value(packageSize),
-      minStock: Value(minStock),
-    ));
+    await _db.insertAccessory(
+      AccessoriesCompanion.insert(
+        name: name,
+        stock: Value(stock),
+        unit: unit,
+        packageSize: Value(packageSize),
+        minStock: Value(minStock),
+      ),
+    );
     notifyListeners();
   }
 

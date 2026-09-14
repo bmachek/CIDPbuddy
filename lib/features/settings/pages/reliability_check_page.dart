@@ -10,9 +10,10 @@ class ReliabilityCheckPage extends StatefulWidget {
   State<ReliabilityCheckPage> createState() => _ReliabilityCheckPageState();
 }
 
-class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with WidgetsBindingObserver {
+class _ReliabilityCheckPageState extends State<ReliabilityCheckPage>
+    with WidgetsBindingObserver {
   final ReliabilityService _service = ReliabilityService();
-  
+
   bool _notificationsOk = true;
   bool _alarmsOk = true;
   bool _batteryOk = true;
@@ -66,73 +67,83 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.reliabilityTitle)),
-      body: _loading 
-        ? const Center(child: CircularProgressIndicator())
-        : ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 30),
-              _buildCheckItem(
-                icon: Icons.notifications_active_outlined,
-                title: context.l10n.reliabilityNotifications,
-                description: context.l10n.reliabilityNotificationsDesc,
-                isOk: _notificationsOk,
-                onFix: () => _service.requestNotificationPermission(),
-              ),
-              if (Platform.isAndroid) ...[
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 30),
+                _buildCheckItem(
+                  icon: Icons.notifications_active_outlined,
+                  title: context.l10n.reliabilityNotifications,
+                  description: context.l10n.reliabilityNotificationsDesc,
+                  isOk: _notificationsOk,
+                  onFix: () => _service.requestNotificationPermission(),
+                ),
+                if (Platform.isAndroid) ...[
+                  const SizedBox(height: 20),
+                  _buildCheckItem(
+                    icon: Icons.alarm_on_rounded,
+                    title: context.l10n.reliabilityExactAlarms,
+                    description: context.l10n.reliabilityExactAlarmsDesc,
+                    isOk: _alarmsOk,
+                    onFix: () => _service.requestExactAlarmPermission(),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildCheckItem(
+                    icon: Icons.battery_charging_full_rounded,
+                    title: context.l10n.reliabilityBatteryOptimization,
+                    description:
+                        context.l10n.reliabilityBatteryOptimizationDesc,
+                    isOk: _batteryOk,
+                    onFix: () => _service.openBatteryOptimizationSettings(),
+                  ),
+                ],
                 const SizedBox(height: 20),
                 _buildCheckItem(
-                  icon: Icons.alarm_on_rounded,
-                  title: context.l10n.reliabilityExactAlarms,
-                  description: context.l10n.reliabilityExactAlarmsDesc,
-                  isOk: _alarmsOk,
-                  onFix: () => _service.requestExactAlarmPermission(),
+                  icon: Icons.backup_outlined,
+                  title: context.l10n.settingsSectionAutoBackup,
+                  description: context.l10n.reliabilityBackupDesc,
+                  isOk: _backupOk,
+                  onFix: () => Navigator.pop(context), // Go back to settings
                 ),
-                const SizedBox(height: 20),
-                _buildCheckItem(
-                  icon: Icons.battery_charging_full_rounded,
-                  title: context.l10n.reliabilityBatteryOptimization,
-                  description: context.l10n.reliabilityBatteryOptimizationDesc,
-                  isOk: _batteryOk,
-                  onFix: () => _service.openBatteryOptimizationSettings(),
-                ),
+                if (_backupOk) ...[
+                  const SizedBox(height: 20),
+                  _buildCheckItem(
+                    icon: Icons.cloud_done_outlined,
+                    title: context.l10n.reliabilityBackupStatus,
+                    description: _lastBackupOk
+                        ? context.l10n.reliabilityBackupUpToDate
+                        : context.l10n.reliabilityBackupStale,
+                    isOk: _lastBackupOk,
+                    onFix: () => Navigator.pop(
+                      context,
+                    ), // Go back to settings to trigger manual
+                  ),
+                ],
+                const SizedBox(height: 40),
+                _buildFooter(),
               ],
-              const SizedBox(height: 20),
-              _buildCheckItem(
-                icon: Icons.backup_outlined,
-                title: context.l10n.settingsSectionAutoBackup,
-                description: context.l10n.reliabilityBackupDesc,
-                isOk: _backupOk,
-                onFix: () => Navigator.pop(context), // Go back to settings
-              ),
-              if (_backupOk) ...[
-                const SizedBox(height: 20),
-                _buildCheckItem(
-                  icon: Icons.cloud_done_outlined,
-                  title: context.l10n.reliabilityBackupStatus,
-                  description: _lastBackupOk
-                      ? context.l10n.reliabilityBackupUpToDate
-                      : context.l10n.reliabilityBackupStale,
-                  isOk: _lastBackupOk,
-                  onFix: () => Navigator.pop(context), // Go back to settings to trigger manual
-                ),
-              ],
-              const SizedBox(height: 40),
-              _buildFooter(),
-            ],
-          ),
+            ),
     );
   }
 
   Widget _buildHeader() {
-    final bool allOk = _notificationsOk && _alarmsOk && _batteryOk && _backupOk && _lastBackupOk;
+    final bool allOk =
+        _notificationsOk &&
+        _alarmsOk &&
+        _batteryOk &&
+        _backupOk &&
+        _lastBackupOk;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: (allOk ? Colors.green : Colors.orange).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: (allOk ? Colors.green : Colors.orange).withValues(alpha: 0.2)),
+        border: Border.all(
+          color: (allOk ? Colors.green : Colors.orange).withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         children: [
@@ -143,7 +154,9 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
           ),
           const SizedBox(height: 16),
           Text(
-            allOk ? context.l10n.reliabilityAllGood : context.l10n.reliabilityActionNeeded,
+            allOk
+                ? context.l10n.reliabilityAllGood
+                : context.l10n.reliabilityActionNeeded,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
@@ -152,7 +165,9 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
                 ? context.l10n.reliabilityAllGoodBody
                 : context.l10n.reliabilityActionNeededBody,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -193,9 +208,21 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(description, style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 if (!isOk) ...[
                   const SizedBox(height: 12),
                   SizedBox(

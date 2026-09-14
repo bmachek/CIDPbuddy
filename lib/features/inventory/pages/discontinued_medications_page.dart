@@ -13,17 +13,18 @@ class DiscontinuedMedicationsPage extends StatelessWidget {
     final inventoryProvider = Provider.of<InventoryProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.discontinuedTitle),
-      ),
+      appBar: AppBar(title: Text(context.l10n.discontinuedTitle)),
       body: StreamBuilder<List<Medication>>(
         stream: inventoryProvider.discontinuedMedicationsStream,
         builder: (context, snapshot) {
           final meds = snapshot.data ?? [];
-          
+
           if (meds.isEmpty) {
             return Center(
-              child: Text(context.l10n.discontinuedEmpty, style: const TextStyle(color: Colors.grey)),
+              child: Text(
+                context.l10n.discontinuedEmpty,
+                style: const TextStyle(color: Colors.grey),
+              ),
             );
           }
 
@@ -37,23 +38,41 @@ class DiscontinuedMedicationsPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.05)),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.05),
+                  ),
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
                   leading: CircleAvatar(
                     backgroundColor: Colors.grey.withValues(alpha: 0.1),
-                    child: const Icon(Icons.heart_broken_outlined, color: Colors.grey),
+                    child: const Icon(
+                      Icons.heart_broken_outlined,
+                      color: Colors.grey,
+                    ),
                   ),
-                  title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(
+                    med.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text(
-                    context.l10n.discontinuedOn(AppDateFormat.date(context, med.discontinuedAt ?? DateTime.now())),
+                    context.l10n.discontinuedOn(
+                      AppDateFormat.date(
+                        context,
+                        med.discontinuedAt ?? DateTime.now(),
+                      ),
+                    ),
                     style: const TextStyle(fontSize: 12),
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => Navigator.push(
-                    context, 
-                    MaterialPageRoute(builder: (_) => MedicationDetailsPage(medicationId: med.id))
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          MedicationDetailsPage(medicationId: med.id),
+                    ),
                   ),
                 ),
               );

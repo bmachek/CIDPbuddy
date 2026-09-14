@@ -95,7 +95,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               child: Container(
                 decoration: const BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage('assets/images/app_icon.png'), // Using logo as a subtle watermark pattern
+                    image: AssetImage(
+                      'assets/images/app_icon.png',
+                    ), // Using logo as a subtle watermark pattern
                     repeat: ImageRepeat.repeat,
                     scale: 4,
                   ),
@@ -106,10 +108,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           // Main Content
           SafeArea(
             bottom: false,
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: _pages,
-            ),
+            child: IndexedStack(index: _selectedIndex, children: _pages),
           ),
         ],
       ),
@@ -162,4 +161,3 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 }
-

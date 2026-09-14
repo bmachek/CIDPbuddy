@@ -1,13 +1,26 @@
 {
   "permissions": {
     "allow": [
+      "Bash(tool/verify.sh)",
+      "Bash(tool/verify.sh *)",
+      "Bash(./tool/verify.sh)",
+      "Bash(./tool/verify.sh *)",
       "Bash(/opt/homebrew/bin/flutter analyze)",
       "Bash(/opt/homebrew/bin/flutter analyze *)",
       "Bash(flutter analyze)",
       "Bash(flutter analyze *)",
+      "Bash(flutter test)",
+      "Bash(flutter test *)",
+      "Bash(flutter gen-l10n)",
       "Bash(flutter pub get)",
       "Bash(flutter pub outdated)",
-      "Bash(flutter pub deps)"
+      "Bash(flutter pub deps)",
+      "Bash(dart run build_runner build *)",
+      "Bash(dart format *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)"
     ]
   }
 }

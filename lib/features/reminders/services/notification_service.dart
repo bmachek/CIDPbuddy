@@ -16,11 +16,13 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   // iOS registers notification actions via a category attached to the
   // request, unlike Android where actions are inlined per-notification.
-  static const String treatmentReminderCategoryId = 'treatment_reminder_actions';
+  static const String treatmentReminderCategoryId =
+      'treatment_reminder_actions';
 
   /// Translations for whichever isolate is calling.
   ///
@@ -31,18 +33,26 @@ class NotificationService {
 
   Future<void> init({bool isBackground = false}) async {
     final l10n = await _l10n;
-    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('notification_icon');
-    final DarwinInitializationSettings darwinSettings = DarwinInitializationSettings(
-      notificationCategories: [
-        DarwinNotificationCategory(
-          treatmentReminderCategoryId,
-          actions: [
-            DarwinNotificationAction.plain('complete_infusion', l10n.actionDone),
-            DarwinNotificationAction.plain('skip_infusion', l10n.actionSkip),
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('notification_icon');
+    final DarwinInitializationSettings darwinSettings =
+        DarwinInitializationSettings(
+          notificationCategories: [
+            DarwinNotificationCategory(
+              treatmentReminderCategoryId,
+              actions: [
+                DarwinNotificationAction.plain(
+                  'complete_infusion',
+                  l10n.actionDone,
+                ),
+                DarwinNotificationAction.plain(
+                  'skip_infusion',
+                  l10n.actionSkip,
+                ),
+              ],
+            ),
           ],
-        ),
-      ],
-    );
+        );
 
     final InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
@@ -56,7 +66,7 @@ class NotificationService {
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
     tz.initializeTimeZones();
-    
+
     // Channel names and descriptions show up in Android's system settings, so
     // they are translated too. Re-creating a channel with an existing id
     // updates its name and description, which means a language change lands on
@@ -82,36 +92,43 @@ class NotificationService {
       importance: Importance.high,
     );
 
-    final AndroidNotificationChannel backupFailureChannel = AndroidNotificationChannel(
-      'backup_failures',
-      l10n.channelBackupFailures,
-      description: l10n.channelBackupFailuresDesc,
-      importance: Importance.high,
-    );
-    final AndroidNotificationChannel backupWarningChannel = AndroidNotificationChannel(
-      'backup_warnings',
-      l10n.channelBackupWarnings,
-      description: l10n.channelBackupWarningsDesc,
-      importance: Importance.defaultImportance,
-    );
+    final AndroidNotificationChannel backupFailureChannel =
+        AndroidNotificationChannel(
+          'backup_failures',
+          l10n.channelBackupFailures,
+          description: l10n.channelBackupFailuresDesc,
+          importance: Importance.high,
+        );
+    final AndroidNotificationChannel backupWarningChannel =
+        AndroidNotificationChannel(
+          'backup_warnings',
+          l10n.channelBackupWarnings,
+          description: l10n.channelBackupWarningsDesc,
+          importance: Importance.defaultImportance,
+        );
 
-    final AndroidNotificationChannel medRemindersChannel = AndroidNotificationChannel(
-      'med_reminders',
-      l10n.channelMedReminders,
-      description: l10n.channelMedRemindersDesc,
-      importance: Importance.max,
-      enableVibration: true,
-      playSound: true,
-    );
+    final AndroidNotificationChannel medRemindersChannel =
+        AndroidNotificationChannel(
+          'med_reminders',
+          l10n.channelMedReminders,
+          description: l10n.channelMedRemindersDesc,
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+        );
 
-    final AndroidNotificationChannel premedTimerChannel = AndroidNotificationChannel(
-      'premed_timer',
-      l10n.timerTitle,
-      description: l10n.channelPremedTimerDesc,
-      importance: Importance.high,
-    );
+    final AndroidNotificationChannel premedTimerChannel =
+        AndroidNotificationChannel(
+          'premed_timer',
+          l10n.timerTitle,
+          description: l10n.channelPremedTimerDesc,
+          importance: Importance.high,
+        );
 
-    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(channel);
       await androidPlugin.createNotificationChannel(stockChannel);
@@ -126,10 +143,12 @@ class NotificationService {
       try {
         final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
         String timeZoneName = timeZoneInfo.identifier;
-        
+
         // Handle weird results like "TimezoneInfo" or null
         if (timeZoneName.isEmpty || timeZoneName == "TimezoneInfo") {
-          debugPrint('NotificationService: Received invalid timezone string "$timeZoneName". Using fallback.');
+          debugPrint(
+            'NotificationService: Received invalid timezone string "$timeZoneName". Using fallback.',
+          );
           timeZoneName = "Europe/Berlin";
         }
 
@@ -137,11 +156,15 @@ class NotificationService {
           tz.setLocalLocation(tz.getLocation(timeZoneName));
           debugPrint('NotificationService: Timezone set to $timeZoneName');
         } catch (e) {
-          debugPrint('NotificationService: Location "$timeZoneName" not found, falling back to UTC: $e');
+          debugPrint(
+            'NotificationService: Location "$timeZoneName" not found, falling back to UTC: $e',
+          );
           tz.setLocalLocation(tz.getLocation('UTC'));
         }
       } catch (e) {
-        debugPrint('NotificationService: Error getting local timezone: $e. Falling back to UTC.');
+        debugPrint(
+          'NotificationService: Error getting local timezone: $e. Falling back to UTC.',
+        );
         tz.setLocalLocation(tz.getLocation('UTC'));
       }
     } else {
@@ -151,17 +174,21 @@ class NotificationService {
         tz.setLocalLocation(tz.getLocation('UTC'));
       } catch (_) {}
     }
-    
+
     // Request permission for Android 13+ notifications
     // IMPORTANT: Only request permission in the main UI app, not in background isolate
     if (androidPlugin != null && !isBackground) {
       try {
         final status = await androidPlugin.requestNotificationsPermission();
-        debugPrint('NotificationService: Android notifications permission status: $status');
-        
+        debugPrint(
+          'NotificationService: Android notifications permission status: $status',
+        );
+
         // For Android 14+, exact alarms need explicit permission or it will fallback to inexact
         final exactStatus = await androidPlugin.requestExactAlarmsPermission();
-        debugPrint('NotificationService: Android exact alarms permission status: $exactStatus');
+        debugPrint(
+          'NotificationService: Android exact alarms permission status: $exactStatus',
+        );
       } catch (e) {
         debugPrint('NotificationService: Failed to request permissions: $e');
       }
@@ -169,12 +196,16 @@ class NotificationService {
   }
 
   Future<AndroidScheduleMode> _getScheduleMode() async {
-    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin == null) return AndroidScheduleMode.inexactAllowWhileIdle;
-    
-    final bool? canScheduleExact = await androidPlugin.canScheduleExactNotifications();
-    return (canScheduleExact ?? false) 
-        ? AndroidScheduleMode.exactAllowWhileIdle 
+
+    final bool? canScheduleExact = await androidPlugin
+        .canScheduleExactNotifications();
+    return (canScheduleExact ?? false)
+        ? AndroidScheduleMode.exactAllowWhileIdle
         : AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
@@ -190,20 +221,22 @@ class NotificationService {
       final l10n = await _l10n;
       final scheduleMode = await _getScheduleMode();
 
-      final List<AndroidNotificationAction>? actions = showAction ? [
-        AndroidNotificationAction(
-          'complete_infusion',
-          l10n.actionDone,
-          showsUserInterface: false,
-          cancelNotification: true,
-        ),
-        AndroidNotificationAction(
-          'skip_infusion',
-          l10n.actionSkip,
-          showsUserInterface: false,
-          cancelNotification: true,
-        ),
-      ] : null;
+      final List<AndroidNotificationAction>? actions = showAction
+          ? [
+              AndroidNotificationAction(
+                'complete_infusion',
+                l10n.actionDone,
+                showsUserInterface: false,
+                cancelNotification: true,
+              ),
+              AndroidNotificationAction(
+                'skip_infusion',
+                l10n.actionSkip,
+                showsUserInterface: false,
+                cancelNotification: true,
+              ),
+            ]
+          : null;
 
       await _notificationsPlugin.zonedSchedule(
         id,
@@ -221,9 +254,9 @@ class NotificationService {
             enableVibration: true,
             fullScreenIntent: false,
             actions: actions,
-            // Re-using the same ID updates the notification. 
+            // Re-using the same ID updates the notification.
             // We use 'onlyAlertOnce: false' to ensure it makes sound again when replaced.
-            onlyAlertOnce: false, 
+            onlyAlertOnce: false,
           ),
           iOS: DarwinNotificationDetails(
             categoryIdentifier: showAction ? treatmentReminderCategoryId : null,
@@ -233,11 +266,14 @@ class NotificationService {
           ),
         ),
         androidScheduleMode: scheduleMode,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload,
       );
     } catch (e) {
-      debugPrint('NotificationService: Failed to schedule notification $id: $e');
+      debugPrint(
+        'NotificationService: Failed to schedule notification $id: $e',
+      );
     }
   }
 
@@ -253,7 +289,9 @@ class NotificationService {
         }
       } else if (response.payload == 'open_backup_settings') {
         // This is handled in the UI usually, but we can log it
-        debugPrint('NotificationService: Backup settings requested via notification');
+        debugPrint(
+          'NotificationService: Backup settings requested via notification',
+        );
       }
     }
   }
@@ -261,48 +299,64 @@ class NotificationService {
   static Future<void> _handleCompleteInfusion(int treatmentId) async {
     try {
       final l10n = await LocaleProvider.l10nForBackground();
-      await NotificationService()._notificationsPlugin.cancel(treatmentId * 100);
+      await NotificationService()._notificationsPlugin.cancel(
+        treatmentId * 100,
+      );
       final db = AppDatabase();
       // 1. Mark as completed
       await db.completePlannedInfusion(treatmentId);
-      
+
       // 2. Log infusion if possible (pills or no extra tracking)
       // Note: For background isolation, we use a simple DB update.
       // Full logging with stock deduction is better done when the app is open
       // or via a dedicated service that doesn't rely on Provider.
-      
+
       // We'll fetch the medication details first
-      final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
-      final med = await (db.select(db.medications)..where((t) => t.id.equals(treatment.medicationId))).getSingle();
-      
+      final treatment = await (db.select(
+        db.plannedInfusions,
+      )..where((t) => t.id.equals(treatmentId))).getSingle();
+      final med = await (db.select(
+        db.medications,
+      )..where((t) => t.id.equals(treatment.medicationId))).getSingle();
+
       if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
         // Automatic logging for simple items
         await db.transaction(() async {
           // Reduce stock
-          await db.updateMedication(med.copyWith(stock: med.stock - treatment.dosage));
-          
+          await db.updateMedication(
+            med.copyWith(stock: med.stock - treatment.dosage),
+          );
+
           // Reduce accessory stock
           final accessories = await db.getAccessoriesForMedication(med.id);
           for (final link in accessories) {
-            final acc = await (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).getSingle();
-            await db.updateAccessory(acc.copyWith(stock: acc.stock - link.defaultQuantity));
+            final acc = await (db.select(
+              db.accessories,
+            )..where((t) => t.id.equals(link.accessoryId))).getSingle();
+            await db.updateAccessory(
+              acc.copyWith(stock: acc.stock - link.defaultQuantity),
+            );
           }
 
           // Insert log
-          await db.insertInfusionLog(InfusionLogCompanion.insert(
-            date: treatment.date,
-            medicationId: med.id,
-            dosage: treatment.dosage,
-            notes: Value(l10n.notificationCompletedNote),
-          ));
+          await db.insertInfusionLog(
+            InfusionLogCompanion.insert(
+              date: treatment.date,
+              medicationId: med.id,
+              dosage: treatment.dosage,
+              notes: Value(l10n.notificationCompletedNote),
+            ),
+          );
         });
       }
-      
+
       // Cancel other reminders for this treatment and refresh the missed-intake
       // summary so it does not keep listing a treatment that is now done.
       await NotificationService().cancelTreatmentReminders(treatmentId);
       await SchedulerService(db).checkMissedTreatments();
-      debugPrint('NotificationService: Treatment $treatmentId marked as completed via notification action.');
+      debugPrint(
+        'NotificationService: Treatment $treatmentId marked as completed via notification action.',
+      );
     } catch (e) {
       debugPrint('NotificationService: Error handling complete infusion: $e');
     }
@@ -311,19 +365,29 @@ class NotificationService {
   static Future<void> _handleSkipInfusion(int treatmentId) async {
     try {
       final l10n = await LocaleProvider.l10nForBackground();
-      await NotificationService()._notificationsPlugin.cancel(treatmentId * 100);
+      await NotificationService()._notificationsPlugin.cancel(
+        treatmentId * 100,
+      );
       final db = AppDatabase();
       // Mark as completed but with a note that it was skipped
-      final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
-      await db.updatePlannedInfusion(treatment.copyWith(
-        isCompleted: true,
-        notes: Value('${treatment.notes ?? ''} ${l10n.notificationSkippedNote}'.trim()),
-      ));
-      
+      final treatment = await (db.select(
+        db.plannedInfusions,
+      )..where((t) => t.id.equals(treatmentId))).getSingle();
+      await db.updatePlannedInfusion(
+        treatment.copyWith(
+          isCompleted: true,
+          notes: Value(
+            '${treatment.notes ?? ''} ${l10n.notificationSkippedNote}'.trim(),
+          ),
+        ),
+      );
+
       // Cancel other reminders
       await NotificationService().cancelTreatmentReminders(treatmentId);
       await SchedulerService(db).checkMissedTreatments();
-      debugPrint('NotificationService: Treatment $treatmentId skipped via notification action.');
+      debugPrint(
+        'NotificationService: Treatment $treatmentId skipped via notification action.',
+      );
     } catch (e) {
       debugPrint('NotificationService: Error handling skip infusion: $e');
     }
@@ -373,7 +437,9 @@ class NotificationService {
     // IDs so they coexist. Default 15 min → 15/30/45 min after the treatment.
     if (snoozeEnabled) {
       for (int i = 1; i <= 3; i++) {
-        final time = treatment.date.add(Duration(minutes: i * snoozeIntervalMin));
+        final time = treatment.date.add(
+          Duration(minutes: i * snoozeIntervalMin),
+        );
         if (time.isAfter(now) && !isQuiet(time)) {
           await scheduleNotification(
             id: baseId + i,
@@ -445,13 +511,18 @@ class NotificationService {
       final pending = await _notificationsPlugin.pendingNotificationRequests();
       for (final req in pending) {
         final id = req.id;
-        if (id < 100) continue; // reserved/system ids live below the treatment range
+        // reserved/system ids live below the treatment range
+        if (id < 100) {
+          continue;
+        }
         final offset = id % 100;
         if (!_treatmentReminderOffsets.contains(offset)) continue;
         final treatmentId = id ~/ 100;
         if (!validTreatmentIds.contains(treatmentId)) {
           await _notificationsPlugin.cancel(id);
-          debugPrint('NotificationService: Cancelled stale reminder $id (treatment $treatmentId).');
+          debugPrint(
+            'NotificationService: Cancelled stale reminder $id (treatment $treatmentId).',
+          );
         }
       }
     } catch (e) {
@@ -495,7 +566,9 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
       );
     } catch (e) {
-      debugPrint('NotificationService: Failed to schedule timer completion: $e');
+      debugPrint(
+        'NotificationService: Failed to schedule timer completion: $e',
+      );
     }
   }
 
@@ -518,7 +591,8 @@ class NotificationService {
     final l10n = await _l10n;
     final title = l10n.timerTitle;
     final content = l10n.timerNotificationRemaining(
-        '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}');
+      '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+    );
 
     await _notificationsPlugin.show(
       9999, // Specific ID for timer progress
@@ -609,7 +683,7 @@ class NotificationService {
 
   Future<void> showStockWarningNotification(List<String> lowItems) async {
     if (lowItems.isEmpty) return;
-    
+
     final l10n = await _l10n;
     final itemsText = lowItems.join(", ");
 
@@ -635,11 +709,18 @@ class NotificationService {
 
   Future<void> scheduleBackupReminder() async {
     const int backupReminderId = 7777;
-    
+
     final l10n = await _l10n;
     // Schedule for 10:00 AM every day
     final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 10, 0);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      10,
+      0,
+    );
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
@@ -659,11 +740,14 @@ class NotificationService {
         iOS: const DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: 'open_backup_settings',
     );
-    debugPrint('NotificationService: Daily backup reminder scheduled for 10:00.');
+    debugPrint(
+      'NotificationService: Daily backup reminder scheduled for 10:00.',
+    );
   }
 
   Future<void> cancelBackupReminder() async {
@@ -697,7 +781,9 @@ class NotificationService {
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse response) {
-  debugPrint('NotificationService: Background action triggered: ${response.actionId}');
+  debugPrint(
+    'NotificationService: Background action triggered: ${response.actionId}',
+  );
   if (response.payload != null) {
     final id = int.tryParse(response.payload!);
     if (id != null) {
@@ -717,7 +803,9 @@ void notificationTapBackground(NotificationResponse response) {
 /// exception aborted the whole action handler before it could mark the intake
 /// as done or cancel its follow-up reminders.
 @pragma('vm:entry-point')
-Future<void> _initBackgroundPlugin(FlutterLocalNotificationsPlugin plugin) async {
+Future<void> _initBackgroundPlugin(
+  FlutterLocalNotificationsPlugin plugin,
+) async {
   const androidSettings = AndroidInitializationSettings('notification_icon');
   // No categories/permission requests here — the main isolate already
   // registered them; re-requesting from a headless engine is unnecessary.
@@ -729,17 +817,25 @@ Future<void> _initBackgroundPlugin(FlutterLocalNotificationsPlugin plugin) async
 
   switch (defaultTargetPlatform) {
     case TargetPlatform.iOS:
-      await plugin.initialize(const InitializationSettings(iOS: darwinSettings));
+      await plugin.initialize(
+        const InitializationSettings(iOS: darwinSettings),
+      );
     case TargetPlatform.macOS:
-      await plugin.initialize(const InitializationSettings(macOS: darwinSettings));
+      await plugin.initialize(
+        const InitializationSettings(macOS: darwinSettings),
+      );
     default:
-      await plugin.initialize(const InitializationSettings(android: androidSettings));
+      await plugin.initialize(
+        const InitializationSettings(android: androidSettings),
+      );
   }
 }
 
 @pragma('vm:entry-point')
 Future<void> _cancelTreatmentBlock(
-    FlutterLocalNotificationsPlugin plugin, int treatmentId) async {
+  FlutterLocalNotificationsPlugin plugin,
+  int treatmentId,
+) async {
   final baseId = treatmentId * 100;
   await plugin.cancel(baseId);
   for (int i = 1; i <= 3; i++) {
@@ -756,14 +852,22 @@ Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
     await _initBackgroundPlugin(notifPlugin);
     await _cancelTreatmentBlock(notifPlugin, treatmentId);
     final db = AppDatabase();
-    final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
-    await db.updatePlannedInfusion(treatment.copyWith(
-      isCompleted: true,
-      notes: Value('${treatment.notes ?? ''} ${l10n.notificationSkippedNote}'.trim()),
-    ));
+    final treatment = await (db.select(
+      db.plannedInfusions,
+    )..where((t) => t.id.equals(treatmentId))).getSingle();
+    await db.updatePlannedInfusion(
+      treatment.copyWith(
+        isCompleted: true,
+        notes: Value(
+          '${treatment.notes ?? ''} ${l10n.notificationSkippedNote}'.trim(),
+        ),
+      ),
+    );
     await SchedulerService(db).checkMissedTreatments();
 
-    debugPrint('NotificationService: Background: Treatment $treatmentId skipped.');
+    debugPrint(
+      'NotificationService: Background: Treatment $treatmentId skipped.',
+    );
   } catch (e) {
     debugPrint('NotificationService: Background: Error skipping: $e');
   }
@@ -779,36 +883,50 @@ Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
     final db = AppDatabase();
     // 1. Mark as completed
     await db.completePlannedInfusion(treatmentId);
-    
+
     // We'll fetch the medication details
-    final treatment = await (db.select(db.plannedInfusions)..where((t) => t.id.equals(treatmentId))).getSingle();
-    final med = await (db.select(db.medications)..where((t) => t.id.equals(treatment.medicationId))).getSingle();
-    
+    final treatment = await (db.select(
+      db.plannedInfusions,
+    )..where((t) => t.id.equals(treatmentId))).getSingle();
+    final med = await (db.select(
+      db.medications,
+    )..where((t) => t.id.equals(treatment.medicationId))).getSingle();
+
     if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
       // Automatic logging for simple items
       await db.transaction(() async {
         // Reduce stock
-        await db.updateMedication(med.copyWith(stock: med.stock - treatment.dosage));
-        
+        await db.updateMedication(
+          med.copyWith(stock: med.stock - treatment.dosage),
+        );
+
         // Reduce accessory stock
         final accessories = await db.getAccessoriesForMedication(med.id);
         for (final link in accessories) {
-          final acc = await (db.select(db.accessories)..where((t) => t.id.equals(link.accessoryId))).getSingle();
-          await db.updateAccessory(acc.copyWith(stock: acc.stock - link.defaultQuantity));
+          final acc = await (db.select(
+            db.accessories,
+          )..where((t) => t.id.equals(link.accessoryId))).getSingle();
+          await db.updateAccessory(
+            acc.copyWith(stock: acc.stock - link.defaultQuantity),
+          );
         }
 
         // Insert log
-        await db.insertInfusionLog(InfusionLogCompanion.insert(
-          date: treatment.date,
-          medicationId: med.id,
-          dosage: treatment.dosage,
-          notes: Value(l10n.notificationCompletedNote),
-        ));
+        await db.insertInfusionLog(
+          InfusionLogCompanion.insert(
+            date: treatment.date,
+            medicationId: med.id,
+            dosage: treatment.dosage,
+            notes: Value(l10n.notificationCompletedNote),
+          ),
+        );
       });
     }
     await SchedulerService(db).checkMissedTreatments();
 
-    debugPrint('NotificationService: Background: Treatment $treatmentId processed.');
+    debugPrint(
+      'NotificationService: Background: Treatment $treatmentId processed.',
+    );
   } catch (e) {
     debugPrint('NotificationService: Background: Error: $e');
   }

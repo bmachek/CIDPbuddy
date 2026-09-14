@@ -25,7 +25,8 @@ class BackgroundService {
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
         autoStart: true,
-        isForegroundMode: true, // We use true but the channel importance is MIN, so it's silent but protected
+        isForegroundMode:
+            true, // We use true but the channel importance is MIN, so it's silent but protected
         notificationChannelId: 'background_service',
         initialNotificationTitle: 'CIDP Buddy',
         initialNotificationContent: l10n.backgroundServiceRunning,
@@ -134,7 +135,8 @@ class BackgroundService {
         // self-corrects the instant this tick gets to run again.
         final previousRemaining = secondsRemaining;
         final storedEnd = prefs.getInt(timerEndEpochKey) ?? endEpoch;
-        secondsRemaining = ((storedEnd - DateTime.now().millisecondsSinceEpoch) / 1000).ceil();
+        secondsRemaining =
+            ((storedEnd - DateTime.now().millisecondsSinceEpoch) / 1000).ceil();
 
         if (secondsRemaining > 0) {
           if (secondsRemaining ~/ 60 < previousRemaining ~/ 60) {
@@ -142,7 +144,9 @@ class BackgroundService {
             try {
               for (int i = 0; i < 3; i++) {
                 await audioPlayer.play(AssetSource('audio/bell.mp3'));
-                if (i < 2) await Future.delayed(const Duration(milliseconds: 1500));
+                if (i < 2) {
+                  await Future.delayed(const Duration(milliseconds: 1500));
+                }
               }
             } catch (e) {
               debugPrint('Background Minute Signal Error: $e');
@@ -157,7 +161,8 @@ class BackgroundService {
             service.setForegroundNotificationInfo(
               title: l10n.timerTitle,
               content: l10n.timerNotificationRemaining(
-                  '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}'),
+                '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
+              ),
             );
             await notifService.showTimerProgress(mins, secs);
           }
@@ -178,7 +183,8 @@ class BackgroundService {
     // Auto-resume a timer that was running before the service was force-killed
     final persistedEndEpoch = prefs.getInt(timerEndEpochKey);
     if (persistedEndEpoch != null) {
-      final remaining = (persistedEndEpoch - DateTime.now().millisecondsSinceEpoch) ~/ 1000;
+      final remaining =
+          (persistedEndEpoch - DateTime.now().millisecondsSinceEpoch) ~/ 1000;
       if (remaining > 0) {
         await startTimerWithSeconds(remaining);
       } else {
@@ -212,7 +218,9 @@ class BackgroundService {
       if (isRunning) {
         final storedEnd = prefs.getInt(timerEndEpochKey);
         if (storedEnd != null) {
-          final computed = ((storedEnd - DateTime.now().millisecondsSinceEpoch) / 1000).ceil();
+          final computed =
+              ((storedEnd - DateTime.now().millisecondsSinceEpoch) / 1000)
+                  .ceil();
           secondsRemaining = computed < 0 ? 0 : computed;
         }
       }
@@ -224,7 +232,7 @@ class BackgroundService {
     Timer.periodic(const Duration(hours: 24), (t) async {
       await _performSync();
     });
-    
+
     // Also perform an initial sync after a short delay
     Future.delayed(const Duration(seconds: 10), () => _performSync());
   }
