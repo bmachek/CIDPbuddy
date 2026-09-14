@@ -5,7 +5,12 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      - '.github/workflows/publish-wiki.yml'
   workflow_dispatch:
+
+concurrency:
+  group: publish-wiki
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -16,15 +21,24 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Clone wiki repository
         run: |
           git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git wiki
 
-      - name: Copy docs to wiki
+      - name: Sync docs to wiki
         run: |
-          # Copy all markdown files from docs/ into the wiki root
+          # Drop wiki pages whose source file no longer exists, so renamed or
+          # deleted docs do not linger as orphans, then copy the current set.
+          for page in wiki/*.md; do
+            [ -e "$page" ] || continue
+            name="$(basename "$page")"
+            if [ ! -f "docs/$name" ]; then
+              echo "Removing stale wiki page: $name"
+              git -C wiki rm --quiet "$name"
+            fi
+          done
           cp docs/*.md wiki/
 
       - name: Commit and push changes

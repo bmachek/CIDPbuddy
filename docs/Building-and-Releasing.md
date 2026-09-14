@@ -1,10 +1,12 @@
 # Building & releasing
 
+> The automated side of this — what runs on every push, PR and tag — is described in [Continuous integration](Continuous-Integration).
+
 ## Prerequisites
 
 - Flutter SDK with Dart ^3.11.4 installed and on the PATH
 - Android Studio / Xcode (depending on the target platform)
-- Java 17 (for Android builds)
+- Java 21 (for Android builds — the same version CI uses)
 - macOS: Homebrew Flutter at `/opt/homebrew/bin/flutter`
 
 ## Development setup
@@ -19,7 +21,10 @@ dart run build_runner build --delete-conflicting-outputs
 # Generate the localizations (required after editing the ARB files)
 flutter gen-l10n
 
-# Lint (must be error-free before every commit)
+# Everything CI checks: generated code, translations, lint, tests
+tool/verify.sh
+
+# Lint only (must be error-free before every commit)
 /opt/homebrew/bin/flutter analyze
 
 # Run the app in debug mode

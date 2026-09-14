@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/bmachek/CIDPbuddy/wiki
+    about: Architecture, database schema, backup/restore and release docs.
+  - name: Security vulnerability
+    url: https://github.com/bmachek/CIDPbuddy/security/advisories/new
+    about: Report privately — please do not open a public issue.

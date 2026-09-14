@@ -18,7 +18,10 @@ dart run build_runner build --delete-conflicting-outputs
 # Regenerate localizations (required after editing lib/l10n/*.arb)
 flutter gen-l10n
 
-# Lint (must pass before finishing any task)
+# Verify everything CI checks: generated code, translations, analyzer, tests
+tool/verify.sh
+
+# Lint only (must pass before finishing any task)
 /opt/homebrew/bin/flutter analyze
 
 # Run app
@@ -27,6 +30,8 @@ flutter run
 # Build release APK
 flutter build apk --release --build-name=X.X.X --build-number=N
 ```
+
+`tool/verify.sh` is the single gate — it is what CI runs, so a green run locally means a green run on GitHub.
 
 `test/widget_test.dart` covers the localization setup (locale coverage, lookup per language, placeholder substitution, widget rendering). Beyond that, no meaningful test suite exists yet.
 
@@ -69,6 +74,29 @@ flutter build apk --release --build-name=X.X.X --build-number=N
 
 ### Platform IDs
 Android `applicationId` and iOS bundle ID are both `de.fokuspunk.cidpbuddy`.
+
+## Continuous Integration
+
+Workflows live in `.github/workflows/`:
+
+- **`ci.yml`** — on every push to `main` and every PR. Runs `tool/verify.sh --check-generated` (regenerates Drift and l10n code and fails if the committed output is stale, fails on any untranslated ARB key, then `flutter analyze --fatal-infos` and `flutter test`), followed by a debug APK build that catches Gradle/Kotlin breakage the analyzer cannot see. Also callable from other workflows.
+- **`release.yml`** — on `v*` tags. Calls `ci.yml` first, so a tag cannot publish a release that does not verify, then builds and attaches the signed APK. The iOS job stays disabled until the App Store Connect secrets are restored.
+- **`codeql.yml`** — CodeQL for `actions` (the workflows themselves) and `java-kotlin` (the Android sources, built with the Flutter toolchain). On push, PR and weekly.
+- **`publish-wiki.yml`** — mirrors `docs/*.md` into the GitHub wiki, pruning pages whose source file was deleted.
+
+The Flutter version is pinned (`FLUTTER_VERSION` in `ci.yml`, and the same literal in `release.yml`); raise both together. Dependabot watches pub, Gradle and the actions themselves.
+
+The repo is deliberately **not** `dart format`-clean, so CI does not check formatting — do not reformat files you are not otherwise changing.
+
+## Subagents
+
+`.claude/agents/` defines three project subagents. Delegating to them keeps large, low-value output out of the main context — a single `flutter` command re-prints a 115-line dependency banner, and the five ARB files together are thousands of lines:
+
+- **`flutter-verifier`** (Haiku) — runs `tool/verify.sh` and reports only the failures. Use it instead of running `flutter analyze` or `flutter test` directly.
+- **`l10n-translator`** (Sonnet) — adds or changes UI strings across all five ARB files and runs `gen-l10n`. Use it whenever a change touches user-visible text.
+- **`drift-migrator`** — schema change plus migration step, version bump and regeneration. Use it for anything that alters the shape of the database; patients' infusion logs cannot be recreated.
+
+Rules of thumb: delegate work whose *output* is large but whose *answer* is small (verification, searching, translating); do the actual feature edits yourself so the reasoning stays in one place. Agents report conclusions, not file dumps.
 
 ## Code Rules (from AI_GUIDELINES.md)
 

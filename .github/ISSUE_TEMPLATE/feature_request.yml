@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest an improvement to CIDP Buddy.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What is hard or impossible today? Describe the situation, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like instead
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Diary and symptoms
+        - Infusions and schedules
+        - Inventory and ordering
+        - Reminders and notifications
+        - Backup and restore
+        - Settings, theme or language
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered

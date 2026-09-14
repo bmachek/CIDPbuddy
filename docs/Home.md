@@ -20,6 +20,7 @@ CIDPbuddy is a Flutter app for managing infusion therapy for patients with **chr
 | `dart run build_runner build --delete-conflicting-outputs` | Regenerate the Drift database code |
 | `flutter gen-l10n` | Regenerate the localizations from the ARB files |
 | `/opt/homebrew/bin/flutter analyze` | Lint (must be error-free) |
+| `tool/verify.sh` | Everything CI checks: generated code, translations, lint, tests |
 | `flutter run` | Run the app |
 | `flutter build apk --release --build-name=X.X.X --build-number=N` | Build a release APK |
 
@@ -32,6 +33,7 @@ CIDPbuddy is a Flutter app for managing infusion therapy for patients with **chr
 - [Localization](Localization) — supported languages, the ARB workflow, how to add a language
 - [Backup & restore](Backup-and-Restore) — the backup system, destinations, auto-backup logic
 - [Building & releasing](Building-and-Releasing) — build commands, release process
+- [Continuous integration](Continuous-Integration) — the workflows, `tool/verify.sh`, CodeQL, Dependabot
 
 ## Technical stack
 

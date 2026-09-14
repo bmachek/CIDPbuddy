@@ -1,0 +1,52 @@
+version: 2
+
+updates:
+  # ─── GitHub Actions used by the workflows ──────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Berlin
+    labels: [dependencies, ci]
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions:
+        patterns: ['*']
+
+  # ─── Dart / Flutter packages ───────────────────────────────────────────────
+  # Grouped so the weekly noise is one PR for the safe bumps and a separate
+  # PR per major, which always needs a real look on a medical app.
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels: [dependencies, dart]
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      dart-minor-and-patch:
+        update-types: [minor, patch]
+
+  # ─── Android Gradle / Kotlin toolchain ─────────────────────────────────────
+  - package-ecosystem: gradle
+    directory: /android
+    schedule:
+      interval: monthly
+      time: '06:00'
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 3
+    labels: [dependencies, android]
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      gradle:
+        update-types: [minor, patch]
