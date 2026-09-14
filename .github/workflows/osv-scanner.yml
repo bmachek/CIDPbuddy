@@ -1,8 +1,11 @@
 name: OSV-Scanner
 
 # CodeQL has no Dart support, so the dependency side is where vulnerabilities
-# in this app are actually detectable: pub packages plus the CocoaPods the
-# iOS and macOS builds pull in.
+# in this app are actually detectable.
+#
+# Only pubspec.lock is scanned: OSV-Scanner has no extractor for CocoaPods
+# Podfile.lock (it supports SwiftPM Package.resolved instead) and exits 127 on
+# a file it cannot parse, which fails the whole scan rather than skipping it.
 
 on:
   push:
@@ -29,8 +32,6 @@ jobs:
     with:
       scan-args: |-
         --lockfile=./pubspec.lock
-        --lockfile=./ios/Podfile.lock
-        --lockfile=./macos/Podfile.lock
       # Report rather than fail: an advisory in a transitive package is not a
       # reason for main to go red, and the alerts are mailed out anyway.
       fail-on-vuln: false
@@ -47,5 +48,3 @@ jobs:
     with:
       scan-args: |-
         --lockfile=./pubspec.lock
-        --lockfile=./ios/Podfile.lock
-        --lockfile=./macos/Podfile.lock

@@ -31,7 +31,7 @@ If `flutter` is not on your `PATH`, the script falls back to `/opt/homebrew/bin/
 | **CI** (`ci.yml`) | push to `main`, every PR, manual, and called by Release | `tool/verify.sh --check-generated`, then a debug APK build |
 | **Release** (`release.yml`) | `v*` tags | Runs CI first, then builds and publishes the signed release APK |
 | **CodeQL** (`codeql.yml`) | push to `main`, PRs, weekly (Mon 05:17 UTC), manual | Static security analysis of the workflows and the Android sources |
-| **OSV-Scanner** (`osv-scanner.yml`) | push to `main`, PRs, weekly (Tue 06:23 UTC), manual | Known vulnerabilities in the pub and CocoaPods lockfiles |
+| **OSV-Scanner** (`osv-scanner.yml`) | push to `main`, PRs, weekly (Tue 06:23 UTC), manual | Known vulnerabilities in `pubspec.lock` |
 | **Publish Wiki** (`publish-wiki.yml`) | push to `main` touching `docs/**` | Mirrors `docs/*.md` into this wiki |
 
 ### CI
@@ -61,7 +61,9 @@ Findings appear under the repository's **Security → Code scanning** tab.
 
 ### OSV-Scanner
 
-Dart is not a CodeQL language, so the dependency side is where vulnerabilities in this app are actually detectable. OSV-Scanner checks three committed lockfiles — `pubspec.lock`, `ios/Podfile.lock`, `macos/Podfile.lock` — against the [OSV database](https://osv.dev) and reports into the same Code scanning tab.
+Dart is not a CodeQL language, so the dependency side is where vulnerabilities in this app are actually detectable. OSV-Scanner checks `pubspec.lock` (185 packages) against the [OSV database](https://osv.dev) and reports into the same Code scanning tab.
+
+The two `Podfile.lock`s are deliberately left out: OSV-Scanner has no CocoaPods extractor — it handles SwiftPM `Package.resolved` instead — and exits 127 on a file it cannot parse, which fails the whole scan rather than skipping that one file. iOS/macOS pods are therefore not covered.
 
 Two modes:
 
