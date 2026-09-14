@@ -79,14 +79,14 @@ Android `applicationId` and iOS bundle ID are both `de.fokuspunk.cidpbuddy`.
 
 Workflows live in `.github/workflows/`:
 
-- **`ci.yml`** — on every push to `main` and every PR. Runs `tool/verify.sh --check-generated` (regenerates Drift and l10n code and fails if the committed output is stale, fails on any untranslated ARB key, then `flutter analyze --fatal-infos` and `flutter test`), followed by a debug APK build that catches Gradle/Kotlin breakage the analyzer cannot see. Also callable from other workflows.
+- **`ci.yml`** — on every push to `main` and every PR. Runs `tool/verify.sh --check-generated` (regenerates Drift and l10n code and fails if the committed output is stale, fails on any untranslated ARB key, checks `dart format`, then `flutter analyze --fatal-infos` and `flutter test`), followed by a debug APK build that catches Gradle/Kotlin breakage the analyzer cannot see. Also callable from other workflows.
 - **`release.yml`** — on `v*` tags. Calls `ci.yml` first, so a tag cannot publish a release that does not verify, then builds and attaches the signed APK. The iOS job stays disabled until the App Store Connect secrets are restored.
 - **`codeql.yml`** — CodeQL for `actions` (the workflows themselves) and `java-kotlin` (the Android sources, built with the Flutter toolchain). On push, PR and weekly.
 - **`publish-wiki.yml`** — mirrors `docs/*.md` into the GitHub wiki, pruning pages whose source file was deleted.
 
 The Flutter version is pinned (`FLUTTER_VERSION` in `ci.yml`, and the same literal in `release.yml`); raise both together. Dependabot watches pub, Gradle and the actions themselves.
 
-The repo is deliberately **not** `dart format`-clean, so CI does not check formatting — do not reformat files you are not otherwise changing.
+`dart format` is enforced by CI. Run `dart format .` before committing; generated code is already format-clean, so the formatter and the generators do not conflict. Linting is not a separate step — `analysis_options.yaml` pulls in `package:flutter_lints`, and CI analyzes with `--fatal-infos`, so every lint is a hard failure.
 
 ## Subagents
 

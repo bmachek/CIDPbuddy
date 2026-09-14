@@ -14,8 +14,9 @@ That script is the single quality gate, and CI runs the same script — a green 
 2. `dart run build_runner build --delete-conflicting-outputs` — the Drift code
 3. `flutter gen-l10n` — the localizations
 4. checks that `l10n-untranslated.json` is `{}`, i.e. every key exists in all five ARB files
-5. `flutter analyze --fatal-infos` — zero errors *and* zero infos
-6. `flutter test`
+5. `dart format --set-exit-if-changed` over every tracked `.dart` file
+6. `flutter analyze --fatal-infos` — zero errors *and* zero infos, which includes every `flutter_lints` rule
+7. `flutter test`
 
 Sub-command output is captured and only printed when a step fails, so the summary stays short.
 
@@ -79,7 +80,22 @@ Majors are deliberately left ungrouped — on a medical app they need a real loo
 
 ## Formatting
 
-The repository is **not** `dart format`-clean, and CI deliberately does not check formatting. Reformatting the tree would rewrite 33 of 47 files and bury real changes in diff noise. Format what you touch if you like; do not reformat files you are not otherwise changing.
+`dart format` is enforced. The whole tree was formatted in one commit so the check starts green; from there on, unformatted code fails CI with the list of offending files.
+
+```bash
+dart format .                         # fix everything
+git ls-files -z '*.dart' | xargs -0 dart format   # only tracked files
+```
+
+Generated code (`lib/l10n/generated/`, `database.g.dart`) is already format-clean as produced by `gen-l10n` and `build_runner`, so the formatter and the generators do not fight each other.
+
+## Linting
+
+There is no separate lint step — `flutter analyze` *is* the linter. `analysis_options.yaml` includes `package:flutter_lints/flutter.yaml`, and CI runs the analyzer with `--fatal-infos`, so every lint in that set is a hard failure, not a suggestion. Adding a rule to `analysis_options.yaml` is all it takes to enforce it everywhere.
+
+## What is not covered
+
+CodeQL has no Dart support, so the app's own Dart code gets no taint or data-flow analysis — the analyzer, the lints and the tests are what guard it. Dart *dependencies* are covered from the other side: Dependabot raises pub advisories, and GitHub's Dependabot security updates (enabled under **Settings → Code security**) open fix PRs for known vulnerable packages in `pubspec.lock`.
 
 ## Recommended branch protection
 

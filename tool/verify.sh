@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# Verify the project the way CI does: generated code is current, the analyzer
-# is clean, every user-visible string is translated, and the tests pass.
+# Verify the project the way CI does: generated code is current, the formatting
+# matches `dart format`, the analyzer is clean, every user-visible string is
+# translated, and the tests pass.
 #
 #   tool/verify.sh                  # local run
 #   tool/verify.sh --check-generated  # also fail if generated code is stale
@@ -91,6 +92,15 @@ and commit the result.
 
 $(git --no-pager diff --stat -- 'lib/l10n/generated' '*.g.dart')"
   fi
+fi
+
+printf '  %s ... ' "formatting             "
+if git ls-files -z '*.dart' | xargs -0 "$DART" format --output=none --set-exit-if-changed >"$LOG" 2>&1; then
+  echo "ok"
+else
+  fail "$(grep '^Changed ' "$LOG" || cat "$LOG")
+
+Run 'dart format .' (or format just the files above) and commit the result."
 fi
 
 run "analyze                " "$FLUTTER" analyze --fatal-infos

@@ -8,7 +8,7 @@
 
 ## Checklist
 
-- [ ] `tool/verify.sh` passes (analyze, tests, generated code, translations)
+- [ ] `tool/verify.sh` passes (format, analyze, tests, generated code, translations)
 - [ ] Generated code is committed (`dart run build_runner build --delete-conflicting-outputs`, `flutter gen-l10n`)
 - [ ] No hard-coded user-visible strings — new keys added to all five ARB files
 - [ ] No hard-coded date or number formats — used the `AppDateFormat` helpers
