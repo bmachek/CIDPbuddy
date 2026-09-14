@@ -79,7 +79,7 @@ Android `applicationId` and iOS bundle ID are both `de.fokuspunk.cidpbuddy`.
 
 Workflows live in `.github/workflows/`:
 
-- **`ci.yml`** — on every push to `main` and every PR. Runs `tool/verify.sh --check-generated` (regenerates Drift and l10n code and fails if the committed output is stale, fails on any untranslated ARB key, checks `dart format`, then `flutter analyze --fatal-infos` and `flutter test`), followed by a debug APK build that catches Gradle/Kotlin breakage the analyzer cannot see. Also callable from other workflows.
+- **`ci.yml`** — on every push to `main` and every PR. Runs `tool/verify.sh --check-generated` (regenerates Drift and l10n code and fails if the committed output is stale, fails on any untranslated ARB key, checks `dart format`, then `flutter analyze --fatal-infos` and `flutter test`), followed by a debug APK build that catches Gradle/Kotlin breakage the analyzer cannot see. Also callable from other workflows (`skip-android-build`).
 - **`release.yml`** — on `v*` tags. Calls `ci.yml` first, so a tag cannot publish a release that does not verify, then builds and attaches the signed APK. The iOS job stays disabled until the App Store Connect secrets are restored.
 - **`codeql.yml`** — CodeQL for `actions` (the workflows themselves) and `java-kotlin` (the Android sources, built with the Flutter toolchain). On push, PR and weekly.
 - **`osv-scanner.yml`** — known vulnerabilities in `pubspec.lock`. CodeQL cannot see Dart, so this is what covers the dependency side; CocoaPods lockfiles are not scannable by it. PRs fail on newly introduced advisories; the scheduled scan only reports.

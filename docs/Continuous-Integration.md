@@ -36,7 +36,7 @@ If `flutter` is not on your `PATH`, the script falls back to `/opt/homebrew/bin/
 
 ### CI
 
-Two jobs. `verify` runs the script above. `build-android` then compiles a debug APK — the analyzer does not exercise the Gradle/Kotlin side, and a release build has broken on exactly that before (tag `v1.8.1`). CI is also a reusable workflow (`workflow_call`) with a `build-android` input, which is how Release reuses it without building the app twice.
+Two jobs. `verify` runs the script above. `build-android` then compiles a debug APK — the analyzer does not exercise the Gradle/Kotlin side, and a release build has broken on exactly that before (tag `v1.8.1`). CI is also a reusable workflow (`workflow_call`) with a `skip-android-build` input, which is how Release reuses it without building the app twice. The input is phrased as a *skip* flag deliberately: for `push` and `pull_request` the `inputs` context is null, and GitHub coerces both `null` and `false` to `0`, so a `build-android != false` guard would silently skip the job on every PR.
 
 On pull requests, a new push cancels the in-flight run (`concurrency`). On `main` and on tags, runs are never cancelled.
 

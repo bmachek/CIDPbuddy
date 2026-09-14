@@ -7,10 +7,10 @@ on:
   workflow_dispatch:
   workflow_call:
     inputs:
-      build-android:
-        description: 'Also compile a debug APK'
+      skip-android-build:
+        description: 'Skip the debug APK build (the release workflow compiles it anyway)'
         type: boolean
-        default: true
+        default: false
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -48,7 +48,10 @@ jobs:
     name: Build Android (debug)
     runs-on: ubuntu-latest
     needs: verify
-    if: inputs.build-android != false
+    # Phrased as a skip flag on purpose: for push/pull_request the `inputs`
+    # context is null, and GitHub coerces both null and false to 0, so
+    # `inputs.build-android != false` would silently skip this job on every PR.
+    if: ${{ !inputs.skip-android-build }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5

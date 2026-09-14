@@ -22,7 +22,7 @@ jobs:
     # The release build compiles the app anyway, so skip CI's debug APK job.
     uses: ./.github/workflows/ci.yml
     with:
-      build-android: false
+      skip-android-build: true
 
   # ─── Android ────────────────────────────────────────────────────────────────
   android-build:
