@@ -1,5 +1,7 @@
 # CIDP Buddy
 
+[![CI](https://github.com/bmachek/CIDPbuddy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bmachek/CIDPbuddy/actions/workflows/ci.yml)
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/W7X2240HF4)
 
 <p align="center">
