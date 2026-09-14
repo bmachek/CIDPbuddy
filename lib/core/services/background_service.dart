@@ -8,6 +8,7 @@ import '../database/database.dart';
 import 'scheduler_service.dart';
 import 'medication_service.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:cidpbuddy/core/l10n/locale_provider.dart';
 
 @pragma('vm:entry-point')
 class BackgroundService {
@@ -18,6 +19,7 @@ class BackgroundService {
 
   static Future<void> initialize() async {
     final service = FlutterBackgroundService();
+    final l10n = await LocaleProvider.l10nForBackground();
 
     await service.configure(
       androidConfiguration: AndroidConfiguration(
@@ -26,7 +28,7 @@ class BackgroundService {
         isForegroundMode: true, // We use true but the channel importance is MIN, so it's silent but protected
         notificationChannelId: 'background_service',
         initialNotificationTitle: 'CIDP Buddy',
-        initialNotificationContent: 'Dienst läuft im Hintergrund',
+        initialNotificationContent: l10n.backgroundServiceRunning,
         foregroundServiceNotificationId: 888,
       ),
       iosConfiguration: IosConfiguration(
@@ -48,6 +50,7 @@ class BackgroundService {
 
     final notifService = NotificationService();
     await notifService.init(isBackground: true);
+    final l10n = await LocaleProvider.l10nForBackground();
 
     if (service is AndroidServiceInstance) {
       service.on('setAsForeground').listen((event) {
@@ -152,8 +155,9 @@ class BackgroundService {
             final mins = secondsRemaining ~/ 60;
             final secs = secondsRemaining % 60;
             service.setForegroundNotificationInfo(
-              title: 'Vormedikation Timer',
-              content: 'Verbleibend: ${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
+              title: l10n.timerTitle,
+              content: l10n.timerNotificationRemaining(
+                  '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}'),
             );
             await notifService.showTimerProgress(mins, secs);
           }

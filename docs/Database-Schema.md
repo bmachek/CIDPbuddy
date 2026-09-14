@@ -1,170 +1,176 @@
-# Datenbankschema
+# Database schema
 
-CIDPbuddy verwendet **Drift ORM** mit SQLite. Die aktuelle Schemaversion ist **14**. Alle Migrationen sind explizit in `lib/core/database/database.dart` mit `onUpgrade`-Schritten hinterlegt.
+CIDPbuddy uses **Drift ORM** with SQLite. The current schema version is **14**. All migrations are declared explicitly as `onUpgrade` steps in `lib/core/database/database.dart`.
 
-## Tabellenübersicht
+## Table overview
 
 ### `Medications`
 
-Medikamente und Infusionslösungen.
+Medications and infusion solutions.
 
-| Feld | Typ | Beschreibung |
-|------|-----|--------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `id` | INTEGER PK | Auto-increment |
-| `name` | TEXT | Handelsname des Medikaments |
-| `dosage` | TEXT | Standarddosis als Freitext (Default `''`) |
-| `pzn` | TEXT? | Pharmazentralnummer |
-| `stock` | REAL | Aktueller Bestand |
-| `minStock` | REAL | Mindestbestand (Alarm-Schwelle) |
-| `unit` | TEXT | Einheit (z.B. „g", „ml", „Stk.") |
-| `type` | INTEGER | `MedicationType`-Enum-Index: `0` = `infusion`, `1` = `pill` |
-| `packageSize` | REAL | Inhalt pro Packung |
-| `trackBatchNumber` | BOOLEAN | Chargennummer bei Infusionslog erfassen? |
-| `trackWeight` | BOOLEAN | Körpergewicht bei Infusionslog erfassen? |
-| `useTimer` | BOOLEAN | Vormedikations-Timer aktivieren? |
-| `createdAt` | DATETIME | Erstellungszeitpunkt |
-| `discontinuedAt` | DATETIME? | Gesetzt wenn abgesetzt (Soft-Delete) |
+| `name` | TEXT | Trade name of the medication |
+| `dosage` | TEXT | Standard dose as free text (default `''`) |
+| `pzn` | TEXT? | Pharmaceutical central number |
+| `stock` | REAL | Current stock |
+| `minStock` | REAL | Minimum stock (warning threshold) |
+| `unit` | TEXT | Unit (e.g. "g", "ml", "pcs") |
+| `type` | INTEGER | `MedicationType` enum index: `0` = `infusion`, `1` = `pill` |
+| `packageSize` | REAL | Contents per package |
+| `trackBatchNumber` | BOOLEAN | Ask for a batch number when logging an infusion? |
+| `trackWeight` | BOOLEAN | Ask for body weight when logging an infusion? |
+| `useTimer` | BOOLEAN | Enable the premedication timer? |
+| `createdAt` | DATETIME | Creation time |
+| `discontinuedAt` | DATETIME? | Set when discontinued (soft delete) |
 
 ### `Accessories`
 
-Medizinisches Verbrauchsmaterial (Nadeln, Spritzen, Schläuche).
+Medical supplies (needles, syringes, tubing).
 
-| Feld | Typ | Beschreibung |
-|------|-----|--------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `id` | INTEGER PK | Auto-increment |
-| `name` | TEXT | Bezeichnung |
-| `stock` | REAL | Aktueller Bestand |
-| `minStock` | REAL | Mindestbestand |
-| `unit` | TEXT | Einheit |
-| `packageSize` | REAL | Inhalt pro Packung |
+| `name` | TEXT | Name |
+| `stock` | REAL | Current stock |
+| `minStock` | REAL | Minimum stock |
+| `unit` | TEXT | Unit |
+| `packageSize` | REAL | Contents per package |
 
 ### `MedicationAccessories`
 
-Stückliste (BOM): Welches Zubehör gehört zu welchem Medikament?
+Bill of materials: which supply belongs to which medication?
 
-| Feld | Typ | Beschreibung |
-|------|-----|--------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `id` | INTEGER PK | Auto-increment |
-| `medicationId` | INTEGER FK → Medications | Eltern-Medikament |
-| `accessoryId` | INTEGER FK → Accessories | Zugehöriges Zubehör |
-| `defaultQuantity` | REAL | Standardmenge pro Infusion |
-| `isMandatory` | BOOLEAN | Pflichtmaterial? |
+| `medicationId` | INTEGER FK → Medications | Parent medication |
+| `accessoryId` | INTEGER FK → Accessories | Associated supply |
+| `defaultQuantity` | REAL | Default amount per infusion |
+| `isMandatory` | BOOLEAN | Always required? |
 
 ### `InfusionLog`
 
-Protokoll abgeschlossener Infusionen (Ist-Daten).
+Record of completed infusions (actuals).
 
-| Feld | Typ | Beschreibung |
-|------|-----|--------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `id` | INTEGER PK | Auto-increment |
-| `date` | DATETIME | Zeitpunkt der Infusion |
-| `medicationId` | INTEGER FK → Medications | Verwendetes Medikament |
-| `dosage` | REAL | Tatsächlich gegebene Dosis |
-| `batchNumber` | TEXT? | Chargennummer |
-| `notes` | TEXT? | Freitext-Notizen |
-| `bodyWeight` | REAL? | Körpergewicht in kg |
-| `photoPath` | TEXT? | Pfad zur Infusionsfotos |
+| `date` | DATETIME | Time of the infusion |
+| `medicationId` | INTEGER FK → Medications | Medication used |
+| `dosage` | REAL | Dose actually administered |
+| `batchNumber` | TEXT? | Batch number |
+| `notes` | TEXT? | Free-text notes |
+| `bodyWeight` | REAL? | Body weight in kg |
+| `photoPath` | TEXT? | Path to the infusion photo |
 
-Beim Einfügen eines Logs wird der Bestand in `Medications` und allen zugehörigen `Accessories` automatisch in einer Transaktion dekrementiert.
+Inserting a log automatically decrements the stock in `Medications` and in every associated `Accessories` row, inside one transaction.
 
 ### `InfusionSchedules`
 
-Wiederkehrende Behandlungspläne (Soll-Daten).
+Recurring treatment schedules (targets).
 
-| Feld | Typ | Beschreibung |
-|------|-----|--------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `id` | INTEGER PK | Auto-increment |
-| `medicationId` | INTEGER FK → Medications | Zugeordnetes Medikament |
-| `dosage` | REAL | Geplante Dosis |
+| `medicationId` | INTEGER FK → Medications | Associated medication |
+| `dosage` | REAL | Planned dose |
 | `frequencyType` | TEXT | `daily`, `interval`, `weekly`, `weekdays` |
-| `intervalValue` | INTEGER? | Für `interval`: Tage zwischen Infusionen; für `weekly`: Wochen-Abstand (z. B. 2 = jede zweite Woche) |
-| `selectedWeekdays` | TEXT? | Für `weekly`: kommagetrennte Wochentage (`'1,3,5'` = Mo/Mi/Fr) |
-| `startDate` | DATETIME | Beginn des Plans |
-| `isActive` | BOOLEAN | Plan aktiv? |
-| `intakeTimes` | TEXT? | Kommagetrennte Uhrzeiten (`'08:00,20:00'`) |
+| `intervalValue` | INTEGER? | For `interval`: days between infusions; for `weekly`: week spacing (e.g. 2 = every other week) |
+| `selectedWeekdays` | TEXT? | For `weekly`: comma-separated weekdays (`'1,3,5'` = Mon/Wed/Fri) |
+| `startDate` | DATETIME | Start of the schedule |
+| `isActive` | BOOLEAN | Schedule active? |
+| `intakeTimes` | TEXT? | Comma-separated times (`'08:00,20:00'`) |
+
+> `frequencyType` values are stored enum keys and must stay in English — the UI translates
+> them for display only.
 
 ### `PlannedInfusions`
 
-Automatisch generierte Termine aus `InfusionSchedules` (90-Tage-Vorschau).
+Appointments generated automatically from `InfusionSchedules` (90-day look-ahead).
 
-| Feld | Typ | Beschreibung |
-|------|-----|--------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `id` | INTEGER PK | Auto-increment |
-| `date` | DATETIME | Geplanter Infusionstermin |
-| `medicationId` | INTEGER FK → Medications | Medikament |
-| `dosage` | REAL | Geplante Dosis |
-| `notes` | TEXT? | Notizen |
-| `isCompleted` | BOOLEAN | Abgeschlossen oder übersprungen? |
-| `scheduleId` | INTEGER? FK → InfusionSchedules | Quell-Plan (nullable für manuelle Termine) |
-| `bodyWeight` | REAL? | Geplantes Körpergewicht |
+| `date` | DATETIME | Planned infusion time |
+| `medicationId` | INTEGER FK → Medications | Medication |
+| `dosage` | REAL | Planned dose |
+| `notes` | TEXT? | Notes |
+| `isCompleted` | BOOLEAN | Completed or skipped? |
+| `scheduleId` | INTEGER? FK → InfusionSchedules | Source schedule (nullable for manual appointments) |
+| `bodyWeight` | REAL? | Planned body weight |
 
-Bei Änderung oder Löschung eines Schedules werden alle verknüpften geplanten Termine automatisch gelöscht.
+When a schedule is changed or deleted, all linked planned appointments are deleted automatically.
 
 ### `PendingOrders`
 
-Bestellungen in Bearbeitung.
+Orders in progress.
 
-| Feld | Typ | Beschreibung |
-|------|-----|--------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `id` | INTEGER PK | Auto-increment |
-| `medicationId` | INTEGER FK → Medications | Bestelltes Medikament |
-| `medicationQty` | REAL | Bestellmenge (Medikament) |
-| `deliveryDate` | DATETIME? | Erwartetes Lieferdatum (optional — der Assistent erlaubt „Gleich nach Bestätigung") |
-| `isConfirmed` | BOOLEAN | Bestellung als geliefert bestätigt? |
-| `confirmedAt` | DATETIME? | Zeitpunkt der Bestätigung (seit Schema 14) |
+| `medicationId` | INTEGER FK → Medications | Medication ordered |
+| `medicationQty` | REAL | Order quantity (medication) |
+| `deliveryDate` | DATETIME? | Expected delivery date (optional — the assistant allows "right after confirmation") |
+| `isConfirmed` | BOOLEAN | Order confirmed as delivered? |
+| `confirmedAt` | DATETIME? | Time of confirmation (since schema 14) |
 
-Das Tagebuch sortiert eine gelieferte Bestellung nach `deliveryDate ?? confirmedAt`. Ohne
-`confirmedAt` hatte eine Bestellung ohne Lieferdatum gar kein Datum und wurde dauerhaft an
-den Anfang der Timeline gepinnt.
+The diary sorts a delivered order by `deliveryDate ?? confirmedAt`. Without `confirmedAt`, an
+order with no delivery date had no date at all and stayed pinned to the top of the timeline.
 
 ### `PendingOrderItems`
 
-Einzelpositionen einer Bestellung.
+Individual line items of an order.
 
-| Feld | Typ | Beschreibung |
-|------|-----|--------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `id` | INTEGER PK | Auto-increment |
-| `orderId` | INTEGER FK → PendingOrders | Zugehörige Bestellung |
-| `medicationId` | INTEGER? FK → Medications | Medikament (nullable) |
-| `accessoryId` | INTEGER? FK → Accessories | Zubehör (nullable) |
-| `quantity` | REAL | Bestellmenge |
+| `orderId` | INTEGER FK → PendingOrders | Parent order |
+| `medicationId` | INTEGER? FK → Medications | Medication (nullable) |
+| `accessoryId` | INTEGER? FK → Accessories | Supply (nullable) |
+| `quantity` | REAL | Order quantity |
 
 ### `DiaryEntries`
 
-Gesundheitstagebuch: Vitalwerte und CIDP-Symptomscores.
+Health diary: vital signs and CIDP symptom scores.
 
-| Feld | Typ | Beschreibung |
-|------|-----|--------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `id` | INTEGER PK | Auto-increment |
-| `date` | DATETIME | Erfassungszeitpunkt |
-| `systolicBP` | REAL? | Systolischer Blutdruck (mmHg) |
-| `diastolicBP` | REAL? | Diastolischer Blutdruck (mmHg) |
-| `heartRate` | INTEGER? | Herzfrequenz (bpm) |
-| `temperature` | REAL? | Körpertemperatur (°C) |
-| `weight` | REAL? | Körpergewicht (kg) |
-| `strengthScore` | INTEGER? | Muskelkraft (0–10) |
-| `sensoryScore` | INTEGER? | Sensibilität (0–10) |
+| `date` | DATETIME | Time of recording |
+| `systolicBP` | REAL? | Systolic blood pressure (mmHg) |
+| `diastolicBP` | REAL? | Diastolic blood pressure (mmHg) |
+| `heartRate` | INTEGER? | Heart rate (bpm) |
+| `temperature` | REAL? | Body temperature (°C) |
+| `weight` | REAL? | Body weight (kg) |
+| `strengthScore` | INTEGER? | Muscle strength (0–10) |
+| `sensoryScore` | INTEGER? | Sensation (0–10) |
 | `fatigueScore` | INTEGER? | Fatigue (0–10) |
-| `painScore` | INTEGER? | Schmerz (0–10) |
-| `balanceScore` | INTEGER? | Balance/Koordination (0–10) |
-| `notes` | TEXT? | Freitext |
+| `painScore` | INTEGER? | Pain (0–10) |
+| `balanceScore` | INTEGER? | Balance/coordination (0–10) |
+| `notes` | TEXT? | Free text |
 
-## Migrationen
+## A note on stored text and language
 
-Explizite `onUpgrade`-Schritte führen bis Version **14** und gewährleisten Rückwärtskompatibilität.
-Jeder Schritt fügt nur das hinzu, was die neue Version benötigt (neue Spalten, neue Tabellen,
-Datenmigration). Für Version **8** existiert kein Schritt — die Nummer wurde übersprungen.
+Some columns hold text the user sees but that is written by the app, not typed: `unit` is seeded from a translated default (`Bottle` / `Flasche` / `Flacon` …) when an item is created, and `notes` can receive an appended marker such as `[Skipped via notification]`. These are stored verbatim in whatever language was active at the time and are **not** re-translated when the language changes — they are user data, not UI strings.
 
-Die letzte Migration (13 → 14) ist die einzige mit echter Datenmigration: Sie legt
-`pending_orders.confirmed_at` an, übernimmt für bereits bestätigte Bestellungen das
-`delivery_date`, und schätzt für Bestellungen ohne Lieferdatum das späteste Lieferdatum
-einer älteren Bestellung als untere Schranke.
+## Migrations
 
-Wann immer das Schema geändert wird:
+Explicit `onUpgrade` steps run up to version **14** and preserve backwards compatibility.
+Each step adds only what the new version needs (new columns, new tables, data migration).
+There is no step for version **8** — the number was skipped.
 
-1. `schemaVersion`-Getter in `AppDatabase` erhöhen (neue Tabellen zusätzlich in `@DriftDatabase(tables: [...])` eintragen)
-2. `onUpgrade`-Schritt hinzufügen
-3. Code neu generieren:
+The last migration (13 → 14) is the only one with real data migration: it creates
+`pending_orders.confirmed_at`, copies `delivery_date` for orders that were already confirmed,
+and for orders with no delivery date estimates the latest delivery date of an older order as a
+lower bound.
+
+Whenever the schema changes:
+
+1. Increase the `schemaVersion` getter in `AppDatabase` (and add any new tables to `@DriftDatabase(tables: [...])`)
+2. Add an `onUpgrade` step
+3. Regenerate the code:
    ```bash
    dart run build_runner build --delete-conflicting-outputs
    ```

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../../core/database/database.dart';
 import '../providers/inventory_provider.dart';
 import 'medication_details_page.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class DiscontinuedMedicationsPage extends StatelessWidget {
   const DiscontinuedMedicationsPage({super.key});
@@ -14,7 +14,7 @@ class DiscontinuedMedicationsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Abgesetzte Medikamente'),
+        title: Text(context.l10n.discontinuedTitle),
       ),
       body: StreamBuilder<List<Medication>>(
         stream: inventoryProvider.discontinuedMedicationsStream,
@@ -22,8 +22,8 @@ class DiscontinuedMedicationsPage extends StatelessWidget {
           final meds = snapshot.data ?? [];
           
           if (meds.isEmpty) {
-            return const Center(
-              child: Text('Keine abgesetzten Medikamente vorhanden.', style: TextStyle(color: Colors.grey)),
+            return Center(
+              child: Text(context.l10n.discontinuedEmpty, style: const TextStyle(color: Colors.grey)),
             );
           }
 
@@ -47,7 +47,7 @@ class DiscontinuedMedicationsPage extends StatelessWidget {
                   ),
                   title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                    'Abgesetzt am: ${DateFormat('dd.MM.yyyy').format(med.discontinuedAt ?? DateTime.now())}',
+                    context.l10n.discontinuedOn(AppDateFormat.date(context, med.discontinuedAt ?? DateTime.now())),
                     style: const TextStyle(fontSize: 12),
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),

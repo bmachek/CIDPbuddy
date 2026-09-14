@@ -10,11 +10,12 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/constants/build_config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'reliability_check_page.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_links.dart';
-import '../../../core/constants/disclaimer.dart';
 import '../../../core/database/database.dart';
+import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/l10n/locale_provider.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -34,22 +35,33 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Einstellungen')),
+      appBar: AppBar(title: Text(l10n.navSettings)),
       body: ListView(
         children: [
-          _buildSectionHeader('Erscheinungsbild'),
+          _buildSectionHeader(l10n.settingsSectionAppearance),
           SwitchListTile(
-            title: const Text('Dunkles Design'),
-            subtitle: const Text('Wechsle zwischen hellem und dunklem Modus'),
+            title: Text(l10n.settingsDarkMode),
+            subtitle: Text(l10n.settingsDarkModeHint),
             value: themeProvider.themeMode == ThemeMode.dark,
             onChanged: (val) => themeProvider.toggleTheme(),
             secondary: const Icon(Icons.brightness_4),
           ),
+          ListTile(
+            leading: const Icon(Icons.translate_rounded),
+            title: Text(l10n.settingsLanguage),
+            subtitle: Text(localeProvider.followsSystem
+                ? l10n.settingsLanguageSystem
+                : _languageName(l10n, localeProvider.locale!.languageCode)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showLanguagePicker(context, localeProvider),
+          ),
           const Divider(),
-          _buildSectionHeader('Automatisches Backup'),
+          _buildSectionHeader(l10n.settingsSectionAutoBackup),
           FutureBuilder<BackupStatus>(
             future: backupService.getStatus(),
             builder: (context, snapshot) {
@@ -61,10 +73,8 @@ class _SettingsPageState extends State<SettingsPage> {
               return Column(
                 children: [
                   SwitchListTile(
-                    title: const Text('Automatisches Backup aktivieren'),
-                    subtitle: const Text(
-                      'Sichert deine Daten regelmäßig in den gewählten Ordner',
-                    ),
+                    title: Text(l10n.settingsEnableAutoBackup),
+                    subtitle: Text(l10n.settingsEnableAutoBackupHint),
                     value: status?.enabled ?? false,
                     onChanged: (val) async {
                       await backupService.setEnabled(val);
@@ -90,19 +100,19 @@ class _SettingsPageState extends State<SettingsPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Backup nicht möglich',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                Text(
+                                  l10n.settingsBackupNotPossible,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  status?.lastError ?? 'Unbekannter Fehler',
+                                  status?.lastError ?? l10n.settingsUnknownError,
                                   style: const TextStyle(fontSize: 12),
                                 ),
                                 const SizedBox(height: 8),
                                 FilledButton.tonal(
                                   onPressed: _pickDestination,
-                                  child: const Text('Ordner erneut wählen'),
+                                  child: Text(l10n.settingsPickFolderAgain),
                                 ),
                               ],
                             ),
@@ -123,24 +133,22 @@ class _SettingsPageState extends State<SettingsPage> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                          SizedBox(width: 12),
+                          const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Backups liegen in der App',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  l10n.settingsBackupsInsideAppTitle,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
-                                  'Sie werden mit der App gelöscht. Exportiere '
-                                  'regelmäßig eine Kopie nach iCloud Drive – über '
-                                  '"Backup exportieren" oder die Dateien-App.',
-                                  style: TextStyle(fontSize: 12),
+                                  l10n.settingsBackupsInsideAppBody,
+                                  style: const TextStyle(fontSize: 12),
                                 ),
                               ],
                             ),
@@ -152,9 +160,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: Icon(dest != null
                         ? Icons.folder
                         : Icons.folder_open_outlined),
-                    title: const Text('Backup-Ziel'),
+                    title: Text(l10n.settingsBackupDestination),
                     subtitle: Text(
-                      dest == null ? 'Ziel wählen...' : dest.displayLabel,
+                      dest == null ? l10n.settingsPickDestination : dest.displayLabel(l10n),
                     ),
                     trailing: dest != null
                         ? const Icon(Icons.check_circle,
@@ -167,7 +175,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (dest != null)
                     ListTile(
                       leading: const Icon(Icons.play_circle_outline),
-                      title: const Text('Backup jetzt ausführen'),
+                      title: Text(l10n.settingsRunBackupNow),
                       onTap: () async {
                         final result =
                             await backupService.runBackup(manual: true);
@@ -175,8 +183,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(result.success
-                                ? 'Backup erfolgreich!'
-                                : 'Backup fehlgeschlagen: ${result.error}'),
+                                ? l10n.settingsBackupSucceeded
+                                : l10n.settingsBackupFailed('${result.error}')),
                             backgroundColor:
                                 result.success ? Colors.green : Colors.red,
                           ),
@@ -187,9 +195,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (dest != null)
                     ListTile(
                       leading: const Icon(Icons.ios_share),
-                      title: const Text('Backup exportieren'),
-                      subtitle: const Text(
-                          'Letzte Sicherung z. B. in Dateien oder iCloud Drive speichern'),
+                      title: Text(l10n.settingsExportBackup),
+                      subtitle: Text(l10n.settingsExportBackupHint),
                       onTap: () async {
                         final box = context.findRenderObject() as RenderBox?;
                         final origin = box != null
@@ -200,9 +207,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         );
                         if (!context.mounted || ok) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Kein Backup zum Exportieren gefunden. Führe zuerst ein Backup aus.'),
+                          SnackBar(
+                            content: Text(l10n.settingsNoBackupToExport),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -211,10 +217,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (status?.lastSuccess != null)
                     ListTile(
                       leading: const Icon(Icons.history),
-                      title: const Text('Zuletzt erfolgreich'),
+                      title: Text(l10n.settingsLastSuccess),
                       subtitle: Text(
-                        DateFormat('dd.MM.yyyy HH:mm')
-                            .format(status!.lastSuccess!),
+                        AppDateFormat.dateTime(context, status!.lastSuccess!),
                       ),
                     ),
                   if (status?.lastAttempt != null &&
@@ -223,17 +228,15 @@ class _SettingsPageState extends State<SettingsPage> {
                               .isAfter(status.lastSuccess!)))
                     ListTile(
                       leading: const Icon(Icons.access_time),
-                      title: const Text('Letzter Versuch'),
+                      title: Text(l10n.settingsLastAttempt),
                       subtitle: Text(
-                        DateFormat('dd.MM.yyyy HH:mm')
-                            .format(status!.lastAttempt!),
+                        AppDateFormat.dateTime(context, status!.lastAttempt!),
                       ),
                     ),
                   ListTile(
                     leading: const Icon(Icons.settings_backup_restore),
-                    title: const Text('Sicherung wiederherstellen'),
-                    subtitle: const Text(
-                        'Wähle ein automatisches Backup zum Einspielen'),
+                    title: Text(l10n.settingsRestoreBackup),
+                    subtitle: Text(l10n.settingsRestoreBackupHint),
                     onTap: () => _showRestoreBackupDialog(context),
                   ),
                 ],
@@ -241,7 +244,7 @@ class _SettingsPageState extends State<SettingsPage> {
             },
           ),
           const Divider(),
-          _buildSectionHeader('Erinnerungen'),
+          _buildSectionHeader(l10n.settingsSectionReminders),
           FutureBuilder<Map<String, dynamic>>(
             future: _getReminderSettings(),
             builder: (context, snapshot) {
@@ -250,8 +253,8 @@ class _SettingsPageState extends State<SettingsPage> {
               return Column(
                 children: [
                   SwitchListTile(
-                    title: const Text('Schlummer-Funktion'),
-                    subtitle: Text('Erneut erinnern alle $snoozeInterval Minuten (3×)'),
+                    title: Text(l10n.settingsSnooze),
+                    subtitle: Text(l10n.settingsSnoozeHint(snoozeInterval)),
                     value: settings['snooze'],
                     onChanged: (val) => _updateReminderSetting('snooze', val),
                     secondary: const Icon(Icons.snooze_rounded),
@@ -259,21 +262,22 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (settings['snooze'] == true)
                     ListTile(
                       leading: const Icon(Icons.timelapse_rounded),
-                      title: const Text('Schlummer-Intervall'),
-                      subtitle: Text('Aktuell: alle $snoozeInterval Minuten'),
+                      title: Text(l10n.settingsSnoozeInterval),
+                      subtitle: Text(l10n.settingsSnoozeIntervalCurrent(snoozeInterval)),
                       onTap: () => _showSnoozeIntervalPicker(context, snoozeInterval),
                     ),
                   SwitchListTile(
-                    title: const Text('Stündliche Erinnerung'),
-                    subtitle: const Text('Erinnern zur vollen Stunde'),
+                    title: Text(l10n.settingsHourlyReminder),
+                    subtitle: Text(l10n.settingsHourlyReminderHint),
                     value: settings['hourly'],
                     onChanged: (val) => _updateReminderSetting('hourly', val),
                     secondary: const Icon(Icons.hourglass_bottom_rounded),
                   ),
                   ListTile(
                     leading: const Icon(Icons.nightlight_round),
-                    title: const Text('Nachtruhe'),
-                    subtitle: Text('Keine Erinnerungen von ${settings['quiet_start']}:00 bis ${settings['quiet_end']}:00'),
+                    title: Text(l10n.settingsQuietHours),
+                    subtitle: Text(l10n.settingsQuietHoursHint(
+                        '${settings['quiet_start']}:00', '${settings['quiet_end']}:00')),
                     onTap: () => _showQuietHoursPicker(context, settings['quiet_start'], settings['quiet_end']),
                   ),
                 ],
@@ -281,11 +285,11 @@ class _SettingsPageState extends State<SettingsPage> {
             },
           ),
           const Divider(),
-          _buildSectionHeader('System & Zuverlässigkeit'),
+          _buildSectionHeader(l10n.settingsSectionSystem),
           ListTile(
             leading: const Icon(Icons.verified_user_outlined),
-            title: const Text('Zuverlässigkeits-Check'),
-            subtitle: const Text('Prüfe Berechtigungen & Akku-Einstellungen'),
+            title: Text(l10n.reliabilityTitle),
+            subtitle: Text(l10n.reliabilitySubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(
               context, 
@@ -293,14 +297,14 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           const Divider(),
-          _buildSectionHeader('Hyqvia Timer'),
+          _buildSectionHeader(l10n.settingsSectionHyqviaTimer),
           FutureBuilder<bool>(
             future: SharedPreferences.getInstance().then((p) => p.getBool('hyqvia_timer_enabled') ?? true),
             builder: (context, snapshot) {
               final enabled = snapshot.data ?? true;
               return SwitchListTile(
-                title: const Text('Timer automatisch vorschlagen'),
-                subtitle: const Text('Bei Hyqvia-Infusionen den Premedikation-Timer anbieten'),
+                title: Text(l10n.settingsSuggestTimer),
+                subtitle: Text(l10n.settingsSuggestTimerHint),
                 value: enabled,
                 onChanged: (val) async {
                   final prefs = await SharedPreferences.getInstance();
@@ -317,41 +321,41 @@ class _SettingsPageState extends State<SettingsPage> {
               final duration = snapshot.data ?? 10;
               return ListTile(
                 leading: const Icon(Icons.timer_outlined),
-                title: const Text('Premedikation-Dauer'),
-                subtitle: Text('Aktuell: $duration Minuten'),
+                title: Text(l10n.settingsPremedDuration),
+                subtitle: Text(l10n.settingsCurrentMinutes(duration)),
                 onTap: () => _showDurationPicker(context, duration),
               );
             },
           ),
           const Divider(),
-          _buildSectionHeader('Rechtliches'),
+          _buildSectionHeader(l10n.settingsSectionLegal),
           ListTile(
             leading: const Icon(Icons.warning_amber_rounded),
-            title: const Text(Disclaimer.liabilityTitle),
-            subtitle: const Text('Kein Medizinprodukt, keine medizinische Beratung'),
+            title: Text(l10n.legalLiabilityTitle),
+            subtitle: Text(l10n.legalLiabilitySubtitle),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showLegalText(
               context,
-              Disclaimer.liabilityTitle,
-              Disclaimer.liability,
+              l10n.legalLiabilityTitle,
+              l10n.legalLiabilityBody,
             ),
           ),
           ListTile(
             leading: const Icon(Icons.qr_code_2_rounded),
-            title: const Text('Chargendokumentation'),
-            subtitle: const Text('Ersetzt nicht die gesetzliche Dokumentation'),
+            title: Text(l10n.legalBatchDocumentationTitle),
+            subtitle: Text(l10n.legalBatchDocumentationSubtitle),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showLegalText(
               context,
-              'Chargendokumentation',
-              Disclaimer.batchDocumentationLong,
+              l10n.legalBatchDocumentationTitle,
+              l10n.legalBatchDocumentationLong,
             ),
           ),
           if (AppLinks.impressumUrl != null || AppLinks.datenschutzUrl != null) ...[
             if (AppLinks.impressumUrl != null)
               ListTile(
                 leading: const Icon(Icons.gavel_outlined),
-                title: const Text('Impressum'),
+                title: Text(l10n.legalImprint),
                 trailing: const Icon(Icons.open_in_new, size: 16),
                 onTap: () => launchUrl(
                   Uri.parse(AppLinks.impressumUrl!),
@@ -361,7 +365,7 @@ class _SettingsPageState extends State<SettingsPage> {
             if (AppLinks.datenschutzUrl != null)
               ListTile(
                 leading: const Icon(Icons.privacy_tip_outlined),
-                title: const Text('Datenschutzerklärung'),
+                title: Text(l10n.legalPrivacyPolicy),
                 trailing: const Icon(Icons.open_in_new, size: 16),
                 onTap: () => launchUrl(
                   Uri.parse(AppLinks.datenschutzUrl!),
@@ -370,7 +374,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
           ],
           const Divider(),
-          _buildSectionHeader('Über CIDP Buddy'),
+          _buildSectionHeader(l10n.settingsSectionAbout),
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
             builder: (context, snapshot) {
@@ -395,7 +399,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Version', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text(l10n.settingsVersion, style: const TextStyle(fontWeight: FontWeight.bold)),
                               Text('$version ($buildNumber)', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                             ],
                           ),
@@ -409,7 +413,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Build-Zeitstempel', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text(l10n.settingsBuildTimestamp, style: const TextStyle(fontWeight: FontWeight.bold)),
                               Text(BuildConfig.buildTimestamp, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                             ],
                           ),
@@ -421,10 +425,10 @@ class _SettingsPageState extends State<SettingsPage> {
               );
             },
           ),
-          const ListTile(
-            leading: Icon(Icons.security),
-            title: Text('Datenschutz'),
-            subtitle: Text('Alle Daten werden lokal auf diesem Gerät gespeichert.'),
+          ListTile(
+            leading: const Icon(Icons.security),
+            title: Text(l10n.settingsPrivacy),
+            subtitle: Text(l10n.settingsPrivacyHint),
           ),
           const SizedBox(height: 100), // Padding for bottom bar
         ],
@@ -443,7 +447,7 @@ class _SettingsPageState extends State<SettingsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Verstanden'),
+            child: Text(context.l10n.actionUnderstood),
           ),
         ],
       ),
@@ -456,6 +460,58 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, letterSpacing: 1.1),
+      ),
+    );
+  }
+
+  /// Native name of a shipped language, so the option reads the same whatever
+  /// language the app currently renders in.
+  String _languageName(AppLocalizations l10n, String code) {
+    switch (code) {
+      case 'de': return l10n.languageGerman;
+      case 'fr': return l10n.languageFrench;
+      case 'it': return l10n.languageItalian;
+      case 'es': return l10n.languageSpanish;
+      default: return l10n.languageEnglish;
+    }
+  }
+
+  void _showLanguagePicker(BuildContext context, LocaleProvider provider) {
+    final l10n = context.l10n;
+    // null = follow the device; the rest mirror AppLocalizations.supportedLocales.
+    const codes = <String?>[null, 'en', 'de', 'fr', 'it', 'es'];
+    showModalBottomSheet(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(l10n.settingsLanguage,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            ...codes.map((code) {
+              final selected = code == null
+                  ? provider.followsSystem
+                  : provider.locale?.languageCode == code;
+              return ListTile(
+                title: Text(code == null
+                    ? l10n.settingsLanguageSystem
+                    : _languageName(l10n, code)),
+                trailing: selected
+                    ? Icon(Icons.check_rounded,
+                        color: Theme.of(context).colorScheme.primary)
+                    : null,
+                onTap: () {
+                  provider.setLocale(code == null ? null : Locale(code));
+                  Navigator.pop(sheetContext);
+                },
+              );
+            }),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
@@ -475,17 +531,12 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Backup-Ziel'),
-        content: const Text(
-            'Auf iOS werden automatische Backups app-intern gespeichert, da '
-            'Apple keinen dauerhaften Schreibzugriff auf frei gewählte '
-            'Ordner erlaubt.\n\n'
-            'Nutze "Backup exportieren", um eine Sicherung z. B. in die '
-            'Dateien-App, iCloud Drive oder per AirDrop zu speichern.'),
+        title: Text(context.l10n.settingsBackupDestination),
+        content: Text(context.l10n.settingsIosStorageInfo),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(context.l10n.actionOk),
           ),
         ],
       ),
@@ -498,9 +549,8 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!mounted) return;
     if (dest == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Ziel konnte nicht verbunden werden. Bitte ein anderes wählen.'),
+        SnackBar(
+          content: Text(context.l10n.settingsDestinationConnectFailed),
           backgroundColor: Colors.red,
         ),
       );
@@ -509,8 +559,8 @@ class _SettingsPageState extends State<SettingsPage> {
       await BackupScheduler.syncFromPrefs();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Backup-Ziel verbunden.'),
+          SnackBar(
+            content: Text(context.l10n.settingsDestinationConnected),
             backgroundColor: Colors.green,
           ),
         );
@@ -541,13 +591,13 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Schlummer-Intervall',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(context.l10n.settingsSnoozeInterval,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             ...options.map((min) => ListTile(
-                  title: Text('Alle $min Minuten'),
+                  title: Text(context.l10n.settingsEveryNMinutes(min)),
                   trailing: min == current
                       ? Icon(Icons.check_rounded,
                           color: Theme.of(context).colorScheme.primary)
@@ -572,14 +622,16 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Nachtruhe einstellen', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(context.l10n.settingsQuietHoursTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildTimeColumn('Beginn', currentStart, (val) => _updateReminderSetting('start', val)),
+                _buildTimeColumn(context.l10n.settingsQuietHoursStart, currentStart,
+                    (val) => _updateReminderSetting('start', val)),
                 const Icon(Icons.arrow_forward_rounded, color: Colors.grey),
-                _buildTimeColumn('Ende', currentEnd, (val) => _updateReminderSetting('end', val)),
+                _buildTimeColumn(context.l10n.settingsQuietHoursEnd, currentEnd,
+                    (val) => _updateReminderSetting('end', val)),
               ],
             ),
             const SizedBox(height: 20),
@@ -616,7 +668,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Standard-Dauer festlegen', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(context.l10n.settingsSetDefaultDuration, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             Wrap(
               spacing: 12,
@@ -666,8 +718,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
                     child: Row(
                       children: [
-                        const Text('Backup auswählen',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text(context.l10n.settingsPickBackup,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         const Spacer(),
                         TextButton.icon(
                           onPressed: () {
@@ -675,7 +727,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             _pickAndRestoreZipDirectly();
                           },
                           icon: const Icon(Icons.folder_zip_outlined, size: 18),
-                          label: const Text('ZIP wählen'),
+                          label: Text(context.l10n.settingsPickZip),
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(ctx),
@@ -687,48 +739,47 @@ class _SettingsPageState extends State<SettingsPage> {
                   const Divider(height: 1),
                   Expanded(
                     child: FutureBuilder<_RestoreListState>(
-                      future: _loadRestoreState(),
+                      future: _loadRestoreState(context.l10n),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(child: CircularProgressIndicator());
                         }
                         if (snapshot.hasError) {
-                          return Center(child: Text('Fehler: ${snapshot.error}'));
+                          return Center(child: Text(context.l10n.genericError('${snapshot.error}')));
                         }
                         final state = snapshot.data!;
                         if (!state.hasDestination) {
                           return _restoreEmptyState(
                             icon: Icons.folder_off_outlined,
-                            title: 'Kein Backup-Ordner verbunden',
-                            body:
-                                'Wähle den Ordner aus, in dem deine Sicherungen liegen — z. B. den Cloud-Ordner aus einer früheren Installation.',
-                            buttonLabel: 'Backup-Ordner wählen',
+                            title: context.l10n.restoreNoFolderTitle,
+                            body: context.l10n.restoreNoFolderBody,
+                            buttonLabel: context.l10n.restorePickFolder,
                             onPressed: pickAndReload,
                           );
                         }
                         if (state.errorMessage != null) {
                           final pathHint = state.destinationLabel != null
-                              ? '\n\nAktueller Ordner:\n${state.destinationLabel}'
+                              ? '\n\n${context.l10n.restoreCurrentFolder('${state.destinationLabel}')}'
                               : '';
                           return _restoreEmptyState(
                             icon: Icons.lock_outline,
-                            title: 'Zugriff auf Backup-Ordner verloren',
-                            body:
-                                '${state.errorMessage}$pathHint\n\nWähle den Ordner erneut, um die Berechtigung wiederherzustellen. Deine bestehenden Sicherungen bleiben erhalten.',
-                            buttonLabel: 'Ordner erneut wählen',
+                            title: context.l10n.restoreAccessLostTitle,
+                            body: '${state.errorMessage}$pathHint\n\n'
+                                '${context.l10n.restoreAccessLostBody}',
+                            buttonLabel: context.l10n.settingsPickFolderAgain,
                             onPressed: pickAndReload,
                           );
                         }
                         if (state.backups.isEmpty) {
                           final pathHint = state.destinationLabel != null
-                              ? '\n\nAktueller Ordner:\n${state.destinationLabel}'
+                              ? '\n\n${context.l10n.restoreCurrentFolder('${state.destinationLabel}')}'
                               : '';
                           return _restoreEmptyState(
                             icon: Icons.folder_open,
-                            title: 'Keine Backups gefunden',
-                            body:
-                                'Im verbundenen Ordner liegen keine Sicherungen (Dateien mit "cidpbuddy_backup_…zip" oder "igkeeper_backup_…zip").$pathHint\n\nFalls deine Backups in einem anderen Ordner liegen, wähle ihn hier aus.',
-                            buttonLabel: 'Anderen Ordner wählen',
+                            title: context.l10n.restoreNoBackupsTitle,
+                            body: '${context.l10n.restoreNoBackupsBody}$pathHint\n\n'
+                                '${context.l10n.restoreNoBackupsHint}',
+                            buttonLabel: context.l10n.restorePickOtherFolder,
                             onPressed: pickAndReload,
                           );
                         }
@@ -741,7 +792,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               leading: const Icon(Icons.inventory_2_outlined),
                               title: Text(b.name),
                               subtitle: Text(
-                                  '${DateFormat('dd.MM.yyyy HH:mm').format(b.date)}  •  ${(b.size / 1024 / 1024).toStringAsFixed(2)} MB'),
+                                  '${AppDateFormat.dateTime(context, b.date)}  •  ${(b.size / 1024 / 1024).toStringAsFixed(2)} MB'),
                               onTap: () {
                                 Navigator.pop(ctx);
                                 _confirmZippedRestore(b);
@@ -761,12 +812,12 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<_RestoreListState> _loadRestoreState() async {
+  Future<_RestoreListState> _loadRestoreState(AppLocalizations l10n) async {
     final dest = await BackupDestination.load();
     if (dest == null) {
       return const _RestoreListState(hasDestination: false, backups: []);
     }
-    final label = dest.displayLabel;
+    final label = dest.displayLabel(l10n);
     // verifyAccess catches the common "SAF/iCloud grant revoked" case
     // (e.g. after reinstall) — without it, listBackups silently returns an
     // empty list and we'd wrongly tell the user there are no backups.
@@ -790,7 +841,7 @@ class _SettingsPageState extends State<SettingsPage> {
       return _RestoreListState(
         hasDestination: true,
         backups: const [],
-        errorMessage: 'Backups konnten nicht gelesen werden: $e',
+        errorMessage: l10n.restoreReadFailed('$e'),
         destinationLabel: label,
       );
     }
@@ -832,8 +883,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final dest = await backupService.pickLocalBackupDirectory();
     if (dest == null && sheetCtx.mounted) {
       ScaffoldMessenger.of(sheetCtx).showSnackBar(
-        const SnackBar(
-          content: Text('Ordner konnte nicht verbunden werden.'),
+        SnackBar(
+          content: Text(sheetCtx.l10n.restoreFolderConnectFailed),
           backgroundColor: Colors.red,
         ),
       );
@@ -854,25 +905,25 @@ class _SettingsPageState extends State<SettingsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sicherung einspielen?'),
+        title: Text(context.l10n.restoreConfirmTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Möchtest du die Datei "$name" wirklich wiederherstellen?'),
+            Text(context.l10n.restoreConfirmFile(name)),
             const SizedBox(height: 16),
-            const Text(
-              'ACHTUNG: Alle aktuellen Daten werden unwiderruflich überschrieben!',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            Text(
+              context.l10n.restoreOverwriteWarning,
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.actionCancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Wiederherstellen'),
+            child: Text(context.l10n.actionRestore),
           ),
         ],
       ),
@@ -895,9 +946,9 @@ class _SettingsPageState extends State<SettingsPage> {
         await _restartAfterRestore(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Fehler bei der Wiederherstellung.'),
-            duration: Duration(seconds: 10),
+          SnackBar(
+            content: Text(context.l10n.restoreFailed),
+            duration: const Duration(seconds: 10),
             backgroundColor: Colors.red,
           ),
         );
@@ -909,25 +960,26 @@ class _SettingsPageState extends State<SettingsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sicherung einspielen?'),
+        title: Text(context.l10n.restoreConfirmTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Möchtest du das Backup vom ${DateFormat('dd.MM.yyyy HH:mm').format(backup.date)} wirklich wiederherstellen?'),
+            Text(context.l10n.restoreConfirmDated(
+                AppDateFormat.dateTime(context, backup.date))),
             const SizedBox(height: 16),
-            const Text(
-              'ACHTUNG: Alle aktuellen Daten werden unwiderruflich überschrieben!',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            Text(
+              context.l10n.restoreOverwriteWarning,
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.actionCancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(context, true), 
-            child: const Text('Wiederherstellen'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(context.l10n.actionRestore),
           ),
         ],
       ),
@@ -954,8 +1006,8 @@ class _SettingsPageState extends State<SettingsPage> {
           await _restartAfterRestore(context);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Fehler bei der Wiederherstellung.'),
+            SnackBar(
+              content: Text(context.l10n.restoreFailed),
               backgroundColor: Colors.red,
             )
           );
@@ -970,9 +1022,9 @@ class _SettingsPageState extends State<SettingsPage> {
   /// asking the user to restart manually.
   Future<void> _restartAfterRestore(BuildContext context) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Daten erfolgreich wiederhergestellt. App wird neu gestartet…'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(context.l10n.restoreSucceeded),
+        duration: const Duration(seconds: 2),
         backgroundColor: Colors.green,
       ),
     );
@@ -983,9 +1035,9 @@ class _SettingsPageState extends State<SettingsPage> {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bitte starte die App manuell neu.'),
-            duration: Duration(seconds: 10),
+          SnackBar(
+            content: Text(context.l10n.restoreRestartManually),
+            duration: const Duration(seconds: 10),
             backgroundColor: Colors.green,
           ),
         );

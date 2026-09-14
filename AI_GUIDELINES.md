@@ -17,4 +17,5 @@ To ensure high-quality code and avoid common Flutter/Dart pitfalls, the followin
 
 ## 3. UI/UX
 - Use the established design system (premium look, specific color palettes).
-- Maintain German localization for all UI strings.
+- Never hard-code user-visible text. Add the key to `lib/l10n/app_en.arb` with a `description`, translate it in `app_de.arb`, `app_fr.arb`, `app_it.arb` and `app_es.arb`, then read it via `context.l10n.<key>`. Run `flutter gen-l10n` afterwards.
+- Never hard-code date or number formats. Use the `AppDateFormat` helpers so they follow the active locale.

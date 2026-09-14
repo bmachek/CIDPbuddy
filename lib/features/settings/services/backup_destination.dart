@@ -6,6 +6,9 @@ import 'package:saf_util/saf_util.dart';
 import 'package:saf_stream/saf_stream.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/l10n/locale_provider.dart';
+import '../../../l10n/generated/app_localizations.dart';
+
 /// A backup file located in some destination (local dir or SAF tree).
 class BackupFile {
   final String name;
@@ -33,7 +36,14 @@ abstract class BackupDestination {
   static const _kKind = 'backup_destination_kind';
 
   DestinationKind get kind;
-  String get displayLabel;
+
+  /// Human-readable name of this destination.
+  ///
+  /// Takes the translations explicitly rather than resolving them itself: the
+  /// caller is always a widget that already has them, and a getter could not
+  /// await the asynchronous lookup the service methods below use.
+  String displayLabel(AppLocalizations l10n);
+
   String get pathOrUri;
 
   /// What [persist] writes to prefs. Defaults to [pathOrUri]; destinations
@@ -45,7 +55,7 @@ abstract class BackupDestination {
   /// the app sandbox, which iOS erases together with the app.
   bool get isDurable => true;
 
-  /// Roundtrip a tiny token file. Returns null on success, or a German
+  /// Roundtrip a tiny token file. Returns null on success, or a translated
   /// error string suitable for user display on failure.
   Future<String?> verifyAccess();
 
@@ -170,10 +180,11 @@ class LocalDestination extends BackupDestination {
   String get pathOrUri => dirPath;
 
   @override
-  String get displayLabel => dirPath;
+  String displayLabel(AppLocalizations l10n) => dirPath;
 
   @override
   Future<String?> verifyAccess() async {
+    final l10n = await LocaleProvider.l10nForBackground();
     final dir = Directory(dirPath);
     // Do NOT silently create the directory here. The restore flow re-uses
     // verifyAccess, and creating an empty dir would mask "I lost access to
@@ -182,24 +193,24 @@ class LocalDestination extends BackupDestination {
     try {
       exists = await dir.exists();
     } catch (e) {
-      return 'Ordner nicht lesbar: $dirPath\n($e)';
+      return l10n.backupFolderUnreadable(dirPath, '$e');
     }
     if (!exists) {
-      return 'Ordner existiert nicht (mehr): $dirPath';
+      return l10n.backupFolderMissing(dirPath);
     }
     // Probe that we can actually read the directory contents — the sandbox
     // case where stat() succeeds but readdir() is denied is the trickiest.
     try {
       await dir.list().take(1).toList();
     } catch (e) {
-      return 'Ordner nicht lesbar: $dirPath\n($e)';
+      return l10n.backupFolderUnreadable(dirPath, '$e');
     }
     try {
       final probe = File(p.join(dirPath, '.cidp_health'));
       await probe.writeAsString('ok', flush: true);
       await probe.delete();
     } catch (e) {
-      return 'Schreibzugriff verweigert: $dirPath\n($e)';
+      return l10n.backupFolderNotWritable(dirPath, '$e');
     }
     return null;
   }
@@ -217,7 +228,7 @@ class LocalDestination extends BackupDestination {
   Future<List<BackupFile>> listBackups() async {
     final dir = Directory(dirPath);
     if (!await dir.exists()) {
-      throw FileSystemException('Ordner existiert nicht', dirPath);
+      throw FileSystemException('Backup folder does not exist', dirPath);
     }
     final entries = await dir.list().toList();
     final files = entries.whereType<File>().where((f) {
@@ -241,20 +252,21 @@ class LocalDestination extends BackupDestination {
   /// matches — surfaces what is actually in the folder so the user can tell
   /// "wrong folder" apart from "lost permission" apart from "weird filename".
   Future<String> describeContents() async {
+    final l10n = await LocaleProvider.l10nForBackground();
     final dir = Directory(dirPath);
-    if (!await dir.exists()) return 'Ordner existiert nicht.';
+    if (!await dir.exists()) return l10n.backupFolderMissingShort;
     try {
       final entries = await dir.list().toList();
-      if (entries.isEmpty) return 'Ordner ist leer.';
+      if (entries.isEmpty) return l10n.backupFolderEmpty;
       final names = entries
           .map((e) => p.basename(e.path))
           .where((n) => !n.startsWith('.'))
           .take(8)
           .toList();
-      return 'Gefunden (${entries.length}): ${names.join(", ")}'
-          '${entries.length > names.length ? ' …' : ''}';
+      return l10n.backupFolderContents(entries.length,
+          names.join(', ') + (entries.length > names.length ? ' …' : ''));
     } catch (e) {
-      return 'Ordner konnte nicht gelistet werden: $e';
+      return l10n.backupFolderListFailed('$e');
     }
   }
 
@@ -286,7 +298,7 @@ class AppInternalDestination extends LocalDestination {
   String get persistedPathOrUri => BackupDestination.appInternalMarker;
 
   @override
-  String get displayLabel => 'App-Ordner (Dateien-App → CIDP Buddy → Backups)';
+  String displayLabel(AppLocalizations l10n) => l10n.backupDestinationAppFolder;
 
   @override
   bool get isDurable => false;
@@ -305,8 +317,8 @@ class SafDestination extends BackupDestination {
   String get pathOrUri => treeUri;
 
   @override
-  String get displayLabel =>
-      displayName != null ? '$displayName (SAF)' : 'Cloud-/SAF-Ordner';
+  String displayLabel(AppLocalizations l10n) =>
+      displayName != null ? '$displayName (SAF)' : l10n.backupDestinationSafFolder;
 
   @override
   Future<void> persist() async {
@@ -343,7 +355,7 @@ class SafDestination extends BackupDestination {
       } catch (_) {}
       return null;
     } catch (e) {
-      return 'Berechtigung für Cloud-Ordner verloren. Bitte Ordner erneut wählen.';
+      return (await LocaleProvider.l10nForBackground()).backupSafPermissionLost;
     }
   }
 
@@ -393,18 +405,19 @@ class SafDestination extends BackupDestination {
   /// Diagnostic: shows what's actually in the SAF tree so the user can
   /// distinguish "wrong folder selected" from "files have unexpected names".
   Future<String> describeContents() async {
+    final l10n = await LocaleProvider.l10nForBackground();
     try {
       final util = SafUtil();
       final entries = await util.list(treeUri);
-      if (entries.isEmpty) return 'SAF-Ordner ist leer.';
+      if (entries.isEmpty) return l10n.backupSafFolderEmpty;
       final names = entries
           .map((f) => f.isDir ? '[${f.name}/]' : f.name)
           .take(8)
           .toList();
-      return 'Gefunden (${entries.length}): ${names.join(", ")}'
-          '${entries.length > names.length ? ' …' : ''}';
+      return l10n.backupFolderContents(entries.length,
+          names.join(', ') + (entries.length > names.length ? ' …' : ''));
     } catch (e) {
-      return 'SAF-Ordner konnte nicht gelistet werden: $e';
+      return l10n.backupSafListFailed('$e');
     }
   }
 }

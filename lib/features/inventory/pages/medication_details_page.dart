@@ -3,10 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:cidpbuddy/features/reminders/services/notification_service.dart';
 import '../providers/inventory_provider.dart';
 import 'package:cidpbuddy/core/database/database.dart';
-import 'package:cidpbuddy/core/constants/disclaimer.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:cidpbuddy/features/diary/pages/add_schedule_page.dart';
-import 'package:intl/intl.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class MedicationDetailsPage extends StatelessWidget {
   final int medicationId;
@@ -57,18 +56,18 @@ class MedicationDetailsPage extends StatelessWidget {
                     IconButton(
                       icon: Icon(Icons.heart_broken_outlined, color: Theme.of(context).colorScheme.primary),
                       onPressed: () => _confirmDiscontinueMedication(context, invProvider, medication),
-                      tooltip: 'Absetzen',
+                      tooltip: context.l10n.medDetailsDiscontinue,
                     )
                   else
                     IconButton(
                       icon: Icon(Icons.add_moderator_outlined, color: Theme.of(context).colorScheme.tertiary),
                       onPressed: () => invProvider.reenrollMedication(medication.id),
-                      tooltip: 'Wieder verordnen',
+                      tooltip: context.l10n.medDetailsReenroll,
                     ),
                   IconButton(
                     icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error),
                     onPressed: () => _confirmDeleteMedication(context, invProvider, medication),
-                    tooltip: 'Vollständig löschen',
+                    tooltip: context.l10n.medDetailsDeleteCompletely,
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -83,7 +82,8 @@ class MedicationDetailsPage extends StatelessWidget {
                         Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 16),
                         const SizedBox(width: 8),
                         Text(
-                          'Dieses Medikament ist abgesetzt seit ${DateFormat('dd.MM.yyyy').format(medication.discontinuedAt!)}',
+                          context.l10n.medDetailsDiscontinuedSince(
+                              AppDateFormat.date(context, medication.discontinuedAt!)),
                           style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                       ],
@@ -94,13 +94,13 @@ class MedicationDetailsPage extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _buildSectionHeader(context, 'Lagerstand & Warnungen'),
+                _buildSectionHeader(context, context.l10n.medDetailsSectionStock),
                 const SizedBox(height: 12),
                 _StockManagementCard(medication: medication),
                 const SizedBox(height: 32),
-                _buildSectionHeader(context, 'Verknüpftes Verbrauchsmaterial'),
+                _buildSectionHeader(context, context.l10n.medDetailsSectionSupplies),
                 Text(
-                  'Dieses Verbrauchsmaterial wird bei jeder Einnahme automatisch vom Bestand abgezogen.',
+                  context.l10n.medDetailsSuppliesHint,
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
@@ -112,7 +112,7 @@ class MedicationDetailsPage extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Center(
-                          child: Text('Noch kein Verbrauchsmaterial verknüpft', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          child: Text(context.l10n.medDetailsNoSuppliesLinked, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                         ),
                       );
                     }
@@ -129,7 +129,7 @@ class MedicationDetailsPage extends StatelessWidget {
                       child: OutlinedButton.icon(
                         onPressed: () => _showLinkAccessoryDialog(context, db, medication),
                         icon: const Icon(Icons.link_rounded),
-                        label: const Text('Verknüpfen'),
+                        label: Text(context.l10n.medDetailsLink),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -141,7 +141,7 @@ class MedicationDetailsPage extends StatelessWidget {
                       child: ElevatedButton.icon(
                         onPressed: () => _showCreateAccessoryDialog(context, db, medication),
                         icon: const Icon(Icons.add_rounded),
-                        label: const Text('Neu & Verknüpfen'),
+                        label: Text(context.l10n.medDetailsCreateAndLink),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -156,17 +156,17 @@ class MedicationDetailsPage extends StatelessWidget {
                 const SizedBox(height: 48),
                 const SizedBox(height: 48),
                 if (medication.type != MedicationType.pill) ...[
-                  _buildSectionHeader(context, 'Einnahme-Workflow'),
+                  _buildSectionHeader(context, context.l10n.medDetailsSectionWorkflow),
                   Text(
-                    'Konfiguriere hier, welche Felder beim Erfassen einer Einnahme angezeigt werden.',
+                    context.l10n.medDetailsWorkflowHint,
                     style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                   ),
                   _buildWorkflowConfig(context, db, invProvider, medication),
                   const SizedBox(height: 32),
                 ],
-                _buildSectionHeader(context, 'Zeitpläne'),
+                _buildSectionHeader(context, context.l10n.planningTabSchedules),
                 Text(
-                  'Lege hier fest, in welchem Rhythmus du dieses Medikament einnimmst.',
+                  context.l10n.medDetailsSchedulesHint,
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
@@ -178,7 +178,7 @@ class MedicationDetailsPage extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Center(
-                          child: Text('Keine Zeitpläne aktiv', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          child: Text(context.l10n.planningNoSchedules, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                         ),
                       );
                     }
@@ -194,7 +194,7 @@ class MedicationDetailsPage extends StatelessWidget {
                     MaterialPageRoute(builder: (_) => AddSchedulePage(preselectedMedicationId: medication.id)),
                   ),
                   icon: const Icon(Icons.calendar_month_rounded),
-                  label: const Text('Zeitplan erstellen'),
+                  label: Text(context.l10n.medDetailsCreateSchedule),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -204,20 +204,20 @@ class MedicationDetailsPage extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: () => _showAddAppointmentDialog(context, db, medication),
                   icon: const Icon(Icons.event_rounded),
-                  label: const Text('Einmaligen Termin planen'),
+                  label: Text(context.l10n.medDetailsPlanOneOff),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
                 const SizedBox(height: 48),
-                _buildSectionHeader(context, 'System-Aktionen'),
+                _buildSectionHeader(context, context.l10n.medDetailsSectionSystemActions),
                 const SizedBox(height: 12),
                 if (medication.discontinuedAt == null)
                   ElevatedButton.icon(
                     onPressed: () => _confirmDiscontinueMedication(context, invProvider, medication),
                     icon: const Icon(Icons.heart_broken_outlined),
-                    label: const Text('Medikament absetzen'),
+                    label: Text(context.l10n.medDetailsDiscontinueMedication),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.surface,
                       foregroundColor: Theme.of(context).colorScheme.primary,
@@ -230,7 +230,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: () => invProvider.reenrollMedication(medication.id),
                     icon: const Icon(Icons.add_moderator_outlined),
-                    label: const Text('Wieder verordnen'),
+                    label: Text(context.l10n.medDetailsReenroll),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.surface,
                       foregroundColor: Theme.of(context).colorScheme.tertiary,
@@ -243,7 +243,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: () => _confirmDeleteMedication(context, invProvider, medication),
                   icon: const Icon(Icons.delete_outline_rounded),
-                  label: const Text('Vollständig aus Datenbank löschen'),
+                  label: Text(context.l10n.medDetailsDeleteFromDatabase),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Theme.of(context).colorScheme.error,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -281,7 +281,7 @@ class MedicationDetailsPage extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(vertical: 4),
               leading: Icon(Icons.build_circle_rounded, color: Theme.of(context).colorScheme.tertiary),
               title: Text(acc.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('Bedarf: ${link.defaultQuantity.toStringAsFixed(0)} ${acc.unit}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              subtitle: Text(context.l10n.medDetailsRequirement(link.defaultQuantity.toStringAsFixed(0), acc.unit), style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -289,7 +289,7 @@ class MedicationDetailsPage extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: Tooltip(
-                        message: 'Muss mitbestellt werden',
+                        message: context.l10n.medDetailsMustBeOrdered,
                         child: Icon(Icons.star_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
                       ),
                     ),
@@ -322,36 +322,36 @@ class MedicationDetailsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Verbrauchsmaterial bearbeiten'),
+        title: Text(context.l10n.accessoryEditTitle),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldName, border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: unitController,
-              decoration: const InputDecoration(labelText: 'Einheit', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldUnit, border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: stockController,
-              decoration: const InputDecoration(labelText: 'Momentaner Lagerstand', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldCurrentStock, border: const OutlineInputBorder()),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: pkgSizeController,
-              decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldPackageSize, border: const OutlineInputBorder()),
               keyboardType: TextInputType.number,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           ElevatedButton(
             onPressed: () async {
               await db.updateAccessory(acc.copyWith(
@@ -362,7 +362,7 @@ class MedicationDetailsPage extends StatelessWidget {
               ));
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Speichern'),
+            child: Text(context.l10n.actionSave),
           ),
         ],
       ),
@@ -376,7 +376,7 @@ class MedicationDetailsPage extends StatelessWidget {
     if (!context.mounted) return;
 
     if (allAcc.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Zuerst Verbrauchsmaterial anlegen!')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.medDetailsNeedSuppliesFirst)));
       return;
     }
 
@@ -388,7 +388,7 @@ class MedicationDetailsPage extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Verbrauchsmaterial verknüpfen'),
+          title: Text(context.l10n.medDetailsLinkSupplyTitle),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: Scrollbar(
             thumbVisibility: true,
@@ -400,18 +400,18 @@ class MedicationDetailsPage extends StatelessWidget {
                   DropdownButtonFormField<Accessory>(
                     items: allAcc.map((a) => DropdownMenuItem(value: a, child: Text(a.name))).toList(),
                     onChanged: (val) => setDialogState(() => selected = val),
-                    decoration: const InputDecoration(labelText: 'Verbrauchsmaterial wählen', border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: context.l10n.medDetailsPickSupply, border: const OutlineInputBorder()),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: qtyController,
-                    decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: context.l10n.fieldPerInfusionRequirement, border: const OutlineInputBorder()),
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile(
-                    title: const Text('Immer mitbestellen', style: TextStyle(fontSize: 14)),
-                    subtitle: const Text('Wird im Einkaufsassistent hervorgehoben', style: TextStyle(fontSize: 12)),
+                    title: Text(context.l10n.medDetailsAlwaysOrder, style: const TextStyle(fontSize: 14)),
+                    subtitle: Text(context.l10n.medDetailsAlwaysOrderHint, style: const TextStyle(fontSize: 12)),
                     value: isMandatory,
                     onChanged: (val) => setDialogState(() => isMandatory = val),
                     contentPadding: EdgeInsets.zero,
@@ -421,7 +421,7 @@ class MedicationDetailsPage extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
             ElevatedButton(
               onPressed: () async {
                 if (selected != null) {
@@ -434,7 +434,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   if (context.mounted) Navigator.pop(context);
                 }
               },
-              child: const Text('Verknüpfen'),
+              child: Text(context.l10n.medDetailsLink),
             ),
           ],
         ),
@@ -448,7 +448,7 @@ class MedicationDetailsPage extends StatelessWidget {
     if (!context.mounted) return;
 
     final nameController = TextEditingController();
-    final unitController = TextEditingController(text: 'Stk');
+    final unitController = TextEditingController(text: context.l10n.unitPieces);
     final stockController = TextEditingController(text: '0');
     final qtyController = TextEditingController(text: '1');
     final pkgSizeController = TextEditingController(text: '1.0');
@@ -458,7 +458,7 @@ class MedicationDetailsPage extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Neues Verbrauchsmaterial anlegen'),
+          title: Text(context.l10n.medDetailsCreateSupplyTitle),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: Scrollbar(
             thumbVisibility: true,
@@ -469,36 +469,36 @@ class MedicationDetailsPage extends StatelessWidget {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name des Verbrauchsmaterials', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.fieldSupplyName, border: const OutlineInputBorder()),
                   autofocus: true,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: unitController,
-                  decoration: const InputDecoration(labelText: 'Einheit (z.B. Stk, Set)', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.fieldUnitWithExample, border: const OutlineInputBorder()),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: stockController,
-                  decoration: const InputDecoration(labelText: 'Aktueller Lagerstand', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.fieldCurrentStock, border: const OutlineInputBorder()),
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: qtyController,
-                  decoration: const InputDecoration(labelText: 'Bedarf pro Infusion', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.fieldPerInfusionRequirement, border: const OutlineInputBorder()),
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: pkgSizeController,
-                  decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.fieldPackageSize, border: const OutlineInputBorder()),
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 12),
                 SwitchListTile(
-                  title: const Text('Immer mitbestellen', style: TextStyle(fontSize: 14)),
-                  subtitle: const Text('Wird im Einkaufsassistent hervorgehoben', style: TextStyle(fontSize: 12)),
+                  title: Text(context.l10n.medDetailsAlwaysOrder, style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(context.l10n.medDetailsAlwaysOrderHint, style: const TextStyle(fontSize: 12)),
                   value: isMandatory,
                   onChanged: (val) => setDialogState(() => isMandatory = val),
                   contentPadding: EdgeInsets.zero,
@@ -508,7 +508,7 @@ class MedicationDetailsPage extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isNotEmpty) {
@@ -530,7 +530,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   if (context.mounted) Navigator.pop(context);
                 }
               },
-              child: const Text('Anlegen'),
+              child: Text(context.l10n.actionCreate),
             ),
           ],
         ),
@@ -550,40 +550,40 @@ class MedicationDetailsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Medikament bearbeiten'),
+        title: Text(context.l10n.medDetailsEditMedication),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldName, border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: dosageController,
-              decoration: const InputDecoration(labelText: 'Dosis / Stärke (z.B. 10g)', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldStrengthWithExample, border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: pznController,
-              decoration: const InputDecoration(labelText: 'PZN', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldPzn, border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: unitController,
-              decoration: const InputDecoration(labelText: 'Einheit (z.B. Flasche)', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldUnitWithBottleExample, border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: pkgSizeController,
-              decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: context.l10n.fieldPackageSize, border: const OutlineInputBorder()),
               keyboardType: TextInputType.number,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           ElevatedButton(
             onPressed: () async {
               await db.updateMedication(med.copyWith(
@@ -595,7 +595,7 @@ class MedicationDetailsPage extends StatelessWidget {
               ));
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Speichern'),
+            child: Text(context.l10n.actionSave),
           ),
         ],
       ),
@@ -606,10 +606,10 @@ class MedicationDetailsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Medikament löschen?'),
-        content: Text('Möchtest du "${med.name}" wirklich vollständig aus der App löschen? Dies kann nicht rückgängig gemacht werden und sollte nur bei Fehlern erfolgen. Für Ende einer Therapie bitte "Absetzen" nutzen.'),
+        title: Text(context.l10n.medDetailsDeleteTitle),
+        content: Text(context.l10n.medDetailsDeleteBody(med.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           TextButton(
             onPressed: () async {
               await provider.deleteMedication(med);
@@ -618,7 +618,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 Navigator.pop(context); // Go back to inventory
               }
             },
-            child: Text('Löschen', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            child: Text(context.l10n.actionDelete, style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),
@@ -629,10 +629,10 @@ class MedicationDetailsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Medikament absetzen?'),
-        content: Text('Möchtest du "${med.name}" absetzen? Es wird aus der aktiven Liste entfernt, bleibt aber in der Historie erhalten. Zukünftige Termine werden gelöscht.'),
+        title: Text(context.l10n.medDetailsDiscontinueTitle),
+        content: Text(context.l10n.medDetailsDiscontinueBody(med.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           ElevatedButton(
             onPressed: () async {
               await provider.discontinueMedication(med.id);
@@ -642,7 +642,7 @@ class MedicationDetailsPage extends StatelessWidget {
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Colors.white),
-            child: const Text('Absetzen'),
+            child: Text(context.l10n.medDetailsDiscontinue),
           ),
         ],
       ),
@@ -658,7 +658,7 @@ class MedicationDetailsPage extends StatelessWidget {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) => AlertDialog(
-            title: const Text('Termin planen'),
+            title: Text(context.l10n.planningScheduleAppointmentTitle),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -666,8 +666,8 @@ class MedicationDetailsPage extends StatelessWidget {
                 Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
                 ListTile(
-                  title: const Text('Datum'),
-                  subtitle: Text(DateFormat('dd.MM.yyyy').format(selectedDate)),
+                  title: Text(context.l10n.fieldDate),
+                  subtitle: Text(AppDateFormat.date(context, selectedDate)),
                   trailing: const Icon(Icons.calendar_today_rounded),
                   onTap: () async {
                     final date = await showDatePicker(
@@ -682,13 +682,13 @@ class MedicationDetailsPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 TextField(
                   controller: dosageController,
-                  decoration: InputDecoration(labelText: 'Geplante Dosis (${med.unit})', border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.fieldPlannedDoseWithUnit(med.unit), border: const OutlineInputBorder()),
                   keyboardType: TextInputType.number,
                 ),
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
               ElevatedButton(
                 onPressed: () async {
                   await db.insertPlannedInfusion(PlannedInfusionsCompanion.insert(
@@ -699,7 +699,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   ));
                   if (context.mounted) Navigator.pop(context);
                 },
-                child: const Text('Speichern'),
+                child: Text(context.l10n.actionSave),
               ),
             ],
           ),
@@ -711,10 +711,10 @@ class MedicationDetailsPage extends StatelessWidget {
   Widget _buildScheduleCard(BuildContext context, AppDatabase db, InfusionSchedule schedule, Medication med) {
     String freqLabel = '';
     switch (schedule.frequencyType) {
-      case 'daily': freqLabel = 'Täglich'; break;
-      case 'weekly': freqLabel = schedule.intervalValue == 2 ? 'Alle 2 Wochen' : 'Wöchentlich'; break;
-      case 'interval': freqLabel = 'Alle ${schedule.intervalValue} Tage'; break;
-      case 'weekdays': freqLabel = 'Wochentage'; break;
+      case 'daily': freqLabel = context.l10n.frequencyDaily; break;
+      case 'weekly': freqLabel = schedule.intervalValue == 2 ? context.l10n.frequencyBiweekly : context.l10n.frequencyWeekly; break;
+      case 'interval': freqLabel = context.l10n.frequencyEveryNDays(schedule.intervalValue ?? 0); break;
+      case 'weekdays': freqLabel = context.l10n.frequencyWeekdaysShort; break;
     }
 
     return Column(
@@ -735,9 +735,9 @@ class MedicationDetailsPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 4),
-              Text('Dosis: ${schedule.dosage} ${med.unit}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              Text(context.l10n.doseValue('${schedule.dosage}', med.unit), style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
               if (schedule.intakeTimes != null && schedule.intakeTimes!.isNotEmpty)
-                Text('Zeiten: ${schedule.intakeTimes}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                Text(context.l10n.medDetailsTimes('${schedule.intakeTimes}'), style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
             ],
           ),
           trailing: Row(
@@ -766,10 +766,10 @@ class MedicationDetailsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Zeitplan löschen?'),
-        content: const Text('Alle zukünftigen (nicht erledigten) Termine dieses Plans werden ebenfalls gelöscht.'),
+        title: Text(context.l10n.planningDeleteScheduleTitle),
+        content: Text(context.l10n.planningDeleteScheduleBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           TextButton(
             onPressed: () async {
               final futureAppts = await (db.select(db.plannedInfusions)..where((t) => t.scheduleId.equals(schedule.id) & t.isCompleted.equals(false))).get();
@@ -780,7 +780,7 @@ class MedicationDetailsPage extends StatelessWidget {
               await db.deleteSchedule(schedule.id);
               if (context.mounted) Navigator.pop(context);
             },
-            child: Text('Löschen', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            child: Text(context.l10n.actionDelete, style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),
@@ -797,8 +797,8 @@ class MedicationDetailsPage extends StatelessWidget {
       child: Column(
         children: [
           SwitchListTile(
-            title: const Text('Chargennummer erfassen'),
-            subtitle: const Text('Barcode scannen oder manuell eingeben'),
+            title: Text(context.l10n.medDetailsTrackBatch),
+            subtitle: Text(context.l10n.medDetailsTrackBatchHint),
             value: medication.trackBatchNumber,
             onChanged: (val) => provider.updateMedication(medication.copyWith(trackBatchNumber: val)),
             secondary: Icon(Icons.qr_code_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
@@ -807,7 +807,7 @@ class MedicationDetailsPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Text(
-                Disclaimer.batchDocumentationShort,
+                context.l10n.legalBatchDocumentationShort,
                 style: TextStyle(
                   fontSize: 12,
                   height: 1.35,
@@ -817,16 +817,16 @@ class MedicationDetailsPage extends StatelessWidget {
             ),
           const Divider(height: 1),
           SwitchListTile(
-            title: const Text('Körpergewicht erfassen'),
-            subtitle: const Text('Gewicht bei der Einnahme protokollieren'),
+            title: Text(context.l10n.medDetailsTrackWeight),
+            subtitle: Text(context.l10n.medDetailsTrackWeightHint),
             value: medication.trackWeight,
             onChanged: (val) => provider.updateMedication(medication.copyWith(trackWeight: val)),
             secondary: Icon(Icons.monitor_weight_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const Divider(height: 1),
           SwitchListTile(
-            title: const Text('Einnahmetimer nutzen'),
-            subtitle: const Text('Premedikation-Timer vor der Einnahme'),
+            title: Text(context.l10n.medDetailsUseTimer),
+            subtitle: Text(context.l10n.medDetailsUseTimerHint),
             value: medication.useTimer,
             onChanged: (val) => provider.updateMedication(medication.copyWith(useTimer: val)),
             secondary: Icon(Icons.av_timer_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
@@ -846,26 +846,26 @@ class MedicationDetailsPage extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text('${acc.name} konfigurieren'),
+          title: Text(context.l10n.medDetailsConfigureNamed(acc.name)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: qtyController,
-                decoration: InputDecoration(labelText: 'Bedarf pro Infusion (${acc.unit})', border: const OutlineInputBorder()),
+                decoration: InputDecoration(labelText: context.l10n.fieldPerInfusionRequirementWithUnit(acc.unit), border: const OutlineInputBorder()),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: pkgSizeController,
-                decoration: const InputDecoration(labelText: 'Packungsgröße (für Bestellung)', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: context.l10n.fieldPackageSize, border: const OutlineInputBorder()),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
               SwitchListTile(
-                title: const Text('Immer mitbestellen', style: TextStyle(fontSize: 14)),
-                subtitle: const Text('Wird im Einkaufsassistent hervorgehoben', style: TextStyle(fontSize: 12)),
+                title: Text(context.l10n.medDetailsAlwaysOrder, style: const TextStyle(fontSize: 14)),
+                subtitle: Text(context.l10n.medDetailsAlwaysOrderHint, style: const TextStyle(fontSize: 12)),
                 value: isMandatory,
                 onChanged: (val) => setState(() => isMandatory = val),
                 contentPadding: EdgeInsets.zero,
@@ -873,7 +873,7 @@ class MedicationDetailsPage extends StatelessWidget {
               const Divider(),
               TextButton.icon(
                 icon: const Icon(Icons.edit_outlined, size: 18),
-                label: const Text('Zubehör global bearbeiten (Name, Einheit)'),
+                label: Text(context.l10n.medDetailsEditSupplyGlobally),
                 onPressed: () {
                    Navigator.pop(context);
                    _showEditAccessoryDialog(context, db, acc);
@@ -882,7 +882,7 @@ class MedicationDetailsPage extends StatelessWidget {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Abbrechen')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
             ElevatedButton(
               onPressed: () async {
                 await db.updateMedicationAccessory(link.copyWith(
@@ -896,7 +896,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 }
                 if (context.mounted) Navigator.pop(context);
               },
-              child: const Text('Speichern'),
+              child: Text(context.l10n.actionSave),
             ),
           ],
         ),
@@ -961,8 +961,8 @@ class _StockManagementCardState extends State<_StockManagementCard> {
     if (mounted) {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lagerstand aktualisiert'),
+        SnackBar(
+          content: Text(context.l10n.medDetailsStockUpdated),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -980,7 +980,7 @@ class _StockManagementCardState extends State<_StockManagementCard> {
               child: TextField(
                 controller: _stockController,
                 decoration: InputDecoration(
-                  labelText: 'Aktueller Bestand',
+                  labelText: context.l10n.fieldCurrentStockShort,
                   suffixText: widget.medication.unit,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   filled: true,
@@ -998,8 +998,8 @@ class _StockManagementCardState extends State<_StockManagementCard> {
               child: TextField(
                 controller: _minStockController,
                 decoration: InputDecoration(
-                  labelText: 'Warnschwelle (in Tagen)',
-                  hintText: 'Warnung wenn Vorrat weniger als x Tage reicht',
+                  labelText: context.l10n.fieldMinStockDays,
+                  hintText: context.l10n.fieldMinStockDaysHint,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
@@ -1013,7 +1013,7 @@ class _StockManagementCardState extends State<_StockManagementCard> {
         ElevatedButton.icon(
           onPressed: _isSaving ? null : _saveChanges,
           icon: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save_rounded),
-          label: const Text('Lagerstand speichern'),
+          label: Text(context.l10n.medDetailsSaveStock),
           style: ElevatedButton.styleFrom(
             minimumSize: const Size.fromHeight(56),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

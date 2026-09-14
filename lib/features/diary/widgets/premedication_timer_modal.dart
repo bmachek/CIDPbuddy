@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class PremedicationTimerModal extends StatefulWidget {
   const PremedicationTimerModal({super.key});
@@ -122,13 +123,13 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Vormedikation Timer',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          Text(
+            context.l10n.timerTitle,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            'Pin jede Minute • $_totalSeconds Sek. Timer',
+            context.l10n.timerSubtitle(_totalSeconds),
             style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 40),
@@ -159,7 +160,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                       fontFamily: 'monospace',
                     ),
                   ),
-                  Text('verbleibend', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
+                  Text(context.l10n.timerRemainingLabel, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -199,7 +200,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Spritzen-Fortschritt', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    Text(context.l10n.timerSyringeProgress, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                     Text('$remainingMl / $totalMl ml', 
                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ],
@@ -314,7 +315,7 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Vormedikation Menge (ml)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(context.l10n.timerVolumePickerTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             Wrap(
               spacing: 12,

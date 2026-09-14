@@ -6,12 +6,11 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
-import 'package:intl/intl.dart';
 import '../providers/diary_provider.dart';
 import '../../inventory/providers/inventory_provider.dart';
 import 'package:cidpbuddy/core/database/database.dart';
-import 'package:cidpbuddy/core/constants/disclaimer.dart';
 import '../widgets/premedication_timer_modal.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class AddInfusionPage extends StatefulWidget {
   final int? initialMedicationId;
@@ -57,7 +56,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Infusion erfassen'),
+        title: Text(context.l10n.addInfusionTitle),
         centerTitle: true,
       ),
       body: Form(
@@ -66,7 +65,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
           padding: const EdgeInsets.all(24),
           children: [
             Text(
-              'Details der Infusion',
+              context.l10n.addInfusionDetailsHeading,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(height: 16),
@@ -94,7 +93,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 return DropdownButtonFormField<Medication>(
                   initialValue: _selectedMed,
                   decoration: InputDecoration(
-                    labelText: 'Medikament wählen',
+                    labelText: context.l10n.addInfusionPickMedication,
                     prefixIcon: const Icon(Icons.medication_rounded),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -105,7 +104,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   ),
                   items: items,
                   onChanged: (val) => setState(() => _selectedMed = val),
-                  validator: (val) => val == null ? 'Bitte wählen' : null,
+                  validator: (val) => val == null ? context.l10n.validationPickOne : null,
                 );
               },
             ),
@@ -128,9 +127,9 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Zeitpunkt der Infusion', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          Text(context.l10n.addInfusionWhen, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           Text(
-                            DateFormat('dd.MM.yyyy, HH:mm').format(_selectedDate),
+                            AppDateFormat.dateTime(context, _selectedDate),
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                           ),
                         ],
@@ -149,8 +148,8 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                     child: TextFormField(
                       controller: _batchController,
                       decoration: InputDecoration(
-                        labelText: 'Chargennummer / Barcode',
-                        hintText: 'Scannen oder tippen',
+                        labelText: context.l10n.fieldBatchNumber,
+                        hintText: context.l10n.fieldBatchNumberHint,
                         prefixIcon: const Icon(Icons.qr_code_rounded),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -165,13 +164,13 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   _buildActionButton(
                     onTap: _openScanner,
                     icon: Icons.qr_code_scanner_rounded,
-                    tooltip: 'Barcode scannen',
+                    tooltip: context.l10n.actionScanBarcode,
                   ),
                   const SizedBox(width: 8),
                   _buildActionButton(
                     onTap: _takePhoto,
                     icon: Icons.camera_alt_rounded,
-                    tooltip: 'Foto von Charge/Aufkleber',
+                    tooltip: context.l10n.actionPhotoOfLabel,
                     isLoading: _isProcessingOcr,
                   ),
                 ],
@@ -202,7 +201,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
             TextFormField(
               controller: _dosageController,
               decoration: InputDecoration(
-                labelText: 'Dosierung / Einheiten',
+                labelText: context.l10n.fieldDosageUnits,
                 prefixIcon: const Icon(Icons.scale_rounded),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -218,7 +217,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
               TextFormField(
                 controller: _weightController,
                 decoration: InputDecoration(
-                  labelText: 'Körpergewicht (kg)',
+                  labelText: context.l10n.fieldBodyWeight,
                   prefixIcon: const Icon(Icons.monitor_weight_rounded),
                   suffixText: 'kg',
                   border: OutlineInputBorder(
@@ -235,7 +234,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
             TextFormField(
               controller: _notesController,
               decoration: InputDecoration(
-                labelText: 'Notizen (Befinden, Verlauf)',
+                labelText: context.l10n.fieldInfusionNotes,
                 prefixIcon: const Icon(Icons.note_alt_rounded),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -265,7 +264,9 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                   const SizedBox(width: 12),
                   Flexible(
                     child: Text(
-                      _shouldShowTimer ? 'Speichern & Timer starten' : 'Infusion speichern & Bestand abbuchen',
+                      _shouldShowTimer
+                          ? context.l10n.addInfusionSaveAndStartTimer
+                          : context.l10n.addInfusionSaveAndDeductStock,
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
@@ -279,8 +280,8 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
     );
   }
 
-  /// Rechtlicher Hinweis: die App-Erfassung ersetzt die vorgeschriebene
-  /// Chargendokumentation nicht.
+  /// Legal note: recording a batch here does not replace the legally required
+  /// batch documentation.
   Widget _buildBatchDocumentationHint(BuildContext context) {
     final color = Theme.of(context).colorScheme.onSurfaceVariant;
     return Container(
@@ -296,7 +297,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              Disclaimer.batchDocumentationShort,
+              context.l10n.legalBatchDocumentationShort,
               style: TextStyle(fontSize: 12, height: 1.35, color: color),
             ),
           ),
@@ -335,9 +336,10 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
           children: [
             const SizedBox(height: 12),
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('Barcode scannen', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(context.l10n.actionScanBarcode,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             Expanded(
               child: ClipRRect(

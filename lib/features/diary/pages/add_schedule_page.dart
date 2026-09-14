@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:cidpbuddy/core/database/database.dart';
 import 'package:cidpbuddy/core/services/scheduler_service.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class AddSchedulePage extends StatefulWidget {
   final InfusionSchedule? initialSchedule;
@@ -26,13 +27,15 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
   bool _isFirstLoad = true;
   bool _isSaving = false;
 
-  final List<Map<String, String>> _frequencies = [
-    {'value': 'daily', 'label': 'Täglich'},
-    {'value': 'interval', 'label': 'Alle X Tage'},
-    {'value': 'weekly', 'label': 'Wöchentlich'},
-    {'value': 'biweekly', 'label': 'Alle 2 Wochen'},
-    {'value': 'weekdays', 'label': 'Bestimmte Wochentage'},
-  ];
+  /// The stored `value` is a database enum and must stay untranslated; only
+  /// the label follows the UI language, so this cannot be a field initializer.
+  List<Map<String, String>> _frequencies(BuildContext context) => [
+        {'value': 'daily', 'label': context.l10n.frequencyDaily},
+        {'value': 'interval', 'label': context.l10n.frequencyInterval},
+        {'value': 'weekly', 'label': context.l10n.frequencyWeekly},
+        {'value': 'biweekly', 'label': context.l10n.frequencyBiweekly},
+        {'value': 'weekdays', 'label': context.l10n.frequencyWeekdays},
+      ];
 
   @override
   void initState() {
@@ -78,7 +81,9 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialSchedule == null ? 'Infusionsplan erstellen' : 'Infusionsplan bearbeiten'),
+        title: Text(widget.initialSchedule == null
+            ? context.l10n.scheduleTitleNew
+            : context.l10n.scheduleTitleEdit),
         centerTitle: true,
       ),
       body: FutureBuilder<List<Medication>>(
@@ -107,14 +112,14 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionHeader('Medikation & Dosis'),
+                _buildSectionHeader(context.l10n.sectionMedicationAndDose),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<Medication>(
                   initialValue: _selectedMedication,
                   items: medications.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
                   onChanged: (val) => setState(() => _selectedMedication = val),
                   decoration: InputDecoration(
-                    labelText: 'Medikament wählen',
+                    labelText: context.l10n.addInfusionPickMedication,
                     prefixIcon: const Icon(Icons.medication_rounded),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   ),
@@ -123,18 +128,18 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                 TextField(
                   controller: _dosageController,
                   decoration: InputDecoration(
-                    labelText: 'Einheiten pro Infusion',
+                    labelText: context.l10n.fieldUnitsPerInfusion,
                     prefixIcon: const Icon(Icons.scale_rounded),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),
                 const SizedBox(height: 32),
-                _buildSectionHeader('Häufigkeit'),
+                _buildSectionHeader(context.l10n.sectionFrequency),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   initialValue: _frequencyType,
-                  items: _frequencies.map((f) => DropdownMenuItem(value: f['value'], child: Text(f['label']!))).toList(),
+                  items: _frequencies(context).map((f) => DropdownMenuItem(value: f['value'], child: Text(f['label']!))).toList(),
                   onChanged: (val) => setState(() => _frequencyType = val!),
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.repeat_rounded),
@@ -146,8 +151,8 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                   TextField(
                     controller: _intervalController,
                     decoration: InputDecoration(
-                      labelText: 'Anzahl der Tage',
-                      hintText: 'Z.B. alle 5 Tage',
+                      labelText: context.l10n.fieldNumberOfDays,
+                      hintText: context.l10n.fieldNumberOfDaysHint,
                       prefixIcon: const Icon(Icons.today_rounded),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                     ),
@@ -156,14 +161,17 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                 ],
                 if (_frequencyType == 'weekdays') ...[
                   const SizedBox(height: 16),
-                  const Text('Tage auswählen:', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  Text(context.l10n.scheduleSelectDays, style: const TextStyle(fontSize: 14, color: Colors.grey)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 0,
                     children: List.generate(7, (index) {
                       final day = index + 1;
-                      final label = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'][index];
+                      // 2024-01-01 was a Monday, so adding `index` days walks
+                      // Mon–Sun and intl supplies the abbreviation per locale.
+                      final label = DateFormat.E(context.localeTag)
+                          .format(DateTime(2024, 1, 1).add(Duration(days: index)));
                       final isSelected = _selectedWeekdays.contains(day);
                       return ChoiceChip(
                         label: Text(label),
@@ -188,7 +196,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                   ),
                 ],
                 const SizedBox(height: 32),
-                _buildSectionHeader('Zeitraum'),
+                _buildSectionHeader(context.l10n.sectionPeriod),
                 const SizedBox(height: 16),
                 InkWell(
                   onTap: () async {
@@ -229,9 +237,9 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Startdatum', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                Text(context.l10n.fieldStartDate, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                 Text(
-                                  DateFormat('dd. MMMM yyyy').format(_startDate),
+                                  AppDateFormat.longDate(context, _startDate),
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                 ),
                               ],
@@ -244,7 +252,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                _buildSectionHeader('Einnahme-Uhrzeiten'),
+                _buildSectionHeader(context.l10n.sectionIntakeTimes),
                 const SizedBox(height: 16),
                 ...List.generate(_intakeTimes.length, (index) => Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
@@ -286,7 +294,7 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                 TextButton.icon(
                   onPressed: () => setState(() => _intakeTimes.add(const TimeOfDay(hour: 8, minute: 0))),
                   icon: const Icon(Icons.add_circle_outline_rounded),
-                  label: const Text('Weitere Uhrzeit hinzufügen'),
+                  label: Text(context.l10n.scheduleAddTime),
                 ),
                 const SizedBox(height: 48),
                 ElevatedButton(
@@ -311,7 +319,9 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                         const Icon(Icons.save_rounded),
                       const SizedBox(width: 12),
                       Text(
-                        widget.initialSchedule == null ? 'Zeitplan aktivieren' : 'Änderungen speichern',
+                        widget.initialSchedule == null
+                            ? context.l10n.scheduleActivate
+                            : context.l10n.actionSaveChanges,
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ],

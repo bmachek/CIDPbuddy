@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cidpbuddy/core/database/database.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 import 'package:cidpbuddy/core/services/scheduler_service.dart';
 import 'package:cidpbuddy/features/diary/pages/dashboard_page.dart';
 import 'package:cidpbuddy/features/inventory/pages/inventory_page.dart';
@@ -47,7 +48,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       // update notification for them.
       final db = AppDatabase();
       db.refreshLiveQueries();
-      // Re-evaluate the "Verpasste Einnahmen" summary. It is a delivered
+      // Re-evaluate the missed-intakes summary. It is a delivered
       // notification that otherwise only gets recomputed on a cold start, so
       // on iOS — where the periodic background sync never gets to run — it
       // would keep showing entries the user has since confirmed.
@@ -136,22 +137,22 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                   _selectedIndex = index;
                 });
               },
-              destinations: const [
+              destinations: [
                 NavigationDestination(
-                  icon: Icon(Icons.grid_view_rounded),
-                  label: 'Dashboard',
+                  icon: const Icon(Icons.grid_view_rounded),
+                  label: context.l10n.navDashboard,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.history_edu_rounded),
-                  label: 'Tagebuch',
+                  icon: const Icon(Icons.history_edu_rounded),
+                  label: context.l10n.navDiary,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.medication_liquid_rounded),
-                  label: 'Medikation',
+                  icon: const Icon(Icons.medication_liquid_rounded),
+                  label: context.l10n.navMedication,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.tune_rounded),
-                  label: 'Einstellungen',
+                  icon: const Icon(Icons.tune_rounded),
+                  label: context.l10n.navSettings,
                 ),
               ],
             ),

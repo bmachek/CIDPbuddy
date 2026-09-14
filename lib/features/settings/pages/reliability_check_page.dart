@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/reliability_service.dart';
+import '../../../core/l10n/l10n_ext.dart';
 import 'dart:io';
 
 class ReliabilityCheckPage extends StatefulWidget {
@@ -64,7 +65,7 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Zuverlässigkeits-Check')),
+      appBar: AppBar(title: Text(context.l10n.reliabilityTitle)),
       body: _loading 
         ? const Center(child: CircularProgressIndicator())
         : ListView(
@@ -74,8 +75,8 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
               const SizedBox(height: 30),
               _buildCheckItem(
                 icon: Icons.notifications_active_outlined,
-                title: 'Benachrichtigungen',
-                description: 'Wichtig für Medikamenten-Erinnerungen und Timer-Abschluss.',
+                title: context.l10n.reliabilityNotifications,
+                description: context.l10n.reliabilityNotificationsDesc,
                 isOk: _notificationsOk,
                 onFix: () => _service.requestNotificationPermission(),
               ),
@@ -83,16 +84,16 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
                 const SizedBox(height: 20),
                 _buildCheckItem(
                   icon: Icons.alarm_on_rounded,
-                  title: 'Exakte Alarme',
-                  description: 'Erlaubt es der App, Erinnerungen auf die Sekunde genau auszulösen.',
+                  title: context.l10n.reliabilityExactAlarms,
+                  description: context.l10n.reliabilityExactAlarmsDesc,
                   isOk: _alarmsOk,
                   onFix: () => _service.requestExactAlarmPermission(),
                 ),
                 const SizedBox(height: 20),
                 _buildCheckItem(
                   icon: Icons.battery_charging_full_rounded,
-                  title: 'Akku-Optimierung',
-                  description: 'Verhindert, dass Android die App im Hintergrund beendet.',
+                  title: context.l10n.reliabilityBatteryOptimization,
+                  description: context.l10n.reliabilityBatteryOptimizationDesc,
                   isOk: _batteryOk,
                   onFix: () => _service.openBatteryOptimizationSettings(),
                 ),
@@ -100,8 +101,8 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
               const SizedBox(height: 20),
               _buildCheckItem(
                 icon: Icons.backup_outlined,
-                title: 'Automatisches Backup',
-                description: 'Sichert deine Daten regelmäßig in der Cloud oder lokal.',
+                title: context.l10n.settingsSectionAutoBackup,
+                description: context.l10n.reliabilityBackupDesc,
                 isOk: _backupOk,
                 onFix: () => Navigator.pop(context), // Go back to settings
               ),
@@ -109,10 +110,10 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
                 const SizedBox(height: 20),
                 _buildCheckItem(
                   icon: Icons.cloud_done_outlined,
-                  title: 'Backup-Status',
-                  description: _lastBackupOk 
-                      ? 'Dein letztes Backup ist aktuell.' 
-                      : 'Dein letztes Backup ist veraltet oder fehlgeschlagen.',
+                  title: context.l10n.reliabilityBackupStatus,
+                  description: _lastBackupOk
+                      ? context.l10n.reliabilityBackupUpToDate
+                      : context.l10n.reliabilityBackupStale,
                   isOk: _lastBackupOk,
                   onFix: () => Navigator.pop(context), // Go back to settings to trigger manual
                 ),
@@ -142,14 +143,14 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
           ),
           const SizedBox(height: 16),
           Text(
-            allOk ? 'Alles bestens!' : 'Handlungsbedarf',
+            allOk ? context.l10n.reliabilityAllGood : context.l10n.reliabilityActionNeeded,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            allOk 
-              ? 'Deine Einstellungen sind optimal für maximale Zuverlässigkeit.'
-              : 'Einige Einstellungen schränken die Zuverlässigkeit der Erinnerungen ein.',
+            allOk
+                ? context.l10n.reliabilityAllGoodBody
+                : context.l10n.reliabilityActionNeededBody,
             textAlign: TextAlign.center,
             style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
@@ -201,7 +202,7 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
                     width: double.infinity,
                     child: OutlinedButton(
                       onPressed: onFix,
-                      child: const Text('Einstellung korrigieren'),
+                      child: Text(context.l10n.reliabilityFix),
                     ),
                   ),
                 ],
@@ -216,16 +217,16 @@ class _ReliabilityCheckPageState extends State<ReliabilityCheckPage> with Widget
   Widget _buildFooter() {
     return Column(
       children: [
-        const Text(
-          'Hinweis: Die Einstellungen werden automatisch aktualisiert, wenn du von den Systemeinstellungen zurückkehrst.',
+        Text(
+          context.l10n.reliabilityFooterHint,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: Colors.grey),
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
         ),
         const SizedBox(height: 12),
         TextButton.icon(
           onPressed: _checkAll,
           icon: const Icon(Icons.refresh),
-          label: const Text('Status jetzt aktualisieren'),
+          label: Text(context.l10n.reliabilityRefresh),
         ),
       ],
     );

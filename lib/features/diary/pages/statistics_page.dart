@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 import '../providers/diary_provider.dart';
 import '../../../core/database/database.dart';
+import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
 
 class StatisticsPage extends StatelessWidget {
   const StatisticsPage({super.key});
@@ -15,27 +15,27 @@ class StatisticsPage extends StatelessWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          const SliverAppBar.large(
-            title: Text('Statistiken'),
+          SliverAppBar.large(
+            title: Text(context.l10n.statisticsTitle),
           ),
           StreamBuilder<List<InfusionLogData>>(
             stream: diaryProvider.infusionLogsStream,
             builder: (context, snapshot) {
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const SliverFillRemaining(
-                  child: Center(child: Text('Noch keine Daten für Statistiken vorhanden.')),
+                return SliverFillRemaining(
+                  child: Center(child: Text(context.l10n.statisticsEmpty)),
                 );
               }
 
               final logs = snapshot.data!;
-              final monthlyData = _processMonthlyData(logs);
+              final monthlyData = _processMonthlyData(context, logs);
 
               return SliverPadding(
                 padding: const EdgeInsets.all(24.0),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     Text(
-                      'Monatliche Dosis',
+                      context.l10n.statisticsMonthlyDose,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,
@@ -43,7 +43,7 @@ class StatisticsPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Übersicht der verabreichten Einheiten der letzten 6 Monate',
+                      context.l10n.statisticsMonthlyDoseSubtitle,
                       style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                     ),
                     const SizedBox(height: 32),
@@ -119,13 +119,13 @@ class StatisticsPage extends StatelessWidget {
     );
   }
 
-  List<_MonthDosage> _processMonthlyData(List<InfusionLogData> logs) {
+  List<_MonthDosage> _processMonthlyData(BuildContext context, List<InfusionLogData> logs) {
     final Map<String, double> grouped = {};
     // Sort logs by date first (ascending for chart)
     final sortedLogs = List<InfusionLogData>.from(logs)..sort((a,b) => a.date.compareTo(b.date));
     
     for (var log in sortedLogs) {
-      final key = DateFormat('MM/yy').format(log.date);
+      final key = AppDateFormat.monthAxis(context, log.date);
       grouped[key] = (grouped[key] ?? 0) + log.dosage;
     }
 
@@ -182,13 +182,13 @@ class StatisticsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Zusammenfassung', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(context.l10n.statisticsSummary, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 16),
-          _buildSummaryRow(context, 'Gesamt-Infusionen', count.toString(), Icons.history_rounded),
-          _buildSummaryRow(context, 'Gesamt-Dosis', '${total.toStringAsFixed(1)} Einheiten', Icons.summarize_rounded),
-          _buildSummaryRow(context, 'Ø Dosis / Gabe', '${avg.toStringAsFixed(1)} Einheiten', Icons.analytics_rounded),
+          _buildSummaryRow(context, context.l10n.statisticsTotalInfusions, count.toString(), Icons.history_rounded),
+          _buildSummaryRow(context, context.l10n.statisticsTotalDose, context.l10n.unitsValue(total.toStringAsFixed(1)), Icons.summarize_rounded),
+          _buildSummaryRow(context, context.l10n.statisticsAverageDose, context.l10n.unitsValue(avg.toStringAsFixed(1)), Icons.analytics_rounded),
           if (lastWeight != null)
-            _buildSummaryRow(context, 'Letztes Gewicht', '${lastWeight.toStringAsFixed(1)} kg', Icons.monitor_weight_rounded),
+            _buildSummaryRow(context, context.l10n.statisticsLastWeight, context.l10n.kilogramsValue(lastWeight.toStringAsFixed(1)), Icons.monitor_weight_rounded),
         ],
       ),
     );

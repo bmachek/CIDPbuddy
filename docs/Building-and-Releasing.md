@@ -1,49 +1,63 @@
-# Bauen & Veröffentlichen
+# Building & releasing
 
-## Voraussetzungen
+## Prerequisites
 
-- Flutter SDK mit Dart ^3.11.4 installiert und im PATH
-- Android Studio / Xcode (je nach Zielplattform)
-- Java 17 (für Android-Builds)
-- macOS: Homebrew-Flutter unter `/opt/homebrew/bin/flutter`
+- Flutter SDK with Dart ^3.11.4 installed and on the PATH
+- Android Studio / Xcode (depending on the target platform)
+- Java 17 (for Android builds)
+- macOS: Homebrew Flutter at `/opt/homebrew/bin/flutter`
 
-## Entwicklungssetup
+## Development setup
 
 ```bash
-# Abhängigkeiten installieren
+# Install dependencies
 flutter pub get
 
-# Drift-Datenbankcode generieren (nach Schema-Änderungen erforderlich)
+# Generate the Drift database code (required after schema changes)
 dart run build_runner build --delete-conflicting-outputs
 
-# Lint prüfen (muss fehlerfrei sein vor jedem Commit)
+# Generate the localizations (required after editing the ARB files)
+flutter gen-l10n
+
+# Lint (must be error-free before every commit)
 /opt/homebrew/bin/flutter analyze
 
-# App im Debug-Modus starten
+# Run the app in debug mode
 flutter run
 ```
 
-## Datenbankcode neu generieren
+## Regenerating the database code
 
-Drift verwendet Code-Generierung. Nach **jeder Änderung** an Tabellendefinitionen oder Queries in `lib/core/database/` muss der Generator ausgeführt werden:
+Drift uses code generation. After **every change** to table definitions or queries in `lib/core/database/`, run the generator:
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-Generierte Dateien enden auf `.g.dart` und sollten nicht manuell bearbeitet werden.
+Generated files end in `.g.dart` and should not be edited by hand.
 
-## Lint-Regeln
+## Regenerating the localizations
 
-Die App folgt einer **Zero-Error-Policy**: `flutter analyze` darf keine Fehler ausgeben. Warnungen sollten ebenfalls behoben werden.
+`pubspec.yaml` sets `flutter: generate: true`, so `flutter run` and `flutter build` regenerate the localizations automatically from `lib/l10n/*.arb`. To run it on its own:
 
-Wichtige Regeln:
-- Kein `const Theme.of(context)` (kein konstanter Ausdruck)
-- `color.withValues(alpha: 0.5)` statt `color.withOpacity(0.5)`
-- `mounted`-Check nach jedem `async`-Gap in StatefulWidgets
-- `BuildContext` als erstes Argument in StatelessWidget-Hilfsmethoden
+```bash
+flutter gen-l10n
+```
 
-## Android Release-APK bauen
+The output lands in `lib/l10n/generated/` and is committed, so the analyzer works on a fresh clone without a build step. See [Localization](Localization) for the full workflow.
+
+## Lint rules
+
+The app follows a **zero-error policy**: `flutter analyze` must report no errors. Warnings should be fixed too.
+
+Key rules:
+- No `const Theme.of(context)` (it is not a constant expression)
+- `color.withValues(alpha: 0.5)` instead of `color.withOpacity(0.5)`
+- Check `mounted` after every `async` gap in StatefulWidgets
+- Pass `BuildContext` as the first argument to StatelessWidget helper methods
+- No user-visible string literals in Dart — route them through `context.l10n`
+
+## Building an Android release APK
 
 ```bash
 flutter build apk --release \
@@ -51,16 +65,16 @@ flutter build apk --release \
   --build-number=1
 ```
 
-Die APK liegt anschließend unter `build/app/outputs/flutter-apk/app-release.apk`.
+The APK then sits at `build/app/outputs/flutter-apk/app-release.apk`.
 
-> Ohne `--build-name`/`--build-number` greift die Version aus `pubspec.yaml` — die trägt
-> bewusst das Suffix `-dev`, damit lokale Builds von CI-Releases unterscheidbar sind.
+> Without `--build-name`/`--build-number` the version from `pubspec.yaml` applies — it
+> deliberately carries the `-dev` suffix so local builds are distinguishable from CI releases.
 
-### Signing konfigurieren
+### Configuring signing
 
-#### Lokaler Entwicklungsbuild
+#### Local development build
 
-Für Release-Builds muss ein Keystore vorhanden sein. Einmalige Erstellung:
+Release builds need a keystore. Create one once:
 
 ```bash
 keytool -genkey -v \
@@ -69,17 +83,16 @@ keytool -genkey -v \
   -alias cidpbuddy
 ```
 
-Dann `android/key.properties` anlegen (wird nicht ins Git eingecheckt):
+Then create `android/key.properties` (it is not checked into git):
 
 ```properties
-storePassword=<passwort>
-keyPassword=<passwort>
+storePassword=<password>
+keyPassword=<password>
 keyAlias=cidpbuddy
 storeFile=../cidpbuddy-release.jks
 ```
 
-Mehr ist nicht nötig: `android/app/build.gradle.kts` liest `key.properties` bereits ein und
-wählt die Signatur automatisch:
+That is all: `android/app/build.gradle.kts` already reads `key.properties` and picks the signing config automatically:
 
 ```kotlin
 // android/app/build.gradle.kts
@@ -103,38 +116,38 @@ buildTypes {
 }
 ```
 
-**Fehlt `key.properties`, fällt der Release-Build stillschweigend auf den Debug-Key zurück.**
-Ein so signiertes APK lässt sich nicht in den Play Store laden und nicht über ein zuvor mit
-dem Release-Key signiertes Update installieren. Im Zweifel prüfen:
+**If `key.properties` is missing, the release build silently falls back to the debug key.**
+An APK signed that way cannot be uploaded to the Play Store and cannot be installed over an
+update previously signed with the release key. When in doubt, check:
 
 ```bash
 keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk
 ```
 
-#### CI/CD-Signing via GitHub Actions Secrets
+#### CI/CD signing via GitHub Actions secrets
 
-Der `android-build`-Job in `.github/workflows/release.yml` legt **keine** `key.properties` an und
-baut damit nach der Fallback-Regel oben mit Debug-Keys. Für einen produktionsfähigen Build
-muss er auf echte Keystore-Secrets umgestellt werden.
+The `android-build` job in `.github/workflows/release.yml` does **not** create a `key.properties`
+and therefore builds with debug keys per the fallback rule above. For a production-ready build
+it must be switched to real keystore secrets.
 
-**Schritt 1 — Keystore als Base64-Secret hinterlegen:**
+**Step 1 — store the keystore as a base64 secret:**
 
 ```bash
-base64 -i android/cidpbuddy-release.jks | pbcopy   # macOS: kopiert in Clipboard
+base64 -i android/cidpbuddy-release.jks | pbcopy   # macOS: copies to the clipboard
 ```
 
-Unter **GitHub → Repository → Settings → Secrets → Actions** folgende Secrets anlegen:
+Under **GitHub → Repository → Settings → Secrets → Actions**, create these secrets:
 
-| Secret-Name         | Inhalt                                  |
+| Secret name         | Contents                                |
 |---------------------|-----------------------------------------|
-| `KEYSTORE_BASE64`   | Base64-kodierter Keystore (s. o.)       |
-| `KEYSTORE_ALIAS`    | Key-Alias (z. B. `cidpbuddy`)           |
-| `KEY_PASSWORD`      | Passwort des Schlüssels                 |
-| `STORE_PASSWORD`    | Passwort des Keystores                  |
+| `KEYSTORE_BASE64`   | Base64-encoded keystore (see above)     |
+| `KEYSTORE_ALIAS`    | Key alias (e.g. `cidpbuddy`)            |
+| `KEY_PASSWORD`      | Password of the key                     |
+| `STORE_PASSWORD`    | Password of the keystore                |
 
-**Schritt 2 — `release.yml` erweitern:**
+**Step 2 — extend `release.yml`:**
 
-Den Build-APK-Step in `.github/workflows/release.yml` ersetzen durch:
+Replace the build-APK step in `.github/workflows/release.yml` with:
 
 ```yaml
 - name: Decode Keystore
@@ -160,13 +173,13 @@ Den Build-APK-Step in `.github/workflows/release.yml` ersetzen durch:
       --build-number=${{ steps.get_version.outputs.build_number }}
 ```
 
-**Wichtig:** Den dekodierten Keystore und `key.properties` nicht cachen oder als Artefakt hochladen.
+**Important:** do not cache the decoded keystore or `key.properties`, and do not upload them as artefacts.
 
 ### ProGuard / R8
 
-Release-Builds verwenden Minifizierung und Resource-Shrinking. ProGuard-Regeln liegen in `android/app/proguard-rules.pro`.
+Release builds use minification and resource shrinking. ProGuard rules live in `android/app/proguard-rules.pro`.
 
-## App Bundle für Play Store
+## App bundle for the Play Store
 
 ```bash
 flutter build appbundle --release \
@@ -176,9 +189,9 @@ flutter build appbundle --release \
 
 Output: `build/app/outputs/bundle/release/app-release.aab`
 
-## iOS-Build
+## iOS build
 
-### Lokal
+### Local
 
 ```bash
 flutter build ipa --release \
@@ -189,76 +202,76 @@ flutter build ipa --release \
 
 Output: `build/ios/ipa/CIDPbuddy.ipa`
 
-Anschließend entweder manuell via Xcode Organizer in den App Store hochladen oder mit `xcrun altool` (siehe CI/CD-Abschnitt unten).
+Then upload to the App Store either manually via Xcode Organizer or with `xcrun altool` (see the CI/CD section below).
 
 ### CI/CD via GitHub Actions
 
-Der Release-Workflow (`.github/workflows/release.yml`) enthält einen parallelen `ios-build`-Job der automatisch bei jedem `v*`-Tag ausgeführt wird.
+The release workflow (`.github/workflows/release.yml`) contains a parallel `ios-build` job that runs automatically on every `v*` tag.
 
-#### Benötigte GitHub Secrets
+#### Required GitHub secrets
 
-| Secret | Inhalt |
-|--------|--------|
-| `IOS_CERTIFICATE_P12` | Base64-kodiertes Distribution Certificate (`.p12`) |
-| `IOS_CERTIFICATE_PASSWORD` | Passwort des `.p12`-Exports |
-| `IOS_PROVISIONING_PROFILE` | Base64-kodiertes App Store Provisioning Profile (`.mobileprovision`) |
-| `APPLE_TEAM_ID` | 10-stellige Apple Team ID (z.B. `ABCDE12345`) |
-| `APP_STORE_CONNECT_API_KEY_ID` | *(optional)* Key ID für TestFlight-Upload |
-| `APP_STORE_CONNECT_API_KEY_ISSUER_ID` | *(optional)* Issuer ID für TestFlight-Upload |
-| `APP_STORE_CONNECT_API_KEY_CONTENT` | *(optional)* Base64-kodierter `.p8`-Private-Key |
+| Secret | Contents |
+|--------|----------|
+| `IOS_CERTIFICATE_P12` | Base64-encoded distribution certificate (`.p12`) |
+| `IOS_CERTIFICATE_PASSWORD` | Password of the `.p12` export |
+| `IOS_PROVISIONING_PROFILE` | Base64-encoded App Store provisioning profile (`.mobileprovision`) |
+| `APPLE_TEAM_ID` | 10-character Apple Team ID (e.g. `ABCDE12345`) |
+| `APP_STORE_CONNECT_API_KEY_ID` | *(optional)* Key ID for the TestFlight upload |
+| `APP_STORE_CONNECT_API_KEY_ISSUER_ID` | *(optional)* Issuer ID for the TestFlight upload |
+| `APP_STORE_CONNECT_API_KEY_CONTENT` | *(optional)* Base64-encoded `.p8` private key |
 
-Sind die drei `APP_STORE_CONNECT_*`-Secrets nicht gesetzt, wird der TestFlight-Upload übersprungen — die IPA wird trotzdem als GitHub-Release-Artefakt angehängt.
+If the three `APP_STORE_CONNECT_*` secrets are unset, the TestFlight upload is skipped — the IPA is still attached as a GitHub release artefact.
 
-#### Zertifikat & Profil vorbereiten
+#### Preparing the certificate & profile
 
-**Distribution Certificate exportieren:**
-1. Xcode → Settings → Accounts → Team auswählen → Manage Certificates
-2. Apple Distribution Certificate → Rechtsklick → Export Certificate → als `.p12` speichern
-3. Als Base64 enkodieren:
+**Export the distribution certificate:**
+1. Xcode → Settings → Accounts → select the team → Manage Certificates
+2. Apple Distribution Certificate → right-click → Export Certificate → save as `.p12`
+3. Encode as base64:
    ```bash
-   base64 -i certificate.p12 | pbcopy   # kopiert direkt ins Clipboard
+   base64 -i certificate.p12 | pbcopy   # copies straight to the clipboard
    ```
 
-**Provisioning Profile herunterladen:**
-1. [developer.apple.com](https://developer.apple.com/account) → Profiles → App Store-Profil für `de.fokuspunk.cidpbuddy` erstellen/herunterladen
-2. Als Base64 enkodieren:
+**Download the provisioning profile:**
+1. [developer.apple.com](https://developer.apple.com/account) → Profiles → create/download an App Store profile for `de.fokuspunk.cidpbuddy`
+2. Encode as base64:
    ```bash
    base64 -i profile.mobileprovision | pbcopy
    ```
 
-**App Store Connect API Key:**
-1. [App Store Connect](https://appstoreconnect.apple.com) → Benutzer & Zugriff → Integrations → App Store Connect API
-2. Neuen Key erstellen (Rolle: App Manager)
-3. Key ID und Issuer ID notieren, `.p8`-Datei herunterladen
-4. `.p8` als Base64:
+**App Store Connect API key:**
+1. [App Store Connect](https://appstoreconnect.apple.com) → Users and Access → Integrations → App Store Connect API
+2. Create a new key (role: App Manager)
+3. Note the Key ID and Issuer ID, download the `.p8` file
+4. Encode the `.p8` as base64:
    ```bash
    base64 -i AuthKey_XXXXX.p8 | pbcopy
    ```
 
-#### Team ID ermitteln
+#### Finding the Team ID
 
 ```bash
-# Aus installiertem Provisioning Profile:
+# From an installed provisioning profile:
 security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision \
   | plutil -extract TeamIdentifier.0 raw -
 ```
 
-Oder in Xcode: Runner-Target → Signing & Capabilities → Team.
+Or in Xcode: Runner target → Signing & Capabilities → Team.
 
-## Schemaversion erhöhen
+## Raising the schema version
 
-Bei DB-Schemaänderungen:
+For DB schema changes:
 
-1. Neue Tabellenfelder/-tabellen in `lib/core/database/database.dart` definieren (neue Tabellen zusätzlich in die `@DriftDatabase(tables: [...])`-Liste eintragen)
-2. `schemaVersion`-Getter in `AppDatabase` erhöhen (aktuell **14**)
-3. `onUpgrade`-Schritt in `lib/core/database/database.dart` hinzufügen
-4. Code neu generieren:
+1. Define the new fields/tables in `lib/core/database/database.dart` (add new tables to the `@DriftDatabase(tables: [...])` list as well)
+2. Raise the `schemaVersion` getter in `AppDatabase` (currently **14**)
+3. Add an `onUpgrade` step in `lib/core/database/database.dart`
+4. Regenerate the code:
    ```bash
    dart run build_runner build --delete-conflicting-outputs
    ```
-5. `flutter analyze` prüfen
+5. Check with `flutter analyze`
 
-## Abhängigkeiten aktualisieren
+## Updating dependencies
 
 ```bash
 flutter pub upgrade
@@ -267,45 +280,55 @@ dart run build_runner build --delete-conflicting-outputs
 /opt/homebrew/bin/flutter analyze
 ```
 
-## App-Version und Build-Nummer
+## App version and build number
 
-Version und Build-Nummer werden in `pubspec.yaml` gepflegt:
+Version and build number are maintained in `pubspec.yaml`:
 
 ```yaml
 version: 0.99.0-dev+17
 #        ↑           ↑
-#        |           Build-Nummer (versionCode auf Android)
-#        Semantic version (versionName auf Android)
+#        |           Build number (versionCode on Android)
+#        Semantic version (versionName on Android)
 ```
 
-Das `-dev`-Suffix ist Absicht: Lokale/manuelle Builds sollen sichtbar von CI-Release-Builds
-unterscheidbar sein. Der Release-Workflow überschreibt beides ohnehin mit Werten aus dem
-`v*`-Git-Tag.
+The `-dev` suffix is deliberate: local/manual builds should be visibly distinguishable from CI
+release builds. The release workflow overwrites both with values from the `v*` git tag anyway.
 
-Beim Build-Befehl können sie überschrieben werden:
+They can be overridden on the build command:
 
 ```bash
 flutter build apk --build-name=1.2.3 --build-number=42
 ```
 
-## Plattform-spezifische Konfiguration
+## Platform-specific configuration
 
-| Datei | Inhalt |
-|-------|--------|
-| `android/app/build.gradle.kts` | App-ID, Min-SDK, Java-Version, Desugaring |
-| `android/app/src/main/AndroidManifest.xml` | Berechtigungen, Intent-Filter, Background-Service |
-| `ios/Runner/Info.plist` | Bundle-ID, Background-Modes (`fetch`), Kamera-Berechtigungstext |
-| `pubspec.yaml` | Version, Abhängigkeiten, Assets |
+| File | Contents |
+|------|----------|
+| `android/app/build.gradle.kts` | App ID, min SDK, Java version, desugaring |
+| `android/app/src/main/AndroidManifest.xml` | Permissions, intent filters, background service |
+| `ios/Runner/Info.plist` | Bundle ID, background modes (`fetch`), camera permission text |
+| `l10n.yaml` | Localization generator settings (ARB directory, template, output) |
+| `pubspec.yaml` | Version, dependencies, assets |
 
 ## Assets
 
-Audio-Dateien für den Vormedikations-Timer:
+Audio files for the premedication timer:
 
 ```
 assets/
   audio/
-    bell.mp3   # Minütliches Glockensignal
-    ping.mp3   # Abschlusssignal
+    bell.mp3   # Per-minute bell signal
+    ping.mp3   # Completion signal
 ```
 
-Assets müssen in `pubspec.yaml` unter `flutter.assets` deklariert sein.
+Assets must be declared in `pubspec.yaml` under `flutter.assets`.
+
+## Store listings
+
+The app is licensed under **Apache-2.0**, which is compatible with distribution through both the
+Apple App Store and Google Play. (It was previously GPL-3.0; the App Store's terms of service
+impose usage restrictions that are incompatible with that licence.) See [LICENSE](../LICENSE)
+and [NOTICE](../NOTICE).
+
+Store listings should be provided in all five shipped languages — English, German, French,
+Italian and Spanish — so the listing language matches what the user sees after install.
