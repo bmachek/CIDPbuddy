@@ -31,6 +31,7 @@ If `flutter` is not on your `PATH`, the script falls back to `/opt/homebrew/bin/
 | **CI** (`ci.yml`) | push to `main`, every PR, manual, and called by Release | `tool/verify.sh --check-generated`, then a debug APK build |
 | **Release** (`release.yml`) | `v*` tags | Runs CI first, then builds and publishes the signed release APK |
 | **CodeQL** (`codeql.yml`) | push to `main`, PRs, weekly (Mon 05:17 UTC), manual | Static security analysis of the workflows and the Android sources |
+| **OSV-Scanner** (`osv-scanner.yml`) | push to `main`, PRs, weekly (Tue 06:23 UTC), manual | Known vulnerabilities in the pub and CocoaPods lockfiles |
 | **Publish Wiki** (`publish-wiki.yml`) | push to `main` touching `docs/**` | Mirrors `docs/*.md` into this wiki |
 
 ### CI
@@ -57,6 +58,17 @@ Two languages in a matrix:
 Dart is not a CodeQL-supported language, so the Flutter code itself is not covered; the analyzer and the tests are what guard it.
 
 Findings appear under the repository's **Security → Code scanning** tab.
+
+### OSV-Scanner
+
+Dart is not a CodeQL language, so the dependency side is where vulnerabilities in this app are actually detectable. OSV-Scanner checks three committed lockfiles — `pubspec.lock`, `ios/Podfile.lock`, `macos/Podfile.lock` — against the [OSV database](https://osv.dev) and reports into the same Code scanning tab.
+
+Two modes:
+
+- **Full scan** on `main` and weekly, with `fail-on-vuln: false` — an advisory in a transitive package is not a reason for `main` to go red, and the alert is mailed out regardless.
+- **PR scan**, which compares against the base branch and reports only what the PR *newly* introduces. That one does fail, because it is a change someone is about to merge.
+
+It complements Dependabot rather than duplicating it: Dependabot opens the upgrade PR, OSV-Scanner tells you what is exposed right now, including packages with no fix available yet.
 
 ### Publish Wiki
 
@@ -95,7 +107,7 @@ There is no separate lint step — `flutter analyze` *is* the linter. `analysis_
 
 ## What is not covered
 
-CodeQL has no Dart support, so the app's own Dart code gets no taint or data-flow analysis — the analyzer, the lints and the tests are what guard it. Dart *dependencies* are covered from the other side: Dependabot raises pub advisories, and GitHub's Dependabot security updates (enabled under **Settings → Code security**) open fix PRs for known vulnerable packages in `pubspec.lock`.
+CodeQL has no Dart support, so the app's own Dart code gets no taint or data-flow analysis — the analyzer, the lints and the tests are what guard it. Dart *dependencies* are covered, by OSV-Scanner and Dependabot together; turning on Dependabot security updates under **Settings → Code security** adds automatic fix PRs on top.
 
 ## Recommended branch protection
 
