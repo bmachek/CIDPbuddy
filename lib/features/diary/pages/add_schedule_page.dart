@@ -31,6 +31,17 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
   bool _isFirstLoad = true;
   bool _isSaving = false;
 
+  /// A weekday schedule without a single day, or an interval below one day,
+  /// would save fine but never produce an appointment or a reminder — and an
+  /// interval of 0 used to make the scheduler emit the same day 5000 times.
+  bool get _isFrequencyValid {
+    if (_frequencyType == 'weekdays') return _selectedWeekdays.isNotEmpty;
+    if (_frequencyType == 'interval') {
+      return (int.tryParse(_intervalController.text) ?? 0) >= 1;
+    }
+    return true;
+  }
+
   /// The stored `value` is a database enum and must stay untranslated; only
   /// the label follows the UI language, so this cannot be a field initializer.
   List<Map<String, String>> _frequencies(BuildContext context) => [
@@ -203,6 +214,8 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                         ),
                       ),
                       keyboardType: TextInputType.number,
+                      // Re-evaluate _isFrequencyValid for the save button.
+                      onChanged: (_) => setState(() {}),
                     ),
                   ],
                   if (_frequencyType == 'weekdays') ...[
@@ -400,7 +413,10 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
                   ),
                   const SizedBox(height: 48),
                   ElevatedButton(
-                    onPressed: (_selectedMedication == null || _isSaving)
+                    onPressed:
+                        (_selectedMedication == null ||
+                            _isSaving ||
+                            !_isFrequencyValid)
                         ? null
                         : () => _saveSchedule(db),
                     style: ElevatedButton.styleFrom(
@@ -465,13 +481,14 @@ class _AddSchedulePageState extends State<AddSchedulePage> {
     // Guard against double-taps: saving runs an async sync (which schedules
     // notifications) before the page closes. Without this, rapid taps would
     // each insert a new schedule, leaving multiple active duplicates.
-    if (_isSaving) return;
+    if (_isSaving || !_isFrequencyValid) return;
     setState(() => _isSaving = true);
 
     String finalFreq = _frequencyType;
     int? interval;
     if (_frequencyType == 'interval') {
       interval = int.tryParse(_intervalController.text) ?? 2;
+      if (interval < 1) interval = 1;
     } else if (_frequencyType == 'biweekly') {
       finalFreq = 'weekly';
       interval = 2;

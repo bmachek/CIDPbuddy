@@ -24,10 +24,10 @@ class MedicationService {
           dailyReq += dosagePerDay;
           break;
         case 'interval':
-          dailyReq += dosagePerDay / (s.intervalValue ?? 1);
+          dailyReq += dosagePerDay / s.safeInterval;
           break;
         case 'weekly':
-          dailyReq += dosagePerDay / (7 * (s.intervalValue ?? 1));
+          dailyReq += dosagePerDay / (7 * s.safeInterval);
           break;
         case 'weekdays':
           final weekdayCount =

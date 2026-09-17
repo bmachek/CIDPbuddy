@@ -302,12 +302,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
           child: Text(context.l10n.actionCancel),
         ),
         ElevatedButton(
-          onPressed:
-              (_selectedMed == null &&
-                  (_results == null ||
-                      !_results!.any((it) => it.isActuallySelected)))
-              ? null
-              : () => _saveOrder(db),
+          // An order always belongs to a medication (PendingOrders.medicationId
+          // is not nullable); saving without one used to crash on `_selectedMed!`.
+          onPressed: _selectedMed == null ? null : () => _saveOrder(db),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.tertiary,
             foregroundColor: Colors.white,
@@ -667,6 +664,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   }
 
   void _saveOrder(AppDatabase db) async {
+    if (_selectedMed == null) return;
     final orderQty = double.tryParse(_qtyController.text) ?? 1.0;
 
     await db.transaction(() async {

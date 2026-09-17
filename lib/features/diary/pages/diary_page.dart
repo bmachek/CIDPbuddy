@@ -643,6 +643,7 @@ class DiaryPage extends StatelessWidget {
     AppDatabase db,
     InfusionLogData log,
   ) {
+    var deleting = false;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -655,31 +656,45 @@ class DiaryPage extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              await db.transaction(() async {
-                // 1. Revert medication stock
-                final med = await (db.select(
-                  db.medications,
-                )..where((t) => t.id.equals(log.medicationId))).getSingle();
-                await db.updateMedication(
-                  med.copyWith(stock: med.stock + log.dosage),
-                );
+              // Guard against double-taps: the dialog only closes after the
+              // transaction, so a second tap would credit the stock twice.
+              if (deleting) return;
+              deleting = true;
+              try {
+                await db.transaction(() async {
+                  // 1. Revert medication stock. The medication may have been
+                  // deleted since; its history stays, so just skip the stock.
+                  final med =
+                      await (db.select(db.medications)
+                            ..where((t) => t.id.equals(log.medicationId)))
+                          .getSingleOrNull();
+                  if (med != null) {
+                    await db.updateMedication(
+                      med.copyWith(stock: med.stock + log.dosage),
+                    );
+                  }
 
-                // 2. Revert accessory stock (based on CURRENT links as best effort)
-                final links = await db.getAccessoriesForMedication(
-                  log.medicationId,
-                );
-                for (final link in links) {
-                  final acc = await (db.select(
-                    db.accessories,
-                  )..where((t) => t.id.equals(link.accessoryId))).getSingle();
-                  await db.updateAccessory(
-                    acc.copyWith(stock: acc.stock + link.defaultQuantity),
+                  // 2. Revert accessory stock (based on CURRENT links as best effort)
+                  final links = await db.getAccessoriesForMedication(
+                    log.medicationId,
                   );
-                }
+                  for (final link in links) {
+                    final acc =
+                        await (db.select(db.accessories)
+                              ..where((t) => t.id.equals(link.accessoryId)))
+                            .getSingleOrNull();
+                    if (acc == null) continue;
+                    await db.updateAccessory(
+                      acc.copyWith(stock: acc.stock + link.defaultQuantity),
+                    );
+                  }
 
-                // 3. Delete log
-                await db.deleteInfusionLog(log.id);
-              });
+                  // 3. Delete log
+                  await db.deleteInfusionLog(log.id);
+                });
+              } finally {
+                deleting = false;
+              }
 
               if (context.mounted) Navigator.pop(context);
             },

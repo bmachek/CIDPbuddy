@@ -22,6 +22,7 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   bool _showPast = false;
   bool _showFuture = false;
+  bool _treatmentActionInFlight = false;
 
   @override
   Widget build(BuildContext context) {
@@ -731,16 +732,24 @@ class _DashboardPageState extends State<DashboardPage> {
 
     Future<void> onAction() async {
       if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
-        final diaryProvider = Provider.of<DiaryProvider>(
-          context,
-          listen: false,
-        );
-        await diaryProvider.logInfusion(
-          medicationId: treatment.medicationId,
-          dosage: treatment.dosage,
-          date: treatment.date,
-        );
-        await SchedulerService(db).completeTreatment(treatment.id);
+        // Guard against double-taps: logging and completing run asynchronously,
+        // so a second tap would log the infusion and deduct the stock twice.
+        if (_treatmentActionInFlight) return;
+        _treatmentActionInFlight = true;
+        try {
+          final diaryProvider = Provider.of<DiaryProvider>(
+            context,
+            listen: false,
+          );
+          await diaryProvider.logInfusion(
+            medicationId: treatment.medicationId,
+            dosage: treatment.dosage,
+            date: treatment.date,
+          );
+          await SchedulerService(db).completeTreatment(treatment.id);
+        } finally {
+          _treatmentActionInFlight = false;
+        }
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

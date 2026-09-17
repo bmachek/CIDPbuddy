@@ -85,6 +85,16 @@ class InfusionSchedules extends Table {
       text().nullable()(); // comma separated: '08:00,20:00'
 }
 
+/// Older builds accepted an interval of 0 (or less) for `interval` and
+/// `weekly` schedules. Such a value stalls the scheduler's date loop and
+/// divides the daily requirement by zero, so every consumer treats it as 1.
+extension InfusionScheduleInterval on InfusionSchedule {
+  int get safeInterval {
+    final value = intervalValue;
+    return value == null || value < 1 ? 1 : value;
+  }
+}
+
 class PendingOrders extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get medicationId => integer().references(Medications, #id)();
@@ -603,9 +613,17 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future reenrollMedication(int id) async {
-    await (update(medications)..where((t) => t.id.equals(id))).write(
-      const MedicationsCompanion(discontinuedAt: Value.absent()),
-    );
+    await transaction(() async {
+      // `Value.absent()` means "leave the column alone", so this used to be a
+      // silent no-op and a discontinued medication could never come back.
+      await (update(medications)..where((t) => t.id.equals(id))).write(
+        const MedicationsCompanion(discontinuedAt: Value(null)),
+      );
+      // Reactivate the schedules that discontinueMedication switched off,
+      // otherwise the scheduler generates no appointments or reminders.
+      await (update(infusionSchedules)..where((t) => t.medicationId.equals(id)))
+          .write(const InfusionSchedulesCompanion(isActive: Value(true)));
+    });
   }
 
   Future<List<InfusionLogData>> getConfirmedBestellungenHistory() async {

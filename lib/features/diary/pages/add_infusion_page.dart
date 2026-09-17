@@ -38,6 +38,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
   late DateTime _selectedDate;
   String? _capturedPhotoPath;
   bool _isProcessingOcr = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -350,7 +351,7 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
                 ),
                 elevation: 0,
               ),
-              onPressed: () => _save(diaryProvider),
+              onPressed: _isSaving ? null : () => _save(diaryProvider),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
@@ -517,19 +518,31 @@ class _AddInfusionPageState extends State<AddInfusionPage> {
   }
 
   void _save(DiaryProvider provider) async {
+    // Guard against double-taps: the log is written asynchronously before the
+    // page closes, so a second tap would log the infusion and deduct the
+    // stock twice.
+    if (_isSaving) return;
     if (_formKey.currentState!.validate() && _selectedMed != null) {
-      await provider.logInfusion(
-        medicationId: _selectedMed!.id,
-        dosage:
-            double.tryParse(_dosageController.text.replaceAll(',', '.')) ?? 1.0,
-        batchNumber: _batchController.text,
-        notes: _notesController.text,
-        bodyWeight: double.tryParse(
-          _weightController.text.replaceAll(',', '.'),
-        ),
-        date: _selectedDate,
-        photoPath: _capturedPhotoPath,
-      );
+      setState(() => _isSaving = true);
+      try {
+        await provider.logInfusion(
+          medicationId: _selectedMed!.id,
+          dosage:
+              double.tryParse(_dosageController.text.replaceAll(',', '.')) ??
+              1.0,
+          batchNumber: _batchController.text,
+          notes: _notesController.text,
+          bodyWeight: double.tryParse(
+            _weightController.text.replaceAll(',', '.'),
+          ),
+          date: _selectedDate,
+          photoPath: _capturedPhotoPath,
+        );
+      } catch (e) {
+        // Re-enable the button so the user can retry instead of being stuck.
+        if (mounted) setState(() => _isSaving = false);
+        return;
+      }
 
       if (mounted) {
         if (_shouldShowTimer) {
