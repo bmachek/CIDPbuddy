@@ -93,7 +93,9 @@ class DiaryProvider extends ChangeNotifier {
       for (final link in accessories) {
         final acc = await (_db.select(
           _db.accessories,
-        )..where((t) => t.id.equals(link.accessoryId))).getSingle();
+        )..where((t) => t.id.equals(link.accessoryId))).getSingleOrNull();
+        // A link whose supply was deleted must not lose the whole infusion.
+        if (acc == null) continue;
         await _db.updateAccessory(
           acc.copyWith(stock: acc.stock - link.defaultQuantity),
         );

@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cidpbuddy/core/services/scheduler_service.dart';
 import 'package:cidpbuddy/features/reminders/services/notification_service.dart';
 import '../providers/inventory_provider.dart';
 import 'package:cidpbuddy/core/database/database.dart';
@@ -1010,7 +1012,7 @@ class MedicationDetailsPage extends StatelessWidget {
     DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
     final dosageController = TextEditingController(text: '1.0');
 
-    showDialog(
+    await showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
@@ -1028,8 +1030,8 @@ class MedicationDetailsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 ListTile(
-                  title: Text(context.l10n.fieldDate),
-                  subtitle: Text(AppDateFormat.date(context, selectedDate)),
+                  title: Text(context.l10n.sectionDateTime),
+                  subtitle: Text(AppDateFormat.dateTime(context, selectedDate)),
                   trailing: const Icon(Icons.calendar_today_rounded),
                   onTap: () async {
                     final date = await showDatePicker(
@@ -1038,7 +1040,24 @@ class MedicationDetailsPage extends StatelessWidget {
                       firstDate: DateTime.now(),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
-                    if (date != null) setState(() => selectedDate = date);
+                    if (date == null || !context.mounted) return;
+                    // Without a time the appointment lands at midnight, which
+                    // falls inside the default quiet hours (22:00–06:00) and
+                    // silences every reminder for it.
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(selectedDate),
+                    );
+                    if (time == null) return;
+                    setState(() {
+                      selectedDate = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        time.hour,
+                        time.minute,
+                      );
+                    });
                   },
                 ),
                 const SizedBox(height: 16),
@@ -1063,11 +1082,24 @@ class MedicationDetailsPage extends StatelessWidget {
                     PlannedInfusionsCompanion.insert(
                       date: selectedDate,
                       medicationId: med.id,
-                      dosage: double.tryParse(dosageController.text) ?? 1.0,
+                      dosage:
+                          double.tryParse(
+                            dosageController.text.replaceAll(',', '.'),
+                          ) ??
+                          1.0,
                       isCompleted: const drift.Value(false),
                     ),
                   );
                   if (context.mounted) Navigator.pop(context);
+                  // Register the reminders now instead of waiting for the next
+                  // app start or the 24 h background sync.
+                  unawaited(
+                    SchedulerService(db).syncPlannedInfusions().catchError(
+                      (e) => debugPrint(
+                        'MedicationDetails: appointment sync failed: $e',
+                      ),
+                    ),
+                  );
                 },
                 child: Text(context.l10n.actionSave),
               ),
@@ -1076,6 +1108,7 @@ class MedicationDetailsPage extends StatelessWidget {
         );
       },
     );
+    dosageController.dispose();
   }
 
   Widget _buildScheduleCard(

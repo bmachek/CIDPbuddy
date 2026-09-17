@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/database/database.dart';
+import '../../../core/services/scheduler_service.dart';
 import '../../reminders/services/notification_service.dart';
 import 'package:drift/drift.dart';
 
@@ -62,6 +63,13 @@ class InventoryProvider extends ChangeNotifier {
   Future<void> reenrollMedication(int id) async {
     await _db.reenrollMedication(id);
     notifyListeners();
+    // The schedules are active again; regenerate their appointments and
+    // reminders in the background so the UI is never blocked by the sync.
+    unawaited(
+      SchedulerService(_db).syncPlannedInfusions().catchError(
+        (e) => debugPrint('InventoryProvider: reenroll sync failed: $e'),
+      ),
+    );
   }
 
   Future<int> addMedication({
