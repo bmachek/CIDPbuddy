@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cidpbuddy/core/database/database.dart';
@@ -1142,13 +1143,15 @@ class _DashboardPageState extends State<DashboardPage> {
 
     if (!context.mounted) return;
 
-    showDialog(
+    // Kept outside the builder: it can run again while the dialog is open
+    // (e.g. on a theme change) and would otherwise reset the user's input.
+    Medication? selectedMed;
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+    final dosageController = TextEditingController(text: '1.0');
+
+    await showDialog(
       context: context,
       builder: (context) {
-        Medication? selectedMed;
-        DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
-        final dosageController = TextEditingController(text: '1.0');
-
         return StatefulBuilder(
           builder: (context, setState) => AlertDialog(
             title: Text(context.l10n.planningScheduleAppointmentTitle),
@@ -1172,8 +1175,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 const SizedBox(height: 16),
                 ListTile(
-                  title: Text(context.l10n.fieldDate),
-                  subtitle: Text(AppDateFormat.date(context, selectedDate)),
+                  title: Text(context.l10n.sectionDateTime),
+                  subtitle: Text(AppDateFormat.dateTime(context, selectedDate)),
                   trailing: const Icon(Icons.calendar_today_rounded),
                   onTap: () async {
                     final date = await showDatePicker(
@@ -1182,7 +1185,24 @@ class _DashboardPageState extends State<DashboardPage> {
                       firstDate: DateTime.now(),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
-                    if (date != null) setState(() => selectedDate = date);
+                    if (date == null || !context.mounted) return;
+                    // Without a time the appointment lands at midnight, which
+                    // falls inside the default quiet hours (22:00–06:00) and
+                    // silences every reminder for it.
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(selectedDate),
+                    );
+                    if (time == null) return;
+                    setState(() {
+                      selectedDate = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        time.hour,
+                        time.minute,
+                      );
+                    });
                   },
                 ),
                 const SizedBox(height: 16),
@@ -1208,11 +1228,24 @@ class _DashboardPageState extends State<DashboardPage> {
                       PlannedInfusionsCompanion.insert(
                         date: selectedDate,
                         medicationId: selectedMed!.id,
-                        dosage: double.tryParse(dosageController.text) ?? 1.0,
+                        dosage:
+                            double.tryParse(
+                              dosageController.text.replaceAll(',', '.'),
+                            ) ??
+                            1.0,
                         isCompleted: const Value(false),
                       ),
                     );
                     if (context.mounted) Navigator.pop(context);
+                    // Register the reminders now instead of waiting for the
+                    // next app start or the 24 h background sync.
+                    unawaited(
+                      SchedulerService(db).syncPlannedInfusions().catchError(
+                        (e) => debugPrint(
+                          'Dashboard: appointment sync failed: $e',
+                        ),
+                      ),
+                    );
                   }
                 },
                 child: Text(context.l10n.actionSave),
@@ -1222,6 +1255,7 @@ class _DashboardPageState extends State<DashboardPage> {
         );
       },
     );
+    dosageController.dispose();
   }
 
   Widget _buildExpansionSection({

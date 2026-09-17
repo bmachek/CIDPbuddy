@@ -261,14 +261,36 @@ class AppDatabase extends _$AppDatabase {
   Future updateMedication(Medication med) => update(medications).replace(med);
   Future deleteMedication(Medication med) async {
     // Foreign keys are not enforced, so deleting only the medication row would
-    // leave orphaned schedules and planned infusions behind. Clean them up too,
-    // otherwise their already-scheduled OS reminders keep firing forever.
+    // leave orphaned schedules, planned infusions, supply links and orders
+    // behind. Clean them up too: orphaned reminders keep firing forever,
+    // orphaned supply links hide those supplies from the inventory, and an
+    // orphaned open order is invisible on the dashboard yet keeps its supplies
+    // out of the low-stock warning for good. Infusion logs are deliberately
+    // kept — they are the patient's medical history.
     await transaction(() async {
       await (delete(
         plannedInfusions,
       )..where((t) => t.medicationId.equals(med.id))).go();
       await (delete(
         infusionSchedules,
+      )..where((t) => t.medicationId.equals(med.id))).go();
+      await (delete(
+        medicationAccessories,
+      )..where((t) => t.medicationId.equals(med.id))).go();
+      final orders = await (select(
+        pendingOrders,
+      )..where((t) => t.medicationId.equals(med.id))).get();
+      final orderIds = orders.map((o) => o.id).toList();
+      if (orderIds.isNotEmpty) {
+        await (delete(
+          pendingOrderItems,
+        )..where((t) => t.orderId.isIn(orderIds))).go();
+      }
+      await (delete(
+        pendingOrderItems,
+      )..where((t) => t.medicationId.equals(med.id))).go();
+      await (delete(
+        pendingOrders,
       )..where((t) => t.medicationId.equals(med.id))).go();
       await delete(medications).delete(med);
     });
@@ -287,7 +309,20 @@ class AppDatabase extends _$AppDatabase {
   Future<int> insertAccessory(AccessoriesCompanion acc) =>
       into(accessories).insert(acc);
   Future updateAccessory(Accessory acc) => update(accessories).replace(acc);
-  Future deleteAccessory(Accessory acc) => delete(accessories).delete(acc);
+  Future deleteAccessory(Accessory acc) async {
+    // Same story as deleteMedication: without foreign keys a dangling supply
+    // link makes the next infusion log throw mid-transaction and lose the
+    // infusion, and a dangling order item keeps the supply "on order" forever.
+    await transaction(() async {
+      await (delete(
+        medicationAccessories,
+      )..where((t) => t.accessoryId.equals(acc.id))).go();
+      await (delete(
+        pendingOrderItems,
+      )..where((t) => t.accessoryId.equals(acc.id))).go();
+      await delete(accessories).delete(acc);
+    });
+  }
 
   // Infusions
   Stream<List<InfusionLogData>> watchInfusionLogs() =>
@@ -447,6 +482,62 @@ class AppDatabase extends _$AppDatabase {
     return (delete(
       infusionSchedules,
     )..where((t) => t.medicationId.isNotIn(medIds))).go();
+  }
+
+  /// Removes supply links and open orders whose medication or supply no longer
+  /// exists. Earlier builds left such rows behind on every delete; a dangling
+  /// link hides the supply from the inventory and makes logging an infusion
+  /// throw, and a dangling order is invisible on the dashboard yet keeps its
+  /// supplies out of the low-stock warning for good. Returns the number of
+  /// deleted rows.
+  Future<int> deleteOrphanedLinksAndOrders() async {
+    final medIds = (await select(medications).get()).map((m) => m.id).toSet();
+    final accIds = (await select(accessories).get()).map((a) => a.id).toSet();
+
+    final links = await select(medicationAccessories).get();
+    final orphanLinkIds = links
+        .where(
+          (l) =>
+              !medIds.contains(l.medicationId) ||
+              !accIds.contains(l.accessoryId),
+        )
+        .map((l) => l.id)
+        .toList();
+
+    final orders = await select(pendingOrders).get();
+    final orphanOrderIds = orders
+        .where((o) => !medIds.contains(o.medicationId))
+        .map((o) => o.id)
+        .toList();
+
+    final items = await select(pendingOrderItems).get();
+    final orphanItemIds = items
+        .where(
+          (i) =>
+              orphanOrderIds.contains(i.orderId) ||
+              (i.medicationId != null && !medIds.contains(i.medicationId)) ||
+              (i.accessoryId != null && !accIds.contains(i.accessoryId)),
+        )
+        .map((i) => i.id)
+        .toList();
+
+    var removed = 0;
+    if (orphanLinkIds.isNotEmpty) {
+      removed += await (delete(
+        medicationAccessories,
+      )..where((t) => t.id.isIn(orphanLinkIds))).go();
+    }
+    if (orphanItemIds.isNotEmpty) {
+      removed += await (delete(
+        pendingOrderItems,
+      )..where((t) => t.id.isIn(orphanItemIds))).go();
+    }
+    if (orphanOrderIds.isNotEmpty) {
+      removed += await (delete(
+        pendingOrders,
+      )..where((t) => t.id.isIn(orphanOrderIds))).go();
+    }
+    return removed;
   }
 
   // Schedules

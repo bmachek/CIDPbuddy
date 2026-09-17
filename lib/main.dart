@@ -116,18 +116,21 @@ Future<void> _initDeferred(AppDatabase db) async {
     BackupScheduler.enableMissedCheck,
   );
 
-  // Self-heal orphaned schedules and planned infusions (e.g. left behind by a
-  // restore whose backup referenced a medication absent from the restored
-  // state). Schedules are removed first so the following sync cannot regenerate
-  // entries from them; runs before the missed-treatment scan so orphans never
-  // surface as actionless rows.
+  // Self-heal orphaned schedules, planned infusions, supply links and orders
+  // (e.g. left behind by a restore whose backup referenced a medication absent
+  // from the restored state, or by deletes in earlier builds). Schedules are
+  // removed first so the following sync cannot regenerate entries from them;
+  // runs before the missed-treatment scan so orphans never surface as
+  // actionless rows.
   await step('cleanupOrphans', () async {
     final removedSchedules = await db.deleteOrphanedSchedules();
     final removedPlanned = await db.deleteOrphanedPlannedInfusions();
-    if (removedSchedules > 0 || removedPlanned > 0) {
+    final removedLinks = await db.deleteOrphanedLinksAndOrders();
+    if (removedSchedules > 0 || removedPlanned > 0 || removedLinks > 0) {
       debugPrint(
-        'Removed $removedSchedules orphaned schedule(s) and '
-        '$removedPlanned orphaned planned infusion(s) on startup.',
+        'Removed $removedSchedules orphaned schedule(s), '
+        '$removedPlanned orphaned planned infusion(s) and '
+        '$removedLinks orphaned supply link/order row(s) on startup.',
       );
     }
   });

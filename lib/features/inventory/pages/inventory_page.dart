@@ -787,9 +787,7 @@ class InventoryPage extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              await (db.delete(
-                db.accessories,
-              )..where((t) => t.id.equals(acc.id))).go();
+              await db.deleteAccessory(acc);
               if (context.mounted) Navigator.pop(context);
             },
             child: Text(
