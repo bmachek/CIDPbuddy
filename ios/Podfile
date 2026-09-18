@@ -45,6 +45,14 @@ post_install do |installer|
       # UNUserNotificationCenter authorization status on iOS.
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'PERMISSION_NOTIFICATIONS=1'
+
+      # Xcode 27 rejects an IPHONEOS_DEPLOYMENT_TARGET below 15.0 with a hard
+      # error instead of the old warning, and several pods (GoogleUtilities,
+      # PromisesObjC, the *_Privacy resource bundles, even Flutter itself) still
+      # ship 9.0-14.0. flutter_additional_ios_build_settings only raises them to
+      # Flutter's own minimum, which is no longer enough — pin every pod target
+      # to the app's minimum from the platform line above.
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
     end
   end
 end
