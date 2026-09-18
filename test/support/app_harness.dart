@@ -1,10 +1,8 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show ByteData, FontLoader;
+import 'package:flutter/services.dart' show FontLoader, rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -49,10 +47,9 @@ class AppHarness {
   /// file.
   Future<void> setUpAll() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    // Outfit is fetched from Google at runtime in the app; tests have no
-    // network and no bundled copy, so let google_fonts fail fast — the
-    // families it asks for then resolve through their fallback to the
-    // Roboto loaded below.
+    // As in main.dart: the font comes from the asset bundle, never from
+    // the network. The explicit load below makes the metrics available
+    // before the first frame instead of after google_fonts' async lookup.
     GoogleFonts.config.allowRuntimeFetching = false;
     await loadTestFonts();
     // Every test opens its own in-memory database; drift's "created the
@@ -171,20 +168,28 @@ class AppHarness {
   static List<Locale> get locales => AppLocalizations.supportedLocales;
 }
 
-/// Loads Roboto from `test/fonts/` under the family names the theme asks
-/// for, so text is measured with real glyph metrics instead of the test
-/// binding's box glyphs (which are as wide as they are tall). Idempotent.
+/// Loads the bundled Outfit files (`assets/google_fonts/`) under the family
+/// names the theme asks for, so text is measured with the app's real glyph
+/// metrics instead of the test binding's box glyphs (which are as wide as
+/// they are tall). Idempotent.
 Future<void> loadTestFonts() async {
   if (_fontsLoaded) return;
   _fontsLoaded = true;
-  const files = ['Roboto-Regular.ttf', 'Roboto-Medium.ttf', 'Roboto-Bold.ttf'];
+  const files = [
+    'Outfit-Light.ttf',
+    'Outfit-Regular.ttf',
+    'Outfit-Medium.ttf',
+    'Outfit-SemiBold.ttf',
+    'Outfit-Bold.ttf',
+    'Outfit-ExtraBold.ttf',
+    'Outfit-Black.ttf',
+  ];
   // google_fonts styles name the family `Outfit_regular` etc. with `Outfit`
-  // as fallback; Material's defaults ask for `Roboto`.
+  // as fallback; Material's own defaults ask for `Roboto`.
   for (final family in ['Outfit', 'Roboto']) {
     final loader = FontLoader(family);
     for (final file in files) {
-      final bytes = File('test/fonts/$file').readAsBytesSync();
-      loader.addFont(Future.value(ByteData.sublistView(bytes)));
+      loader.addFont(rootBundle.load('assets/google_fonts/$file'));
     }
     await loader.load();
   }

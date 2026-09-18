@@ -108,6 +108,11 @@ flutter:
   assets:
     - assets/images/
     - assets/audio/
+    # Outfit, bundled so the UI font is there on first launch, offline, and
+    # without the app contacting Google's font servers. google_fonts finds
+    # the files by name (Outfit-Regular.ttf, …); runtime fetching is off in
+    # main.dart.
+    - assets/google_fonts/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

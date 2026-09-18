@@ -75,6 +75,7 @@ Beyond the analyzer, CI fails on: an `IconButton` without `tooltip:`, an empty `
 
 ### Theme & Localization
 - Material3 with custom colors: Blue `#0066FF`, Emerald `#00BFA6`, Gold `#FFB300`
+- The UI font Outfit is bundled in `assets/google_fonts/` (OFL); `GoogleFonts.config.allowRuntimeFetching` is off in `main.dart`, so the app never contacts Google's font servers and looks right on a first launch offline. The widget tests load the same files
 - Light and dark themes (`AppTheme.lightTheme` / `darkTheme`) via `ThemeProvider`; defaults to `ThemeMode.system` and is not persisted
 - **Five languages** — English, German, French, Italian, Spanish. Generated from ARB files (`lib/l10n/*.arb`) by `flutter gen-l10n`; generated code is committed
 - **No user-visible string literals in Dart** — everything goes through `context.l10n` (`lib/core/l10n/l10n_ext.dart`)

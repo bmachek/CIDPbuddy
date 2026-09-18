@@ -138,6 +138,12 @@ class AppTheme {
         fontWeight: FontWeight.bold,
       ),
     ),
+    // Same reasoning as the light theme: #0066FF as small text on the dark
+    // surface is ~3.3:1; the lighter tint clears WCAG AA.
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: const Color(0xFF8AB4FF)),
+    ),
+    dialogTheme: const DialogThemeData(backgroundColor: cardDark),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
