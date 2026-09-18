@@ -94,6 +94,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     setState(() => _selectedIndex = index);
   }
 
+  /// How much taller than its 75 dp default the navigation bar has to be for
+  /// the current text scale: 1.0 at the default font size, at most 1.5.
+  static double _navBarScale(BuildContext context) =>
+      MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.5);
+
   @override
   Widget build(BuildContext context) {
     return MainTabs(
@@ -124,18 +129,21 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            // Subtle texture overlay (optional, keeping it clean for now)
+            // Subtle texture overlay (optional, keeping it clean for now).
+            // Purely decorative, so it must not reach the screen reader.
             Positioned.fill(
-              child: Opacity(
-                opacity: 0.05,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(
-                        'assets/images/app_icon.png',
-                      ), // Using logo as a subtle watermark pattern
-                      repeat: ImageRepeat.repeat,
-                      scale: 4,
+              child: ExcludeSemantics(
+                child: Opacity(
+                  opacity: 0.05,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(
+                          'assets/images/app_icon.png',
+                        ), // Using logo as a subtle watermark pattern
+                        repeat: ImageRepeat.repeat,
+                        scale: 4,
+                      ),
                     ),
                   ),
                 ),
@@ -164,7 +172,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                 ),
               ),
               child: NavigationBar(
-                height: 75,
+                // The labels do not wrap, so the bar grows with the system
+                // font size instead of clipping them; capped so it never
+                // swallows the screen.
+                height: 75 * _navBarScale(context),
                 elevation: 0,
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: _selectTab,

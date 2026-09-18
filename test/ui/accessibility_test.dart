@@ -25,19 +25,31 @@ void main() {
     group(themeMode.name, () {
       for (final page in allPages) {
         testWidgets(page.name, (tester) async {
+          // Semantics must be on before the first frame, and the handle has
+          // to be released before the test body returns — the framework
+          // checks for leaked handles before any `addTearDown` runs.
           final semantics = tester.ensureSemantics();
-          addTearDown(semantics.dispose);
+          try {
+            await app.pumpPage(
+              tester,
+              page.build(app.seeded),
+              locale: const Locale('de'),
+              themeMode: themeMode,
+            );
 
-          await app.pumpPage(
-            tester,
-            page.build(app.seeded),
-            locale: const Locale('de'),
-            themeMode: themeMode,
-          );
-
-          await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
-          await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
-          await expectLater(tester, meetsGuideline(textContrastGuideline));
+            await expectLater(
+              tester,
+              meetsGuideline(androidTapTargetGuideline),
+            );
+            await expectLater(
+              tester,
+              meetsGuideline(labeledTapTargetGuideline),
+            );
+            await expectLater(tester, meetsGuideline(textContrastGuideline));
+          } finally {
+            semantics.dispose();
+            await app.unmount(tester);
+          }
         });
       }
     });

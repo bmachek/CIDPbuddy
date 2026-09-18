@@ -99,6 +99,7 @@ void main() {
             );
           });
           final thrown = tester.takeException();
+          await app.unmount(tester);
 
           final summary = summarizeErrors(errors);
           expect(

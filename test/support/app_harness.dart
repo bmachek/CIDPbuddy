@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show ByteData, FontLoader;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -42,12 +45,16 @@ class AppHarness {
   /// Ids of the seeded rows, for pages that need one to be constructed.
   late SeededData seeded;
 
-  /// Registers the plugin doubles. Runs once per test file.
+  /// Registers the plugin doubles and loads real fonts. Runs once per test
+  /// file.
   Future<void> setUpAll() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
     // Outfit is fetched from Google at runtime in the app; tests have no
-    // network and no bundled copy, so let google_fonts fail fast and fall
-    // back to the test font instead of waiting on a socket.
+    // network and no bundled copy, so let google_fonts fail fast — the
+    // families it asks for then resolve through their fallback to the
+    // Roboto loaded below.
     GoogleFonts.config.allowRuntimeFetching = false;
+    await loadTestFonts();
     // Every test opens its own in-memory database; drift's "created the
     // database class multiple times" warning is noise here.
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -127,6 +134,19 @@ class AppHarness {
     await settle(tester);
   }
 
+  /// Takes the page down at the end of a test body, while the fake-async
+  /// zone is still alive: unmounts the tree so every StreamBuilder cancels
+  /// its Drift stream, then pumps the zero-length timer Drift schedules when
+  /// a stream closes. Without this the framework reports "A Timer is still
+  /// pending" and the database close in [tearDown] can hang on a query.
+  Future<void> unmount(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    // `pump()` without a duration never advances the fake clock, and a
+    // zero-length timer only fires when the clock moves past it.
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump(const Duration(milliseconds: 1));
+  }
+
   /// Pumps frames until nothing is scheduled any more, or [maxFrames] have
   /// passed. Unlike `pumpAndSettle` this never throws on a page that keeps
   /// an animation running (progress spinners, pulsing highlights).
@@ -150,6 +170,27 @@ class AppHarness {
   /// Every locale the app ships, in the order of `supportedLocales`.
   static List<Locale> get locales => AppLocalizations.supportedLocales;
 }
+
+/// Loads Roboto from `test/fonts/` under the family names the theme asks
+/// for, so text is measured with real glyph metrics instead of the test
+/// binding's box glyphs (which are as wide as they are tall). Idempotent.
+Future<void> loadTestFonts() async {
+  if (_fontsLoaded) return;
+  _fontsLoaded = true;
+  const files = ['Roboto-Regular.ttf', 'Roboto-Medium.ttf', 'Roboto-Bold.ttf'];
+  // google_fonts styles name the family `Outfit_regular` etc. with `Outfit`
+  // as fallback; Material's defaults ask for `Roboto`.
+  for (final family in ['Outfit', 'Roboto']) {
+    final loader = FontLoader(family);
+    for (final file in files) {
+      final bytes = File('test/fonts/$file').readAsBytesSync();
+      loader.addFont(Future.value(ByteData.sublistView(bytes)));
+    }
+    await loader.load();
+  }
+}
+
+bool _fontsLoaded = false;
 
 /// Row ids created by [seedDatabase].
 class SeededData {
