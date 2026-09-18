@@ -489,5 +489,9 @@
   "confirmReenrollBody": "{name} vuelve a la lista activa; sus planes y recordatorios se vuelven a crear.",
   "validationEnterNumber": "Introduce un número.",
   "validationPositiveNumber": "Introduce un número mayor que 0.",
-  "inventoryAddFirstMedicationHint": "Añade tu primer medicamento con el botón de abajo."
+  "inventoryAddFirstMedicationHint": "Añade tu primer medicamento con el botón de abajo.",
+  "savedSupply": "Material fungible guardado",
+  "reenrolledMedication": "{name} vuelve a estar activo",
+  "restoringPleaseWait": "Restaurando la copia de seguridad, espera…",
+  "loading": "Cargando…"
 }

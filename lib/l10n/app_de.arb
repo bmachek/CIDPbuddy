@@ -489,5 +489,9 @@
   "confirmReenrollBody": "{name} kehrt zurück in die aktive Liste; Zeitpläne und Erinnerungen werden neu erstellt.",
   "validationEnterNumber": "Bitte gib eine Zahl ein.",
   "validationPositiveNumber": "Bitte gib eine Zahl größer als 0 ein.",
-  "inventoryAddFirstMedicationHint": "Füge dein erstes Medikament über die Schaltfläche unten hinzu."
+  "inventoryAddFirstMedicationHint": "Füge dein erstes Medikament über die Schaltfläche unten hinzu.",
+  "savedSupply": "Verbrauchsmaterial gespeichert",
+  "reenrolledMedication": "{name} ist wieder aktiv",
+  "restoringPleaseWait": "Backup wird wiederhergestellt, bitte warten…",
+  "loading": "Wird geladen…"
 }

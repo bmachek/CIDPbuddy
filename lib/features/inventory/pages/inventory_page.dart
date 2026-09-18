@@ -51,10 +51,7 @@ class InventoryPage extends StatelessWidget {
               SliverAppBar.large(
                 backgroundColor: Colors.transparent,
                 surfaceTintColor: Colors.transparent,
-                title: Text(
-                  context.l10n.navMedication,
-                  style: const TextStyle(height: 1.25),
-                ),
+                title: Text(context.l10n.navMedication),
                 pinned: true,
                 actions: [
                   IconButton(
@@ -770,6 +767,12 @@ class InventoryPage extends StatelessWidget {
                 return;
               }
               navigator.pop();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(l10n.savedSupply),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             },
             child: Text(dialogContext.l10n.actionSave),
           ),

@@ -1674,7 +1674,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get discardChangesBody =>
-      'Ihre Eingaben wurden noch nicht gespeichert.';
+      'Deine Eingaben wurden noch nicht gespeichert.';
 
   @override
   String get errorLoadingData => 'Die Daten konnten nicht geladen werden.';
@@ -1699,13 +1699,28 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get validationEnterNumber => 'Bitte geben Sie eine Zahl ein.';
+  String get validationEnterNumber => 'Bitte gib eine Zahl ein.';
 
   @override
   String get validationPositiveNumber =>
-      'Bitte geben Sie eine Zahl größer als 0 ein.';
+      'Bitte gib eine Zahl größer als 0 ein.';
 
   @override
   String get inventoryAddFirstMedicationHint =>
-      'Fügen Sie Ihr erstes Medikament über die Schaltfläche unten hinzu.';
+      'Füge dein erstes Medikament über die Schaltfläche unten hinzu.';
+
+  @override
+  String get savedSupply => 'Verbrauchsmaterial gespeichert';
+
+  @override
+  String reenrolledMedication(String name) {
+    return '$name ist wieder aktiv';
+  }
+
+  @override
+  String get restoringPleaseWait =>
+      'Backup wird wiederhergestellt, bitte warten…';
+
+  @override
+  String get loading => 'Wird geladen…';
 }

@@ -2460,5 +2460,26 @@
   "inventoryAddFirstMedicationHint": "Add your first medication with the button below.",
   "@inventoryAddFirstMedicationHint": {
     "description": "Empty-state guidance shown on the inventory tab below the no-medications message"
+  },
+  "savedSupply": "Supply saved",
+  "@savedSupply": {
+    "description": "Snackbar after creating or editing an accessory such as an infusion set"
+  },
+  "reenrolledMedication": "{name} is active again",
+  "@reenrolledMedication": {
+    "description": "Snackbar after a discontinued medication is resumed; name is the medication name",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "restoringPleaseWait": "Restoring backup, please wait…",
+  "@restoringPleaseWait": {
+    "description": "Text under the spinner while a backup is being restored and the app is about to restart"
+  },
+  "loading": "Loading…",
+  "@loading": {
+    "description": "Generic semantics label for a progress spinner"
   }
 }

@@ -786,6 +786,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 return;
               }
               navigator.pop();
+              _showSnack(messenger, l10n.savedSupply);
             },
             child: Text(dialogContext.l10n.actionSave),
           ),
@@ -1036,6 +1037,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   return;
                 }
                 navigator.pop();
+                _showSnack(messenger, l10n.savedSupply);
               },
               child: Text(dialogContext.l10n.actionCreate),
             ),
@@ -1272,7 +1274,7 @@ class MedicationDetailsPage extends StatelessWidget {
                 return;
               }
               navigator.pop();
-              _showSnack(messenger, l10n.savedMedication);
+              _showSnack(messenger, l10n.reenrolledMedication(med.name));
             },
             child: Text(dialogContext.l10n.medDetailsReenroll),
           ),
@@ -1734,6 +1736,7 @@ class MedicationDetailsPage extends StatelessWidget {
                   return;
                 }
                 navigator.pop();
+                _showSnack(messenger, l10n.savedSupply);
               },
               child: Text(dialogContext.l10n.actionSave),
             ),

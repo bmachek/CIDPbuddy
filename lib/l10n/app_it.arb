@@ -489,5 +489,9 @@
   "confirmReenrollBody": "{name} torna nell'elenco attivo; i suoi piani e promemoria vengono ricreati.",
   "validationEnterNumber": "Inserisci un numero.",
   "validationPositiveNumber": "Inserisci un numero maggiore di 0.",
-  "inventoryAddFirstMedicationHint": "Aggiungi il tuo primo farmaco con il pulsante qui sotto."
+  "inventoryAddFirstMedicationHint": "Aggiungi il tuo primo farmaco con il pulsante qui sotto.",
+  "savedSupply": "Materiale di consumo salvato",
+  "reenrolledMedication": "{name} è di nuovo attivo",
+  "restoringPleaseWait": "Ripristino del backup in corso, attendere…",
+  "loading": "Caricamento…"
 }

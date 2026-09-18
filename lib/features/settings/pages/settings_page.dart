@@ -43,7 +43,7 @@ class _SettingsPageState extends State<SettingsPage> {
         // Explicit line height (Outfit's natural one is ~1.26, so this is
         // invisible) keeps some background inside the title's box: the
         // contrast checker samples what is painted behind the glyphs.
-        title: Text(l10n.navSettings, style: const TextStyle(height: 1.25)),
+        title: Text(l10n.navSettings),
       ),
       body: ListView(
         children: [
@@ -1257,7 +1257,7 @@ class _SettingsPageState extends State<SettingsPage> {
         canPop: false,
         child: Center(
           child: Semantics(
-            label: l10n.actionRestore,
+            label: l10n.restoringPleaseWait,
             liveRegion: true,
             child: Card(
               margin: const EdgeInsets.all(32),
@@ -1268,7 +1268,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     const CircularProgressIndicator(),
                     const SizedBox(height: 16),
-                    Text(l10n.actionRestore, textAlign: TextAlign.center),
+                    Text(l10n.restoringPleaseWait, textAlign: TextAlign.center),
                   ],
                 ),
               ),

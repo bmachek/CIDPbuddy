@@ -489,5 +489,9 @@
   "confirmReenrollBody": "{name} revient dans la liste active ; ses plans et rappels sont recréés.",
   "validationEnterNumber": "Veuillez saisir un nombre.",
   "validationPositiveNumber": "Veuillez saisir un nombre supérieur à 0.",
-  "inventoryAddFirstMedicationHint": "Ajoutez votre premier médicament avec le bouton ci-dessous."
+  "inventoryAddFirstMedicationHint": "Ajoutez votre premier médicament avec le bouton ci-dessous.",
+  "savedSupply": "Consommable enregistré",
+  "reenrolledMedication": "{name} est de nouveau actif",
+  "restoringPleaseWait": "Restauration de la sauvegarde, veuillez patienter…",
+  "loading": "Chargement…"
 }

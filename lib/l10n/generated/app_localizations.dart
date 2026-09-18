@@ -3048,6 +3048,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add your first medication with the button below.'**
   String get inventoryAddFirstMedicationHint;
+
+  /// Snackbar after creating or editing an accessory such as an infusion set
+  ///
+  /// In en, this message translates to:
+  /// **'Supply saved'**
+  String get savedSupply;
+
+  /// Snackbar after a discontinued medication is resumed; name is the medication name
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is active again'**
+  String reenrolledMedication(String name);
+
+  /// Text under the spinner while a backup is being restored and the app is about to restart
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring backup, please wait…'**
+  String get restoringPleaseWait;
+
+  /// Generic semantics label for a progress spinner
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get loading;
 }
 
 class _AppLocalizationsDelegate

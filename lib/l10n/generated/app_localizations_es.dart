@@ -1707,4 +1707,19 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get inventoryAddFirstMedicationHint =>
       'Añade tu primer medicamento con el botón de abajo.';
+
+  @override
+  String get savedSupply => 'Material fungible guardado';
+
+  @override
+  String reenrolledMedication(String name) {
+    return '$name vuelve a estar activo';
+  }
+
+  @override
+  String get restoringPleaseWait =>
+      'Restaurando la copia de seguridad, espera…';
+
+  @override
+  String get loading => 'Cargando…';
 }

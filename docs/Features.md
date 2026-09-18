@@ -47,7 +47,7 @@ Records:
 - CIDP symptom scores (0–10 each): muscle strength, sensation, fatigue, pain, balance
 - Free-text notes
 
-### Treatment schedule (`add_schedule_page.dart`, `planning_page.dart`)
+### Treatment schedule (`add_schedule_page.dart`)
 
 Schedules can be created with:
 

@@ -84,52 +84,65 @@ class _ActiveTimerBannerState extends State<ActiveTimerBanner>
     final timeText =
         '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     final accent = Theme.of(context).colorScheme.tertiary;
+    final title = _isRunning
+        ? context.l10n.timerBannerRunning
+        : context.l10n.timerBannerPaused;
 
+    // One semantics node for the whole banner: the title and the remaining
+    // time are announced together, as a single button.
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: accent.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          onTap: _openTimer,
-          borderRadius: BorderRadius.circular(18),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Icon(
-                  _isRunning
-                      ? Icons.av_timer_rounded
-                      : Icons.pause_circle_outline_rounded,
-                  color: accent,
+      child: MergeSemantics(
+        child: Semantics(
+          button: true,
+          child: Material(
+            color: accent.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              onTap: _openTimer,
+              borderRadius: BorderRadius.circular(18),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isRunning
-                            ? context.l10n.timerBannerRunning
-                            : context.l10n.timerBannerPaused,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isRunning
+                          ? Icons.av_timer_rounded
+                          : Icons.pause_circle_outline_rounded,
+                      color: accent,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            context.l10n.timerBannerRemaining(timeText),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        context.l10n.timerBannerRemaining(timeText),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: accent),
+                  ],
                 ),
-                Icon(Icons.chevron_right_rounded, color: accent),
-              ],
+              ),
             ),
           ),
         ),
