@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cidpbuddy/core/database/database.dart';
 import 'package:cidpbuddy/features/inventory/providers/inventory_provider.dart';
@@ -23,6 +24,10 @@ import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Outfit ships in assets/google_fonts/. Never fetch it at runtime: the
+  // font would be missing on a first launch without network, and a medical
+  // app has no business contacting Google's font servers.
+  GoogleFonts.config.allowRuntimeFetching = false;
   // Force Flutter to build & expose the semantics tree so UI-test tools
   // (Maestro) can find widgets by text/id without a screen reader running.
   SemanticsBinding.instance.ensureSemantics();

@@ -212,11 +212,11 @@ abstract class AppLocalizations {
   /// **'Premedication timer'**
   String get timerTitle;
 
-  /// Timer sheet subtitle; seconds is the configured total duration
+  /// Timer sheet subtitle; minutes is the configured total duration
   ///
   /// In en, this message translates to:
-  /// **'Ping every minute • {seconds} sec timer'**
-  String timerSubtitle(int seconds);
+  /// **'Ping every minute • {minutes} min timer'**
+  String timerSubtitle(int minutes);
 
   /// Label under the countdown digits
   ///
@@ -2712,6 +2712,366 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backup of the CIDP Buddy database from {date}'**
   String shareBackupText(String date);
+
+  /// Tooltip for the app bar icon button that opens the statistics page from the diary
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get tooltipOpenStatistics;
+
+  /// Tooltip for the icon button that edits a pending medication order on the dashboard
+  ///
+  /// In en, this message translates to:
+  /// **'Edit order'**
+  String get tooltipEditOrder;
+
+  /// Tooltip for the icon button that deletes a pending medication order on the dashboard
+  ///
+  /// In en, this message translates to:
+  /// **'Delete order'**
+  String get tooltipDeleteOrder;
+
+  /// Tooltip for the icon button that edits a logged infusion in the diary
+  ///
+  /// In en, this message translates to:
+  /// **'Edit infusion entry'**
+  String get tooltipEditInfusionLog;
+
+  /// Tooltip for the icon button that deletes a logged infusion in the diary
+  ///
+  /// In en, this message translates to:
+  /// **'Delete infusion entry'**
+  String get tooltipDeleteInfusionLog;
+
+  /// Tooltip for the icon button that edits an accessory such as an infusion set
+  ///
+  /// In en, this message translates to:
+  /// **'Edit supply'**
+  String get tooltipEditSupply;
+
+  /// Tooltip for the icon button that deletes an accessory such as an infusion set
+  ///
+  /// In en, this message translates to:
+  /// **'Delete supply'**
+  String get tooltipDeleteSupply;
+
+  /// Tooltip for the chevron icon that opens details for a medication row
+  ///
+  /// In en, this message translates to:
+  /// **'Show details'**
+  String get tooltipShowDetails;
+
+  /// Tooltip for the icon button that edits a medication
+  ///
+  /// In en, this message translates to:
+  /// **'Edit medication'**
+  String get tooltipEditMedication;
+
+  /// Tooltip for the gear icon on a supply linked to a medication; opens quantity-per-infusion and mandatory settings
+  ///
+  /// In en, this message translates to:
+  /// **'Link settings'**
+  String get tooltipLinkSettings;
+
+  /// Tooltip for the icon button that unlinks a supply from a medication without deleting the supply itself
+  ///
+  /// In en, this message translates to:
+  /// **'Remove supply from this medication'**
+  String get tooltipUnlinkSupply;
+
+  /// Tooltip for the icon button that edits a recurring infusion or intake schedule
+  ///
+  /// In en, this message translates to:
+  /// **'Edit schedule'**
+  String get tooltipEditSchedule;
+
+  /// Tooltip for the icon button that deletes a recurring infusion or intake schedule
+  ///
+  /// In en, this message translates to:
+  /// **'Delete schedule'**
+  String get tooltipDeleteSchedule;
+
+  /// Tooltip for the icon button that clears a selected date field
+  ///
+  /// In en, this message translates to:
+  /// **'Clear date'**
+  String get tooltipClearDate;
+
+  /// Tooltip for the icon button that removes one of several daily intake times on a schedule
+  ///
+  /// In en, this message translates to:
+  /// **'Remove time'**
+  String get tooltipRemoveIntakeTime;
+
+  /// Tooltip for the icon button that removes the photographed batch label
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get tooltipRemovePhoto;
+
+  /// Tooltip for the premedication timer's reset control
+  ///
+  /// In en, this message translates to:
+  /// **'Reset timer'**
+  String get tooltipTimerReset;
+
+  /// Tooltip for the premedication timer's start control
+  ///
+  /// In en, this message translates to:
+  /// **'Start timer'**
+  String get tooltipTimerStart;
+
+  /// Tooltip for the premedication timer's pause control
+  ///
+  /// In en, this message translates to:
+  /// **'Pause timer'**
+  String get tooltipTimerPause;
+
+  /// Tooltip for the premedication timer's duration control
+  ///
+  /// In en, this message translates to:
+  /// **'Set duration'**
+  String get tooltipTimerDuration;
+
+  /// Generic button label that closes a sheet or dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get actionClose;
+
+  /// Generic button label that navigates to the previous screen
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get actionBack;
+
+  /// Button label that discards unsaved changes
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get actionDiscard;
+
+  /// Button label that dismisses the discard-changes prompt and returns to the form
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get actionKeepEditing;
+
+  /// Button label that reverses the last action, shown e.g. in a snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get actionUndo;
+
+  /// Screen-reader label for the per-row button that logs an infusion
+  ///
+  /// In en, this message translates to:
+  /// **'Log infusion of {name} now'**
+  String dashboardLogInfusionFor(String name);
+
+  /// Screen-reader label for the per-row button that marks a dose as taken
+  ///
+  /// In en, this message translates to:
+  /// **'Mark {name} as taken'**
+  String dashboardMarkDoneFor(String name);
+
+  /// Screen-reader label for the per-row button that removes a planned infusion
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from the plan'**
+  String dashboardRemoveFor(String name);
+
+  /// Screen-reader label read aloud for a symptom bar in the diary; symptom is the already-localized symptom name
+  ///
+  /// In en, this message translates to:
+  /// **'{symptom}: {score} of 10'**
+  String symptomScoreLabel(String symptom, int score);
+
+  /// Label for the green check icon in settings shown once a backup destination is set up
+  ///
+  /// In en, this message translates to:
+  /// **'Backup destination configured'**
+  String get backupDestinationConfigured;
+
+  /// Short status badge text shown next to a passed reliability check
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get reliabilityStatusOk;
+
+  /// Short status badge text shown next to a failed reliability check
+  ///
+  /// In en, this message translates to:
+  /// **'Action needed'**
+  String get reliabilityStatusFailed;
+
+  /// Chip label showing the premedication duration in minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String minutesShort(int count);
+
+  /// Formatted volume value with its unit; value is already formatted
+  ///
+  /// In en, this message translates to:
+  /// **'{value} ml'**
+  String millilitersShort(String value);
+
+  /// Progress label showing remaining versus total volume in millilitres
+  ///
+  /// In en, this message translates to:
+  /// **'{remaining} / {total} ml'**
+  String millilitersProgress(String remaining, String total);
+
+  /// Unit suffix shown inside the body-weight field
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get kilogramsShort;
+
+  /// Formatted file size in megabytes; value is already formatted
+  ///
+  /// In en, this message translates to:
+  /// **'{value} MB'**
+  String megabytes(String value);
+
+  /// One line describing a delivered order item in the diary
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} {unit} {name}'**
+  String deliveredItem(String quantity, String unit, String name);
+
+  /// Snackbar confirmation after saving an infusion entry
+  ///
+  /// In en, this message translates to:
+  /// **'Infusion logged'**
+  String get savedInfusion;
+
+  /// Snackbar confirmation after saving a diary entry
+  ///
+  /// In en, this message translates to:
+  /// **'Entry saved'**
+  String get savedDiaryEntry;
+
+  /// Snackbar confirmation after saving a recurring schedule
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule saved'**
+  String get savedSchedule;
+
+  /// Snackbar confirmation after saving a pending order
+  ///
+  /// In en, this message translates to:
+  /// **'Order saved'**
+  String get savedOrder;
+
+  /// Snackbar confirmation after saving a medication
+  ///
+  /// In en, this message translates to:
+  /// **'Medication saved'**
+  String get savedMedication;
+
+  /// Generic snackbar confirmation after deleting an item
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get deletedGeneric;
+
+  /// Snackbar shown when saving any form fails
+  ///
+  /// In en, this message translates to:
+  /// **'Saving failed: {error}'**
+  String saveFailed(String error);
+
+  /// Title of the confirmation dialog shown when leaving a form with unsaved changes
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get discardChangesTitle;
+
+  /// Body of the discard-changes confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Your entries have not been saved yet.'**
+  String get discardChangesBody;
+
+  /// Generic error state shown by a StreamBuilder/FutureBuilder when loading fails
+  ///
+  /// In en, this message translates to:
+  /// **'The data could not be loaded.'**
+  String get errorLoadingData;
+
+  /// Shown on the medication details page when the underlying row was deleted meanwhile
+  ///
+  /// In en, this message translates to:
+  /// **'This medication no longer exists.'**
+  String get medDetailsNotFound;
+
+  /// Title of the confirmation dialog for unlinking a supply from a medication
+  ///
+  /// In en, this message translates to:
+  /// **'Remove supply?'**
+  String get confirmUnlinkSupplyTitle;
+
+  /// Body of the confirmation dialog for unlinking a supply
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will no longer be ordered together with this medication.'**
+  String confirmUnlinkSupplyBody(String name);
+
+  /// Title of the confirmation dialog for putting a discontinued medication back into active use
+  ///
+  /// In en, this message translates to:
+  /// **'Resume medication?'**
+  String get confirmReenrollTitle;
+
+  /// Body of the confirmation dialog for resuming a discontinued medication
+  ///
+  /// In en, this message translates to:
+  /// **'{name} returns to the active list; its schedules and reminders are recreated.'**
+  String confirmReenrollBody(String name);
+
+  /// Form validator message for a numeric field left empty or non-numeric
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a number'**
+  String get validationEnterNumber;
+
+  /// Form validator message for a numeric field that must be positive
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a number greater than 0'**
+  String get validationPositiveNumber;
+
+  /// Empty-state guidance shown on the inventory tab below the no-medications message
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first medication with the button below.'**
+  String get inventoryAddFirstMedicationHint;
+
+  /// Snackbar after creating or editing an accessory such as an infusion set
+  ///
+  /// In en, this message translates to:
+  /// **'Supply saved'**
+  String get savedSupply;
+
+  /// Snackbar after a discontinued medication is resumed; name is the medication name
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is active again'**
+  String reenrolledMedication(String name);
+
+  /// Text under the spinner while a backup is being restored and the app is about to restart
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring backup, please wait…'**
+  String get restoringPleaseWait;
+
+  /// Generic semantics label for a progress spinner
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get loading;
 }
 
 class _AppLocalizationsDelegate

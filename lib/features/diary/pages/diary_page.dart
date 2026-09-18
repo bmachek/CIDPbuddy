@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:provider/provider.dart';
 import '../providers/diary_provider.dart';
@@ -8,6 +10,7 @@ import 'add_infusion_page.dart';
 import 'add_diary_entry_page.dart';
 import 'statistics_page.dart';
 import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
+import 'package:cidpbuddy/core/theme/app_colors.dart';
 
 class DiaryPage extends StatelessWidget {
   const DiaryPage({super.key});
@@ -29,6 +32,7 @@ class DiaryPage extends StatelessWidget {
                 title: Text(context.l10n.diaryTitle),
                 actions: [
                   IconButton(
+                    tooltip: context.l10n.tooltipOpenStatistics,
                     icon: const Icon(Icons.bar_chart_rounded),
                     onPressed: () => Navigator.push(
                       context,
@@ -37,17 +41,21 @@ class DiaryPage extends StatelessWidget {
                   ),
                 ],
               ),
-              if (entries.isEmpty)
+              if (snapshot.hasError)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildErrorState(context),
+                )
+              else if (entries.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: _buildEmptyState(context),
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
+                  // The bottom clearance keeps the last entry above the
+                  // translucent navigation bar (extendBody) and the FABs.
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 160),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final entry = entries[index];
@@ -69,9 +77,7 @@ class DiaryPage extends StatelessWidget {
         },
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(
-          bottom: 120,
-        ), // Moved higher for better accessibility
+        padding: const EdgeInsets.only(bottom: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -87,7 +93,7 @@ class DiaryPage extends StatelessWidget {
               backgroundColor: Theme.of(
                 context,
               ).cardColor.withValues(alpha: 0.9),
-              foregroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: AppStatusColors.of(context).accentText,
             ),
             const SizedBox(height: 12),
             FloatingActionButton.extended(
@@ -105,9 +111,25 @@ class DiaryPage extends StatelessWidget {
     );
   }
 
+  /// Blood pressure as `120/80`; a half-recorded reading shows what exists.
+  String _bloodPressure(BuildContext context, DiaryEntry entry) {
+    final format = NumberFormat.decimalPattern(context.localeTag);
+    final systolic = entry.systolicBP;
+    final diastolic = entry.diastolicBP;
+    if (systolic != null && diastolic != null) {
+      return '${format.format(systolic.round())}/${format.format(diastolic.round())}';
+    }
+    return format.format((systolic ?? diastolic ?? 0).round());
+  }
+
   Widget _buildDiaryEntryCard(BuildContext context, DiaryEntry entry) {
     final dateStr = AppDateFormat.longDate(context, entry.date);
     final timeStr = AppDateFormat.time(context, entry.date);
+    final intFormat = NumberFormat.decimalPattern(context.localeTag);
+    final oneDecimal = NumberFormat.decimalPatternDigits(
+      locale: context.localeTag,
+      decimalDigits: 1,
+    );
 
     return Column(
       children: [
@@ -163,22 +185,27 @@ class DiaryPage extends StatelessWidget {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          if (entry.systolicBP != null)
+                          if (entry.systolicBP != null ||
+                              entry.diastolicBP != null)
                             _buildSmallChip(
                               context,
-                              '${entry.systolicBP?.toInt()}/${entry.diastolicBP?.toInt()}',
+                              _bloodPressure(context, entry),
                               Icons.favorite,
                             ),
                           if (entry.heartRate != null)
                             _buildSmallChip(
                               context,
-                              context.l10n.bpmValue('${entry.heartRate}'),
+                              context.l10n.bpmValue(
+                                intFormat.format(entry.heartRate),
+                              ),
                               Icons.monitor_heart,
                             ),
                           if (entry.weight != null)
                             _buildSmallChip(
                               context,
-                              context.l10n.kilogramsValue('${entry.weight}'),
+                              context.l10n.kilogramsValue(
+                                oneDecimal.format(entry.weight),
+                              ),
                               Icons.monitor_weight,
                             ),
                         ],
@@ -210,12 +237,12 @@ class DiaryPage extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 10, color: Theme.of(context).colorScheme.primary),
+          Icon(icon, size: 14, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 4),
           Text(
             text,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
             ),
@@ -226,65 +253,94 @@ class DiaryPage extends StatelessWidget {
   }
 
   Widget _buildSymptomMiniBar(BuildContext context, DiaryEntry entry) {
-    final Map<IconData, int?> symptomScores = {
-      Icons.fitness_center_rounded: entry.strengthScore,
-      Icons.touch_app_rounded: entry.sensoryScore,
-      Icons.battery_alert_rounded: entry.fatigueScore,
-      Icons.bolt_rounded: entry.painScore,
-      Icons.balance_rounded: entry.balanceScore,
-    };
+    final l10n = context.l10n;
+    final symptoms = <({IconData icon, String name, int? score})>[
+      (
+        icon: Icons.fitness_center_rounded,
+        name: l10n.symptomStrength,
+        score: entry.strengthScore,
+      ),
+      (
+        icon: Icons.touch_app_rounded,
+        name: l10n.symptomSensory,
+        score: entry.sensoryScore,
+      ),
+      (
+        icon: Icons.battery_alert_rounded,
+        name: l10n.symptomFatigue,
+        score: entry.fatigueScore,
+      ),
+      (
+        icon: Icons.bolt_rounded,
+        name: l10n.symptomPain,
+        score: entry.painScore,
+      ),
+      (
+        icon: Icons.balance_rounded,
+        name: l10n.symptomBalance,
+        score: entry.balanceScore,
+      ),
+    ];
 
-    final activeSymptoms = symptomScores.entries
-        .where((e) => e.value != null)
-        .toList();
+    final activeSymptoms = symptoms.where((s) => s.score != null).toList();
     if (activeSymptoms.isEmpty) return const SizedBox();
+    final numberFormat = NumberFormat.decimalPattern(context.localeTag);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          context.l10n.diaryVitalsAndSymptomsLabel,
+          l10n.diaryVitalsAndSymptomsLabel,
           style: TextStyle(
-            fontSize: 9,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
-            color: Theme.of(context).colorScheme.primary,
+            color: AppStatusColors.of(context).accentText,
           ),
         ),
         const SizedBox(height: 6),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: activeSymptoms.map((e) {
-            final score = e.value ?? 0;
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: activeSymptoms.map((s) {
+            final score = s.score ?? 0;
+            final color = _getColorForScore(context, score);
+            // Colour alone is not enough: the score is printed under each
+            // bar, and a screen reader hears "Pain: 7 of 10".
             return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 4.0),
-                child: Column(
-                  children: [
-                    Icon(
-                      e.key,
-                      size: 14,
-                      color: _getColorForScore(context, score),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: _getColorForScore(context, score),
-                        borderRadius: BorderRadius.circular(2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _getColorForScore(
-                              context,
-                              score,
-                            ).withValues(alpha: 0.3),
-                            blurRadius: 4,
-                            spreadRadius: 1,
-                          ),
-                        ],
+              child: Semantics(
+                label: l10n.symptomScoreLabel(s.name, score),
+                excludeSemantics: true,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 4.0),
+                  child: Column(
+                    children: [
+                      Icon(s.icon, size: 16, color: color),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.3),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        numberFormat.format(score),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -296,31 +352,58 @@ class DiaryPage extends StatelessWidget {
 
   Color _getColorForScore(BuildContext context, int score) {
     if (score >= 8) return Theme.of(context).colorScheme.error;
-    if (score >= 5) return const Color(0xFFFFB300); // Warning Gold
-    return Theme.of(context).colorScheme.tertiary; // Emerald
+    if (score >= 5) return AppStatusColors.of(context).warning;
+    return AppStatusColors.of(context).success;
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    // Scrollable so that a large system font never overflows the space the
+    // sliver leaves for it.
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(32, 32, 32, 160),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/images/empty_diary.png',
+            height: 200,
+            fit: BoxFit.contain,
+            excludeFromSemantics: true,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            context.l10n.diaryEmptyTitle,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.diaryEmptyBody,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.all(32),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'assets/images/empty_diary.png',
-              height: 200,
-              fit: BoxFit.contain,
+            Icon(
+              Icons.error_outline_rounded,
+              size: 40,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             Text(
-              context.l10n.diaryEmptyTitle,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.l10n.diaryEmptyBody,
+              context.l10n.errorLoadingData,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -335,6 +418,11 @@ class DiaryPage extends StatelessWidget {
   Widget _buildLogCard(BuildContext context, InfusionLogData log) {
     final dateStr = AppDateFormat.longDate(context, log.date);
     final timeStr = AppDateFormat.time(context, log.date);
+    final accentText = AppStatusColors.of(context).accentText;
+    final oneDecimal = NumberFormat.decimalPatternDigits(
+      locale: context.localeTag,
+      decimalDigits: 1,
+    );
 
     return Column(
       children: [
@@ -376,15 +464,17 @@ class DiaryPage extends StatelessWidget {
                         Icon(
                           Icons.access_time_rounded,
                           size: 14,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: accentText,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          timeStr,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
+                        Flexible(
+                          child: Text(
+                            timeStr,
+                            style: TextStyle(
+                              color: accentText,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ],
@@ -421,19 +511,22 @@ class DiaryPage extends StatelessWidget {
                             Icon(
                               Icons.monitor_weight_rounded,
                               size: 14,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant
-                                  .withValues(alpha: 0.5),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              context.l10n.kilogramsValue('${log.bodyWeight}'),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
+                            Flexible(
+                              child: Text(
+                                context.l10n.kilogramsValue(
+                                  oneDecimal.format(log.bodyWeight),
+                                ),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
                               ),
                             ),
                           ],
@@ -449,6 +542,7 @@ class DiaryPage extends StatelessWidget {
                             height: 120,
                             width: double.infinity,
                             fit: BoxFit.cover,
+                            semanticLabel: context.l10n.actionPhotoOfLabel,
                             errorBuilder: (context, error, stackTrace) =>
                                 const SizedBox.shrink(),
                           ),
@@ -457,7 +551,7 @@ class DiaryPage extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -465,30 +559,30 @@ class DiaryPage extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        tooltip: context.l10n.tooltipEditInfusionLog,
+                        icon: const Icon(Icons.edit_outlined, size: 20),
                         onPressed: () => _showEditLogDialog(
                           context,
                           Provider.of<AppDatabase>(context, listen: false),
                           log,
                         ),
-                        visualDensity: VisualDensity.compact,
                       ),
                       IconButton(
+                        tooltip: context.l10n.tooltipDeleteInfusionLog,
                         icon: Icon(
                           Icons.delete_outline_rounded,
                           color: Theme.of(context).colorScheme.error,
-                          size: 18,
+                          size: 20,
                         ),
                         onPressed: () => _confirmDeleteLog(
                           context,
                           Provider.of<AppDatabase>(context, listen: false),
                           log,
                         ),
-                        visualDensity: VisualDensity.compact,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -506,10 +600,10 @@ class DiaryPage extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      log.dosage.toStringAsFixed(1),
+                      oneDecimal.format(log.dosage),
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: accentText,
                         fontSize: 14,
                       ),
                     ),
@@ -529,43 +623,59 @@ class DiaryPage extends StatelessWidget {
     AppDatabase db,
     InfusionLogData log,
   ) {
+    final formKey = GlobalKey<FormState>();
     final batchController = TextEditingController(text: log.batchNumber ?? '');
+    final weight = log.bodyWeight;
     final weightController = TextEditingController(
-      text: log.bodyWeight?.toString() ?? '',
+      text: weight == null
+          ? ''
+          : (weight == weight.roundToDouble()
+                ? weight.toInt().toString()
+                : weight.toString()),
     );
     final notesController = TextEditingController(text: log.notes ?? '');
     DateTime selectedDate = log.date;
+    var saving = false;
 
     showDialog(
       context: context,
+      // Three fields to fill in: an accidental tap outside must not throw
+      // the edits away.
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: Text(context.l10n.diaryEntryTitleEdit),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text(context.l10n.sectionDateTime),
-                subtitle: Text(AppDateFormat.dateTime(context, selectedDate)),
-                trailing: const Icon(Icons.edit_calendar_rounded),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime.now().subtract(
-                      const Duration(days: 365),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(context.l10n.sectionDateTime),
+                    subtitle: Text(
+                      AppDateFormat.dateTime(context, selectedDate),
                     ),
-                    lastDate: DateTime.now(),
-                  );
-                  if (date != null && context.mounted) {
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay.fromDateTime(selectedDate),
-                    );
-                    if (time != null && context.mounted) {
+                    trailing: const Icon(Icons.edit_calendar_rounded),
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime.now().subtract(
+                          const Duration(days: 365),
+                        ),
+                        lastDate: DateTime.now(),
+                      );
+                      if (date == null || !context.mounted) return;
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.fromDateTime(selectedDate),
+                      );
+                      if (time == null || !context.mounted) return;
                       setState(() {
                         selectedDate = DateTime(
                           date.year,
@@ -575,39 +685,56 @@ class DiaryPage extends StatelessWidget {
                           time.minute,
                         );
                       });
-                    }
-                  }
-                },
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: batchController,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.fieldBatchNumberShort,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: weightController,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.fieldBodyWeight,
+                      border: const OutlineInputBorder(),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                    ],
+                    validator: (text) {
+                      if (text == null || text.trim().isEmpty) return null;
+                      final value = double.tryParse(
+                        text.trim().replaceAll(',', '.'),
+                      );
+                      if (value == null) {
+                        return context.l10n.validationEnterNumber;
+                      }
+                      if (value <= 0) {
+                        return context.l10n.validationPositiveNumber;
+                      }
+                      return null;
+                    },
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: notesController,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.fieldNotes,
+                      border: const OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: batchController,
-                decoration: InputDecoration(
-                  labelText: context.l10n.fieldBatchNumberShort,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: weightController,
-                decoration: InputDecoration(
-                  labelText: context.l10n.fieldBodyWeight,
-                  border: const OutlineInputBorder(),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: notesController,
-                decoration: InputDecoration(
-                  labelText: context.l10n.fieldNotes,
-                  border: const OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-            ],
+            ),
           ),
           actions: [
             TextButton(
@@ -616,19 +743,35 @@ class DiaryPage extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () async {
-                await db.updateInfusionLog(
-                  log.copyWith(
-                    date: selectedDate,
-                    batchNumber: drift.Value(batchController.text),
-                    bodyWeight: drift.Value(
-                      double.tryParse(
-                        weightController.text.replaceAll(',', '.'),
+                if (saving) return;
+                if (!(formKey.currentState?.validate() ?? false)) return;
+                saving = true;
+                final messenger = ScaffoldMessenger.of(context);
+                final l10n = context.l10n;
+                try {
+                  await db.updateInfusionLog(
+                    log.copyWith(
+                      date: selectedDate,
+                      batchNumber: drift.Value(batchController.text),
+                      bodyWeight: drift.Value(
+                        double.tryParse(
+                          weightController.text.trim().replaceAll(',', '.'),
+                        ),
                       ),
+                      notes: drift.Value(notesController.text),
                     ),
-                    notes: drift.Value(notesController.text),
-                  ),
-                );
+                  );
+                } catch (e) {
+                  saving = false;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(l10n.saveFailed('$e'))),
+                  );
+                  return;
+                }
                 if (context.mounted) Navigator.pop(context);
+                messenger.showSnackBar(
+                  SnackBar(content: Text(l10n.savedInfusion)),
+                );
               },
               child: Text(context.l10n.actionSave),
             ),
@@ -655,11 +798,16 @@ class DiaryPage extends StatelessWidget {
             child: Text(context.l10n.actionCancel),
           ),
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: () async {
               // Guard against double-taps: the dialog only closes after the
               // transaction, so a second tap would credit the stock twice.
               if (deleting) return;
               deleting = true;
+              final messenger = ScaffoldMessenger.of(context);
+              final l10n = context.l10n;
               try {
                 await db.transaction(() async {
                   // 1. Revert medication stock. The medication may have been
@@ -692,16 +840,20 @@ class DiaryPage extends StatelessWidget {
                   // 3. Delete log
                   await db.deleteInfusionLog(log.id);
                 });
-              } finally {
+              } catch (e) {
                 deleting = false;
+                messenger.showSnackBar(
+                  SnackBar(content: Text(l10n.saveFailed('$e'))),
+                );
+                return;
               }
 
               if (context.mounted) Navigator.pop(context);
+              messenger.showSnackBar(
+                SnackBar(content: Text(l10n.deletedGeneric)),
+              );
             },
-            child: Text(
-              context.l10n.actionDelete,
-              style: const TextStyle(color: Colors.red),
-            ),
+            child: Text(context.l10n.actionDelete),
           ),
         ],
       ),
@@ -714,6 +866,7 @@ class DiaryPage extends StatelessWidget {
       context,
       order.deliveryDate ?? DateTime.now(),
     );
+    final quantityFormat = NumberFormat.decimalPattern(context.localeTag);
 
     return FutureBuilder<List<PendingOrderItem>>(
       future: db.getPendingOrderItems(order.id),
@@ -767,23 +920,33 @@ class DiaryPage extends StatelessWidget {
                                 )..where((t) => t.id.equals(item.accessoryId!)))
                                 .getSingle(),
                       builder: (context, nameSnapshot) {
-                        final name = nameSnapshot.data?.name ?? '...';
-                        final unit = nameSnapshot.data?.unit ?? '';
+                        final String text;
+                        if (nameSnapshot.hasError) {
+                          // The item was deleted since: say so instead of
+                          // leaving a permanent "…" placeholder.
+                          text = context.l10n.errorLoadingData;
+                        } else if (nameSnapshot.hasData) {
+                          text = context.l10n.deliveredItem(
+                            quantityFormat.format(item.quantity),
+                            nameSnapshot.data?.unit ?? '',
+                            nameSnapshot.data?.name ?? '',
+                          );
+                        } else {
+                          text = '…';
+                        }
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.check_circle_rounded,
-                                size: 12,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.5),
+                                size: 14,
+                                color: AppStatusColors.of(context).success,
                               ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  '${item.quantity.toStringAsFixed(0)} $unit $name',
+                                  text,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Theme.of(
@@ -814,24 +977,20 @@ class DiaryPage extends StatelessWidget {
   ) {
     final dateStr = AppDateFormat.longDate(context, event.date);
     final isDiscontinued = event.type == MedicationEventType.discontinued;
+    final status = AppStatusColors.of(context);
+    final accent = isDiscontinued ? status.inactive : status.success;
 
     return Column(
       children: [
         ListTile(
           contentPadding: const EdgeInsets.symmetric(vertical: 8),
           leading: CircleAvatar(
-            backgroundColor:
-                (isDiscontinued
-                        ? Colors.grey
-                        : Theme.of(context).colorScheme.tertiary)
-                    .withValues(alpha: 0.1),
+            backgroundColor: accent.withValues(alpha: 0.1),
             child: Icon(
               isDiscontinued
                   ? Icons.heart_broken_outlined
                   : Icons.add_moderator_outlined,
-              color: isDiscontinued
-                  ? Colors.grey
-                  : Theme.of(context).colorScheme.tertiary,
+              color: accent,
             ),
           ),
           title: Text(

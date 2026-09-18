@@ -4,6 +4,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 
 import 'premedication_timer_modal.dart';
 import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
+import 'package:cidpbuddy/core/services/background_service.dart';
 
 /// Re-entry point for a running or paused Vormedikation timer.
 ///
@@ -31,6 +32,10 @@ class _ActiveTimerBannerState extends State<ActiveTimerBanner>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    // The timer lives in the background service, which only exists on
+    // Android and iOS. Elsewhere there is nothing to show.
+    if (!BackgroundService.isSupportedPlatform) return;
+
     final service = FlutterBackgroundService();
     _serviceSubscription = service.on('timerUpdate').listen((event) {
       if (!mounted || event == null) return;
@@ -45,7 +50,8 @@ class _ActiveTimerBannerState extends State<ActiveTimerBanner>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed &&
+        BackgroundService.isSupportedPlatform) {
       // On iOS the service isolate is starved while backgrounded, so its
       // periodic tick has not been broadcasting. Ask for the current state
       // instead of showing whatever was last received.
@@ -78,52 +84,65 @@ class _ActiveTimerBannerState extends State<ActiveTimerBanner>
     final timeText =
         '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     final accent = Theme.of(context).colorScheme.tertiary;
+    final title = _isRunning
+        ? context.l10n.timerBannerRunning
+        : context.l10n.timerBannerPaused;
 
+    // One semantics node for the whole banner: the title and the remaining
+    // time are announced together, as a single button.
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: accent.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          onTap: _openTimer,
-          borderRadius: BorderRadius.circular(18),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Icon(
-                  _isRunning
-                      ? Icons.av_timer_rounded
-                      : Icons.pause_circle_outline_rounded,
-                  color: accent,
+      child: MergeSemantics(
+        child: Semantics(
+          button: true,
+          child: Material(
+            color: accent.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              onTap: _openTimer,
+              borderRadius: BorderRadius.circular(18),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isRunning
-                            ? context.l10n.timerBannerRunning
-                            : context.l10n.timerBannerPaused,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isRunning
+                          ? Icons.av_timer_rounded
+                          : Icons.pause_circle_outline_rounded,
+                      color: accent,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            context.l10n.timerBannerRemaining(timeText),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        context.l10n.timerBannerRemaining(timeText),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: accent),
+                  ],
                 ),
-                Icon(Icons.chevron_right_rounded, color: accent),
-              ],
+              ),
             ),
           ),
         ),

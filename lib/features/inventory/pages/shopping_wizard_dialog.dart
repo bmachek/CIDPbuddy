@@ -1,9 +1,23 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' hide Column, Table;
 import 'package:cidpbuddy/core/services/medication_service.dart';
 import 'package:cidpbuddy/core/database/database.dart';
 import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
+import 'package:cidpbuddy/core/theme/app_colors.dart';
+
+/// Digits and one decimal separator; the German keyboard produces a comma, so
+/// both `.` and `,` are accepted and everything else is dropped as typed.
+final _numberInputFormatters = <TextInputFormatter>[
+  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+];
+
+/// Parses a number the way a patient types it: `1,5` and `1.5` are the same.
+double? _parseNumber(String text) =>
+    double.tryParse(text.trim().replaceAll(',', '.'));
 
 class ShoppingWizardDialog extends StatefulWidget {
   final Medication? initialMedication;
@@ -24,6 +38,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   List<_ShoppingItem>? _results;
   DateTime? _deliveryDate;
   bool _isFirstBuild = true;
+  bool _isSaving = false;
   DateTime? _medReachDate;
 
   @override
@@ -43,8 +58,22 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   }
 
   @override
+  void dispose() {
+    _qtyController.dispose();
+    super.dispose();
+  }
+
+  void _showMessage(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final db = Provider.of<AppDatabase>(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final status = AppStatusColors.of(context);
 
     if (_isFirstBuild) {
       _isFirstBuild = false;
@@ -60,19 +89,23 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             widget.orderToEdit == null
                 ? Icons.auto_awesome_rounded
                 : Icons.edit_note_rounded,
-            color: Theme.of(context).colorScheme.primary,
+            color: colorScheme.primary,
           ),
           const SizedBox(width: 12),
-          Text(
-            widget.orderToEdit == null
-                ? context.l10n.shoppingWizardTitle
-                : context.l10n.shoppingWizardEditTitle,
+          Expanded(
+            child: Text(
+              widget.orderToEdit == null
+                  ? context.l10n.shoppingWizardTitle
+                  : context.l10n.shoppingWizardEditTitle,
+            ),
           ),
         ],
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.9,
+        // Fill a phone, but stop growing on tablets — a dialog wider than
+        // 480 dp is hard to scan and its fields become absurdly long.
+        width: math.min(MediaQuery.sizeOf(context).width * 0.9, 480),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -84,7 +117,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     : context.l10n.shoppingWizardEditIntro,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 24),
@@ -95,12 +128,15 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                   final items = [
                     DropdownMenuItem<int?>(
                       value: null,
-                      child: Text(context.l10n.shoppingWizardSuppliesOnly),
+                      child: Text(
+                        context.l10n.shoppingWizardSuppliesOnly,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     ...meds.map(
                       (m) => DropdownMenuItem<int?>(
                         value: m.id,
-                        child: Text(m.name),
+                        child: Text(m.name, overflow: TextOverflow.ellipsis),
                       ),
                     ),
                   ];
@@ -111,13 +147,17 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     items.add(
                       DropdownMenuItem<int?>(
                         value: _selectedMed!.id,
-                        child: Text(_selectedMed!.name),
+                        child: Text(
+                          _selectedMed!.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     );
                   }
 
                   return DropdownButtonFormField<int?>(
                     initialValue: _selectedMed?.id,
+                    isExpanded: true,
                     items: items,
                     onChanged: (val) {
                       setState(() {
@@ -144,7 +184,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       filled: true,
-                      fillColor: Theme.of(context).colorScheme.surface,
+                      fillColor: colorScheme.surface,
                     ),
                   );
                 },
@@ -162,23 +202,26 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
+                    fillColor: colorScheme.surface,
                     helperText: _getMedReachText(),
                     helperStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.tertiary,
+                      color: status.success,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: _numberInputFormatters,
                   onChanged: (_) => _calculateBOM(db),
                 ),
               ],
               const SizedBox(height: 16),
               ListTile(
-                tileColor: Theme.of(context).colorScheme.surface,
+                tileColor: colorScheme.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
+                  side: BorderSide(color: colorScheme.outline),
                 ),
                 leading: const Icon(Icons.event_rounded),
                 title: Text(
@@ -199,11 +242,15 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     ),
                     lastDate: DateTime.now().add(const Duration(days: 365)),
                   );
+                  // Dismissing the picker keeps the current date; the clear
+                  // button next to it is the explicit way to remove one.
+                  if (date == null || !mounted) return;
                   setState(() => _deliveryDate = date);
                 },
                 trailing: _deliveryDate != null
                     ? IconButton(
                         icon: const Icon(Icons.clear),
+                        tooltip: context.l10n.tooltipClearDate,
                         onPressed: () => setState(() => _deliveryDate = null),
                       )
                     : null,
@@ -229,7 +276,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -247,7 +294,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -261,16 +308,13 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                     padding: const EdgeInsets.all(16),
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.05),
+                      color: colorScheme.primary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       context.l10n.shoppingWizardNoSuggestions,
-
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 13,
                       ),
                       textAlign: TextAlign.center,
@@ -279,11 +323,12 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
 
                 const SizedBox(height: 20),
                 Center(
-                  child: OutlinedButton.icon(
+                  child: TextButton.icon(
                     onPressed: () => _addManualAccessory(db),
                     icon: const Icon(Icons.add_shopping_cart_rounded),
                     label: Text(context.l10n.shoppingWizardAddOther),
-                    style: OutlinedButton.styleFrom(
+                    style: TextButton.styleFrom(
+                      foregroundColor: status.accentText,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -299,15 +344,20 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
+          // The brand blue at text-safe contrast on both dialog surfaces; the
+          // dark theme's default text-button colour only reaches ~3:1.
+          style: TextButton.styleFrom(foregroundColor: status.accentText),
           child: Text(context.l10n.actionCancel),
         ),
         ElevatedButton(
           // An order always belongs to a medication (PendingOrders.medicationId
           // is not nullable); saving without one used to crash on `_selectedMed!`.
-          onPressed: _selectedMed == null ? null : () => _saveOrder(db),
+          onPressed: _selectedMed == null || _isSaving
+              ? null
+              : () => _saveOrder(db),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.tertiary,
-            foregroundColor: Colors.white,
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
@@ -329,8 +379,9 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
 
     final Accessory? selected = await showDialog<Accessory>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.shoppingWizardPickSupply),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.shoppingWizardPickSupply),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -341,43 +392,53 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
               return ListTile(
                 title: Text(acc.name),
                 subtitle: Text(
-                  context.l10n.stockValue('${acc.stock}', acc.unit),
+                  context.l10n.stockValue(
+                    acc.stock.toStringAsFixed(0),
+                    acc.unit,
+                  ),
                 ),
                 onTap: () => Navigator.pop(context, acc),
               );
             },
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            style: TextButton.styleFrom(
+              foregroundColor: AppStatusColors.of(dialogContext).accentText,
+            ),
+            child: Text(dialogContext.l10n.actionCancel),
+          ),
+        ],
       ),
     );
 
-    if (selected != null) {
-      setState(() {
-        _results ??= [];
-        // Check if already in list
-        if (_results!.any((it) => it.id == selected.id)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.shoppingWizardAlreadyInList)),
-          );
-          return;
-        }
+    if (selected == null || !mounted) return;
 
-        _results!.add(
-          _ShoppingItem(
-            selected.id,
-            selected.name,
-            selected.packageSize,
-            selected.unit,
-            selected.stock,
-            false,
-            false,
-            selected.packageSize,
-            0,
-            true,
-          ),
-        );
-      });
+    final alreadyListed = _results?.any((it) => it.id == selected.id) ?? false;
+    if (alreadyListed) {
+      _showMessage(context.l10n.shoppingWizardAlreadyInList);
+      return;
     }
+
+    setState(() {
+      _results ??= [];
+      _results!.add(
+        _ShoppingItem(
+          selected.id,
+          selected.name,
+          selected.packageSize,
+          selected.unit,
+          selected.stock,
+          false,
+          false,
+          selected.packageSize,
+          0,
+          true,
+        ),
+      );
+    });
   }
 
   void _calculateInitialData(AppDatabase db) async {
@@ -386,6 +447,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
           await (db.select(db.medications)
                 ..where((t) => t.id.equals(widget.orderToEdit!.medicationId)))
               .getSingle();
+      if (!mounted) return;
       setState(() {
         _selectedMed = med;
       });
@@ -394,35 +456,39 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   }
 
   Widget _buildAccessoryRow(_ShoppingItem item) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final status = AppStatusColors.of(context);
+    final highlighted = item.isSystemRecommended || item.isUserAddition;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: item.isSystemRecommended || item.isUserAddition
-            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
-            : Theme.of(context).colorScheme.surface,
+        color: highlighted
+            ? colorScheme.primary.withValues(alpha: 0.08)
+            : colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: item.isSystemRecommended || item.isUserAddition
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
-              : Colors.grey.withValues(alpha: 0.1),
-          width: item.isSystemRecommended || item.isUserAddition ? 2 : 1,
+          color: highlighted
+              ? colorScheme.primary.withValues(alpha: 0.3)
+              : colorScheme.outline,
+          width: highlighted ? 2 : 1,
         ),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: item.isSystemRecommended
-                      ? Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.1)
-                      : Theme.of(context).colorScheme.surface,
+                      ? colorScheme.primary.withValues(alpha: 0.1)
+                      : colorScheme.surface,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+                  border: Border.all(color: colorScheme.outline),
                 ),
                 child: Icon(
                   item.isSystemRecommended
@@ -430,8 +496,8 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       : Icons.add_circle_outline_rounded,
                   size: 20,
                   color: item.isSystemRecommended
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(width: 12),
@@ -446,7 +512,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                             ? FontWeight.bold
                             : FontWeight.w500,
                         color: item.isSystemRecommended
-                            ? Theme.of(context).colorScheme.primary
+                            ? status.accentText
                             : null,
                       ),
                     ),
@@ -454,8 +520,8 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       Text(
                         context.l10n.shoppingWizardRecommendedAmount,
                         style: TextStyle(
-                          fontSize: 10,
-                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 12,
+                          color: status.accentText,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -463,80 +529,60 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
                       Text(
                         context.l10n.shoppingWizardAdditionallySelected,
                         style: TextStyle(
-                          fontSize: 10,
-                          color: Theme.of(context).colorScheme.tertiary,
+                          fontSize: 12,
+                          color: status.success,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                   ],
                 ),
               ),
-              Container(
-                width: 80,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: item.controller,
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          color: item.isActuallySelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                          border: InputBorder.none,
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (val) {
-                          final qty = double.tryParse(val) ?? 0;
-                          setState(() {
-                            item.updateReach(item.dailyUsage, qty);
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      item.unit,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
+          ),
+          const SizedBox(height: 12),
+          // A full-height, bordered field: the old 80 dp borderless box was
+          // below the 48 dp tap target and had no label for screen readers.
+          TextField(
+            controller: item.controller,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: item.isActuallySelected
+                  ? status.accentText
+                  : colorScheme.onSurfaceVariant,
+            ),
+            decoration: InputDecoration(
+              labelText: context.l10n.shoppingWizardOrderQuantity(item.unit),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: colorScheme.surface,
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: _numberInputFormatters,
+            onChanged: (val) {
+              final qty = _parseNumber(val) ?? 0;
+              setState(() {
+                item.updateReach(item.dailyUsage, qty);
+              });
+            },
           ),
           if (item.reachDate != null && item.isActuallySelected) ...[
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(
-                  Icons.date_range_rounded,
-                  size: 14,
-                  color: Color(0xFF00BFA6),
-                ), // Emerald accent
+                Icon(Icons.date_range_rounded, size: 16, color: status.success),
                 const SizedBox(width: 6),
-                Text(
-                  context.l10n.inventoryLastsUntil(
-                    AppDateFormat.date(context, item.reachDate!),
-                  ),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF00BFA6),
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    context.l10n.inventoryLastsUntil(
+                      AppDateFormat.date(context, item.reachDate!),
+                    ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: status.success,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -555,6 +601,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
   }
 
   void _calculateBOM(AppDatabase db) async {
+    if (!mounted) return;
     // Keep manual additions if they exist
     final manualAdditions =
         _results?.where((it) => it.isManualAddition).toList() ?? [];
@@ -566,14 +613,15 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       return;
     }
 
-    final orderQty = double.tryParse(_qtyController.text) ?? 0.0;
+    final selectedMed = _selectedMed!;
+    final orderQty = _parseNumber(_qtyController.text) ?? 0.0;
     final medService = Provider.of<MedicationService>(context, listen: false);
 
-    final dailyReq = await medService.getDailyRequirement(_selectedMed!.id);
+    final dailyReq = await medService.getDailyRequirement(selectedMed.id);
 
     // Med reach date
-    _medReachDate = await medService.calculateReachDate(
-      _selectedMed!,
+    final reachDate = await medService.calculateReachDate(
+      selectedMed,
       additionalStock: orderQty,
     );
 
@@ -583,7 +631,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       existingItems = await db.getPendingOrderItems(widget.orderToEdit!.id);
     }
 
-    final links = await db.getAccessoriesForMedication(_selectedMed!.id);
+    final links = await db.getAccessoriesForMedication(selectedMed.id);
     List<_ShoppingItem> items = [];
 
     for (var link in links) {
@@ -592,7 +640,7 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       )..where((t) => t.id.equals(link.accessoryId))).getSingle();
 
       // Calculate how much accessory is "reserved" for current med stock
-      final reservedForExisting = _selectedMed!.stock * link.defaultQuantity;
+      final reservedForExisting = selectedMed.stock * link.defaultQuantity;
       final availableStock = acc.stock - reservedForExisting;
 
       final neededForOrder = orderQty * link.defaultQuantity;
@@ -656,44 +704,67 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
       }
     }
 
-    if (mounted) {
-      setState(() {
-        _results = items;
-      });
-    }
+    // The user may have switched medication (or closed the dialog) while the
+    // queries above ran; only the result for the current selection counts.
+    if (!mounted || !identical(_selectedMed, selectedMed)) return;
+    setState(() {
+      _medReachDate = reachDate;
+      _results = items;
+    });
   }
 
   void _saveOrder(AppDatabase db) async {
-    if (_selectedMed == null) return;
-    final orderQty = double.tryParse(_qtyController.text) ?? 1.0;
+    if (_selectedMed == null || _isSaving) return;
+    final l10n = context.l10n;
 
-    await db.transaction(() async {
-      int orderId;
-      if (widget.orderToEdit != null) {
-        orderId = widget.orderToEdit!.id;
-        await db.updatePendingOrder(
-          widget.orderToEdit!.copyWith(
-            medicationId: _selectedMed!.id,
-            medicationQty: orderQty,
-            deliveryDate: Value(_deliveryDate),
-          ),
-        );
-        // Clear existing items to re-add them (simplest way to update)
-        await (db.delete(
-          db.pendingOrderItems,
-        )..where((t) => t.orderId.equals(orderId))).go();
-      } else {
-        orderId = await db.insertPendingOrder(
-          PendingOrdersCompanion.insert(
-            medicationId: _selectedMed!.id,
-            medicationQty: orderQty,
-            deliveryDate: Value(_deliveryDate),
-          ),
-        );
+    final orderQty = _parseNumber(_qtyController.text);
+    if (orderQty == null) {
+      _showMessage(l10n.validationEnterNumber);
+      return;
+    }
+    final itemQuantities = <_ShoppingItem, double>{};
+    for (final item in _results ?? const <_ShoppingItem>[]) {
+      final qty = _parseNumber(item.controller.text);
+      if (qty == null) {
+        _showMessage(l10n.validationEnterNumber);
+        return;
       }
+      itemQuantities[item] = qty;
+    }
 
-      // Add medication as order item (if selected)
-      if (_selectedMed != null) {
+    // Captured before the awaits: the dialog is gone by the time the
+    // confirmation shows, so it must land on the page's messenger.
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    setState(() => _isSaving = true);
+
+    try {
+      await db.transaction(() async {
+        int orderId;
+        if (widget.orderToEdit != null) {
+          orderId = widget.orderToEdit!.id;
+          await db.updatePendingOrder(
+            widget.orderToEdit!.copyWith(
+              medicationId: _selectedMed!.id,
+              medicationQty: orderQty,
+              deliveryDate: Value(_deliveryDate),
+            ),
+          );
+          // Clear existing items to re-add them (simplest way to update)
+          await (db.delete(
+            db.pendingOrderItems,
+          )..where((t) => t.orderId.equals(orderId))).go();
+        } else {
+          orderId = await db.insertPendingOrder(
+            PendingOrdersCompanion.insert(
+              medicationId: _selectedMed!.id,
+              medicationQty: orderQty,
+              deliveryDate: Value(_deliveryDate),
+            ),
+          );
+        }
+
+        // Add medication as order item
         await db.insertPendingOrderItem(
           PendingOrderItemsCompanion.insert(
             orderId: orderId,
@@ -701,26 +772,40 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
             quantity: orderQty,
           ),
         );
-      }
 
-      // Add accessories as order items
-      if (_results != null) {
-        for (var item in _results!) {
-          final qty = double.tryParse(item.controller.text) ?? item.neededCount;
-          if (qty > 0) {
+        // Add accessories as order items
+        for (final entry in itemQuantities.entries) {
+          if (entry.value > 0) {
             await db.insertPendingOrderItem(
               PendingOrderItemsCompanion.insert(
                 orderId: orderId,
-                accessoryId: Value(item.id),
-                quantity: qty,
+                accessoryId: Value(entry.key.id),
+                quantity: entry.value,
               ),
             );
           }
         }
-      }
-    });
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.saveFailed('$e')),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
-    if (mounted) Navigator.pop(context);
+    if (!mounted) return;
+    navigator.pop();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.savedOrder),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 }
 
@@ -752,7 +837,7 @@ class _ShoppingItem {
   ]) : controller = TextEditingController(text: neededCount.toStringAsFixed(0));
 
   bool get isActuallySelected {
-    final val = double.tryParse(controller.text) ?? 0;
+    final val = _parseNumber(controller.text) ?? 0;
     return val > 0;
   }
 

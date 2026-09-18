@@ -96,11 +96,11 @@
   "@timerTitle": {
     "description": "Title of the premedication timer sheet"
   },
-  "timerSubtitle": "Ping every minute • {seconds} sec timer",
+  "timerSubtitle": "Ping every minute • {minutes} min timer",
   "@timerSubtitle": {
-    "description": "Timer sheet subtitle; seconds is the configured total duration",
+    "description": "Timer sheet subtitle; minutes is the configured total duration",
     "placeholders": {
-      "seconds": {
+      "minutes": {
         "type": "int"
       }
     }
@@ -2150,5 +2150,336 @@
         "example": "9/14/2026"
       }
     }
+  },
+  "tooltipOpenStatistics": "Statistics",
+  "@tooltipOpenStatistics": {
+    "description": "Tooltip for the app bar icon button that opens the statistics page from the diary"
+  },
+  "tooltipEditOrder": "Edit order",
+  "@tooltipEditOrder": {
+    "description": "Tooltip for the icon button that edits a pending medication order on the dashboard"
+  },
+  "tooltipDeleteOrder": "Delete order",
+  "@tooltipDeleteOrder": {
+    "description": "Tooltip for the icon button that deletes a pending medication order on the dashboard"
+  },
+  "tooltipEditInfusionLog": "Edit infusion entry",
+  "@tooltipEditInfusionLog": {
+    "description": "Tooltip for the icon button that edits a logged infusion in the diary"
+  },
+  "tooltipDeleteInfusionLog": "Delete infusion entry",
+  "@tooltipDeleteInfusionLog": {
+    "description": "Tooltip for the icon button that deletes a logged infusion in the diary"
+  },
+  "tooltipEditSupply": "Edit supply",
+  "@tooltipEditSupply": {
+    "description": "Tooltip for the icon button that edits an accessory such as an infusion set"
+  },
+  "tooltipDeleteSupply": "Delete supply",
+  "@tooltipDeleteSupply": {
+    "description": "Tooltip for the icon button that deletes an accessory such as an infusion set"
+  },
+  "tooltipShowDetails": "Show details",
+  "@tooltipShowDetails": {
+    "description": "Tooltip for the chevron icon that opens details for a medication row"
+  },
+  "tooltipEditMedication": "Edit medication",
+  "@tooltipEditMedication": {
+    "description": "Tooltip for the icon button that edits a medication"
+  },
+  "tooltipLinkSettings": "Link settings",
+  "@tooltipLinkSettings": {
+    "description": "Tooltip for the gear icon on a supply linked to a medication; opens quantity-per-infusion and mandatory settings"
+  },
+  "tooltipUnlinkSupply": "Remove supply from this medication",
+  "@tooltipUnlinkSupply": {
+    "description": "Tooltip for the icon button that unlinks a supply from a medication without deleting the supply itself"
+  },
+  "tooltipEditSchedule": "Edit schedule",
+  "@tooltipEditSchedule": {
+    "description": "Tooltip for the icon button that edits a recurring infusion or intake schedule"
+  },
+  "tooltipDeleteSchedule": "Delete schedule",
+  "@tooltipDeleteSchedule": {
+    "description": "Tooltip for the icon button that deletes a recurring infusion or intake schedule"
+  },
+  "tooltipClearDate": "Clear date",
+  "@tooltipClearDate": {
+    "description": "Tooltip for the icon button that clears a selected date field"
+  },
+  "tooltipRemoveIntakeTime": "Remove time",
+  "@tooltipRemoveIntakeTime": {
+    "description": "Tooltip for the icon button that removes one of several daily intake times on a schedule"
+  },
+  "tooltipRemovePhoto": "Remove photo",
+  "@tooltipRemovePhoto": {
+    "description": "Tooltip for the icon button that removes the photographed batch label"
+  },
+  "tooltipTimerReset": "Reset timer",
+  "@tooltipTimerReset": {
+    "description": "Tooltip for the premedication timer's reset control"
+  },
+  "tooltipTimerStart": "Start timer",
+  "@tooltipTimerStart": {
+    "description": "Tooltip for the premedication timer's start control"
+  },
+  "tooltipTimerPause": "Pause timer",
+  "@tooltipTimerPause": {
+    "description": "Tooltip for the premedication timer's pause control"
+  },
+  "tooltipTimerDuration": "Set duration",
+  "@tooltipTimerDuration": {
+    "description": "Tooltip for the premedication timer's duration control"
+  },
+  "actionClose": "Close",
+  "@actionClose": {
+    "description": "Generic button label that closes a sheet or dialog"
+  },
+  "actionBack": "Back",
+  "@actionBack": {
+    "description": "Generic button label that navigates to the previous screen"
+  },
+  "actionDiscard": "Discard",
+  "@actionDiscard": {
+    "description": "Button label that discards unsaved changes"
+  },
+  "actionKeepEditing": "Keep editing",
+  "@actionKeepEditing": {
+    "description": "Button label that dismisses the discard-changes prompt and returns to the form"
+  },
+  "actionUndo": "Undo",
+  "@actionUndo": {
+    "description": "Button label that reverses the last action, shown e.g. in a snackbar"
+  },
+  "dashboardLogInfusionFor": "Log infusion of {name} now",
+  "@dashboardLogInfusionFor": {
+    "description": "Screen-reader label for the per-row button that logs an infusion",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Hizentra"
+      }
+    }
+  },
+  "dashboardMarkDoneFor": "Mark {name} as taken",
+  "@dashboardMarkDoneFor": {
+    "description": "Screen-reader label for the per-row button that marks a dose as taken",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Hizentra"
+      }
+    }
+  },
+  "dashboardRemoveFor": "Remove {name} from the plan",
+  "@dashboardRemoveFor": {
+    "description": "Screen-reader label for the per-row button that removes a planned infusion",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Hizentra"
+      }
+    }
+  },
+  "symptomScoreLabel": "{symptom}: {score} of 10",
+  "@symptomScoreLabel": {
+    "description": "Screen-reader label read aloud for a symptom bar in the diary; symptom is the already-localized symptom name",
+    "placeholders": {
+      "symptom": {
+        "type": "String",
+        "example": "Strength"
+      },
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDestinationConfigured": "Backup destination configured",
+  "@backupDestinationConfigured": {
+    "description": "Label for the green check icon in settings shown once a backup destination is set up"
+  },
+  "reliabilityStatusOk": "OK",
+  "@reliabilityStatusOk": {
+    "description": "Short status badge text shown next to a passed reliability check"
+  },
+  "reliabilityStatusFailed": "Action needed",
+  "@reliabilityStatusFailed": {
+    "description": "Short status badge text shown next to a failed reliability check"
+  },
+  "minutesShort": "{count} min",
+  "@minutesShort": {
+    "description": "Chip label showing the premedication duration in minutes",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "millilitersShort": "{value} ml",
+  "@millilitersShort": {
+    "description": "Formatted volume value with its unit; value is already formatted",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "10.0"
+      }
+    }
+  },
+  "millilitersProgress": "{remaining} / {total} ml",
+  "@millilitersProgress": {
+    "description": "Progress label showing remaining versus total volume in millilitres",
+    "placeholders": {
+      "remaining": {
+        "type": "String",
+        "example": "5.0"
+      },
+      "total": {
+        "type": "String",
+        "example": "10.0"
+      }
+    }
+  },
+  "kilogramsShort": "kg",
+  "@kilogramsShort": {
+    "description": "Unit suffix shown inside the body-weight field"
+  },
+  "megabytes": "{value} MB",
+  "@megabytes": {
+    "description": "Formatted file size in megabytes; value is already formatted",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "1.25"
+      }
+    }
+  },
+  "deliveredItem": "{quantity} {unit} {name}",
+  "@deliveredItem": {
+    "description": "One line describing a delivered order item in the diary",
+    "placeholders": {
+      "quantity": {
+        "type": "String",
+        "example": "2"
+      },
+      "unit": {
+        "type": "String",
+        "example": "bottles"
+      },
+      "name": {
+        "type": "String",
+        "example": "Hizentra"
+      }
+    }
+  },
+  "savedInfusion": "Infusion logged",
+  "@savedInfusion": {
+    "description": "Snackbar confirmation after saving an infusion entry"
+  },
+  "savedDiaryEntry": "Entry saved",
+  "@savedDiaryEntry": {
+    "description": "Snackbar confirmation after saving a diary entry"
+  },
+  "savedSchedule": "Schedule saved",
+  "@savedSchedule": {
+    "description": "Snackbar confirmation after saving a recurring schedule"
+  },
+  "savedOrder": "Order saved",
+  "@savedOrder": {
+    "description": "Snackbar confirmation after saving a pending order"
+  },
+  "savedMedication": "Medication saved",
+  "@savedMedication": {
+    "description": "Snackbar confirmation after saving a medication"
+  },
+  "deletedGeneric": "Deleted",
+  "@deletedGeneric": {
+    "description": "Generic snackbar confirmation after deleting an item"
+  },
+  "saveFailed": "Saving failed: {error}",
+  "@saveFailed": {
+    "description": "Snackbar shown when saving any form fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Disk is full"
+      }
+    }
+  },
+  "discardChangesTitle": "Discard changes?",
+  "@discardChangesTitle": {
+    "description": "Title of the confirmation dialog shown when leaving a form with unsaved changes"
+  },
+  "discardChangesBody": "Your entries have not been saved yet.",
+  "@discardChangesBody": {
+    "description": "Body of the discard-changes confirmation dialog"
+  },
+  "errorLoadingData": "The data could not be loaded.",
+  "@errorLoadingData": {
+    "description": "Generic error state shown by a StreamBuilder/FutureBuilder when loading fails"
+  },
+  "medDetailsNotFound": "This medication no longer exists.",
+  "@medDetailsNotFound": {
+    "description": "Shown on the medication details page when the underlying row was deleted meanwhile"
+  },
+  "confirmUnlinkSupplyTitle": "Remove supply?",
+  "@confirmUnlinkSupplyTitle": {
+    "description": "Title of the confirmation dialog for unlinking a supply from a medication"
+  },
+  "confirmUnlinkSupplyBody": "{name} will no longer be ordered together with this medication.",
+  "@confirmUnlinkSupplyBody": {
+    "description": "Body of the confirmation dialog for unlinking a supply",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Infusion set"
+      }
+    }
+  },
+  "confirmReenrollTitle": "Resume medication?",
+  "@confirmReenrollTitle": {
+    "description": "Title of the confirmation dialog for putting a discontinued medication back into active use"
+  },
+  "confirmReenrollBody": "{name} returns to the active list; its schedules and reminders are recreated.",
+  "@confirmReenrollBody": {
+    "description": "Body of the confirmation dialog for resuming a discontinued medication",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Hizentra"
+      }
+    }
+  },
+  "validationEnterNumber": "Please enter a number",
+  "@validationEnterNumber": {
+    "description": "Form validator message for a numeric field left empty or non-numeric"
+  },
+  "validationPositiveNumber": "Please enter a number greater than 0",
+  "@validationPositiveNumber": {
+    "description": "Form validator message for a numeric field that must be positive"
+  },
+  "inventoryAddFirstMedicationHint": "Add your first medication with the button below.",
+  "@inventoryAddFirstMedicationHint": {
+    "description": "Empty-state guidance shown on the inventory tab below the no-medications message"
+  },
+  "savedSupply": "Supply saved",
+  "@savedSupply": {
+    "description": "Snackbar after creating or editing an accessory such as an infusion set"
+  },
+  "reenrolledMedication": "{name} is active again",
+  "@reenrolledMedication": {
+    "description": "Snackbar after a discontinued medication is resumed; name is the medication name",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "restoringPleaseWait": "Restoring backup, please wait…",
+  "@restoringPleaseWait": {
+    "description": "Text under the spinner while a backup is being restored and the app is about to restart"
+  },
+  "loading": "Loading…",
+  "@loading": {
+    "description": "Generic semantics label for a progress spinner"
   }
 }

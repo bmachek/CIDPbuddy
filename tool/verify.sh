@@ -2,7 +2,8 @@
 #
 # Verify the project the way CI does: generated code is current, the formatting
 # matches `dart format`, the analyzer is clean, every user-visible string is
-# translated, and the tests pass.
+# translated, the UI rules in tool/ui_lint.dart hold, and the tests pass —
+# including the accessibility and layout suites under test/ui/.
 #
 #   tool/verify.sh                  # local run
 #   tool/verify.sh --check-generated  # also fail if generated code is stale
@@ -104,6 +105,7 @@ Run 'dart format .' (or format just the files above) and commit the result."
 fi
 
 run "analyze                " "$FLUTTER" analyze --fatal-infos
+run "ui-lint                " "$DART" run tool/ui_lint.dart
 run "test                   " "$FLUTTER" test
 
 echo

@@ -24,8 +24,9 @@ patients. The ARB files live in `lib/l10n/`:
    reviewable.
 4. **Translate, do not transliterate.** This is medical vocabulary used by
    patients: use the terms a patient in that language would actually read
-   ("infusion", "Zuzahlung", "ordonnance"). Keep it formal-but-warm; German
-   uses "Sie".
+   ("infusion", "Zuzahlung", "ordonnance"). Keep it warm and direct; German
+   addresses the patient as "du" (the whole file does — never mix in "Sie",
+   `test/ui/l10n_consistency_test.dart` fails on it).
 5. **Placeholders are copied verbatim** — `{count}`, `{date}` — never
    translated, never reordered out of a plural/select block.
 6. **Plurals** use ICU syntax and must cover the categories the target
