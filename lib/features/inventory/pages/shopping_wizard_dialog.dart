@@ -323,11 +323,11 @@ class _ShoppingWizardDialogState extends State<ShoppingWizardDialog> {
 
                 const SizedBox(height: 20),
                 Center(
-                  child: OutlinedButton.icon(
+                  child: TextButton.icon(
                     onPressed: () => _addManualAccessory(db),
                     icon: const Icon(Icons.add_shopping_cart_rounded),
                     label: Text(context.l10n.shoppingWizardAddOther),
-                    style: OutlinedButton.styleFrom(
+                    style: TextButton.styleFrom(
                       foregroundColor: status.accentText,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
