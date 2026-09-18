@@ -72,8 +72,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get timerTitle => 'Temporizador de premedicación';
 
   @override
-  String timerSubtitle(int seconds) {
-    return 'Señal cada minuto • temporizador de $seconds s';
+  String timerSubtitle(int minutes) {
+    return 'Señal cada minuto • temporizador de $minutes min';
   }
 
   @override
@@ -1512,4 +1512,199 @@ class AppLocalizationsEs extends AppLocalizations {
   String shareBackupText(String date) {
     return 'Copia de seguridad de la base de datos de CIDP Buddy del $date';
   }
+
+  @override
+  String get tooltipOpenStatistics => 'Estadísticas';
+
+  @override
+  String get tooltipEditOrder => 'Editar pedido';
+
+  @override
+  String get tooltipDeleteOrder => 'Eliminar pedido';
+
+  @override
+  String get tooltipEditInfusionLog => 'Editar entrada de infusión';
+
+  @override
+  String get tooltipDeleteInfusionLog => 'Eliminar entrada de infusión';
+
+  @override
+  String get tooltipEditSupply => 'Editar material fungible';
+
+  @override
+  String get tooltipDeleteSupply => 'Eliminar material fungible';
+
+  @override
+  String get tooltipShowDetails => 'Mostrar detalles';
+
+  @override
+  String get tooltipEditMedication => 'Editar medicamento';
+
+  @override
+  String get tooltipLinkSettings => 'Ajustes del vínculo';
+
+  @override
+  String get tooltipUnlinkSupply =>
+      'Quitar el material fungible de este medicamento';
+
+  @override
+  String get tooltipEditSchedule => 'Editar plan';
+
+  @override
+  String get tooltipDeleteSchedule => 'Eliminar plan';
+
+  @override
+  String get tooltipClearDate => 'Borrar la fecha';
+
+  @override
+  String get tooltipRemoveIntakeTime => 'Quitar la hora';
+
+  @override
+  String get tooltipRemovePhoto => 'Quitar la foto';
+
+  @override
+  String get tooltipTimerReset => 'Reiniciar el temporizador';
+
+  @override
+  String get tooltipTimerStart => 'Iniciar el temporizador';
+
+  @override
+  String get tooltipTimerPause => 'Pausar el temporizador';
+
+  @override
+  String get tooltipTimerDuration => 'Definir la duración';
+
+  @override
+  String get actionClose => 'Cerrar';
+
+  @override
+  String get actionBack => 'Atrás';
+
+  @override
+  String get actionDiscard => 'Descartar';
+
+  @override
+  String get actionKeepEditing => 'Seguir editando';
+
+  @override
+  String get actionUndo => 'Deshacer';
+
+  @override
+  String dashboardLogInfusionFor(String name) {
+    return 'Registrar ahora la infusión de $name';
+  }
+
+  @override
+  String dashboardMarkDoneFor(String name) {
+    return 'Marcar $name como tomado';
+  }
+
+  @override
+  String dashboardRemoveFor(String name) {
+    return 'Quitar $name del plan';
+  }
+
+  @override
+  String symptomScoreLabel(String symptom, int score) {
+    return '$symptom: $score de 10';
+  }
+
+  @override
+  String get backupDestinationConfigured =>
+      'Destino de la copia de seguridad configurado';
+
+  @override
+  String get reliabilityStatusOk => 'OK';
+
+  @override
+  String get reliabilityStatusFailed => 'Acción requerida';
+
+  @override
+  String minutesShort(int count) {
+    return '$count min';
+  }
+
+  @override
+  String millilitersShort(String value) {
+    return '$value ml';
+  }
+
+  @override
+  String millilitersProgress(String remaining, String total) {
+    return '$remaining / $total ml';
+  }
+
+  @override
+  String get kilogramsShort => 'kg';
+
+  @override
+  String megabytes(String value) {
+    return '$value MB';
+  }
+
+  @override
+  String deliveredItem(String quantity, String unit, String name) {
+    return '$quantity $unit $name';
+  }
+
+  @override
+  String get savedInfusion => 'Infusión registrada';
+
+  @override
+  String get savedDiaryEntry => 'Entrada guardada';
+
+  @override
+  String get savedSchedule => 'Plan guardado';
+
+  @override
+  String get savedOrder => 'Pedido guardado';
+
+  @override
+  String get savedMedication => 'Medicamento guardado';
+
+  @override
+  String get deletedGeneric => 'Eliminado';
+
+  @override
+  String saveFailed(String error) {
+    return 'No se pudo guardar: $error';
+  }
+
+  @override
+  String get discardChangesTitle => '¿Descartar los cambios?';
+
+  @override
+  String get discardChangesBody => 'Tus cambios aún no se han guardado.';
+
+  @override
+  String get errorLoadingData => 'No se pudieron cargar los datos.';
+
+  @override
+  String get medDetailsNotFound => 'Este medicamento ya no existe.';
+
+  @override
+  String get confirmUnlinkSupplyTitle => '¿Quitar el material fungible?';
+
+  @override
+  String confirmUnlinkSupplyBody(String name) {
+    return '$name ya no se pedirá junto con este medicamento.';
+  }
+
+  @override
+  String get confirmReenrollTitle => '¿Volver a prescribir el medicamento?';
+
+  @override
+  String confirmReenrollBody(String name) {
+    return '$name vuelve a la lista activa; sus planes y recordatorios se vuelven a crear.';
+  }
+
+  @override
+  String get validationEnterNumber => 'Introduce un número.';
+
+  @override
+  String get validationPositiveNumber => 'Introduce un número mayor que 0.';
+
+  @override
+  String get inventoryAddFirstMedicationHint =>
+      'Añade tu primer medicamento con el botón de abajo.';
 }

@@ -111,6 +111,22 @@ void main() {
     expect(problems, isEmpty, reason: problems.join('\n'));
   });
 
+  test('German addresses the patient as "du", never "Sie"', () {
+    // The whole German file is informal; a formal string in between reads
+    // like a different app. "Sie" alone is ambiguous (it is also "they"),
+    // so this matches the unambiguous markers: "Ihnen", "Ihre…", an
+    // imperative ("geben Sie") or "Sie" followed by a modal verb.
+    final formal = RegExp(
+      r'(\bIhnen\b|\bIhre[mnrs]?\b|\b[a-zäöüß]+en Sie\b|'
+      r'\bSie (können|haben|müssen|sollten|sind|möchten|wollen|dürfen|brauchen)\b)',
+    );
+    final de = others['de']!;
+    final hits = messageKeys(
+      de,
+    ).where((k) => formal.hasMatch(de[k] as String)).toList();
+    expect(hits, isEmpty, reason: 'Formal address in app_de.arb: $hits');
+  });
+
   test('translations are not left identical to English', () {
     // Short strings (units, proper nouns, "OK") are legitimately identical.
     // Anything longer that matches the template word for word was skipped.
