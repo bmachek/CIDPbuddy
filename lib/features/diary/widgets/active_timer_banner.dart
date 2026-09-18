@@ -4,6 +4,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 
 import 'premedication_timer_modal.dart';
 import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
+import 'package:cidpbuddy/core/services/background_service.dart';
 
 /// Re-entry point for a running or paused Vormedikation timer.
 ///
@@ -31,6 +32,10 @@ class _ActiveTimerBannerState extends State<ActiveTimerBanner>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    // The timer lives in the background service, which only exists on
+    // Android and iOS. Elsewhere there is nothing to show.
+    if (!BackgroundService.isSupportedPlatform) return;
+
     final service = FlutterBackgroundService();
     _serviceSubscription = service.on('timerUpdate').listen((event) {
       if (!mounted || event == null) return;
@@ -45,7 +50,8 @@ class _ActiveTimerBannerState extends State<ActiveTimerBanner>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed &&
+        BackgroundService.isSupportedPlatform) {
       // On iOS the service isolate is starved while backgrounded, so its
       // periodic tick has not been broadcasting. Ask for the current state
       // instead of showing whatever was last received.

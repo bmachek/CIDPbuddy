@@ -10,14 +10,17 @@ import 'package:cidpbuddy/features/diary/pages/diary_page.dart';
 import 'package:cidpbuddy/features/settings/pages/settings_page.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  const MainScreen({super.key, this.initialIndex = 0});
+
+  /// Which tab opens first: 0 dashboard, 1 diary, 2 inventory, 3 settings.
+  final int initialIndex;
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
-  int _selectedIndex = 0;
+  late int _selectedIndex = widget.initialIndex;
 
   final List<Widget> _pages = [
     const DashboardPage(),

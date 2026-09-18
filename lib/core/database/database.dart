@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:rxdart/rxdart.dart';
 import '../../features/settings/services/backup_service.dart';
 import 'connection/connection.dart' as c;
@@ -154,11 +155,32 @@ class DiaryEntries extends Table {
 )
 class AppDatabase extends _$AppDatabase {
   static final AppDatabase _instance = AppDatabase._internal();
+  static AppDatabase? _testInstance;
 
-  factory AppDatabase() => _instance;
+  factory AppDatabase() => _testInstance ?? _instance;
 
   AppDatabase._internal() : super(_openConnection()) {
     _setupAutoBackup();
+  }
+
+  /// Opens the schema on [executor] (typically `NativeDatabase.memory()`) and
+  /// makes it what `AppDatabase()` returns until [resetForTesting] is called.
+  ///
+  /// The auto-backup listener is not installed: tests must never reach for
+  /// the platform backup plumbing. Test-only — production code always goes
+  /// through the singleton.
+  @visibleForTesting
+  AppDatabase.forTesting(super.executor) {
+    _testInstance = this;
+  }
+
+  /// Closes the instance installed by [AppDatabase.forTesting] and restores
+  /// the production singleton for whatever runs next.
+  @visibleForTesting
+  static Future<void> resetForTesting() async {
+    final db = _testInstance;
+    _testInstance = null;
+    await db?.close();
   }
 
   void _setupAutoBackup() {
