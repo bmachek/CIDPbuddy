@@ -1065,6 +1065,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get backupDestinationSafFolder => 'Dossier cloud / SAF';
 
   @override
+  String get backupDestinationPickedFolder => 'Dossier choisi';
+
+  @override
   String backupFolderUnreadable(String path, String error) {
     return 'Dossier illisible : $path\n($error)';
   }
@@ -1173,12 +1176,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsPickFolderAgain => 'Resélectionner le dossier';
 
   @override
+  String get backupBookmarkAccessLost =>
+      'CIDP Buddy ne peut plus accéder au dossier de sauvegarde que vous avez choisi. Veuillez le resélectionner.';
+
+  @override
   String get settingsBackupsInsideAppTitle =>
       'Les sauvegardes sont dans l\'app';
 
   @override
   String get settingsBackupsInsideAppBody =>
-      'Elles sont supprimées avec l\'application. Exportez régulièrement une copie vers iCloud Drive — via « Exporter la sauvegarde » ou l\'app Fichiers.';
+      'Elles sont supprimées avec l\'application. Choisissez un dossier dans l\'app Fichiers pour que les sauvegardes restent en dehors — ou exportez une copie régulièrement.';
 
   @override
   String get settingsBackupDestination => 'Destination de sauvegarde';
@@ -1223,7 +1230,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsIosStorageInfo =>
-      'Sur iOS, les sauvegardes automatiques sont stockées dans l\'application, car Apple n\'autorise pas d\'accès en écriture durable à des dossiers librement choisis.\n\nUtilisez « Exporter la sauvegarde » pour enregistrer une copie dans l\'app Fichiers, iCloud Drive ou via AirDrop.';
+      'Les sauvegardes peuvent être écrites directement dans un dossier que vous choisissez dans l\'app Fichiers : iCloud Drive, Nextcloud, Dropbox ou un lecteur connecté. CIDP Buddy continue d\'y écrire automatiquement, et ces sauvegardes survivent à la suppression de l\'application.\n\nSans dossier choisi, les sauvegardes restent dans l\'application et sont supprimées avec elle — vous devez alors exporter vous-même une copie.';
+
+  @override
+  String get settingsIosPickFolder => 'Choisir un dossier';
+
+  @override
+  String get settingsIosUseAppFolder => 'Utiliser le dossier de l\'app';
 
   @override
   String get settingsDestinationConnectFailed =>

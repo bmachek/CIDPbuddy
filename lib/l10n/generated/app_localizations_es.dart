@@ -1061,6 +1061,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get backupDestinationSafFolder => 'Carpeta en la nube / SAF';
 
   @override
+  String get backupDestinationPickedFolder => 'Carpeta elegida';
+
+  @override
   String backupFolderUnreadable(String path, String error) {
     return 'Carpeta no legible: $path\n($error)';
   }
@@ -1170,12 +1173,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsPickFolderAgain => 'Elegir la carpeta de nuevo';
 
   @override
+  String get backupBookmarkAccessLost =>
+      'CIDP Buddy ya no puede acceder a la carpeta de copias que elegiste. Vuelve a elegirla.';
+
+  @override
   String get settingsBackupsInsideAppTitle =>
       'Las copias están dentro de la app';
 
   @override
   String get settingsBackupsInsideAppBody =>
-      'Se eliminan junto con la aplicación. Exporta una copia a iCloud Drive con regularidad, mediante «Exportar copia» o la app Archivos.';
+      'Se eliminan junto con la aplicación. Elige una carpeta en la app Archivos para que las copias queden fuera de ella, o expórtalas con regularidad.';
 
   @override
   String get settingsBackupDestination => 'Destino de la copia';
@@ -1220,7 +1227,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsIosStorageInfo =>
-      'En iOS las copias automáticas se guardan dentro de la aplicación, porque Apple no permite acceso de escritura duradero a carpetas elegidas libremente.\n\nUsa «Exportar copia» para guardar una copia en la app Archivos, iCloud Drive o por AirDrop.';
+      'Las copias pueden guardarse directamente en una carpeta que elijas en la app Archivos: iCloud Drive, Nextcloud, Dropbox o una unidad conectada. CIDP Buddy sigue escribiendo ahí por su cuenta, y esas copias se conservan aunque elimines la app.\n\nSin una carpeta elegida, las copias se quedan dentro de la app y se eliminan junto con ella, así que tendrás que exportar una copia por tu cuenta.';
+
+  @override
+  String get settingsIosPickFolder => 'Elegir carpeta';
+
+  @override
+  String get settingsIosUseAppFolder => 'Usar la carpeta de la app';
 
   @override
   String get settingsDestinationConnectFailed =>
