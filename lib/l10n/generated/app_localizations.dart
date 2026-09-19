@@ -1951,6 +1951,12 @@ abstract class AppLocalizations {
   /// **'Cloud / SAF folder'**
   String get backupDestinationSafFolder;
 
+  /// Label for the iOS backup destination the user picked in the Files app, shown when the folder name is not known
+  ///
+  /// In en, this message translates to:
+  /// **'Picked folder'**
+  String get backupDestinationPickedFolder;
+
   /// Error when the backup folder cannot be read
   ///
   /// In en, this message translates to:
@@ -2131,6 +2137,12 @@ abstract class AppLocalizations {
   /// **'Pick folder again'**
   String get settingsPickFolderAgain;
 
+  /// Error shown when the stored access to the picked iOS backup folder no longer works, e.g. because the folder was deleted or moved
+  ///
+  /// In en, this message translates to:
+  /// **'CIDP Buddy can no longer reach the backup folder you picked. Please pick it again.'**
+  String get backupBookmarkAccessLost;
+
   /// Warning title: backups live inside the app sandbox
   ///
   /// In en, this message translates to:
@@ -2140,7 +2152,7 @@ abstract class AppLocalizations {
   /// Warns that app-internal backups are erased with the app and points to the export action
   ///
   /// In en, this message translates to:
-  /// **'They are deleted along with the app. Export a copy to iCloud Drive regularly — via \"Export backup\" or the Files app.'**
+  /// **'They are deleted along with the app. Pick a folder in the Files app so backups land outside it — or export a copy regularly.'**
   String get settingsBackupsInsideAppBody;
 
   /// Row and dialog title for where backups are written
@@ -2215,11 +2227,23 @@ abstract class AppLocalizations {
   /// **'Pick an automatic backup to restore'**
   String get settingsRestoreBackupHint;
 
-  /// Explains why iOS backups are stored inside the app instead of a user-picked folder
+  /// Explains the two iOS backup destinations in the dialog where the user picks one
   ///
   /// In en, this message translates to:
-  /// **'On iOS automatic backups are stored inside the app, because Apple does not allow lasting write access to freely chosen folders.\n\nUse \"Export backup\" to save a copy to the Files app, iCloud Drive or via AirDrop.'**
+  /// **'Backups can be written straight into a folder you pick in the Files app: iCloud Drive, Nextcloud, Dropbox or a connected drive. CIDP Buddy keeps writing there on its own, and those backups survive deleting the app.\n\nWithout a picked folder, backups stay inside the app and are deleted together with it — you then have to export a copy yourself.'**
   String get settingsIosStorageInfo;
+
+  /// Button that opens the iOS Files app folder picker for backups
+  ///
+  /// In en, this message translates to:
+  /// **'Choose folder'**
+  String get settingsIosPickFolder;
+
+  /// Button that keeps backups in the app's own folder on iOS instead of a picked one
+  ///
+  /// In en, this message translates to:
+  /// **'Use app folder'**
+  String get settingsIosUseAppFolder;
 
   /// Snackbar when the chosen folder could not be connected
   ///

@@ -1518,6 +1518,10 @@
   "@backupDestinationSafFolder": {
     "description": "Fallback name for an Android SAF folder with no display name"
   },
+  "backupDestinationPickedFolder": "Picked folder",
+  "@backupDestinationPickedFolder": {
+    "description": "Label for the iOS backup destination the user picked in the Files app, shown when the folder name is not known"
+  },
   "backupFolderUnreadable": "Folder not readable: {path}\n({error})",
   "@backupFolderUnreadable": {
     "description": "Error when the backup folder cannot be read",
@@ -1691,11 +1695,15 @@
   "@settingsPickFolderAgain": {
     "description": "Button that re-opens the folder picker to restore access"
   },
+  "backupBookmarkAccessLost": "CIDP Buddy can no longer reach the backup folder you picked. Please pick it again.",
+  "@backupBookmarkAccessLost": {
+    "description": "Error shown when the stored access to the picked iOS backup folder no longer works, e.g. because the folder was deleted or moved"
+  },
   "settingsBackupsInsideAppTitle": "Backups live inside the app",
   "@settingsBackupsInsideAppTitle": {
     "description": "Warning title: backups live inside the app sandbox"
   },
-  "settingsBackupsInsideAppBody": "They are deleted along with the app. Export a copy to iCloud Drive regularly — via \"Export backup\" or the Files app.",
+  "settingsBackupsInsideAppBody": "They are deleted along with the app. Pick a folder in the Files app so backups land outside it — or export a copy regularly.",
   "@settingsBackupsInsideAppBody": {
     "description": "Warns that app-internal backups are erased with the app and points to the export action"
   },
@@ -1753,9 +1761,17 @@
   "@settingsRestoreBackupHint": {
     "description": "Explains the restore row"
   },
-  "settingsIosStorageInfo": "On iOS automatic backups are stored inside the app, because Apple does not allow lasting write access to freely chosen folders.\n\nUse \"Export backup\" to save a copy to the Files app, iCloud Drive or via AirDrop.",
+  "settingsIosStorageInfo": "Backups can be written straight into a folder you pick in the Files app: iCloud Drive, Nextcloud, Dropbox or a connected drive. CIDP Buddy keeps writing there on its own, and those backups survive deleting the app.\n\nWithout a picked folder, backups stay inside the app and are deleted together with it — you then have to export a copy yourself.",
   "@settingsIosStorageInfo": {
-    "description": "Explains why iOS backups are stored inside the app instead of a user-picked folder"
+    "description": "Explains the two iOS backup destinations in the dialog where the user picks one"
+  },
+  "settingsIosPickFolder": "Choose folder",
+  "@settingsIosPickFolder": {
+    "description": "Button that opens the iOS Files app folder picker for backups"
+  },
+  "settingsIosUseAppFolder": "Use app folder",
+  "@settingsIosUseAppFolder": {
+    "description": "Button that keeps backups in the app's own folder on iOS instead of a picked one"
   },
   "settingsDestinationConnectFailed": "Could not connect the destination. Please pick a different one.",
   "@settingsDestinationConnectFailed": {

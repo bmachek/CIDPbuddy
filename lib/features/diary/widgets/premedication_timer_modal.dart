@@ -378,33 +378,35 @@ class _PremedicationTimerModalState extends State<PremedicationTimerModal> {
     // The tooltip is what a screen reader announces (like IconButton does
     // it); the Semantics wrapper marks the node as a button and reflects the
     // disabled state.
+    //
+    // The circle has to be painted by a Material of its own, not by an `Ink`
+    // decoration: `Ink` hands its decoration to the nearest Material ancestor,
+    // which here is the bottom sheet's — and that Material paints its ink
+    // features *below* its child, so the modal's own opaque background
+    // container covered every circle. All that was left of the play button
+    // was its icon, in onTertiary: white on the light background, black on
+    // the dark one, invisible either way.
     return Tooltip(
       message: tooltip,
       child: Semantics(
         button: true,
         enabled: enabled,
-        child: InkWell(
-          onTap: onPressed,
-          customBorder: const CircleBorder(),
-          child: Ink(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: enabled ? color : color.withValues(alpha: 0.5),
-              shape: BoxShape.circle,
-              boxShadow: [
-                if (enabled)
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-              ],
-            ),
-            child: Icon(
-              icon,
-              color: enabled ? iconColor : iconColor.withValues(alpha: 0.6),
-              size: size * 0.5,
+        child: Material(
+          color: enabled ? color : color.withValues(alpha: 0.5),
+          shape: const CircleBorder(),
+          elevation: enabled ? 6 : 0,
+          shadowColor: color.withValues(alpha: 0.4),
+          child: InkWell(
+            onTap: onPressed,
+            customBorder: const CircleBorder(),
+            child: SizedBox(
+              width: size,
+              height: size,
+              child: Icon(
+                icon,
+                color: enabled ? iconColor : iconColor.withValues(alpha: 0.6),
+                size: size * 0.5,
+              ),
             ),
           ),
         ),

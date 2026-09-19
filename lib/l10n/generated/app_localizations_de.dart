@@ -1065,6 +1065,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupDestinationSafFolder => 'Cloud-/SAF-Ordner';
 
   @override
+  String get backupDestinationPickedFolder => 'Gewählter Ordner';
+
+  @override
   String backupFolderUnreadable(String path, String error) {
     return 'Ordner nicht lesbar: $path\n($error)';
   }
@@ -1172,11 +1175,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPickFolderAgain => 'Ordner erneut wählen';
 
   @override
+  String get backupBookmarkAccessLost =>
+      'CIDP Buddy kann nicht mehr auf den von dir gewählten Backup-Ordner zugreifen. Wähle ihn bitte erneut.';
+
+  @override
   String get settingsBackupsInsideAppTitle => 'Backups liegen in der App';
 
   @override
   String get settingsBackupsInsideAppBody =>
-      'Sie werden mit der App gelöscht. Exportiere regelmäßig eine Kopie nach iCloud Drive – über \"Backup exportieren\" oder die Dateien-App.';
+      'Sie werden mit der App gelöscht. Wähle in der Dateien-App einen Ordner, damit Backups außerhalb davon landen — oder exportiere regelmäßig eine Kopie.';
 
   @override
   String get settingsBackupDestination => 'Backup-Ziel';
@@ -1221,7 +1228,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsIosStorageInfo =>
-      'Auf iOS werden automatische Backups app-intern gespeichert, da Apple keinen dauerhaften Schreibzugriff auf frei gewählte Ordner erlaubt.\n\nNutze \"Backup exportieren\", um eine Sicherung z. B. in die Dateien-App, iCloud Drive oder per AirDrop zu speichern.';
+      'Backups können direkt in einen Ordner geschrieben werden, den du in der Dateien-App auswählst: iCloud Drive, Nextcloud, Dropbox oder ein verbundenes Laufwerk. CIDP Buddy schreibt dort von selbst weiter, und diese Backups bleiben auch nach dem Löschen der App erhalten.\n\nOhne gewählten Ordner bleiben Backups app-intern und werden zusammen mit der App gelöscht — dann musst du selbst eine Kopie exportieren.';
+
+  @override
+  String get settingsIosPickFolder => 'Ordner wählen';
+
+  @override
+  String get settingsIosUseAppFolder => 'App-Ordner nutzen';
 
   @override
   String get settingsDestinationConnectFailed =>
