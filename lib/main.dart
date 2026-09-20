@@ -162,7 +162,7 @@ Future<void> _initDeferred(AppDatabase db) async {
       await NotificationService().scheduleBackupReminder();
     } else {
       await NotificationService().cancelBackupReminder();
-      unawaited(BackupService().checkSafAccessOnStartup());
+      unawaited(BackupService().checkDestinationAccessOnStartup());
     }
   });
 }

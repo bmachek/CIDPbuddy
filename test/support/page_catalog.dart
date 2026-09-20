@@ -4,6 +4,7 @@ import 'package:cidpbuddy/features/diary/pages/add_diary_entry_page.dart';
 import 'package:cidpbuddy/features/diary/pages/add_infusion_page.dart';
 import 'package:cidpbuddy/features/diary/pages/add_schedule_page.dart';
 import 'package:cidpbuddy/features/diary/pages/statistics_page.dart';
+import 'package:cidpbuddy/features/diary/widgets/premedication_timer_modal.dart';
 import 'package:cidpbuddy/features/inventory/pages/add_item_page.dart';
 import 'package:cidpbuddy/features/inventory/pages/discontinued_medications_page.dart';
 import 'package:cidpbuddy/features/inventory/pages/medication_details_page.dart';
@@ -28,10 +29,8 @@ class PageCase {
 /// here — the layout and accessibility suites iterate this list, so a page
 /// that is missing is a page that is not checked.
 ///
-/// Not listed: `ReliabilityCheckPage` (its `initState` queries OS
-/// permissions through plugins that have no test double) and
-/// `PremedicationTimerModal` (a bottom sheet bound to the background
-/// service isolate).
+/// Not listed: `ReliabilityCheckPage` — its `initState` queries OS
+/// permissions through plugins that have no test double.
 final List<PageCase> allPages = [
   // The four tabs draw on a transparent scaffold over the gradient that
   // `MainScreen` paints, so they are rendered through it — with the
@@ -66,5 +65,15 @@ final List<PageCase> allPages = [
   PageCase(
     'ShoppingWizardDialog',
     (_) => const Scaffold(body: ShoppingWizardDialog()),
+  ),
+  // Not a route but a bottom sheet, and the screen a patient looks at for
+  // the length of an infusion. It stayed out of this list while its controls
+  // were invisible in both themes, so it is rendered here the way the sheet
+  // does it: on a Material, which is what `Ink` needs to paint at all. The
+  // background service does not exist in tests, so the controls render in
+  // their disabled state.
+  PageCase(
+    'PremedicationTimerModal',
+    (_) => const Scaffold(body: PremedicationTimerModal()),
   ),
 ];

@@ -1053,6 +1053,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupDestinationSafFolder => 'Cloud / SAF folder';
 
   @override
+  String get backupDestinationPickedFolder => 'Picked folder';
+
+  @override
   String backupFolderUnreadable(String path, String error) {
     return 'Folder not readable: $path\n($error)';
   }
@@ -1159,11 +1162,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPickFolderAgain => 'Pick folder again';
 
   @override
+  String get backupBookmarkAccessLost =>
+      'CIDP Buddy can no longer reach the backup folder you picked. Please pick it again.';
+
+  @override
   String get settingsBackupsInsideAppTitle => 'Backups live inside the app';
 
   @override
   String get settingsBackupsInsideAppBody =>
-      'They are deleted along with the app. Export a copy to iCloud Drive regularly — via \"Export backup\" or the Files app.';
+      'They are deleted along with the app. Pick a folder in the Files app so backups land outside it — or export a copy regularly.';
 
   @override
   String get settingsBackupDestination => 'Backup destination';
@@ -1207,7 +1214,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsIosStorageInfo =>
-      'On iOS automatic backups are stored inside the app, because Apple does not allow lasting write access to freely chosen folders.\n\nUse \"Export backup\" to save a copy to the Files app, iCloud Drive or via AirDrop.';
+      'Backups can be written straight into a folder you pick in the Files app: iCloud Drive, Nextcloud, Dropbox or a connected drive. CIDP Buddy keeps writing there on its own, and those backups survive deleting the app.\n\nWithout a picked folder, backups stay inside the app and are deleted together with it — you then have to export a copy yourself.';
+
+  @override
+  String get settingsIosPickFolder => 'Choose folder';
+
+  @override
+  String get settingsIosUseAppFolder => 'Use app folder';
 
   @override
   String get settingsDestinationConnectFailed =>

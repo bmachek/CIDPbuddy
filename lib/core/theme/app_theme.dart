@@ -27,7 +27,10 @@ class AppTheme {
       secondary: const Color(0xFF4F7396),
       onSecondary: Colors.white,
       tertiary: accentEmerald,
-      onTertiary: Colors.white,
+      // Emerald is a light colour: white on it is 2.3:1, black 9:1. The dark
+      // theme already got this right; the light one claimed white was legible
+      // on the timer's play button and the syringe bar.
+      onTertiary: Colors.black,
       // Red 700: 4.9:1 on white, so error text passes WCAG AA at body size
       // (the previous E53935 managed 4.1:1).
       error: const Color(0xFFD32F2F),

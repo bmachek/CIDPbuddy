@@ -63,11 +63,14 @@ Beyond the analyzer, CI fails on: an `IconButton` without `tooltip:`, an empty `
 - **diary/** — health tracking, symptom logging, dashboard, infusion timer with audio
 - **inventory/** — medication/accessory management, QR scanning, shopping wizard, OCR
 - **reminders/** — `NotificationService`; only the next 7 days get alarms registered (the window lives in `SchedulerService.notificationLookAhead`), keeping the count of concurrently registered exact alarms small
-- **settings/** — ZIP-based backup/restore via SAF, reliability checks
+- **settings/** — ZIP-based backup/restore: a SAF tree on Android, a Files-app folder held by a
+  security-scoped bookmark on iOS (`ios/Runner/BackupBookmarkPlugin.swift`, `DestinationKind.bookmark`),
+  a plain directory elsewhere; reliability checks
 
 ### Background & Scheduling (`lib/core/services/`)
 - **`SchedulerService`** — generates 90-day rolling treatment schedule; `_calculateDates` handles frequency rules (daily, interval, weekly, weekdays)
 - **`BackgroundService`** — premedication timers and a 24h periodic sync. Android runs it as a real foreground service; on iOS the isolate is starved while backgrounded, so the countdown derives its remaining time from a persisted absolute end timestamp instead of decrementing
+- **Periodic backup** — WorkManager on Android, `BGTaskScheduler` on iOS. The WorkManager *unique* name is the iOS task identifier, so `backup_worker.dart`, `BGTaskSchedulerPermittedIdentifiers` in `ios/Runner/Info.plist` and the registration in `AppDelegate.swift` have to name the same strings
 - **`MedicationService`** — low-stock calculation: `stock ÷ daily-requirement` vs `minStock`
 
 ### Navigation

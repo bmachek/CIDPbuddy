@@ -16,12 +16,17 @@ const String kMissedCheckTaskUniqueName = 'cidpbuddy_missed_check_v1';
 ///
 /// Must be a top-level / static function and tagged `vm:entry-point` so the
 /// AOT compiler keeps the symbol.
+///
+/// The identifier handed in differs per platform: Android passes the *task*
+/// name, iOS the BGTask identifier, which is the *unique* name. Matching only
+/// the task name meant every iOS wake-up — the missed-treatment check
+/// included — fell through to the backup branch below.
 @pragma('vm:entry-point')
 void backupCallbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     WidgetsFlutterBinding.ensureInitialized();
     try {
-      if (task == kMissedCheckTaskName) {
+      if (task == kMissedCheckTaskName || task == kMissedCheckTaskUniqueName) {
         return await _runMissedTreatmentsCheck();
       }
 
@@ -59,6 +64,12 @@ class BackupScheduler {
   /// Register (or replace) the periodic backup task. Android's minimum
   /// interval is 15 minutes; we ask for 6 hours. The task itself skips
   /// when a recent backup already exists (see `BackupService._autoMinInterval`).
+  ///
+  /// On iOS this submits a BGAppRefreshTaskRequest for
+  /// [kBackupPeriodicTaskUniqueName]; the frequency and the constraints below
+  /// are Android-only. The iOS interval is set where the task is registered
+  /// (AppDelegate.swift), and iOS treats it as a lower bound it may ignore —
+  /// which is why the in-app trigger in AppDatabase._setupAutoBackup stays.
   static Future<void> enable() async {
     await Workmanager().registerPeriodicTask(
       kBackupPeriodicTaskUniqueName,

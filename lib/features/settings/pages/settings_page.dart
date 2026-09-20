@@ -102,7 +102,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       title: l10n.settingsBackupNotPossible,
                       body: status.lastError ?? l10n.settingsUnknownError,
                       action: FilledButton.tonal(
-                        onPressed: _pickDestination,
+                        onPressed: Platform.isIOS
+                            ? _pickIosDestination
+                            : _pickDestination,
                         child: Text(l10n.settingsPickFolderAgain),
                       ),
                     ),
@@ -117,6 +119,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       icon: Icons.warning_amber_rounded,
                       title: l10n.settingsBackupsInsideAppTitle,
                       body: l10n.settingsBackupsInsideAppBody,
+                      // The warning is only fair if the way out is one tap
+                      // away — on iOS that is picking a folder in Files.
+                      action: Platform.isIOS
+                          ? FilledButton.tonal(
+                              onPressed: _pickIosDestination,
+                              child: Text(l10n.settingsIosPickFolder),
+                            )
+                          : null,
                     ),
                   ListTile(
                     leading: Icon(
@@ -137,7 +147,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           )
                         : null,
                     onTap: Platform.isIOS
-                        ? () => _showIosStorageInfo(context)
+                        ? _pickIosDestination
                         : _pickDestination,
                   ),
                   if (dest != null)
@@ -658,8 +668,11 @@ class _SettingsPageState extends State<SettingsPage> {
     };
   }
 
-  void _showIosStorageInfo(BuildContext context) {
-    showDialog(
+  /// iOS has two kinds of destination and the difference decides whether a
+  /// backup survives deleting the app, so the choice is spelled out rather
+  /// than hidden behind a single "pick folder" tap.
+  Future<void> _pickIosDestination() async {
+    final choice = await showDialog<_IosDestination>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.settingsBackupDestination),
@@ -669,11 +682,40 @@ class _SettingsPageState extends State<SettingsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.actionOk),
+            child: Text(context.l10n.actionCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, _IosDestination.appFolder),
+            child: Text(context.l10n.settingsIosUseAppFolder),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(context, _IosDestination.pickedFolder),
+            child: Text(context.l10n.settingsIosPickFolder),
           ),
         ],
       ),
     );
+    if (choice == null || !mounted) return;
+
+    if (choice == _IosDestination.appFolder) {
+      await _pickDestination();
+      return;
+    }
+
+    final result = await backupService.pickBookmarkBackupDirectory();
+    if (!mounted) return;
+    // A cancelled picker changed nothing; saying "could not connect" about it
+    // would be both wrong and alarming.
+    if (result.cancelled) return;
+    if (result.destination == null) {
+      _showErrorSnack(context.l10n.settingsDestinationConnectFailed);
+    } else {
+      await BackupScheduler.syncFromPrefs();
+      if (!mounted) return;
+      _showSuccessSnack(context.l10n.settingsDestinationConnected);
+    }
+    setState(() {});
   }
 
   Future<void> _pickDestination() async {
@@ -1039,7 +1081,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 leading: const Icon(Icons.inventory_2_outlined),
                                 title: Text(b.name),
                                 subtitle: Text(
-                                  '${AppDateFormat.dateTime(context, b.date)}  •  ${_megabytes(context, b.size)}',
+                                  b.size > 0
+                                      ? '${AppDateFormat.dateTime(context, b.date)}  •  ${_megabytes(context, b.size)}'
+                                      : AppDateFormat.dateTime(context, b.date),
                                 ),
                                 onTap: () {
                                   Navigator.pop(ctx);
@@ -1144,6 +1188,17 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<BackupDestination?> _pickRestoreSource() async {
+    // On iOS the folder holding the backups is picked in the Files app.
+    // Routing this through pickLocalBackupDirectory would quietly point the
+    // destination at the app's own folder instead — the one place the backups
+    // being restored are guaranteed not to be.
+    if (Platform.isIOS) {
+      final result = await backupService.pickBookmarkBackupDirectory();
+      if (!result.cancelled && result.destination == null && mounted) {
+        _showErrorSnack(context.l10n.restoreFolderConnectFailed);
+      }
+      return result.destination;
+    }
     final dest = await backupService.pickLocalBackupDirectory();
     if (dest == null && mounted) {
       _showErrorSnack(context.l10n.restoreFolderConnectFailed);
@@ -1357,3 +1412,8 @@ class _RestoreListState {
     this.destinationLabel,
   });
 }
+
+/// The two iOS backup destinations, as the chooser dialog offers them:
+/// a folder picked in the Files app (durable, and the automatic export), or
+/// the app's own folder (goes away with the app).
+enum _IosDestination { pickedFolder, appFolder }

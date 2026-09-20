@@ -18,9 +18,26 @@ export 'backup_destination.dart'
     show
         BackupFile,
         BackupDestination,
+        BookmarkDestination,
         DestinationKind,
         LocalDestination,
         SafDestination;
+
+/// Outcome of a destination pick. A cancelled pick and a failed one both
+/// leave the destination untouched, but only one of them is worth telling the
+/// patient about — "Verbindung fehlgeschlagen" after a deliberate Cancel is
+/// exactly the kind of message that makes someone doubt their backups.
+class DestinationPickResult {
+  const DestinationPickResult.picked(BackupDestination this.destination)
+    : cancelled = false;
+  const DestinationPickResult.cancelled()
+    : destination = null,
+      cancelled = true;
+  const DestinationPickResult.failed() : destination = null, cancelled = false;
+
+  final BackupDestination? destination;
+  final bool cancelled;
+}
 
 /// Result of a backup attempt — used by UI / WorkManager / reliability check.
 class BackupResult {
@@ -135,6 +152,7 @@ class BackupService {
   /// [BackupDestination.provisionAppInternal]), so we instead (re)provision
   /// the app-internal backup folder. This still lets the "Ordner erneut
   /// wählen" retry button recover from a deleted/corrupted internal folder.
+  /// The durable iOS pick is [pickBookmarkBackupDirectory].
   Future<BackupDestination?> pickLocalBackupDirectory() async {
     try {
       if (Platform.isIOS) {
@@ -158,10 +176,33 @@ class BackupService {
     }
   }
 
-  /// Shares the most recent backup file via the OS share sheet — the way
-  /// for iOS users (whose backups live in an app-internal folder, see
-  /// [pickLocalBackupDirectory]) to get a copy into Files/iCloud
-  /// Drive/AirDrop/etc.
+  /// iOS only: lets the patient pick a folder in the Files app and keeps a
+  /// security-scoped bookmark for it, so backups land outside the app sandbox
+  /// — and keep landing there without anyone opening the app or tapping a
+  /// share sheet. iCloud Drive, Nextcloud, Dropbox and a plugged-in drive all
+  /// show up in that picker, so this is also the automatic export.
+  Future<DestinationPickResult> pickBookmarkBackupDirectory() async {
+    if (!Platform.isIOS) return const DestinationPickResult.failed();
+    try {
+      final destination = await BookmarkDestination.pick();
+      if (destination == null) return const DestinationPickResult.cancelled();
+      // Verify before persisting — proves the bookmark is actually usable
+      // rather than just well-formed.
+      final err = await destination.verifyAccess();
+      if (err != null) return const DestinationPickResult.failed();
+      await destination.persist();
+      await _resetFailureState();
+      return DestinationPickResult.picked(destination);
+    } catch (e) {
+      return const DestinationPickResult.failed();
+    }
+  }
+
+  /// Shares the most recent backup file via the OS share sheet — the manual
+  /// way to get a copy out of the app-internal folder on iOS (see
+  /// [pickLocalBackupDirectory]) into Files/iCloud Drive/AirDrop/etc. Once a
+  /// folder has been picked with [pickBookmarkBackupDirectory] the backups
+  /// are already out there, and this is only a convenience.
   ///
   /// [sharePositionOrigin] anchors the iPad popover. share_plus's iOS side
   /// treats `popoverPresentationController` as non-null on iPhone too (not
@@ -456,15 +497,25 @@ class BackupService {
     await runBackup(manual: false);
   }
 
-  /// Checks SAF access once on app startup to detect revoked pCloud/SAF
-  /// permissions before the next scheduled WorkManager run. Skips if a
-  /// recent successful backup exists or if a failure is already recorded.
-  Future<void> checkSafAccessOnStartup() async {
+  /// Checks once on app startup that the destination is still reachable, so
+  /// a revoked SAF grant or a picked iOS folder that has since been deleted
+  /// surfaces before the next scheduled WorkManager run rather than after it
+  /// silently failed. Skips if a recent successful backup exists or if a
+  /// failure is already recorded.
+  ///
+  /// Only the two destinations whose access can be taken away behind the
+  /// app's back are worth the check; a plain local folder either exists or
+  /// fails loudly on the next write.
+  Future<void> checkDestinationAccessOnStartup() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       if (!(prefs.getBool(kAutoBackupEnabled) ?? false)) return;
       final dest = await BackupDestination.load();
-      if (dest == null || dest.kind != DestinationKind.saf) return;
+      if (dest == null ||
+          (dest.kind != DestinationKind.saf &&
+              dest.kind != DestinationKind.bookmark)) {
+        return;
+      }
 
       // Skip if already in a known error state — WorkManager handles retries.
       if (prefs.getString(_kLastError) != null) return;
