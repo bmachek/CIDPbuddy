@@ -16,7 +16,8 @@ That script is the single quality gate, and CI runs the same script — a green 
 4. checks that `l10n-untranslated.json` is `{}`, i.e. every key exists in all five ARB files
 5. `dart format --set-exit-if-changed` over every tracked `.dart` file
 6. `flutter analyze --fatal-infos` — zero errors *and* zero infos, which includes every `flutter_lints` rule
-7. `flutter test`
+7. `dart run tool/ui_lint.dart` — the UI rules the analyzer cannot express (see below)
+8. `flutter test` — the localization tests and the UI suites under `test/ui/`
 
 Sub-command output is captured and only printed when a step fails, so the summary stays short.
 
@@ -105,7 +106,32 @@ Generated code (`lib/l10n/generated/`, `database.g.dart`) is already format-clea
 
 ## Linting
 
-There is no separate lint step — `flutter analyze` *is* the linter. `analysis_options.yaml` includes `package:flutter_lints/flutter.yaml`, and CI runs the analyzer with `--fatal-infos`, so every lint in that set is a hard failure, not a suggestion. Adding a rule to `analysis_options.yaml` is all it takes to enforce it everywhere.
+`flutter analyze` is the first linter. `analysis_options.yaml` includes `package:flutter_lints/flutter.yaml`, and CI runs the analyzer with `--fatal-infos`, so every lint in that set is a hard failure, not a suggestion. Adding a rule to `analysis_options.yaml` is all it takes to enforce it everywhere.
+
+`tool/ui_lint.dart` is the second. It holds the rules that matter for this app's users — CIDP patients, often with reduced hand control and vision — and that the analyzer has no lint for:
+
+| Rule | Fails on |
+|---|---|
+| `icon-button-tooltip` | an `IconButton` without `tooltip:` (what a screen reader announces) |
+| `dead-handler` | `onPressed: () {}` and friends — a control that does nothing |
+| `compact-icon-button` | `VisualDensity.compact`, which shrinks the 48 dp tap target |
+| `tiny-font` | `fontSize` below 11 |
+| `hardcoded-palette` | `Colors.grey/red/green/orange/blue` in the UI layer — they fail contrast in one of the two themes; use `colorScheme.*` or `AppStatusColors` |
+| `hardcoded-text` | a string literal with letters in a user-visible slot (`Text('…')`, `label:`, `hintText:`, `tooltip:` …) instead of `context.l10n` |
+| `date-format-literal` | a literal `DateFormat('…')` pattern instead of `AppDateFormat` |
+| `deprecated-opacity`, `const-of-context`, `print` | the three classic analyzer blind spots from `AI_GUIDELINES.md` |
+
+A line can opt out with a trailing `// ui-lint: allow <rule>` comment; say why in the same comment. `dart run tool/ui_lint.dart --explain` prints the rationale for every rule.
+
+## UI test suites
+
+`flutter test` includes three suites under `test/ui/` that render every screen listed in `test/support/page_catalog.dart` over an in-memory database seeded with one of everything:
+
+- **`accessibility_test.dart`** — light and dark theme, against Flutter's own `androidTapTargetGuideline` (48 dp targets), `labeledTapTargetGuideline` (a label on every tappable node) and `textContrastGuideline` (WCAG AA on what is actually drawn).
+- **`layout_robustness_test.dart`** — phone width in all five languages, a 320 dp phone, text scale 1.3, and a dark tablet; any `RenderFlex overflowed` or build exception fails, and the message names the widget and its `file:line`. The test font draws every glyph as a box as wide as the font size, so a layout that passes has margin in the real app.
+- **`l10n_consistency_test.dart`** — the five ARB files against each other: placeholders, empty strings, orphan keys, ICU `other` branches, translations left identical to English (`gen-l10n` only reports keys that are missing outright).
+
+A new page has to be added to the catalog or it is not checked.
 
 ## What is not covered
 

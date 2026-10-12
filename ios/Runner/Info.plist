@@ -83,5 +83,15 @@
 		<string>processing</string>
 		<string>audio</string>
 	</array>
+	<!-- Every BGTaskScheduler identifier the app registers has to be listed
+	     here, or BGTaskScheduler.shared.register() raises at launch and
+	     submit() fails with BGTaskSchedulerErrorCodeNotPermitted. The strings
+	     are the WorkManager *unique* names from backup_worker.dart: on iOS the
+	     unique name is the BGTask identifier, the task name is ignored. -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>cidpbuddy_periodic_backup_v1</string>
+		<string>cidpbuddy_missed_check_v1</string>
+	</array>
 </dict>
 </plist>

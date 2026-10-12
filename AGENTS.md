@@ -31,9 +31,20 @@ flutter run
 flutter build apk --release --build-name=X.X.X --build-number=N
 ```
 
-`tool/verify.sh` is the single gate — it is what CI runs, so a green run locally means a green run on GitHub.
+`tool/verify.sh` is the single gate — it is what CI runs, so a green run locally means a green run on GitHub. It also runs `dart run tool/ui_lint.dart`, the static UI rules described below.
 
-`test/widget_test.dart` covers the localization setup (locale coverage, lookup per language, placeholder substitution, widget rendering). Beyond that, no meaningful test suite exists yet.
+### Tests
+
+- `test/widget_test.dart` — localization setup (locale coverage, lookup per language, placeholder substitution, widget rendering).
+- `test/ui/l10n_consistency_test.dart` — cross-checks the five ARB files: placeholders per translation, empty strings, orphan keys, ICU `other` branches, translations left identical to English.
+- `test/ui/accessibility_test.dart` — every screen in `test/support/page_catalog.dart`, light and dark, against Flutter's `androidTapTargetGuideline`, `labeledTapTargetGuideline` and `textContrastGuideline`.
+- `test/ui/layout_robustness_test.dart` — every screen at phone width in all five languages, on a 320 dp phone, at text scale 1.3 and on a dark tablet; fails on any `RenderFlex overflowed` or build exception, listing the culprit widget with file:line.
+
+`test/support/app_harness.dart` renders a page with the production provider tree over an in-memory Drift database (`AppDatabase.forTesting`) seeded with one of everything (`seedDatabase`). **A new page must be added to `page_catalog.dart`** — a page that is not listed is a page that is not checked. The four tabs are rendered through `MainScreen(initialIndex:)` so they sit on the real gradient and under the real navigation bar.
+
+### UI rules enforced by `tool/ui_lint.dart`
+
+Beyond the analyzer, CI fails on: an `IconButton` without `tooltip:`, an empty `onPressed`/`onTap`, `VisualDensity.compact`, `fontSize` below 11, `Colors.grey/red/green/orange/blue` in the UI layer (use `colorScheme.*` or `AppStatusColors.of(context).success/warning/inactive` from `lib/core/theme/app_colors.dart`), string literals with letters in user-visible slots, literal `DateFormat` patterns, `withOpacity`, `const Theme.of`, and `print`. A line can opt out with `// ui-lint: allow <rule>` plus a reason. `dart run tool/ui_lint.dart --explain` prints the rationale per rule.
 
 ## Architecture
 
@@ -64,6 +75,7 @@ flutter build apk --release --build-name=X.X.X --build-number=N
 
 ### Theme & Localization
 - Material3 with custom colors: Blue `#0066FF`, Emerald `#00BFA6`, Gold `#FFB300`
+- The UI font Outfit is bundled in `assets/google_fonts/` (OFL); `GoogleFonts.config.allowRuntimeFetching` is off in `main.dart`, so the app never contacts Google's font servers and looks right on a first launch offline. The widget tests load the same files
 - Light and dark themes (`AppTheme.lightTheme` / `darkTheme`) via `ThemeProvider`; defaults to `ThemeMode.system` and is not persisted
 - **Five languages** — English, German, French, Italian, Spanish. Generated from ARB files (`lib/l10n/*.arb`) by `flutter gen-l10n`; generated code is committed
 - **No user-visible string literals in Dart** — everything goes through `context.l10n` (`lib/core/l10n/l10n_ext.dart`)
@@ -71,6 +83,8 @@ flutter build apk --release --build-name=X.X.X --build-number=N
 - Dates/numbers are locale-aware via `AppDateFormat` — never hard-code patterns like `dd.MM.yyyy`
 - Background isolates (notifications, backup, scheduler) use `LocaleProvider.l10nForBackground()` since they have no `BuildContext`
 - Premium gradient backgrounds; glassmorphic bottom nav (`BackdropFilter`)
+- Status colours (success, warning, inactive) live in `AppStatusColors`, a `ThemeExtension` with light and dark variants; the light error colour is red 700 so error text passes WCAG AA
+- `BackgroundService.isSupportedPlatform` gates everything that touches `flutter_background_service` — it exists on Android and iOS only, and the app also builds for desktop and web
 
 ### Platform IDs
 Android `applicationId` and iOS bundle ID are both `de.fokuspunk.cidpbuddy`.
@@ -79,7 +93,7 @@ Android `applicationId` and iOS bundle ID are both `de.fokuspunk.cidpbuddy`.
 
 Workflows live in `.github/workflows/`:
 
-- **`ci.yml`** — on every push to `main` and every PR. Runs `tool/verify.sh --check-generated` (regenerates Drift and l10n code and fails if the committed output is stale, fails on any untranslated ARB key, checks `dart format`, then `flutter analyze --fatal-infos` and `flutter test`), followed by a debug APK build that catches Gradle/Kotlin breakage the analyzer cannot see. Also callable from other workflows (`skip-android-build`).
+- **`ci.yml`** — on every push to `main` and every PR. Runs `tool/verify.sh --check-generated` (regenerates Drift and l10n code and fails if the committed output is stale, fails on any untranslated ARB key, checks `dart format`, then `flutter analyze --fatal-infos`, `dart run tool/ui_lint.dart` and `flutter test`), followed by a debug APK build that catches Gradle/Kotlin breakage the analyzer cannot see. Also callable from other workflows (`skip-android-build`).
 - **`release.yml`** — on `v*` tags. Calls `ci.yml` first, so a tag cannot publish a release that does not verify, then builds and attaches the signed APK. The iOS job stays disabled until the App Store Connect secrets are restored.
 - **`codeql.yml`** — CodeQL for `actions` (the workflows themselves) and `java-kotlin` (the Android sources, built with the Flutter toolchain). On push, PR and weekly.
 - **`osv-scanner.yml`** — known vulnerabilities in `pubspec.lock`. CodeQL cannot see Dart, so this is what covers the dependency side; CocoaPods lockfiles are not scannable by it. PRs fail on newly introduced advisories; the scheduled scan only reports.
@@ -91,11 +105,13 @@ The Flutter version is pinned (`FLUTTER_VERSION` in `ci.yml`, and the same liter
 
 ## Subagents
 
-`.claude/agents/` defines three project subagents. Delegating to them keeps large, low-value output out of the main context — a single `flutter` command re-prints a 115-line dependency banner, and the five ARB files together are thousands of lines:
+`.claude/agents/` defines five project subagents. Delegating to them keeps large, low-value output out of the main context — a single `flutter` command re-prints a 115-line dependency banner, and the five ARB files together are thousands of lines:
 
 - **`flutter-verifier`** (Haiku) — runs `tool/verify.sh` and reports only the failures. Use it instead of running `flutter analyze` or `flutter test` directly.
 - **`l10n-translator`** (Sonnet) — adds or changes UI strings across all five ARB files and runs `gen-l10n`. Use it whenever a change touches user-visible text.
 - **`drift-migrator`** — schema change plus migration step, version bump and regeneration. Use it for anything that alters the shape of the database; patients' infusion logs cannot be recreated.
+- **`ui-auditor`** (Sonnet) — runs the automated UI checks (`tool/ui_lint.dart`, the accessibility, layout and ARB suites in `test/ui/`) and reports the findings as deduplicated file:line lists. Use after any page or widget change.
+- **`ux-reviewer`** — read-only review of a page or diff against the UX/accessibility checklist (states, feedback, confirmations, unsaved-changes protection, tap targets, labels, theme colours, text scaling, scrollable dialogs, locale formats). Use before finishing UI work; it finds what the automated checks cannot.
 
 Rules of thumb: delegate work whose *output* is large but whose *answer* is small (verification, searching, translating); do the actual feature edits yourself so the reasoning stays in one place. Agents report conclusions, not file dumps.
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'app_colors.dart';
+
 class AppTheme {
   // Brand Colors: Professional Blue, Slate, and Emerald
   static const Color primaryBase = Color(0xFF0066FF);
@@ -16,6 +18,7 @@ class AppTheme {
 
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
+    extensions: const [AppStatusColors.light],
     colorScheme: ColorScheme.fromSeed(
       seedColor: primaryBase,
       brightness: Brightness.light,
@@ -24,8 +27,13 @@ class AppTheme {
       secondary: const Color(0xFF4F7396),
       onSecondary: Colors.white,
       tertiary: accentEmerald,
-      onTertiary: Colors.white,
-      error: const Color(0xFFE53935),
+      // Emerald is a light colour: white on it is 2.3:1, black 9:1. The dark
+      // theme already got this right; the light one claimed white was legible
+      // on the timer's play button and the syringe bar.
+      onTertiary: Colors.black,
+      // Red 700: 4.9:1 on white, so error text passes WCAG AA at body size
+      // (the previous E53935 managed 4.1:1).
+      error: const Color(0xFFD32F2F),
       onError: Colors.white,
       surface: surfaceLight,
       onSurface: const Color(0xFF1A1A1A),
@@ -40,6 +48,13 @@ class AppTheme {
         fontWeight: FontWeight.bold,
       ),
     ),
+    // Text buttons ("Cancel", "Undo") are the one place the brand blue is
+    // used as small text. On the tinted dialog surface #0066FF only reaches
+    // ~3.9:1, so text buttons use a darker shade that clears WCAG AA.
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: const Color(0xFF0052CC)),
+    ),
+    dialogTheme: const DialogThemeData(backgroundColor: cardLight),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
       foregroundColor: const Color(0xFF1A1A1A),
@@ -101,6 +116,7 @@ class AppTheme {
 
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
+    extensions: const [AppStatusColors.dark],
     colorScheme: ColorScheme.fromSeed(
       seedColor: primaryBase,
       brightness: Brightness.dark,
@@ -125,6 +141,12 @@ class AppTheme {
         fontWeight: FontWeight.bold,
       ),
     ),
+    // Same reasoning as the light theme: #0066FF as small text on the dark
+    // surface is ~3.3:1; the lighter tint clears WCAG AA.
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: const Color(0xFF8AB4FF)),
+    ),
+    dialogTheme: const DialogThemeData(backgroundColor: cardDark),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,

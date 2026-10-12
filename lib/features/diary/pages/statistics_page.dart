@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../providers/diary_provider.dart';
 import '../../../core/database/database.dart';
 import 'package:cidpbuddy/core/l10n/l10n_ext.dart';
+import 'package:cidpbuddy/core/theme/app_colors.dart';
 
 class StatisticsPage extends StatelessWidget {
   const StatisticsPage({super.key});
@@ -19,120 +21,168 @@ class StatisticsPage extends StatelessWidget {
           StreamBuilder<List<InfusionLogData>>(
             stream: diaryProvider.infusionLogsStream,
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildMessage(
+                    context,
+                    context.l10n.errorLoadingData,
+                    Icons.error_outline_rounded,
+                  ),
+                );
+              }
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return SliverFillRemaining(
-                  child: Center(child: Text(context.l10n.statisticsEmpty)),
+                  hasScrollBody: false,
+                  child: _buildMessage(
+                    context,
+                    context.l10n.statisticsEmpty,
+                    Icons.bar_chart_rounded,
+                  ),
                 );
               }
 
               final logs = snapshot.data!;
               final monthlyData = _processMonthlyData(context, logs);
+              final axisFormat = NumberFormat.decimalPattern(context.localeTag);
 
-              return SliverPadding(
-                padding: const EdgeInsets.all(24.0),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    Text(
-                      context.l10n.statisticsMonthlyDose,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
+              return SliverSafeArea(
+                top: false,
+                sliver: SliverPadding(
+                  padding: const EdgeInsets.all(24.0),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      Text(
+                        context.l10n.statisticsMonthlyDose,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppStatusColors.of(context).accentText,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.l10n.statisticsMonthlyDoseSubtitle,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 13,
+                      const SizedBox(height: 8),
+                      Text(
+                        context.l10n.statisticsMonthlyDoseSubtitle,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      height: 240,
-                      child: BarChart(
-                        BarChartData(
-                          alignment: BarChartAlignment.spaceAround,
-                          maxY: _getMaxY(monthlyData),
-                          barTouchData: BarTouchData(
-                            enabled: true,
-                            touchTooltipData: BarTouchTooltipData(
-                              getTooltipColor: (_) => Theme.of(
-                                context,
-                              ).colorScheme.secondaryContainer,
-                              tooltipRoundedRadius: 8,
-                            ),
-                          ),
-                          titlesData: FlTitlesData(
-                            show: true,
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                getTitlesWidget: (value, meta) {
-                                  final index = value.toInt();
-                                  if (index >= 0 &&
-                                      index < monthlyData.length) {
-                                    return SideTitleWidget(
-                                      meta: meta,
-                                      child: Text(
-                                        monthlyData[index].month,
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                  return const SizedBox();
-                                },
-                                reservedSize: 32,
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        height: 260,
+                        child: BarChart(
+                          BarChartData(
+                            alignment: BarChartAlignment.spaceAround,
+                            maxY: _getMaxY(monthlyData),
+                            barTouchData: BarTouchData(
+                              enabled: true,
+                              touchTooltipData: BarTouchTooltipData(
+                                getTooltipColor: (_) => Theme.of(
+                                  context,
+                                ).colorScheme.secondaryContainer,
+                                tooltipRoundedRadius: 8,
                               ),
                             ),
-                            leftTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 40,
-                                getTitlesWidget: (value, meta) => Text(
-                                  value.toInt().toString(),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                            titlesData: FlTitlesData(
+                              show: true,
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (value, meta) {
+                                    final index = value.toInt();
+                                    if (index >= 0 &&
+                                        index < monthlyData.length) {
+                                      return SideTitleWidget(
+                                        meta: meta,
+                                        child: Text(
+                                          monthlyData[index].month,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return const SizedBox();
+                                  },
+                                  reservedSize: 40,
+                                ),
+                              ),
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 48,
+                                  getTitlesWidget: (value, meta) => Text(
+                                    axisFormat.format(value.toInt()),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ),
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
                             ),
-                            topTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
+                            gridData: FlGridData(
+                              show: true,
+                              drawVerticalLine: false,
+                              getDrawingHorizontalLine: (value) => FlLine(
+                                color: Theme.of(
+                                  context,
+                                ).dividerColor.withValues(alpha: 0.1),
+                                strokeWidth: 1,
+                              ),
                             ),
-                            rightTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
+                            borderData: FlBorderData(show: false),
+                            barGroups: _buildBarGroups(context, monthlyData),
                           ),
-                          gridData: FlGridData(
-                            show: true,
-                            drawVerticalLine: false,
-                            getDrawingHorizontalLine: (value) => FlLine(
-                              color: Theme.of(
-                                context,
-                              ).dividerColor.withValues(alpha: 0.1),
-                              strokeWidth: 1,
-                            ),
-                          ),
-                          borderData: FlBorderData(show: false),
-                          barGroups: _buildBarGroups(context, monthlyData),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 48),
-                    _buildSummary(context, logs),
-                  ]),
+                      const SizedBox(height: 48),
+                      _buildSummary(context, logs),
+                    ]),
+                  ),
                 ),
               );
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMessage(BuildContext context, String text, IconData icon) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 40,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -194,12 +244,20 @@ class StatisticsPage extends StatelessWidget {
     final total = logs.fold<double>(0, (sum, item) => sum + item.dosage);
     final count = logs.length;
     final avg = count > 0 ? total / count : 0.0;
+    final intFormat = NumberFormat.decimalPattern(context.localeTag);
+    final oneDecimal = NumberFormat.decimalPatternDigits(
+      locale: context.localeTag,
+      decimalDigits: 1,
+    );
 
     // Find last recorded weight
     double? lastWeight;
-    try {
-      lastWeight = logs.firstWhere((l) => l.bodyWeight != null).bodyWeight;
-    } catch (_) {}
+    for (final log in logs) {
+      if (log.bodyWeight != null) {
+        lastWeight = log.bodyWeight;
+        break;
+      }
+    }
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -225,26 +283,26 @@ class StatisticsPage extends StatelessWidget {
           _buildSummaryRow(
             context,
             context.l10n.statisticsTotalInfusions,
-            count.toString(),
+            intFormat.format(count),
             Icons.history_rounded,
           ),
           _buildSummaryRow(
             context,
             context.l10n.statisticsTotalDose,
-            context.l10n.unitsValue(total.toStringAsFixed(1)),
+            context.l10n.unitsValue(oneDecimal.format(total)),
             Icons.summarize_rounded,
           ),
           _buildSummaryRow(
             context,
             context.l10n.statisticsAverageDose,
-            context.l10n.unitsValue(avg.toStringAsFixed(1)),
+            context.l10n.unitsValue(oneDecimal.format(avg)),
             Icons.analytics_rounded,
           ),
           if (lastWeight != null)
             _buildSummaryRow(
               context,
               context.l10n.statisticsLastWeight,
-              context.l10n.kilogramsValue(lastWeight.toStringAsFixed(1)),
+              context.l10n.kilogramsValue(oneDecimal.format(lastWeight)),
               Icons.monitor_weight_rounded,
             ),
         ],
@@ -260,33 +318,34 @@ class StatisticsPage extends StatelessWidget {
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                size: 16,
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.7),
-              ),
-              const SizedBox(width: 8),
-              Text(
+      child: MergeSemantics(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 18, color: AppStatusColors.of(context).accentText),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
                 label,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-            ],
-          ),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          ),
-        ],
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                value,
+                textAlign: TextAlign.end,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

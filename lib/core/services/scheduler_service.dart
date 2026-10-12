@@ -62,6 +62,9 @@ class SchedulerService {
         final key = '${schedule.id}_${date.toIso8601String()}';
 
         if (!existingSet.contains(key)) {
+          // Remember it for this run too, so a repeated intake time cannot
+          // insert the same slot twice.
+          existingSet.add(key);
           final id = await db.insertPlannedInfusion(
             PlannedInfusionsCompanion.insert(
               date: date,
@@ -298,7 +301,7 @@ class SchedulerService {
           current = DateTime(current.year, current.month, current.day + 1);
           break;
         case 'interval':
-          final interval = schedule.intervalValue ?? 1;
+          final interval = schedule.safeInterval;
           current = DateTime(
             current.year,
             current.month,
@@ -306,7 +309,7 @@ class SchedulerService {
           );
           break;
         case 'weekly':
-          final weeks = schedule.intervalValue ?? 1;
+          final weeks = schedule.safeInterval;
           current = DateTime(
             current.year,
             current.month,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cidpbuddy/core/database/database.dart';
 import 'package:cidpbuddy/features/inventory/providers/inventory_provider.dart';
@@ -23,6 +24,10 @@ import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Outfit ships in assets/google_fonts/. Never fetch it at runtime: the
+  // font would be missing on a first launch without network, and a medical
+  // app has no business contacting Google's font servers.
+  GoogleFonts.config.allowRuntimeFetching = false;
   // Force Flutter to build & expose the semantics tree so UI-test tools
   // (Maestro) can find widgets by text/id without a screen reader running.
   SemanticsBinding.instance.ensureSemantics();
@@ -116,18 +121,21 @@ Future<void> _initDeferred(AppDatabase db) async {
     BackupScheduler.enableMissedCheck,
   );
 
-  // Self-heal orphaned schedules and planned infusions (e.g. left behind by a
-  // restore whose backup referenced a medication absent from the restored
-  // state). Schedules are removed first so the following sync cannot regenerate
-  // entries from them; runs before the missed-treatment scan so orphans never
-  // surface as actionless rows.
+  // Self-heal orphaned schedules, planned infusions, supply links and orders
+  // (e.g. left behind by a restore whose backup referenced a medication absent
+  // from the restored state, or by deletes in earlier builds). Schedules are
+  // removed first so the following sync cannot regenerate entries from them;
+  // runs before the missed-treatment scan so orphans never surface as
+  // actionless rows.
   await step('cleanupOrphans', () async {
     final removedSchedules = await db.deleteOrphanedSchedules();
     final removedPlanned = await db.deleteOrphanedPlannedInfusions();
-    if (removedSchedules > 0 || removedPlanned > 0) {
+    final removedLinks = await db.deleteOrphanedLinksAndOrders();
+    if (removedSchedules > 0 || removedPlanned > 0 || removedLinks > 0) {
       debugPrint(
-        'Removed $removedSchedules orphaned schedule(s) and '
-        '$removedPlanned orphaned planned infusion(s) on startup.',
+        'Removed $removedSchedules orphaned schedule(s), '
+        '$removedPlanned orphaned planned infusion(s) and '
+        '$removedLinks orphaned supply link/order row(s) on startup.',
       );
     }
   });
@@ -154,7 +162,7 @@ Future<void> _initDeferred(AppDatabase db) async {
       await NotificationService().scheduleBackupReminder();
     } else {
       await NotificationService().cancelBackupReminder();
-      unawaited(BackupService().checkSafAccessOnStartup());
+      unawaited(BackupService().checkDestinationAccessOnStartup());
     }
   });
 }

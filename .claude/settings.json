@@ -20,7 +20,10 @@
       "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)",
-      "Bash(git show *)"
+      "Bash(git show *)",
+      "Bash(dart run tool/ui_lint.dart)",
+      "Bash(dart run tool/ui_lint.dart *)",
+      "Bash(flutter test test/ui*)"
     ]
   }
 }

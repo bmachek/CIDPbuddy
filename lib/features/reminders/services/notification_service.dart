@@ -303,52 +303,7 @@ class NotificationService {
         treatmentId * 100,
       );
       final db = AppDatabase();
-      // 1. Mark as completed
-      await db.completePlannedInfusion(treatmentId);
-
-      // 2. Log infusion if possible (pills or no extra tracking)
-      // Note: For background isolation, we use a simple DB update.
-      // Full logging with stock deduction is better done when the app is open
-      // or via a dedicated service that doesn't rely on Provider.
-
-      // We'll fetch the medication details first
-      final treatment = await (db.select(
-        db.plannedInfusions,
-      )..where((t) => t.id.equals(treatmentId))).getSingle();
-      final med = await (db.select(
-        db.medications,
-      )..where((t) => t.id.equals(treatment.medicationId))).getSingle();
-
-      if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
-        // Automatic logging for simple items
-        await db.transaction(() async {
-          // Reduce stock
-          await db.updateMedication(
-            med.copyWith(stock: med.stock - treatment.dosage),
-          );
-
-          // Reduce accessory stock
-          final accessories = await db.getAccessoriesForMedication(med.id);
-          for (final link in accessories) {
-            final acc = await (db.select(
-              db.accessories,
-            )..where((t) => t.id.equals(link.accessoryId))).getSingle();
-            await db.updateAccessory(
-              acc.copyWith(stock: acc.stock - link.defaultQuantity),
-            );
-          }
-
-          // Insert log
-          await db.insertInfusionLog(
-            InfusionLogCompanion.insert(
-              date: treatment.date,
-              medicationId: med.id,
-              dosage: treatment.dosage,
-              notes: Value(l10n.notificationCompletedNote),
-            ),
-          );
-        });
-      }
+      await _logCompletedTreatment(db, l10n, treatmentId);
 
       // Cancel other reminders for this treatment and refresh the missed-intake
       // summary so it does not keep listing a treatment that is now done.
@@ -873,6 +828,59 @@ Future<void> _handleSkipInfusionInBackground(int treatmentId) async {
   }
 }
 
+/// Marks [treatmentId] as done and records it the way the in-app flow does:
+/// one infusion log plus the medication and supply stock deductions, all in
+/// a single transaction.
+///
+/// This used to skip the log for any medication that tracks batch numbers,
+/// weight or the timer — which is every medication by default — so tapping
+/// "Done" on the reminder made the intake vanish from the dashboard with no
+/// diary entry and no stock change. Batch number and weight can be added
+/// afterwards by editing the diary entry. Already-completed intakes are left
+/// alone so a stale notification cannot log the same infusion twice.
+Future<void> _logCompletedTreatment(
+  AppDatabase db,
+  AppLocalizations l10n,
+  int treatmentId,
+) async {
+  final treatment = await (db.select(
+    db.plannedInfusions,
+  )..where((t) => t.id.equals(treatmentId))).getSingleOrNull();
+  if (treatment == null || treatment.isCompleted) return;
+  final med = await (db.select(
+    db.medications,
+  )..where((t) => t.id.equals(treatment.medicationId))).getSingleOrNull();
+
+  await db.transaction(() async {
+    await db.completePlannedInfusion(treatmentId);
+    // The medication may have been deleted since the reminder was scheduled;
+    // the intake is still marked done so its follow-ups stop.
+    if (med == null) return;
+
+    await db.updateMedication(
+      med.copyWith(stock: med.stock - treatment.dosage),
+    );
+    final accessories = await db.getAccessoriesForMedication(med.id);
+    for (final link in accessories) {
+      final acc = await (db.select(
+        db.accessories,
+      )..where((t) => t.id.equals(link.accessoryId))).getSingleOrNull();
+      if (acc == null) continue;
+      await db.updateAccessory(
+        acc.copyWith(stock: acc.stock - link.defaultQuantity),
+      );
+    }
+    await db.insertInfusionLog(
+      InfusionLogCompanion.insert(
+        date: treatment.date,
+        medicationId: med.id,
+        dosage: treatment.dosage,
+        notes: Value(l10n.notificationCompletedNote),
+      ),
+    );
+  });
+}
+
 @pragma('vm:entry-point')
 Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
   try {
@@ -881,47 +889,7 @@ Future<void> _handleCompleteInfusionInBackground(int treatmentId) async {
     await _initBackgroundPlugin(notifPlugin);
     await _cancelTreatmentBlock(notifPlugin, treatmentId);
     final db = AppDatabase();
-    // 1. Mark as completed
-    await db.completePlannedInfusion(treatmentId);
-
-    // We'll fetch the medication details
-    final treatment = await (db.select(
-      db.plannedInfusions,
-    )..where((t) => t.id.equals(treatmentId))).getSingle();
-    final med = await (db.select(
-      db.medications,
-    )..where((t) => t.id.equals(treatment.medicationId))).getSingle();
-
-    if (!med.trackBatchNumber && !med.trackWeight && !med.useTimer) {
-      // Automatic logging for simple items
-      await db.transaction(() async {
-        // Reduce stock
-        await db.updateMedication(
-          med.copyWith(stock: med.stock - treatment.dosage),
-        );
-
-        // Reduce accessory stock
-        final accessories = await db.getAccessoriesForMedication(med.id);
-        for (final link in accessories) {
-          final acc = await (db.select(
-            db.accessories,
-          )..where((t) => t.id.equals(link.accessoryId))).getSingle();
-          await db.updateAccessory(
-            acc.copyWith(stock: acc.stock - link.defaultQuantity),
-          );
-        }
-
-        // Insert log
-        await db.insertInfusionLog(
-          InfusionLogCompanion.insert(
-            date: treatment.date,
-            medicationId: med.id,
-            dosage: treatment.dosage,
-            notes: Value(l10n.notificationCompletedNote),
-          ),
-        );
-      });
-    }
+    await _logCompletedTreatment(db, l10n, treatmentId);
     await SchedulerService(db).checkMissedTreatments();
 
     debugPrint(

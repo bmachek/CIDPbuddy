@@ -131,11 +131,14 @@ keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk
 
 #### CI/CD signing via GitHub Actions secrets
 
-The `android-build` job in `.github/workflows/release.yml` does **not** create a `key.properties`
-and therefore builds with debug keys per the fallback rule above. For a production-ready build
-it must be switched to real keystore secrets.
+The `android-build` job in `.github/workflows/release.yml` decodes the keystore from repository
+secrets, writes `android/key.properties` and builds with `requireReleaseSigning` set, so Gradle
+refuses to fall back to the debug key. **Without the secrets below the release job fails on
+purpose** — a debug-signed release carries a different key every time and cannot be installed
+over the previous one, which forces users to uninstall and lose their local database. After the
+build, the job also checks the APK's certificate and fails if it is the debug one.
 
-**Step 1 — store the keystore as a base64 secret:**
+**Store the keystore as a base64 secret:**
 
 ```bash
 base64 -i android/cidpbuddy-release.jks | pbcopy   # macOS: copies to the clipboard
@@ -150,35 +153,12 @@ Under **GitHub → Repository → Settings → Secrets → Actions**, create the
 | `KEY_PASSWORD`      | Password of the key                     |
 | `STORE_PASSWORD`    | Password of the keystore                |
 
-**Step 2 — extend `release.yml`:**
+The workflow writes `android/key.properties` from these secrets itself (see the
+"Configure release signing" step). Keep using the **same** keystore for every release: an APK
+signed with a different key is rejected by Android as an update.
 
-Replace the build-APK step in `.github/workflows/release.yml` with:
-
-```yaml
-- name: Decode Keystore
-  run: |
-    echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode \
-      > android/cidpbuddy-release.jks
-
-- name: Build APK
-  env:
-    KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-    KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-    STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-    STORE_FILE: cidpbuddy-release.jks
-  run: |
-    cat > android/key.properties <<EOF
-    keyAlias=$KEY_ALIAS
-    keyPassword=$KEY_PASSWORD
-    storePassword=$STORE_PASSWORD
-    storeFile=../$STORE_FILE
-    EOF
-    flutter build apk --release \
-      --build-name=${{ steps.get_version.outputs.build_name }} \
-      --build-number=${{ steps.get_version.outputs.build_number }}
-```
-
-**Important:** do not cache the decoded keystore or `key.properties`, and do not upload them as artefacts.
+**Important:** never commit the keystore or `key.properties` (both are git-ignored), do not cache
+the decoded keystore, and do not upload it as an artefact.
 
 ### ProGuard / R8
 

@@ -13,6 +13,14 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
+// The release workflow sets this property (ORG_GRADLE_PROJECT_requireReleaseSigning)
+// so a release can never silently fall back to the debug key below: every CI
+// runner generates a fresh debug keystore, and an APK signed with it cannot be
+// installed over the previous release without uninstalling the app — which
+// deletes the patient's local database. Local builds keep the fallback.
+if (project.hasProperty("requireReleaseSigning") && !keystorePropertiesFile.exists()) {
+    throw GradleException("android/key.properties is missing but release signing is required")
+}
 
 android {
     namespace = "de.fokuspunk.cidpbuddy"
@@ -73,5 +81,5 @@ flutter {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }

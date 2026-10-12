@@ -72,8 +72,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get timerTitle => 'Vormedikation Timer';
 
   @override
-  String timerSubtitle(int seconds) {
-    return 'Pin jede Minute • $seconds Sek. Timer';
+  String timerSubtitle(int minutes) {
+    return 'Pin jede Minute • $minutes Min. Timer';
   }
 
   @override
@@ -1065,6 +1065,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupDestinationSafFolder => 'Cloud-/SAF-Ordner';
 
   @override
+  String get backupDestinationPickedFolder => 'Gewählter Ordner';
+
+  @override
   String backupFolderUnreadable(String path, String error) {
     return 'Ordner nicht lesbar: $path\n($error)';
   }
@@ -1172,11 +1175,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPickFolderAgain => 'Ordner erneut wählen';
 
   @override
+  String get backupBookmarkAccessLost =>
+      'CIDP Buddy kann nicht mehr auf den von dir gewählten Backup-Ordner zugreifen. Wähle ihn bitte erneut.';
+
+  @override
   String get settingsBackupsInsideAppTitle => 'Backups liegen in der App';
 
   @override
   String get settingsBackupsInsideAppBody =>
-      'Sie werden mit der App gelöscht. Exportiere regelmäßig eine Kopie nach iCloud Drive – über \"Backup exportieren\" oder die Dateien-App.';
+      'Sie werden mit der App gelöscht. Wähle in der Dateien-App einen Ordner, damit Backups außerhalb davon landen — oder exportiere regelmäßig eine Kopie.';
 
   @override
   String get settingsBackupDestination => 'Backup-Ziel';
@@ -1221,7 +1228,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsIosStorageInfo =>
-      'Auf iOS werden automatische Backups app-intern gespeichert, da Apple keinen dauerhaften Schreibzugriff auf frei gewählte Ordner erlaubt.\n\nNutze \"Backup exportieren\", um eine Sicherung z. B. in die Dateien-App, iCloud Drive oder per AirDrop zu speichern.';
+      'Backups können direkt in einen Ordner geschrieben werden, den du in der Dateien-App auswählst: iCloud Drive, Nextcloud, Dropbox oder ein verbundenes Laufwerk. CIDP Buddy schreibt dort von selbst weiter, und diese Backups bleiben auch nach dem Löschen der App erhalten.\n\nOhne gewählten Ordner bleiben Backups app-intern und werden zusammen mit der App gelöscht — dann musst du selbst eine Kopie exportieren.';
+
+  @override
+  String get settingsIosPickFolder => 'Ordner wählen';
+
+  @override
+  String get settingsIosUseAppFolder => 'App-Ordner nutzen';
 
   @override
   String get settingsDestinationConnectFailed =>
@@ -1512,4 +1525,215 @@ class AppLocalizationsDe extends AppLocalizations {
   String shareBackupText(String date) {
     return 'Sicherung der CIDP-Buddy-Datenbank vom $date';
   }
+
+  @override
+  String get tooltipOpenStatistics => 'Statistiken';
+
+  @override
+  String get tooltipEditOrder => 'Bestellung bearbeiten';
+
+  @override
+  String get tooltipDeleteOrder => 'Bestellung löschen';
+
+  @override
+  String get tooltipEditInfusionLog => 'Infusionseintrag bearbeiten';
+
+  @override
+  String get tooltipDeleteInfusionLog => 'Infusionseintrag löschen';
+
+  @override
+  String get tooltipEditSupply => 'Verbrauchsmaterial bearbeiten';
+
+  @override
+  String get tooltipDeleteSupply => 'Verbrauchsmaterial löschen';
+
+  @override
+  String get tooltipShowDetails => 'Details anzeigen';
+
+  @override
+  String get tooltipEditMedication => 'Medikament bearbeiten';
+
+  @override
+  String get tooltipLinkSettings => 'Verknüpfungseinstellungen';
+
+  @override
+  String get tooltipUnlinkSupply =>
+      'Verbrauchsmaterial von diesem Medikament entfernen';
+
+  @override
+  String get tooltipEditSchedule => 'Zeitplan bearbeiten';
+
+  @override
+  String get tooltipDeleteSchedule => 'Zeitplan löschen';
+
+  @override
+  String get tooltipClearDate => 'Datum löschen';
+
+  @override
+  String get tooltipRemoveIntakeTime => 'Uhrzeit entfernen';
+
+  @override
+  String get tooltipRemovePhoto => 'Foto entfernen';
+
+  @override
+  String get tooltipTimerReset => 'Timer zurücksetzen';
+
+  @override
+  String get tooltipTimerStart => 'Timer starten';
+
+  @override
+  String get tooltipTimerPause => 'Timer pausieren';
+
+  @override
+  String get tooltipTimerDuration => 'Dauer festlegen';
+
+  @override
+  String get actionClose => 'Schließen';
+
+  @override
+  String get actionBack => 'Zurück';
+
+  @override
+  String get actionDiscard => 'Verwerfen';
+
+  @override
+  String get actionKeepEditing => 'Weiter bearbeiten';
+
+  @override
+  String get actionUndo => 'Rückgängig';
+
+  @override
+  String dashboardLogInfusionFor(String name) {
+    return 'Infusion von $name jetzt erfassen';
+  }
+
+  @override
+  String dashboardMarkDoneFor(String name) {
+    return '$name als eingenommen markieren';
+  }
+
+  @override
+  String dashboardRemoveFor(String name) {
+    return '$name aus dem Plan entfernen';
+  }
+
+  @override
+  String symptomScoreLabel(String symptom, int score) {
+    return '$symptom: $score von 10';
+  }
+
+  @override
+  String get backupDestinationConfigured => 'Backup-Ziel eingerichtet';
+
+  @override
+  String get reliabilityStatusOk => 'OK';
+
+  @override
+  String get reliabilityStatusFailed => 'Handlungsbedarf';
+
+  @override
+  String minutesShort(int count) {
+    return '$count min';
+  }
+
+  @override
+  String millilitersShort(String value) {
+    return '$value ml';
+  }
+
+  @override
+  String millilitersProgress(String remaining, String total) {
+    return '$remaining / $total ml';
+  }
+
+  @override
+  String get kilogramsShort => 'kg';
+
+  @override
+  String megabytes(String value) {
+    return '$value MB';
+  }
+
+  @override
+  String deliveredItem(String quantity, String unit, String name) {
+    return '$quantity $unit $name';
+  }
+
+  @override
+  String get savedInfusion => 'Infusion erfasst';
+
+  @override
+  String get savedDiaryEntry => 'Eintrag gespeichert';
+
+  @override
+  String get savedSchedule => 'Zeitplan gespeichert';
+
+  @override
+  String get savedOrder => 'Bestellung gespeichert';
+
+  @override
+  String get savedMedication => 'Medikament gespeichert';
+
+  @override
+  String get deletedGeneric => 'Gelöscht';
+
+  @override
+  String saveFailed(String error) {
+    return 'Speichern fehlgeschlagen: $error';
+  }
+
+  @override
+  String get discardChangesTitle => 'Änderungen verwerfen?';
+
+  @override
+  String get discardChangesBody =>
+      'Deine Eingaben wurden noch nicht gespeichert.';
+
+  @override
+  String get errorLoadingData => 'Die Daten konnten nicht geladen werden.';
+
+  @override
+  String get medDetailsNotFound => 'Dieses Medikament existiert nicht mehr.';
+
+  @override
+  String get confirmUnlinkSupplyTitle => 'Verbrauchsmaterial entfernen?';
+
+  @override
+  String confirmUnlinkSupplyBody(String name) {
+    return '$name wird nicht mehr zusammen mit diesem Medikament bestellt.';
+  }
+
+  @override
+  String get confirmReenrollTitle => 'Medikament wieder verordnen?';
+
+  @override
+  String confirmReenrollBody(String name) {
+    return '$name kehrt zurück in die aktive Liste; Zeitpläne und Erinnerungen werden neu erstellt.';
+  }
+
+  @override
+  String get validationEnterNumber => 'Bitte gib eine Zahl ein.';
+
+  @override
+  String get validationPositiveNumber =>
+      'Bitte gib eine Zahl größer als 0 ein.';
+
+  @override
+  String get inventoryAddFirstMedicationHint =>
+      'Füge dein erstes Medikament über die Schaltfläche unten hinzu.';
+
+  @override
+  String get savedSupply => 'Verbrauchsmaterial gespeichert';
+
+  @override
+  String reenrolledMedication(String name) {
+    return '$name ist wieder aktiv';
+  }
+
+  @override
+  String get restoringPleaseWait =>
+      'Backup wird wiederhergestellt, bitte warten…';
+
+  @override
+  String get loading => 'Wird geladen…';
 }

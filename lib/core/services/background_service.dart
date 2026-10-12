@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +14,13 @@ import 'package:cidpbuddy/core/l10n/locale_provider.dart';
 
 @pragma('vm:entry-point')
 class BackgroundService {
+  /// Whether `flutter_background_service` has an implementation here. It
+  /// ships Android and iOS only; on desktop, web and in widget tests even
+  /// reading `FlutterBackgroundService()` throws, so every caller that is
+  /// not itself platform-gated must check this first.
+  static bool get isSupportedPlatform =>
+      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
   static const String timerKey = 'timer_seconds_remaining';
   static const String timerRunningKey = 'timer_is_running';
   // Persisted across service restarts so the timer survives a force-kill
