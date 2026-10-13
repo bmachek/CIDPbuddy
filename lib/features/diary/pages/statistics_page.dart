@@ -80,7 +80,7 @@ class StatisticsPage extends StatelessWidget {
                                 getTooltipColor: (_) => Theme.of(
                                   context,
                                 ).colorScheme.secondaryContainer,
-                                tooltipRoundedRadius: 8,
+                                tooltipBorderRadius: BorderRadius.circular(8),
                               ),
                             ),
                             titlesData: FlTitlesData(

@@ -163,7 +163,7 @@ class BackupService {
         await _resetFailureState();
         return destination;
       }
-      final selected = await FilePicker.platform.getDirectoryPath();
+      final selected = await FilePicker.getDirectoryPath();
       if (selected == null) return null;
       final destination = LocalDestination(selected);
       final err = await destination.verifyAccess();
@@ -221,10 +221,12 @@ class BackupService {
       final tempFile = await File(
         p.join(tempDir.path, latest.name),
       ).writeAsBytes(bytes, flush: true);
-      final result = await Share.shareXFiles(
-        [XFile(tempFile.path)],
-        subject: 'CIDP Buddy Backup',
-        sharePositionOrigin: sharePositionOrigin,
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(tempFile.path)],
+          subject: 'CIDP Buddy Backup',
+          sharePositionOrigin: sharePositionOrigin,
+        ),
       );
       return result.status != ShareResultStatus.unavailable;
     } catch (e) {
@@ -466,20 +468,22 @@ class BackupService {
 
     final l10n = await LocaleProvider.l10nForBackground();
     final locale = await LocaleProvider.resolveForBackground();
-    await Share.shareXFiles(
-      [XFile(tempFile.path)],
-      subject: l10n.shareBackupSubject,
-      text: l10n.shareBackupText(
-        AppDateFormat.dateIn(locale.toLanguageTag(), DateTime.now()),
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(tempFile.path)],
+        subject: l10n.shareBackupSubject,
+        text: l10n.shareBackupText(
+          AppDateFormat.dateIn(locale.toLanguageTag(), DateTime.now()),
+        ),
       ),
     );
   }
 
   /// Legacy single-file import via FilePicker (e.g. from older exports).
   Future<bool> importDatabase() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.any);
-    if (result == null || result.files.single.path == null) return false;
-    final pickedFile = File(result.files.single.path!);
+    final pickedPath = (await FilePicker.pickFile())?.path;
+    if (pickedPath == null) return false;
+    final pickedFile = File(pickedPath);
     final dbFolder = await getApplicationDocumentsDirectory();
     final dbFile = File(p.join(dbFolder.path, 'igkeeper.sqlite'));
     final tmp = File('${dbFile.path}.restore_tmp');

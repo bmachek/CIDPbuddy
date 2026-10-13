@@ -22,7 +22,7 @@ permissions:
 env:
   # Pinned so CI matches the version the app is developed and released with.
   # Dependabot cannot bump this — raise it by hand together with the SDK.
-  FLUTTER_VERSION: '3.44.6'
+  FLUTTER_VERSION: '3.47.7'
 
 jobs:
   verify:

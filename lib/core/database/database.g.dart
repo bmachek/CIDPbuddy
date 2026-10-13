@@ -4886,10 +4886,7 @@ final class $$MedicationsTableReferences
   static MultiTypedResultKey<$InfusionLogTable, List<InfusionLogData>>
   _infusionLogRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.infusionLog,
-    aliasName: $_aliasNameGenerator(
-      db.medications.id,
-      db.infusionLog.medicationId,
-    ),
+    aliasName: 'medications__id__infusion_log__medication_id',
   );
 
   $$InfusionLogTableProcessedTableManager get infusionLogRefs {
@@ -4911,10 +4908,7 @@ final class $$MedicationsTableReferences
   _medicationAccessoriesRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.medicationAccessories,
-        aliasName: $_aliasNameGenerator(
-          db.medications.id,
-          db.medicationAccessories.medicationId,
-        ),
+        aliasName: 'medications__id__medication_accessories__medication_id',
       );
 
   $$MedicationAccessoriesTableProcessedTableManager
@@ -4936,10 +4930,7 @@ final class $$MedicationsTableReferences
   _infusionSchedulesRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.infusionSchedules,
-        aliasName: $_aliasNameGenerator(
-          db.medications.id,
-          db.infusionSchedules.medicationId,
-        ),
+        aliasName: 'medications__id__infusion_schedules__medication_id',
       );
 
   $$InfusionSchedulesTableProcessedTableManager get infusionSchedulesRefs {
@@ -4959,10 +4950,7 @@ final class $$MedicationsTableReferences
   static MultiTypedResultKey<$PlannedInfusionsTable, List<PlannedInfusion>>
   _plannedInfusionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.plannedInfusions,
-    aliasName: $_aliasNameGenerator(
-      db.medications.id,
-      db.plannedInfusions.medicationId,
-    ),
+    aliasName: 'medications__id__planned_infusions__medication_id',
   );
 
   $$PlannedInfusionsTableProcessedTableManager get plannedInfusionsRefs {
@@ -4982,10 +4970,7 @@ final class $$MedicationsTableReferences
   static MultiTypedResultKey<$PendingOrdersTable, List<PendingOrder>>
   _pendingOrdersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.pendingOrders,
-    aliasName: $_aliasNameGenerator(
-      db.medications.id,
-      db.pendingOrders.medicationId,
-    ),
+    aliasName: 'medications__id__pending_orders__medication_id',
   );
 
   $$PendingOrdersTableProcessedTableManager get pendingOrdersRefs {
@@ -5004,10 +4989,7 @@ final class $$MedicationsTableReferences
   _pendingOrderItemsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.pendingOrderItems,
-        aliasName: $_aliasNameGenerator(
-          db.medications.id,
-          db.pendingOrderItems.medicationId,
-        ),
+        aliasName: 'medications__id__pending_order_items__medication_id',
       );
 
   $$PendingOrderItemsTableProcessedTableManager get pendingOrderItemsRefs {
@@ -5650,7 +5632,7 @@ class $$MedicationsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MedicationsTable, Medication>(table),
                   $$MedicationsTableReferences(db, table, e),
                 ),
               )
@@ -5862,10 +5844,7 @@ final class $$AccessoriesTableReferences
   _medicationAccessoriesRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.medicationAccessories,
-        aliasName: $_aliasNameGenerator(
-          db.accessories.id,
-          db.medicationAccessories.accessoryId,
-        ),
+        aliasName: 'accessories__id__medication_accessories__accessory_id',
       );
 
   $$MedicationAccessoriesTableProcessedTableManager
@@ -5887,10 +5866,7 @@ final class $$AccessoriesTableReferences
   _pendingOrderItemsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.pendingOrderItems,
-        aliasName: $_aliasNameGenerator(
-          db.accessories.id,
-          db.pendingOrderItems.accessoryId,
-        ),
+        aliasName: 'accessories__id__pending_order_items__accessory_id',
       );
 
   $$PendingOrderItemsTableProcessedTableManager get pendingOrderItemsRefs {
@@ -6185,7 +6161,7 @@ class $$AccessoriesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$AccessoriesTable, Accessory>(table),
                   $$AccessoriesTableReferences(db, table, e),
                 ),
               )
@@ -6298,10 +6274,9 @@ final class $$InfusionLogTableReferences
     extends BaseReferences<_$AppDatabase, $InfusionLogTable, InfusionLogData> {
   $$InfusionLogTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $MedicationsTable _medicationIdTable(_$AppDatabase db) =>
-      db.medications.createAlias(
-        $_aliasNameGenerator(db.infusionLog.medicationId, db.medications.id),
-      );
+  static $MedicationsTable _medicationIdTable(_$AppDatabase db) => db
+      .medications
+      .createAlias('infusion_log__medication_id__medications__id');
 
   $$MedicationsTableProcessedTableManager get medicationId {
     final $_column = $_itemColumn<int>('medication_id')!;
@@ -6581,7 +6556,7 @@ class $$InfusionLogTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$InfusionLogTable, InfusionLogData>(table),
                   $$InfusionLogTableReferences(db, table, e),
                 ),
               )
@@ -6675,13 +6650,9 @@ final class $$MedicationAccessoriesTableReferences
     super.$_typedResult,
   );
 
-  static $MedicationsTable _medicationIdTable(_$AppDatabase db) =>
-      db.medications.createAlias(
-        $_aliasNameGenerator(
-          db.medicationAccessories.medicationId,
-          db.medications.id,
-        ),
-      );
+  static $MedicationsTable _medicationIdTable(_$AppDatabase db) => db
+      .medications
+      .createAlias('medication_accessories__medication_id__medications__id');
 
   $$MedicationsTableProcessedTableManager get medicationId {
     final $_column = $_itemColumn<int>('medication_id')!;
@@ -6697,13 +6668,8 @@ final class $$MedicationAccessoriesTableReferences
     );
   }
 
-  static $AccessoriesTable _accessoryIdTable(_$AppDatabase db) =>
-      db.accessories.createAlias(
-        $_aliasNameGenerator(
-          db.medicationAccessories.accessoryId,
-          db.accessories.id,
-        ),
-      );
+  static $AccessoriesTable _accessoryIdTable(_$AppDatabase db) => db.accessories
+      .createAlias('medication_accessories__accessory_id__accessories__id');
 
   $$AccessoriesTableProcessedTableManager get accessoryId {
     final $_column = $_itemColumn<int>('accessory_id')!;
@@ -6999,7 +6965,9 @@ class $$MedicationAccessoriesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MedicationAccessoriesTable, MedicationAccessory>(
+                    table,
+                  ),
                   $$MedicationAccessoriesTableReferences(db, table, e),
                 ),
               )
@@ -7118,13 +7086,9 @@ final class $$InfusionSchedulesTableReferences
     super.$_typedResult,
   );
 
-  static $MedicationsTable _medicationIdTable(_$AppDatabase db) =>
-      db.medications.createAlias(
-        $_aliasNameGenerator(
-          db.infusionSchedules.medicationId,
-          db.medications.id,
-        ),
-      );
+  static $MedicationsTable _medicationIdTable(_$AppDatabase db) => db
+      .medications
+      .createAlias('infusion_schedules__medication_id__medications__id');
 
   $$MedicationsTableProcessedTableManager get medicationId {
     final $_column = $_itemColumn<int>('medication_id')!;
@@ -7143,10 +7107,7 @@ final class $$InfusionSchedulesTableReferences
   static MultiTypedResultKey<$PlannedInfusionsTable, List<PlannedInfusion>>
   _plannedInfusionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.plannedInfusions,
-    aliasName: $_aliasNameGenerator(
-      db.infusionSchedules.id,
-      db.plannedInfusions.scheduleId,
-    ),
+    aliasName: 'infusion_schedules__id__planned_infusions__schedule_id',
   );
 
   $$PlannedInfusionsTableProcessedTableManager get plannedInfusionsRefs {
@@ -7503,7 +7464,7 @@ class $$InfusionSchedulesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$InfusionSchedulesTable, InfusionSchedule>(table),
                   $$InfusionSchedulesTableReferences(db, table, e),
                 ),
               )
@@ -7626,13 +7587,9 @@ final class $$PlannedInfusionsTableReferences
     super.$_typedResult,
   );
 
-  static $MedicationsTable _medicationIdTable(_$AppDatabase db) =>
-      db.medications.createAlias(
-        $_aliasNameGenerator(
-          db.plannedInfusions.medicationId,
-          db.medications.id,
-        ),
-      );
+  static $MedicationsTable _medicationIdTable(_$AppDatabase db) => db
+      .medications
+      .createAlias('planned_infusions__medication_id__medications__id');
 
   $$MedicationsTableProcessedTableManager get medicationId {
     final $_column = $_itemColumn<int>('medication_id')!;
@@ -7648,13 +7605,9 @@ final class $$PlannedInfusionsTableReferences
     );
   }
 
-  static $InfusionSchedulesTable _scheduleIdTable(_$AppDatabase db) =>
-      db.infusionSchedules.createAlias(
-        $_aliasNameGenerator(
-          db.plannedInfusions.scheduleId,
-          db.infusionSchedules.id,
-        ),
-      );
+  static $InfusionSchedulesTable _scheduleIdTable(_$AppDatabase db) => db
+      .infusionSchedules
+      .createAlias('planned_infusions__schedule_id__infusion_schedules__id');
 
   $$InfusionSchedulesTableProcessedTableManager? get scheduleId {
     final $_column = $_itemColumn<int>('schedule_id');
@@ -7993,7 +7946,7 @@ class $$PlannedInfusionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$PlannedInfusionsTable, PlannedInfusion>(table),
                   $$PlannedInfusionsTableReferences(db, table, e),
                 ),
               )
@@ -8101,10 +8054,9 @@ final class $$PendingOrdersTableReferences
     super.$_typedResult,
   );
 
-  static $MedicationsTable _medicationIdTable(_$AppDatabase db) =>
-      db.medications.createAlias(
-        $_aliasNameGenerator(db.pendingOrders.medicationId, db.medications.id),
-      );
+  static $MedicationsTable _medicationIdTable(_$AppDatabase db) => db
+      .medications
+      .createAlias('pending_orders__medication_id__medications__id');
 
   $$MedicationsTableProcessedTableManager get medicationId {
     final $_column = $_itemColumn<int>('medication_id')!;
@@ -8124,10 +8076,7 @@ final class $$PendingOrdersTableReferences
   _pendingOrderItemsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.pendingOrderItems,
-        aliasName: $_aliasNameGenerator(
-          db.pendingOrders.id,
-          db.pendingOrderItems.orderId,
-        ),
+        aliasName: 'pending_orders__id__pending_order_items__order_id',
       );
 
   $$PendingOrderItemsTableProcessedTableManager get pendingOrderItemsRefs {
@@ -8432,7 +8381,7 @@ class $$PendingOrdersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$PendingOrdersTable, PendingOrder>(table),
                   $$PendingOrdersTableReferences(db, table, e),
                 ),
               )
@@ -8553,10 +8502,8 @@ final class $$PendingOrderItemsTableReferences
     super.$_typedResult,
   );
 
-  static $PendingOrdersTable _orderIdTable(_$AppDatabase db) =>
-      db.pendingOrders.createAlias(
-        $_aliasNameGenerator(db.pendingOrderItems.orderId, db.pendingOrders.id),
-      );
+  static $PendingOrdersTable _orderIdTable(_$AppDatabase db) => db.pendingOrders
+      .createAlias('pending_order_items__order_id__pending_orders__id');
 
   $$PendingOrdersTableProcessedTableManager get orderId {
     final $_column = $_itemColumn<int>('order_id')!;
@@ -8572,13 +8519,9 @@ final class $$PendingOrderItemsTableReferences
     );
   }
 
-  static $MedicationsTable _medicationIdTable(_$AppDatabase db) =>
-      db.medications.createAlias(
-        $_aliasNameGenerator(
-          db.pendingOrderItems.medicationId,
-          db.medications.id,
-        ),
-      );
+  static $MedicationsTable _medicationIdTable(_$AppDatabase db) => db
+      .medications
+      .createAlias('pending_order_items__medication_id__medications__id');
 
   $$MedicationsTableProcessedTableManager? get medicationId {
     final $_column = $_itemColumn<int>('medication_id');
@@ -8594,13 +8537,8 @@ final class $$PendingOrderItemsTableReferences
     );
   }
 
-  static $AccessoriesTable _accessoryIdTable(_$AppDatabase db) =>
-      db.accessories.createAlias(
-        $_aliasNameGenerator(
-          db.pendingOrderItems.accessoryId,
-          db.accessories.id,
-        ),
-      );
+  static $AccessoriesTable _accessoryIdTable(_$AppDatabase db) => db.accessories
+      .createAlias('pending_order_items__accessory_id__accessories__id');
 
   $$AccessoriesTableProcessedTableManager? get accessoryId {
     final $_column = $_itemColumn<int>('accessory_id');
@@ -8946,7 +8884,7 @@ class $$PendingOrderItemsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$PendingOrderItemsTable, PendingOrderItem>(table),
                   $$PendingOrderItemsTableReferences(db, table, e),
                 ),
               )
@@ -9383,7 +9321,16 @@ class $$DiaryEntriesTableTableManager
                 notes: notes,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$DiaryEntriesTable, DiaryEntry>(table),
+                  BaseReferences<_$AppDatabase, $DiaryEntriesTable, DiaryEntry>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),

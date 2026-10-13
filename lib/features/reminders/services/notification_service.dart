@@ -61,7 +61,7 @@ class NotificationService {
     );
 
     await _notificationsPlugin.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: _onNotificationResponse,
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
@@ -239,11 +239,11 @@ class NotificationService {
           : null;
 
       await _notificationsPlugin.zonedSchedule(
-        id,
-        title,
-        body,
-        tz.TZDateTime.from(scheduledTime, tz.local),
-        NotificationDetails(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tz.TZDateTime.from(scheduledTime, tz.local),
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'med_reminders',
             l10n.channelMedReminders,
@@ -266,8 +266,6 @@ class NotificationService {
           ),
         ),
         androidScheduleMode: scheduleMode,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload,
       );
     } catch (e) {
@@ -300,7 +298,7 @@ class NotificationService {
     try {
       final l10n = await LocaleProvider.l10nForBackground();
       await NotificationService()._notificationsPlugin.cancel(
-        treatmentId * 100,
+        id: treatmentId * 100,
       );
       final db = AppDatabase();
       await _logCompletedTreatment(db, l10n, treatmentId);
@@ -321,7 +319,7 @@ class NotificationService {
     try {
       final l10n = await LocaleProvider.l10nForBackground();
       await NotificationService()._notificationsPlugin.cancel(
-        treatmentId * 100,
+        id: treatmentId * 100,
       );
       final db = AppDatabase();
       // Mark as completed but with a note that it was skipped
@@ -427,10 +425,10 @@ class NotificationService {
   Future<void> cancelTreatmentReminders(int treatmentId) async {
     final baseId = _getBaseId(treatmentId);
     // Main slot + 3 snooze slots + 3 hourly slots.
-    await _notificationsPlugin.cancel(baseId);
+    await _notificationsPlugin.cancel(id: baseId);
     for (int i = 1; i <= 3; i++) {
-      await _notificationsPlugin.cancel(baseId + i);
-      await _notificationsPlugin.cancel(baseId + 10 + i);
+      await _notificationsPlugin.cancel(id: baseId + i);
+      await _notificationsPlugin.cancel(id: baseId + 10 + i);
     }
   }
 
@@ -474,7 +472,7 @@ class NotificationService {
         if (!_treatmentReminderOffsets.contains(offset)) continue;
         final treatmentId = id ~/ 100;
         if (!validTreatmentIds.contains(treatmentId)) {
-          await _notificationsPlugin.cancel(id);
+          await _notificationsPlugin.cancel(id: id);
           debugPrint(
             'NotificationService: Cancelled stale reminder $id (treatment $treatmentId).',
           );
@@ -498,16 +496,16 @@ class NotificationService {
       final l10n = await _l10n;
       final scheduleMode = await _getScheduleMode();
       await _notificationsPlugin.zonedSchedule(
-        _timerCompletionId,
-        l10n.timerFinishedTitle,
-        l10n.timerFinishedBody,
+        id: _timerCompletionId,
+        title: l10n.timerFinishedTitle,
+        body: l10n.timerFinishedBody,
         // Use UTC explicitly: the background isolate sets tz.local = UTC,
         // so fromMillisecondsSinceEpoch with tz.UTC is always correct
-        tz.TZDateTime.fromMillisecondsSinceEpoch(
+        scheduledDate: tz.TZDateTime.fromMillisecondsSinceEpoch(
           tz.UTC,
           endTime.millisecondsSinceEpoch,
         ),
-        NotificationDetails(
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'premed_timer',
             l10n.timerTitle,
@@ -517,8 +515,6 @@ class NotificationService {
           iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: scheduleMode,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
       );
     } catch (e) {
       debugPrint(
@@ -528,14 +524,14 @@ class NotificationService {
   }
 
   Future<void> cancelTimerCompletionNotification() async {
-    await _notificationsPlugin.cancel(_timerCompletionId);
+    await _notificationsPlugin.cancel(id: _timerCompletionId);
   }
 
   Future<void> cancelPremedicationTimer() async {
     // Cancel IDs in the timer range
     for (int i = 1; i <= 60; i++) {
       for (int repeat = 0; repeat < 3; repeat++) {
-        await _notificationsPlugin.cancel(999 + (i * 10) + repeat);
+        await _notificationsPlugin.cancel(id: 999 + (i * 10) + repeat);
       }
     }
     await cancelTimerProgress();
@@ -550,10 +546,10 @@ class NotificationService {
     );
 
     await _notificationsPlugin.show(
-      9999, // Specific ID for timer progress
-      title,
-      content,
-      NotificationDetails(
+      id: 9999, // Specific ID for timer progress
+      title: title,
+      body: content,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           'premed_timer',
           l10n.timerTitle,
@@ -569,7 +565,7 @@ class NotificationService {
   }
 
   Future<void> cancelTimerProgress() async {
-    await _notificationsPlugin.cancel(9999);
+    await _notificationsPlugin.cancel(id: 9999);
   }
 
   static const String _missedSignatureKey = 'missed_treatments_signature';
@@ -600,10 +596,10 @@ class NotificationService {
     final body = items.join('\n');
 
     await _notificationsPlugin.show(
-      missedId,
-      l10n.channelMissedIntakes,
-      summary,
-      NotificationDetails(
+      id: missedId,
+      title: l10n.channelMissedIntakes,
+      body: summary,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           'missed_treatments',
           l10n.channelMissedIntakes,
@@ -629,7 +625,7 @@ class NotificationService {
   }
 
   Future<void> cancelMissedTreatmentsNotification() async {
-    await _notificationsPlugin.cancel(5555);
+    await _notificationsPlugin.cancel(id: 5555);
     // Forget the signature too, otherwise the next genuinely-missed intake with
     // the same summary text would be suppressed by the de-duplication above.
     final prefs = await SharedPreferences.getInstance();
@@ -643,10 +639,10 @@ class NotificationService {
     final itemsText = lowItems.join(", ");
 
     await _notificationsPlugin.show(
-      8888, // Constant ID for stock warning to overwrite previous ones
-      l10n.dashboardOrderRecommended,
-      l10n.dashboardLowStockNames(itemsText),
-      NotificationDetails(
+      id: 8888, // Constant ID for stock warning to overwrite previous ones
+      title: l10n.dashboardOrderRecommended,
+      body: l10n.dashboardLowStockNames(itemsText),
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           'stock_warnings',
           l10n.channelStockWarnings,
@@ -681,11 +677,11 @@ class NotificationService {
     }
 
     await _notificationsPlugin.zonedSchedule(
-      backupReminderId,
-      l10n.backupReminderTitle,
-      l10n.backupReminderBody,
-      scheduledDate,
-      NotificationDetails(
+      id: backupReminderId,
+      title: l10n.backupReminderTitle,
+      body: l10n.backupReminderBody,
+      scheduledDate: scheduledDate,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           'backup_warnings',
           l10n.channelBackupWarnings,
@@ -695,8 +691,6 @@ class NotificationService {
         iOS: const DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: 'open_backup_settings',
     );
@@ -706,16 +700,16 @@ class NotificationService {
   }
 
   Future<void> cancelBackupReminder() async {
-    await _notificationsPlugin.cancel(7777);
+    await _notificationsPlugin.cancel(id: 7777);
   }
 
   Future<void> showBackupFailureNotification(String error) async {
     final l10n = await _l10n;
     await _notificationsPlugin.show(
-      6666, // Constant ID for backup failure
-      l10n.backupFailedTitle,
-      l10n.backupFailedBody(error),
-      NotificationDetails(
+      id: 6666, // Constant ID for backup failure
+      title: l10n.backupFailedTitle,
+      body: l10n.backupFailedBody(error),
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           'backup_failures',
           l10n.channelBackupFailures,
@@ -730,7 +724,7 @@ class NotificationService {
   }
 
   Future<void> cancelBackupFailureNotification() async {
-    await _notificationsPlugin.cancel(6666);
+    await _notificationsPlugin.cancel(id: 6666);
   }
 }
 
@@ -773,15 +767,15 @@ Future<void> _initBackgroundPlugin(
   switch (defaultTargetPlatform) {
     case TargetPlatform.iOS:
       await plugin.initialize(
-        const InitializationSettings(iOS: darwinSettings),
+        settings: const InitializationSettings(iOS: darwinSettings),
       );
     case TargetPlatform.macOS:
       await plugin.initialize(
-        const InitializationSettings(macOS: darwinSettings),
+        settings: const InitializationSettings(macOS: darwinSettings),
       );
     default:
       await plugin.initialize(
-        const InitializationSettings(android: androidSettings),
+        settings: const InitializationSettings(android: androidSettings),
       );
   }
 }
@@ -792,10 +786,10 @@ Future<void> _cancelTreatmentBlock(
   int treatmentId,
 ) async {
   final baseId = treatmentId * 100;
-  await plugin.cancel(baseId);
+  await plugin.cancel(id: baseId);
   for (int i = 1; i <= 3; i++) {
-    await plugin.cancel(baseId + i);
-    await plugin.cancel(baseId + 10 + i);
+    await plugin.cancel(id: baseId + i);
+    await plugin.cancel(id: baseId + 10 + i);
   }
 }
 
