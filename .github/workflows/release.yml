@@ -62,7 +62,7 @@ jobs:
         with:
           # Keep in sync with FLUTTER_VERSION in ci.yml — releases must be
           # built with the version CI verified against.
-          flutter-version: '3.44.6'
+          flutter-version: '3.47.7'
           channel: 'stable'
           cache: true
 
@@ -175,7 +175,7 @@ jobs:
         with:
           # Keep in sync with FLUTTER_VERSION in ci.yml — releases must be
           # built with the version CI verified against.
-          flutter-version: '3.44.6'
+          flutter-version: '3.47.7'
           channel: 'stable'
           cache: true
 

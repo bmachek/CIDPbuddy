@@ -1207,13 +1207,13 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _pickAndRestoreZipDirectly() async {
-    final result = await FilePicker.platform.pickFiles(
+    final picked = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['zip'],
     );
-    if (result == null || result.files.single.path == null) return;
-    final path = result.files.single.path!;
-    final name = result.files.single.name;
+    final path = picked?.path;
+    if (picked == null || path == null) return;
+    final name = picked.name;
 
     if (!mounted) return;
     final confirmed = await _confirmRestore(
