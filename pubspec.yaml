@@ -62,7 +62,7 @@ dependencies:
   archive: ^3.6.1
   flutter_background_service: ^5.1.0
   device_info_plus: ^13.3.0
-  permission_handler: ^11.3.1
+  permission_handler: ^13.0.2
   disable_battery_optimization: ^1.1.2
   flutter_test:
     sdk: flutter
