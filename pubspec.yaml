@@ -51,7 +51,7 @@ dependencies:
   share_plus: ^13.3.1
   file_picker: ^13.1.0
   fl_chart: ^1.2.0
-  timezone: ^0.11.1
+  timezone: ^0.11.2
   google_fonts: ^8.2.1
   audioplayers: ^6.8.1
   image_picker: ^1.2.4
@@ -82,7 +82,7 @@ dependencies:
   saf_stream: ^2.0.0
   workmanager: ^0.10.10
   url_launcher: ^6.3.3
-  restart_app: ^1.10.1
+  restart_app: ^1.10.2
 
 flutter_launcher_icons:
   android: "launcher_icon"
